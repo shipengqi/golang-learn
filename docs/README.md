@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://github.com/golang/go">
-    <img alt="Go Logo" src="https://upload.wikimedia.org/wikipedia/commons/2/23/Go_Logo_Aqua.svg" width="40%" height="">
+    <img alt="Go Logo" src="https://upload.wikimedia.org/wikipedia/commons/2/23/Go_Logo_Aqua.svg" width="20%" height="">
   </a>
 </p>
 
