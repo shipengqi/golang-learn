@@ -4,9 +4,11 @@
 
 <p align="center">
   <a href="https://github.com/golang/go">
-    <img alt="Go Logo" src="https://upload.wikimedia.org/wikipedia/commons/2/23/Go_Logo_Aqua.svg" width="50%" height="">
+    <img alt="Go Logo" src="https://upload.wikimedia.org/wikipedia/commons/2/23/Go_Logo_Aqua.svg" width="40%" height="">
   </a>
 </p>
+
+
 
 ## Go语言的主要特性
 - 编译型语言，静态类型语言，但是语法非常简洁
