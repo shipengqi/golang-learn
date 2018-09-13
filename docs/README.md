@@ -1,5 +1,19 @@
+<<<<<<< HEAD
 # go-learn-demo
 Go language learn demo
+=======
+<h1 align="center">
+  Go 语言学习笔记
+</h1>
+
+<p align="center">
+  <a href="https://github.com/golang/go">
+    <img alt="Go Logo" src="https://upload.wikimedia.org/wikipedia/commons/2/23/Go_Logo_Aqua.svg" width="20%" height="">
+  </a>
+</p>
+
+
+>>>>>>> 953eff387a92effdc0f80f9c38c37ad872f01096
 
 ## Go语言的主要特性
 - 编译型语言，静态类型语言，但是语法非常简洁
@@ -19,4 +33,7 @@ Go language learn demo
 - `os.Args`获取命令行参数。
 
 ### 类型
+<<<<<<< HEAD
 
+=======
+>>>>>>> 953eff387a92effdc0f80f9c38c37ad872f01096
