@@ -1,0 +1,27 @@
+{
+    "name": "go-learn-demo",
+    "version": "1.0.0",
+    "description": "Golang Learning.",
+    "main": "index.js",
+    "directories": {
+        "doc": "docs"
+    },
+    "scripts": {
+        "docs:dev": "vuepress dev ./docs",
+        "docs:build": "vuepress build ./docs",
+        "deploy": "./build/deploy.sh"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/shipengqi/go-learn-demo.git"
+    },
+    "author": "",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/shipengqi/go-learn-demo/issues"
+    },
+    "homepage": "https://github.com/shipengqi/go-learn-demo#readme",
+    "devDependencies": {
+        "vuepress": "^0.14.2"
+    }
+}

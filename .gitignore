@@ -1,3 +1,14 @@
 # IDE
 .idea
 .vscode
+
+# Node
+node_modules
+
+# logs
+*.log
+logs
+log
+
+# dist
+docs/.vuepress/dist
