@@ -117,15 +117,76 @@ func FToC(f Fahrenheit) Celsius { return Celsius((f - 32) * 5 / 9) }
 ```
 
 ## 包
-Go 语言的包与其他语言的`modules`或者`libraries`类似。每个包都对应一个独立的名字空间，如：
-`image`包和`unicode/utf16`包中都包含了`Decode`。要在外部引用该函数，必须显式使用`image.Decode`或`utf16.Decode`形式访问。
-
-包内以大写字母开头定义的名字（包括变量，类型，函数等等），会被导出，可以在包的外部访问。
+Go 语言的包与其他语言的`modules`或者`libraries`类似。Go语言有超过100个的标准包，可以使用`go list std | wc -l`查看包的数量。
+更多 Go 语言开源包，可以在[这里](http://godoc.org)搜索。
+我们知道 Go 语言编译速度很快，主要依赖下面三点：
+1. 导入的包必须在文件的头部显式声明，这样的话编译器就没有必要读取和分析整个源文件来判断包的依赖关系。
+2. 禁止包的循环依赖，每个包可以被独立编译，而且很可能是被并发编译。
+3. 编译后包的目标文件不仅仅记录包本身的导出信息，同时还记录了包的依赖关系。
+因此，在编译一个包的时候，编译器只需读取每个导入包的目标文件，而不需要遍历所有依赖的的文件。
 
 ### 导入包
 
 每个包都有一个全局唯一的导入路径，一个导入路径如`import "packages/test"`，那么这个包的完整路径应该是`GOPTAH/src/packages/test`，
 `test`应该是一个目录，包含了一个或多个`test`（包的名字和包的导入路径的最后一个字段相同）包的源文件。
+```go
+// 导入一个包
+import "fmt"
+
+// 导入多个包
+import (
+    "fmt"
+    "os"
+)
+```
+
+导入的包之间可以通过添加空行来分组；通常将来自不同组织的包独自分组。
+```go
+import (
+    "fmt"
+    "os"
+
+    "golang.org/x/net/ipv4"
+)
+```
+
+
+如果你的包会发布出去，那么导入路径最好是全球唯一的。为了避免冲突，所有非标准库包的导入路径建议以所在组织的互联网域名为前缀；而且这样也有利于包的检索。例如`import "github.com/go-sql-driver/mysql"`。
+
+#### 导入包重命名
+如果导入两个相同名字的包，如`math/rand`包和`crypto/rand`包，可以为一个包重命名来解决名字冲突：
+```go
+import (
+    "crypto/rand"
+    mrand "math/rand" // alternative name mrand avoids conflict
+)
+```
+注意，重命名的包名只在当前源文件有效。
+
+有些情况下也可以使用包重命名：
+1. 包名很长。重命名一个简短的包名。
+2. 与变量名冲突。
+
+选择用简短名称重命名导入包时候最好统一，以避免包名混乱。
+
+#### 匿名导入
+比如`import _ "image/png"`，`_`是空白标识符，不能被访问。
+匿名导入有什么用？我们知道如果导入一个包而不使用会导致编译错误`unused import`。当我们想要导入包，
+仅仅只是想计算导入包的包级变量的初始化表达式和执行导入包的`init`初始化函数，就可以使用匿名导入。
+
+### 包声明
+包声明语句（包名）必须在每个源文件的开头。被其它包导入时默认的标识符。每个包都对应一个独立的名字空间，
+如：`image`包和`unicode/utf16`包中都包含了`Decode`。要在外部引用该函数，必须显式使用`image.Decode`或`utf16.Decode`形式访问。
+
+**包内以大写字母开头定义的名字（包括变量，类型，函数等等），会被导出，可以在包的外部访问。**
+
+默认包名一般采用导入路径名的最后一段，比如`GOPTAH/src/packages/test`的`test`就是包名。三种情况例外：
+1. `main`包，`go build`命令编译完之后生成一个可执行程序。
+2. 以`_test`为后缀包名的测试外部扩展包都由`go test`命令独立编译。(以`_`或`.`开头的源文件会被构建工具忽略)
+3. 如"gopkg.in/yaml.v2"。包的名字包含版本号后缀`.v2`，这种情况下包名是`yaml`。
+
+### 包命名
+包命名尽量有描述性且无歧义，简短，避免冲突。
 
 ### 初始化包
 包的初始化首先是解决包级变量的依赖顺序，然后按照包级变量声明出现的顺序依次初始化：
@@ -160,3 +221,57 @@ func f() int { return c + 1 }
 
 **一个程序可能包含多个同名的声明，只要它们在不同的词法域就可以。内层的词法域会屏蔽外部的声明。** 编译器遇到一个名字引用是，
 会从最内层的词法域向全局查找（和`Javascript`相似）。
+
+## 工具
+Go 语言工具箱的命令：
+```bash
+$ go
+Go is a tool for managing Go source code.
+
+Usage:
+
+        go command [arguments]
+
+The commands are:
+
+        build       compile packages and dependencies
+        clean       remove object files and cached files
+        doc         show documentation for package or symbol
+        env         print Go environment information
+        bug         start a bug report
+        fix         update packages to use new APIs
+        fmt         gofmt (reformat) package sources
+        generate    generate Go files by processing source
+        get         download and install packages and dependencies
+        install     compile and install packages and dependencies
+        list        list packages
+        run         compile and run Go program
+        test        test packages
+        tool        run specified go tool
+        version     print Go version
+        vet         report likely mistakes in packages
+
+Use "go help [command]" for more information about a command.
+
+Additional help topics:
+
+        c           calling between Go and C
+        buildmode   build modes
+        cache       build and test caching
+        filetype    file types
+        gopath      GOPATH environment variable
+        environment environment variables
+        importpath  import path syntax
+        packages    package lists
+        testflag    testing flags
+        testfunc    testing functions
+
+Use "go help [topic]" for more information about that topic.
+```
+
+### 工作区 GOPATH
+### 下载包
+### 构建包
+### 包文档
+### 内部包
+### 查询包
