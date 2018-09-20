@@ -59,7 +59,27 @@ fmt.Println(x)  // "2"
 `*p`也可以被赋值。
 
 任何类型的指针的零值都是`nil`。当指针指向同一个变量或者`nil`时是相等的。
+当一个指针被定义后没有分配到任何变量时，它的值为`nil`。`nil`指针也称为空指针。
 
+#### 指向指针的指针
+```go
+var a int
+var ptr *int
+var pptr **int
+
+a = 3000
+
+/* 指针 ptr 地址 */
+ptr = &a
+
+/* 指向指针 ptr 地址 */
+pptr = &ptr
+
+/* 获取 pptr 的值 */
+fmt.Printf("变量 a = %d\n", a )
+fmt.Printf("指针变量 *ptr = %d\n", *ptr )
+fmt.Printf("指向指针的指针变量 **pptr = %d\n", **pptr)
+```
 ### new
 `new`函数可以创建变量，返回变量的地址。`new`函数很少使用，直接使用字面量语法创建更灵活。
 ```go

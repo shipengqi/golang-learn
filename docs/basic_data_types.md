@@ -62,8 +62,7 @@ Go 语言的四类数据类型
 
 ## 复合数据类型
 ### 数组
-数组是一个由固定长度的指定类型元素组成的序列。由于数组长度是固定的，所以使用`slice`会更灵活，`slice`是动态的，长度可以增加也可以减少。
-数组的长度在编译阶段确定。
+数组是一个由固定长度的指定类型元素组成的序列。数组的长度在编译阶段确定。
 
 声明数组：
 ```go
@@ -83,10 +82,16 @@ var q [3]int = [3]int{1, 2, 3}
 var r [3]int = [3]int{1, 2}
 fmt.Println(r[2]) // "0"
 
+var balance = []float32{1000.0, 2.0, 3.4, 7.0, 50.0}
+mt.Println(len(balance)) // 5
+var balance2 = []float32
+fmt.Println(len(balance2)) // type []float32 is not an expression
+
 q := [...]int{1, 2, 3}
 fmt.Printf("%T\n", q) // "[3]int"
 ```
 初始化数组中`{}`中的元素个数不能大于`[]`中的数字。
+如果`[]`中的`SIZE`，Go 语言会根据元素的个数来设置数组的大小。
 上面代码中的`...`省略号，表示数组的长度是根据初始化值的个数来计算。
 
 #### 二维数组
@@ -111,6 +116,273 @@ func test(ptr *[32]byte) {
 ```
 
 ### slice
-slice的语法和数组很像，只是没有固定长度而已。
+slice的语法和数组很像，由于数组长度是固定的，所以使用`slice`相比数组会更灵活，`slice`是动态的，长度可以增加也可以减少。
+还有一点与数组不同，切片不需要说明长度。
+
+定义切片，和定义数组的区别就是不需要指定`SIZE`：
+```go
+var 变量名 []类型
+```
+一个`slice`由三个部分构成：指针、长度和容量。长度不能超过容量。
+一个切片在未初始化之前默认为`nil`，长度为`0`。
+
+初始化切片：
+```go
+// 直接初始化切片，[] 表示是切片类型，{1,2,3}初始化值依次是1,2,3.其 cap=len=3
+s :=[]int {1,2,3 }
+
+// 初始化切片s,是数组arr的引用
+s := arr[:]
+
+// 将arr中从下标startIndex到endIndex-1 下的元素创建为一个新的切片
+s := arr[startIndex:endIndex] 
+
+// 缺省endIndex时将表示一直到arr的最后一个元素
+s := arr[startIndex:] 
+
+// 缺省startIndex时将表示从arr的第一个元素开始
+s := arr[:endIndex]
+
+// 使用 make 函数来创建切片
+// len 是数组的长度并且也是切片的初始长度
+// capacity 为可选参数, 指定容量
+s := make([]int, len, capacity)
+```
+
+#### len() 和 cap()
+- `len`获取切片长度。
+- `cap`计算切片的最大容量
+
+#### append() 和 copy()
+- `append`向切片追加新元素
+- `copy`拷贝切片
+
+#### 截取切片
+```go
+   /* 创建切片 */
+   numbers := []int{0,1,2,3,4,5,6,7,8}   
+
+   /* 打印子切片从索引1(包含) 到索引4(不包含)*/
+   fmt.Println("numbers[1:4] ==", numbers[1:4]) // numbers[1:4] == [1 2 3]
+
+   /* 默认下限为 0*/
+   fmt.Println("numbers[:3] ==", numbers[:3]) // numbers[:3] == [0 1 2]
+
+   /* 默认上限为 len(s)*/
+   fmt.Println("numbers[4:] ==", numbers[4:]) // numbers[4:] == [4 5 6 7 8]
+
+   numbers1 := make([]int,0,5)
+
+   /* 打印子切片从索引  0(包含) 到索引 2(不包含) */
+   number2 := numbers[:2]
+   fmt.Printf("len=%d cap=%d slice=%v\n",len(number2),cap(number2),number2) // len=2 cap=9 slice=[0 1]
+   /* 打印子切片从索引 2(包含) 到索引 5(不包含) */
+	 number3 := numbers[2:5]
+	 fmt.Printf("len=%d cap=%d slice=%v\n",len(number3),cap(number3),number3) // len=3 cap=7 slice=[2 3 4]
+```
+
 ### map
+`map`是一个无序的`key/value`对的集合，使用`hash`表实现的。
+定义`map`，使用`map`关键字：
+```go
+/* 声明变量，默认 map 是 nil */
+var 变量名 map[键类型]值类型
+
+/* 使用 make 函数 */
+变量名 := make(map[键类型]值类型)
+
+/* 字面值的语法创建 */
+变量名 := map[键类型]值类型{
+  key1: value1,
+	key2: value2,
+	...
+}
+```
+一个`map`在未初始化之前默认为`nil`。
+通过索引下标`key`来访问`map`中对应的`value`
+```go
+age, ok := ages["bob"]
+if !ok { /* "bob" is not a key in this map; age == 0. */ }
+```
+`ok`表示操作结果，是一个布尔值。
+
+#### delet()
+`delete`函数删除`map`元素。
+```go
+delete(mapName, key)
+```
+
+#### 遍历
+可以使用`for range`遍历`map`：
+```go
+for key, value := range mapName {
+	fmt.Println(mapName[key])
+}
+```
+`Map`的迭代顺序是不确定的。可以先使用`sort`包排序。
+
 ### 结构体
+结构体是由一系列具有相同类型或不同类型的数据构成的数据集合。
+结构体定义需要使用`type`和`struct`语句, `struct`语句定义一个新的数据类型, `type` 语句定义了结构体的名称：
+```go
+// 定义了结构体类型
+type struct_variable_type struct {
+   member definition;
+   member definition;
+   ...
+   member definition;
+}
+
+// 声明
+variable_name := structure_variable_type{value1, value2...valuen}
+// 或
+variable_name := structure_variable_type{ key1: value1, key2: value2..., keyn: valuen}
+```
+
+用点号`.`操作符访问结构体成员, 实例：
+```go
+type Books struct {
+	title string
+	author string
+	subject string
+	book_id int
+}
+
+
+func main() {
+	var Book1 Books        /* 声明 Book1 为 Books 类型 */
+
+	/* book 1 描述 */
+	Book1.title = "Go 语言"
+	Book1.author = "www.runoob.com"
+	Book1.subject = "Go 语言教程"
+	Book1.book_id = 6495407
+
+		/* 打印 Book1 信息 */
+	fmt.Printf( "Book 1 title : %s\n", Book1.title)
+	fmt.Printf( "Book 1 author : %s\n", Book1.author)
+	fmt.Printf( "Book 1 subject : %s\n", Book1.subject)
+	fmt.Printf( "Book 1 book_id : %d\n", Book1.book_id)
+}
+```
+`.`点操作符也可以和指向结构体的指针一起工作:
+```go
+var employeeOfTheMonth *Employee = &dilbert
+employeeOfTheMonth.Position += " (proactive team player)"
+```
+
+一个结构体可能同时包含导出和未导出的成员, 如果结构体成员名字是以大写字母开头的，那么该成员就是导出的。
+未导出的成员, 不允许在外部包修改。
+
+通常一行对应一个结构体成员，成员的名字在前类型在后，不过如果相邻的成员类型如果相同的话可以被合并到一行:
+```go
+type Employee struct {
+	ID            int
+	Name, Address string
+	Salary        int
+}
+```
+
+一个命名为 S 的结构体类型将不能再包含 S 类型的成员：因为一个聚合的值不能包含它自身。（该限制同样适应于数组。）
+但是S类型的结构体可以包含 *S 指针类型的成员，这可以让我们创建递归的数据结构，比如链表和树结构等：
+```go
+type tree struct {
+	value       int
+	left, right *tree
+}
+```
+
+
+#### 结构体字面值
+
+结构体字面值可以指定每个成员的值:
+```go
+type Point struct{ X, Y int }
+
+p := Point{1, 2}
+```
+
+#### 结构体比较
+
+两个结构体将可以使用`==`或`!=`运算符进行比较。
+```go
+type Point struct{ X, Y int }
+
+p := Point{1, 2}
+q := Point{2, 1}
+fmt.Println(p.X == q.X && p.Y == q.Y) // "false"
+fmt.Println(p == q)                   // "false"
+```
+
+#### 结构体嵌入 匿名成员
+Go 语言提供的不同寻常的结构体嵌入机制让一个命名的结构体包含另一个结构体类型的匿名成员，
+这样就可以通过简单的点运算符`x.f`来访问匿名成员链中嵌套的`x.d.e.f`成员。
+```go
+type Point struct {
+    X, Y int
+}
+
+type Circle struct {
+    Center Point
+    Radius int
+}
+
+type Wheel struct {
+    Circle Circle
+    Spokes int
+}
+```
+
+上面的代码，会使访问每个成员变得繁琐：
+```go
+var w Wheel
+w.Circle.Center.X = 8
+w.Circle.Center.Y = 8
+w.Circle.Radius = 5
+w.Spokes = 20
+```
+
+Go 语言有一个特性可以只声明一个成员对应的数据类型而定义成员的名字；这类成员就叫匿名成员。
+匿名成员的数据类型必须是命名的类型或指向一个命名的类型的指针。
+```go
+type Point struct {
+    X, Y int
+}
+
+
+type Circle struct {
+    Point
+    Radius int
+}
+
+type Wheel struct {
+    Circle
+    Spokes int
+}
+
+var w Wheel
+w.X = 8            // equivalent to w.Circle.Point.X = 8
+w.Y = 8            // equivalent to w.Circle.Point.Y = 8
+w.Radius = 5       // equivalent to w.Circle.Radius = 5
+w.Spokes = 20
+```
+
+上面的代码中，`Circle`和`Wheel`各自都有一个匿名成员。我们可以说`Point`类型被嵌入到了`Circle`结构体，同时`Circle`类型被嵌入到了`Wheel`结构体。
+但是结构体字面值并没有简短表示匿名成员的语法，所以下面的代码，会编译失败：
+```go
+w = Wheel{8, 8, 5, 20}                       // compile error: unknown fields
+w = Wheel{X: 8, Y: 8, Radius: 5, Spokes: 20} // compile error: unknown fields
+
+// 正确的语法
+w = Wheel{Circle{Point{8, 8}, 5}, 20}
+
+w = Wheel{
+    Circle: Circle{
+        Point:  Point{X: 8, Y: 8},
+        Radius: 5,
+    },
+    Spokes: 20, // NOTE: trailing comma necessary here (and at Radius)
+}
+```
+
+不能同时包含两个类型相同的匿名成员，这会导致名字冲突。

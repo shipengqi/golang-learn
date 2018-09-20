@@ -241,7 +241,7 @@ for condition { }
 // 相当于 C 语言的 for(;;)
 for { }
 
-for key, value := range oldMap {
+for key, value := range oldMap { // 第二个循环变量可以忽略，但是第一个变量要忽略可以使用空标识符 _ 代替
     newMap[key] = value
 }
 ```
@@ -263,3 +263,57 @@ LOOP: for a < 20 {
 	a ++  
 }  
 ```
+
+## JSON
+`JavaScript`对象表示法（JSON）是一种用于发送和接收结构化信息的标准协议。Go 对于其他序列化协议如`XML`，`Protocol Buffers`，都有良好的支持，
+由标准库中的`encoding/json`、`encoding/xml`、`encoding/asn1`等包提供支持，`Protocol Buffers`的由`github.com/golang/protobuf`包提供支持，
+并且这类包都有着相似的API接口。
+
+GO 中结构体转为`JSON`使用`json.Marshal`，也就是编码操作：
+```go
+type Movie struct {
+	Title  string
+	Year   int  `json:"released"`
+	Color  bool `json:"color,omitempty"`
+	Actors []string
+}
+
+var movies = []Movie{
+	{
+		Title: "Casablanca", 
+		Year: 1942, 
+		Color: false,
+		Actors: []string{"Humphrey Bogart", "Ingrid Bergman"}},
+	{
+		Title: "Cool Hand Luke",
+		Year: 1967, 
+		Color: true,
+		Actors: []string{"Paul Newman"}},
+	{
+		Title: "Bullitt", 
+		Year: 1968, 
+		Color: true,
+		Actors: []string{"Steve McQueen", "Jacqueline Bisset"}}}	
+
+data, err := json.Marshal(movies)
+if err != nil {
+    log.Fatalf("JSON marshaling failed: %s", err)
+}
+fmt.Printf("%s\n", data)
+```
+
+`json.MarshalIndent`格式化输出`JSON`。
+
+**注意，只有导出的结构体成员才会被编码**
+
+解码操作，使用`json.Unmarshal`：
+```go
+var titles []struct{ Title string }
+if err := json.Unmarshal(data, &titles); err != nil {
+    log.Fatalf("JSON unmarshaling failed: %s", err)
+}
+fmt.Println(titles) // "[{Casablanca} {Cool Hand Luke} {Bullitt}]"
+```
+通过定义合适的Go语言数据结构，我们可以选择性地解码JSON中感兴趣的成员。
+
+基于流式的解码器`json.Decoder`。针对输出流的`json.Encoder`编码对象
