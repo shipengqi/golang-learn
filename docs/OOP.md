@@ -61,3 +61,42 @@ func (P) f() { /* ... */ } // compile error: invalid receiver type
 注意两点：
 1. 不管你的`method`的`receiver`是指针类型还是非指针类型，都是可以通过指针/非指针类型进行调用的，编译器会帮你做类型转换。
 2. 在声明一个`method`的`receiver`该是指针还是非指针类型时，你需要考虑两方面的内部，第一方面是这个对象本身是不是特别大，如果声明为非指针变量时，调用会产生一次拷贝；第二方面是如果你用指针类型作为`receiver`，那么你一定要注意，这种指针类型指向的始终是一块内存地址，就算你对其进行了拷贝。
+
+### 嵌入结构体扩展类型
+```go
+import "image/color"
+
+type Point struct{ X, Y float64 }
+
+type ColoredPoint struct {
+  Point
+  Color color.RGBA
+}
+
+red := color.RGBA{255, 0, 0, 255}
+blue := color.RGBA{0, 0, 255, 255}
+var p = ColoredPoint{Point{1, 1}, red}
+var q = ColoredPoint{Point{5, 4}, blue}
+fmt.Println(p.Distance(q.Point)) // "5"
+p.ScaleBy(2)
+q.ScaleBy(2)
+fmt.Println(p.Distance(q.Point)) // "10"
+```
+
+如果对基于类来实现面向对象的语言比较熟悉的话，可能会倾向于将`Point`看作一个基类，而`ColoredPoint`看作其子类或者继承类。但这是错误的理解。请注意上面例子中对`Distance`方法的调用。`Distance`有一个参数是`Point`类型，但`q`并不是一个`Point`类，所以尽管`q`有着`Point`这个内嵌类型，我们也必须要显式地选择它。
+
+### 封装
+一个对象的变量或者方法如果对调用方是不可见的话，一般就被定义为“封装”。通过首字母大小写来定义是否从包中导出。
+封装一个对象，必须定义为一个`struct`：
+```go
+type IntSet struct {
+  words []uint64
+}
+```
+
+优点：
+- 调用方不能直接修改对象的变量值
+- 隐藏实现的细节，防止调用方依赖那些可能变化的具体实现，这样使设计包的程序员在不破坏对外的api情况下能得到更大的自由。
+- 阻止了外部调用方对对象内部的值任意地进行修改。
+
+## 接口
