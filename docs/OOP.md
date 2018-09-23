@@ -100,3 +100,60 @@ type IntSet struct {
 - 阻止了外部调用方对对象内部的值任意地进行修改。
 
 ## 接口
+
+Go 支持接口数据类型，接口类型是一种抽象的类型。接口类型具体描述了一系列方法的集合，任何其他类型只要实现了这些方法就是实现了这个接口。
+
+定义接口：
+```go
+type 接口名 interface {
+  方法名1 [返回类型]
+  方法名2 [返回类型]
+  方法名3 [返回类型]
+  ...
+}
+
+/* 定义结构体 */
+type struct_name struct {
+   /* variables */
+}
+
+/* 实现接口方法 */
+func (struct_name_variable struct_name) method_name1() [return_type] {
+   /* 方法实现 */
+}
+...
+func (struct_name_variable struct_name) method_namen() [return_type] {
+   /* 方法实现*/
+}
+```
+
+实例：
+```go
+type Phone interface {
+  call()
+}
+
+type NokiaPhone struct {
+}
+
+func (nokiaPhone NokiaPhone) call() {
+  fmt.Println("I am Nokia, I can call you!")
+}
+
+type IPhone struct {
+}
+
+func (iPhone IPhone) call() {
+  fmt.Println("I am iPhone, I can call you!")
+}
+
+func main() {
+  var phone Phone
+
+  phone = new(NokiaPhone)
+  phone.call()
+
+  phone = new(IPhone)
+  phone.call()
+}
+```

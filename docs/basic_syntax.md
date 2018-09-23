@@ -182,6 +182,22 @@ fmt.Printf("%08b\n", x&^y) // "00100000"
 ### 其他运算符
 `&`（取地址操作），`*`（指针变量）。
 
+## 类型转换
+类型转换用于将一种数据类型的变量转换为另外一种类型的变量：
+```go
+类型名(表达式)
+```
+
+实例：
+```go
+var sum int = 17
+var count int = 5
+var mean float32
+
+mean = float32(sum)/float32(count)
+fmt.Printf("mean 的值为: %f\n",mean)
+```
+
 ## 条件语句
 ### if
 ```go
