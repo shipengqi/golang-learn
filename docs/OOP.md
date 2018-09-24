@@ -157,3 +157,26 @@ func main() {
   phone.call()
 }
 ```
+
+接口类型也可以通过组合已有的接口来定义：
+```go
+type Reader interface {
+  Read(p []byte) (n int, err error)
+}
+type Closer interface {
+  Close() error
+}
+
+
+type ReadWriteCloser interface {
+  Reader
+  Writer
+  Closer
+}
+
+// 混合
+type ReadWriter interface {
+  Read(p []byte) (n int, err error)
+  Writer
+}
+```
