@@ -102,6 +102,9 @@ type IntSet struct {
 ## 接口
 
 Go 支持接口数据类型，接口类型是一种抽象的类型。接口类型具体描述了一系列方法的集合，任何其他类型只要实现了这些方法就是实现了这个接口。
+接口只有当有两个或两个以上的具体类型必须以相同的方式进行处理时才需要。
+
+接口的零值就是它的类型和值的部分都是`nil`。
 
 定义接口：
 ```go
@@ -118,11 +121,11 @@ type struct_name struct {
 }
 
 /* 实现接口方法 */
-func (struct_name_variable struct_name) method_name1() [return_type] {
+func (struct_name_variable struct_name) 方法名1() [返回类型] {
    /* 方法实现 */
 }
 ...
-func (struct_name_variable struct_name) method_namen() [return_type] {
+func (struct_name_variable struct_name) 方法名2() [返回类型] {
    /* 方法实现*/
 }
 ```
@@ -180,3 +183,28 @@ type ReadWriter interface {
   Writer
 }
 ```
+
+### 空接口类型
+`interface {}`被称为空接口类型，它没有任何方法。
+
+### error 接口
+Go 内置了错误接口。
+```go
+type error interface {
+  Error() string
+}
+```
+创建一个`error`最简单的方法就是调用`errors.New`函数。
+
+`error`包：
+```go
+package errors
+
+func New(text string) error { return &errorString{text} }
+
+type errorString struct { text string }
+
+func (e *errorString) Error() string { return e.text }
+```
+
+`fmt.Errorf`封装了`errors.New`函数，它会处理字符串格式化。
