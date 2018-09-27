@@ -176,5 +176,67 @@ func Balance() int {
 `unlock`这个锁。
 
 我们可以使用`defer`来`unlock`锁，保证在函数返回之后或者发生错误返回时一定会执行`unlock`。
-### 读写锁
-`sync.RWMutex`
+
+#### 读写锁
+如果有过个`goroutine`读取变量，那么是并发安全的，这个时候使用`sync.Mutex`加锁就没有必要。可以使用`sync.RWMutex`读写锁（多读单写锁）。
+```go
+var mu sync.RWMutex
+var balance int
+func Balance() int {
+  mu.RLock() // readers lock
+  defer mu.RUnlock()
+  return balance
+}
+```
+`RLock`只能在共享变量没有任何写入操作时可用。
+
+为什么只读操作也需要加锁？
+```go
+var x, y int
+go func() {
+  x = 1 // A1
+  fmt.Print("y:", y, " ") // A2
+}()
+go func() {
+  y = 1                   // B1
+  fmt.Print("x:", x, " ") // B2
+}()
+```
+
+上面的代码打印的结果可能是：
+```bash
+y:0 x:1
+x:0 y:1
+x:1 y:1
+y:1 x:1
+
+# 还可能是
+x:0 y:0
+y:0 x:0
+```
+
+为什么会有`x:0 y:0`这种结果，在一个`goroutine`中，语句的执行顺序可以保证，在声明的例子，可以保证执行`x = 1`后打印`y:`，但是不能保证
+打印`y:`时，另一个`goroutine`中`y = 1`是否已经执行。
+
+所以可能的话，将变量限定在`goroutine`内部；如果是多个`goroutine`都需要访问的变量，使用互斥条件来访问。
+
+
+### sync.Once 初始化
+```go
+var loadIconsOnce sync.Once
+var icons map[string]image.Image
+// Concurrency-safe.
+func Icon(name string) image.Image {
+  loadIconsOnce.Do(loadIcons)
+  return icons[name]
+}
+```
+`Do`这个唯一的方法需要接收初始化函数作为其参数。
+
+### 竞争检查器
+在`go build`，`go ru`n或者`go test`命令后面加上`-race`，就会使编译器创建一个你的应用的“修改”版。
+
+会记录下每一个读或者写共享变量的`goroutine`的身份信息。记录下所有的同步事件，比如`go`语句，`channel`操作，
+以及对`(*sync.Mutex).Lock`，`(*sync.WaitGroup).Wait`等等的调用。
+
+由于需要额外的记录，因此构建时加了竞争检测的程序跑起来会慢一些，且需要更大的内存，即使是这样，这些代价对于很多生产环境的工作来说还是可以接受的。
