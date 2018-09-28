@@ -1,4 +1,3 @@
-# 并发编程
 ## Goroutines
 `goroutine`可以简单理解为一个线程，我们程序运行的`main`函数在一个单独的`goroutine`中运行，叫做`main goroutine`。
 在代码中可以使用`go`关键字创建`goroutine`。

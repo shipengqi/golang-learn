@@ -1,7 +1,7 @@
 module.exports = {
     base: '/go-learn-demo/',
     title: 'Go 语言学习笔记',
-    description: 'Go 数据类型，函数，方法，接口，并发编程',
+    description: 'Go 数据类型，函数，方法，接口，并发编程，高级编程',
     head: [
         ['link', {
             rel: 'icon',
@@ -28,20 +28,26 @@ module.exports = {
         }, {
             text: '高级编程',
             link: '/advanced/'
-        }]
-    },
-    sidebar: {
-        '/art/': [{
-            title: 'Go 语言入门',
-            children: [
-                'intruduction',
-                'basic_data_types',
-                'basic_syntax',
-                'function',
-                'OOP',
-                'test',
-                'reflect'
-            ]
-        }]
+        }],
+        sidebar: {
+            '/go_basic/': [{
+                title: 'Go 语言入门',
+                children: [
+                    '',
+                    'basic_data_types',
+                    'basic_syntax',
+                    'function',
+                    'OOP',
+                    'test',
+                    'reflect'
+                ]
+            }],
+            '/concurrent/': [{
+                title: '并发编程',
+                children: [
+                    ''
+                ]
+            }]
+        }
     }
 }
