@@ -1,11 +1,11 @@
 module.exports = {
-    base: '/mVue/',
-    title: 'Vue深入学习',
-    description: '解析 Vue 源码，深入理解 Vue',
+    base: '/go-learn-demo/',
+    title: 'Go 语言学习笔记',
+    description: 'Go 数据类型，函数，方法，接口，并发编程',
     head: [
         ['link', {
             rel: 'icon',
-            href: '/logo.png'
+            href: 'https://upload.wikimedia.org/wikipedia/commons/2/23/Go_Logo_Aqua.svg'
         }]
     ],
     markdown: {
@@ -14,20 +14,34 @@ module.exports = {
         }
     },
     themeConfig: {
-        repo: 'shipengqi/mVue',
+        repo: 'shipengqi/go-learn-demo',
         docsDir: 'docs',
         editLinks: true,
         editLinkText: '错别字纠正',
         sidebarDepth: 3,
         nav: [{
-            text: '正文',
-            link: '/deep/',
+            text: 'Go 语言入门',
+            link: '/go_basic/',
         }, {
-            text: 'mVue',
-            link: '/mvue/'
+            text: '并发编程',
+            link: '/concurrent/'
         }, {
-            text: '部署',
-            link: '/vuepress.md'
+            text: '高级编程',
+            link: '/advanced/'
+        }]
+    },
+    sidebar: {
+        '/art/': [{
+            title: 'Go 语言入门',
+            children: [
+                'intruduction',
+                'basic_data_types',
+                'basic_syntax',
+                'function',
+                'OOP',
+                'test',
+                'reflect'
+            ]
         }]
     }
 }
