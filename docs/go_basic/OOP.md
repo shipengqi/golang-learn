@@ -5,7 +5,7 @@ GO 支持面向对象编程。
 
 方法声明：
 ```go
-func (变量名 类型) 方法() [返回类型]{
+func (变量名 类型) 方法名() [返回类型]{
    /* 函数体*/
 }
 ```
@@ -23,7 +23,7 @@ func main() {
 }
 
 // 该 method 属于 Circle 类型对象中的方法
-// 这里的 c 叫作方法的接收器
+// 这里的 c 叫作方法的接收器，类似 Javascript 的 this
 func (c Circle) getArea() float64 {
   // c.radius 即为 Circle 类型对象中的属性
   return 3.14 * c.radius * c.radius
@@ -83,7 +83,9 @@ q.ScaleBy(2)
 fmt.Println(p.Distance(q.Point)) // "10"
 ```
 
-如果对基于类来实现面向对象的语言比较熟悉的话，可能会倾向于将`Point`看作一个基类，而`ColoredPoint`看作其子类或者继承类。但这是错误的理解。请注意上面例子中对`Distance`方法的调用。`Distance`有一个参数是`Point`类型，但`q`并不是一个`Point`类，所以尽管`q`有着`Point`这个内嵌类型，我们也必须要显式地选择它。
+如果对基于类来实现面向对象的语言比较熟悉的话，可能会倾向于将`Point`看作一个基类，而`ColoredPoint`看作其子类或者继承类。
+但这是错误的理解。请注意上面例子中对`Distance`方法的调用。`Distance`有一个参数是`Point`类型，但是这里的`q`虽然貌似是继承了
+`Point`类，但`q`并不是，所以尽管`q`有着`Point`这个内嵌类型，我们也必须要显式传入`q.Point`。
 
 ### 封装
 一个对象的变量或者方法如果对调用方是不可见的话，一般就被定义为“封装”。通过首字母大小写来定义是否从包中导出。
@@ -185,7 +187,7 @@ type ReadWriter interface {
 ```
 
 ### 空接口类型
-`interface {}`被称为空接口类型，它没有任何方法。
+`interface {}`被称为空接口类型，它没有任何方法，类似 Javascrit 的`Object`。
 
 ### error 接口
 Go 内置了错误接口。

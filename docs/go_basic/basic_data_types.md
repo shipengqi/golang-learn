@@ -32,8 +32,8 @@ Go 语言的四类数据类型
 内置`complex`函数创建复数。`math/cmplx`包提供了复数处理的许多函数。
 
 #### 其他数值类型
-- `byte`，等价于`uint8`，通常用于表示一个`Unicode`码点。
-- `rune`，等价于`int32`，一般用于强调数值是一个原始的数据而不是一个小的整数。
+- `byte`，`uint8`的别名，通常用于表示一个`Unicode`码点。
+- `rune`，`int32`的别名，一般用于强调数值是一个原始的数据而不是一个小的整数。
 - `uintptr`，无符号整型，用于存放一个指针，没有指定具体的`bit`大小。
 
 ### 布尔类型
@@ -93,6 +93,8 @@ fmt.Printf("%T\n", q) // "[3]int"
 初始化数组中`{}`中的元素个数不能大于`[]`中的数字。
 如果`[]`中的`SIZE`，Go 语言会根据元素的个数来设置数组的大小。
 上面代码中的`...`省略号，表示数组的长度是根据初始化值的个数来计算。
+
+声明数组`SIZE`是必须的，如果没有，那就是切片了。
 
 #### 二维数组
 ```go
@@ -159,26 +161,26 @@ s := make([]int, len, capacity)
 
 #### 截取切片
 ```go
-   /* 创建切片 */
-   numbers := []int{0,1,2,3,4,5,6,7,8}   
+/* 创建切片 */
+numbers := []int{0,1,2,3,4,5,6,7,8}   
 
-   /* 打印子切片从索引1(包含) 到索引4(不包含)*/
-   fmt.Println("numbers[1:4] ==", numbers[1:4]) // numbers[1:4] == [1 2 3]
+/* 打印子切片从索引1(包含) 到索引4(不包含)*/
+fmt.Println("numbers[1:4] ==", numbers[1:4]) // numbers[1:4] == [1 2 3]
 
-   /* 默认下限为 0*/
-   fmt.Println("numbers[:3] ==", numbers[:3]) // numbers[:3] == [0 1 2]
+/* 默认下限为 0*/
+fmt.Println("numbers[:3] ==", numbers[:3]) // numbers[:3] == [0 1 2]
 
-   /* 默认上限为 len(s)*/
-   fmt.Println("numbers[4:] ==", numbers[4:]) // numbers[4:] == [4 5 6 7 8]
+/* 默认上限为 len(s)*/
+fmt.Println("numbers[4:] ==", numbers[4:]) // numbers[4:] == [4 5 6 7 8]
 
-   numbers1 := make([]int,0,5)
+numbers1 := make([]int,0,5)
 
-   /* 打印子切片从索引  0(包含) 到索引 2(不包含) */
-   number2 := numbers[:2]
-   fmt.Printf("len=%d cap=%d slice=%v\n",len(number2),cap(number2),number2) // len=2 cap=9 slice=[0 1]
-   /* 打印子切片从索引 2(包含) 到索引 5(不包含) */
-	 number3 := numbers[2:5]
-	 fmt.Printf("len=%d cap=%d slice=%v\n",len(number3),cap(number3),number3) // len=3 cap=7 slice=[2 3 4]
+/* 打印子切片从索引  0(包含) 到索引 2(不包含) */
+number2 := numbers[:2]
+fmt.Printf("len=%d cap=%d slice=%v\n",len(number2),cap(number2),number2) // len=2 cap=9 slice=[0 1]
+/* 打印子切片从索引 2(包含) 到索引 5(不包含) */
+number3 := numbers[2:5]
+fmt.Printf("len=%d cap=%d slice=%v\n",len(number3),cap(number3),number3) // len=3 cap=7 slice=[2 3 4]
 ```
 
 ### map
@@ -204,7 +206,8 @@ var 变量名 map[键类型]值类型
 age, ok := ages["bob"]
 if !ok { /* "bob" is not a key in this map; age == 0. */ }
 ```
-`ok`表示操作结果，是一个布尔值。
+`ok`表示操作结果，是一个布尔值。这叫做`ok-idiom`模式，就是在多返回值中返回一个`ok`布尔值，表示是否操作
+成功。
 
 #### delet()
 `delete`函数删除`map`元素。
@@ -219,7 +222,7 @@ for key, value := range mapName {
 	fmt.Println(mapName[key])
 }
 ```
-`Map`的迭代顺序是不确定的。可以先使用`sort`包排序。
+**`Map`的迭代顺序是不确定的。可以先使用`sort`包排序**。
 
 ### 结构体
 结构体是由一系列具有相同类型或不同类型的数据构成的数据集合。
