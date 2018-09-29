@@ -31,7 +31,7 @@ module.exports = {
         }],
         sidebar: {
             '/go_basic/': [{
-                title: 'Go 语言入门',
+                title: 'Go 语言入门（持续更新中...）',
                 children: [
                     '',
                     'basic_data_types',
@@ -44,6 +44,12 @@ module.exports = {
             }],
             '/concurrent/': [{
                 title: '并发编程',
+                children: [
+                    ''
+                ]
+            }],
+            '/advanced/': [{
+                title: '高级编程',
                 children: [
                     ''
                 ]

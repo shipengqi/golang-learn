@@ -253,11 +253,15 @@ select {
 ```go
 for init; condition; post { }
 
-// 相当于 C 语言的 while
-for condition { }
+// 相当于  while (x < 5) { ... }
+for x < 5 {
+  ...
+}
 
-// 相当于 C 语言的 for(;;)
-for { }
+// 相当于 while (true) { ... }
+for {
+	...
+}
 
 for key, value := range oldMap { // 第二个循环变量可以忽略，但是第一个变量要忽略可以使用空标识符 _ 代替
     newMap[key] = value

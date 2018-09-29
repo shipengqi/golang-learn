@@ -1,6 +1,6 @@
 ---
 home: true
-heroImage: https://upload.wikimedia.org/wikipedia/commons/2/23/Go_Logo_Aqua.svg
+heroImage: /logo.png
 actionText: 开始阅读 
 actionLink: /go_basic/
 features:
