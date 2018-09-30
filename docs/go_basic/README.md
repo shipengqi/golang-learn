@@ -135,8 +135,8 @@ v = m[key]                  // map查找，也可以返回一个值，失败时�
 
 不管是隐式还是显式地赋值，在赋值语句左边的变量和右边最终的求到的值必须有相同的数据类型。这就是**可赋值性**。
 
-## 类型
-创建了一个新的类型名称，一般出现在包一级，与变量一样，如果类型名字的首字母是大写，则在包外部也可以使用：
+## 自定义类型
+使用`type`自定义类型，一般出现在包一级，与变量一样，如果类型名字的首字母是大写，则在包外部也可以使用：
 ```go
 type 类型名字 底层类型
 ```
@@ -147,15 +147,18 @@ type Celsius float64    // 摄氏温度
 type Fahrenheit float64 // 华氏温度
 
 const (
-    AbsoluteZeroC Celsius = -273.15 // 绝对零度
-    FreezingC     Celsius = 0       // 结冰点温度
-    BoilingC      Celsius = 100     // 沸水温度
+	AbsoluteZeroC Celsius = -273.15 // 绝对零度
+	FreezingC     Celsius = 0       // 结冰点温度
+	BoilingC      Celsius = 100     // 沸水温度
 )
 
 func CToF(c Celsius) Fahrenheit { return Fahrenheit(c*9/5 + 32) }
 
 func FToC(f Fahrenheit) Celsius { return Celsius((f - 32) * 5 / 9) }
 ```
+
+自定义类型虽然置顶了底层类型，但是只是底层数据结构相同，不会继承底层类型的其他信息，比如（方法）。
+不能隐式转换，不能直接用于比较表达式。
 
 ## 包
 Go 语言的包与其他语言的`modules`或者`libraries`类似。Go语言有超过100个的标准包，可以使用`go list std | wc -l`查看包的数量。

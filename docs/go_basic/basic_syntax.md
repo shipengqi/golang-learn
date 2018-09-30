@@ -220,7 +220,7 @@ if 布尔表达式 {
 ```go
 switch var1 {
     case val1:
-        ...
+        ...  // 不需要显示的break，case 执行完会自动中断
     case val2:
 				...
 		case val3,val4,...:		
@@ -268,6 +268,8 @@ for key, value := range oldMap { // 第二个循环变量可以忽略，但是�
     newMap[key] = value
 }
 ```
+`for range`支持遍历数组，切片，字符串，字典，通道，并返回索引和键值。**`for range`会复制目标数据。可改用数组指针或者切片**。
+
 循环控制语句：
 - `break`，用于中断当前`for`循环或跳出`switch`语句
 - `continue`，跳过当前循，继续进行下一轮循环。
