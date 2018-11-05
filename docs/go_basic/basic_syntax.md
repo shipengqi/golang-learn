@@ -327,7 +327,55 @@ if err != nil {
 fmt.Printf("%s\n", data)
 ```
 
-`json.MarshalIndent`格式化输出`JSON`。
+`json.MarshalIndent`格式化输出`JSON`，例如：
+```go
+data, err := json.MarshalIndent(movies, "", "    ")
+if err != nil {
+    log.Fatalf("JSON marshaling failed: %s", err)
+}
+fmt.Printf("%s\n", data)
+```
+输出：
+```js
+[
+    {
+        "Title": "Casablanca",
+        "released": 1942,
+        "Actors": [
+            "Humphrey Bogart",
+            "Ingrid Bergman"
+        ]
+    },
+    {
+        "Title": "Cool Hand Luke",
+        "released": 1967,
+        "color": true,
+        "Actors": [
+            "Paul Newman"
+        ]
+    },
+    {
+        "Title": "Bullitt",
+        "released": 1968,
+        "color": true,
+        "Actors": [
+            "Steve McQueen",
+            "Jacqueline Bisset"
+        ]
+    }
+]
+```
+
+有没有注意到，`Year`字段名的成员在编码后变成了`released`，`Color`变成了小写的`color`。这是因为结构体的成员`Tag`导致的，如上面的：
+```go
+	Year   int  `json:"released"`
+	Color  bool `json:"color,omitempty"`
+```
+结构体的成员Tag可以是任意的字符串面值，但是通常是一系列用空格分隔的`key:"value"`键值对序列；因为值中含义双引号字符，
+因此成员Tag一般用原生字符串面值的形式书写。`json`开头键名对应的值用于控制`encoding/json`包的编码和解码的行为，并且`encoding/...`
+下面其它的包也遵循这个约定。成员`Tag`中`json`对应值的第一部分用于指定JSON对象的名字，比如将Go语言中的`TotalCount`成员对应到
+JSON中的`total_count`对象。`Color`成员的Tag还带了一个额外的`omitempty`选项，表示当Go语言结构体成员为空或零值时不生成JSON对象
+（这里false为零值）。果然，`Casablanca`是一个黑白电影，并没有输出`Color`成员。
 
 **注意，只有导出的结构体成员才会被编码**
 
