@@ -1,10 +1,27 @@
 # 介绍
+Go语言非常简单，只有25个关键字：
+
+- `var`和`const`声明变量和常量
+- `package`和`import`声明所属包名和导入包。
+- `func` 用于定义函数和方法
+- `return` 用于从函数返回
+- `defer` 用于类似析构函数
+- `go` 用于并发
+- `select` 用于选择不同类型的通讯
+- `interface` 用于定义接口
+- `struct` 用于定义抽象数据类型
+- `break`、`case`、`continue`、`for`、`fallthrough`、`else`、`if`、`switch`、`goto`、`default`流程控制语句
+- `chan`用于`channel`通讯
+- `type`用于声明自定义类型
+- `map`用于声明`map`类型数据
+- `range`用于读取`slice`、`map`、`channel`数据
+
 ## 命名
 所有命名只能以字母或者`_`开头，可以包含字母，数字或者`_`。区分大小写。
 关键字不能定义变量名，如`func`，`default`。
 
-注意：函数内部定义的，只能在函数内部使用（函数级），在函数外部定义的（包级），可以在当前包的所有文件中是使用。
-并且，是在函数外定义的名字，如果以大写字母开头，那么会被导出，也就是在包的外部也可以访问，所以定义名字时，要注意大小写。
+**注意：函数内部定义的，只能在函数内部使用（函数级），在函数外部定义的（包级），可以在当前包的所有文件中是使用。
+并且，是在函数外定义的名字，如果以大写字母开头，那么会被导出，也就是在包的外部也可以访问，所以定义名字时，要注意大小写。**
 
 ## 声明
 - `var`声明变量
@@ -28,7 +45,7 @@ var 变量名字 类型 = 表达式
 
 ### 声明一组变量
 ```go
-var 变量名字 变量名字 变量名字 ... 类型 = 表达式, 表达式, 表达式, ...
+var 变量名字, 变量名字, 变量名字 ... 类型 = 表达式, 表达式, 表达式, ...
 ```
 比如：
 ```go
@@ -37,10 +54,16 @@ var i, j, k int                 // int, int, int
 
 // 声明一组不同类型
 var b, f, s = true, 2.3, "four" // bool, float64, string
+
+var (
+  i int
+  pi float32
+  prefix string
+)
 ```
 
 ### 简短声明
-`:=`只能在函数内使用，不能提供数据类型，Go 会自动推断类型：
+**`:=`只能在函数内使用，不能提供数据类型**，Go 会自动推断类型：
 ```go
 变量名字 := 表达式
 ```
@@ -197,6 +220,15 @@ import (
 
 如果你的包会发布出去，那么导入路径最好是全球唯一的。为了避免冲突，所有非标准库包的导入路径建议以所在组织的互联网域名为前缀；而且这样也有利于包的检索。例如`import "github.com/go-sql-driver/mysql"`。
 
+### 点操作
+```go
+ import(
+    . "fmt"
+ )
+```
+这个点操作的含义就是这个包导入之后在你调用这个包的函数时，你可以省略前缀的包名，也就是前面你调用的`fmt.Println("hello world")`
+可以省略的写成`Println("hello world")`。
+
 #### 导入包重命名
 如果导入两个相同名字的包，如`math/rand`包和`crypto/rand`包，可以为一个包重命名来解决名字冲突：
 ```go
@@ -250,6 +282,13 @@ func f() int { return c + 1 }
 #### 使用`init`函数
 使用`init`函数来简化初始化工作，`init`函数和普通函数类似，但是不能被调用或引用。
 程序开始执行时按照它们声明的顺序自动调用。
+`init`函数不能有任何的参数和返回值，虽然一个`package`里面可以写任意多个`init`函数，但这无论是对于可读性还是以后的可维护性来说，
+我们都强烈建议用户在一个`package`中每个文件只写一个`init`函数。
+
+程序的初始化和执行都起始于`main`包。如果`main`包还导入了其它的包，那么就会在编译时将它们依次导入。有时一个包会被多个包同时导入，
+那么它只会被导入一次（例如很多包可能都会用到`fmt`包，但它只会被导入一次，因为没有必要导入多次）。当一个包被导入时，如果该包还导入了其它的包，
+那么会先将其它包导入进来，然后再对这些包中的包级常量和变量进行初始化，接着执行`init`函数（如果有的话），依次类推。等所有被导入的包都加载完毕了，就
+会开始对`main`包中的包级常量和变量进行初始化，然后执行`main`包中的`init`函数（如果存在的话），最后执行`main`函数。
 
 ## 作用域
 声明语句的作用域是指源代码中可以有效使用这个名字的范围。我觉得 Go 语言的作用域和`Javascript`很相似。
@@ -265,152 +304,3 @@ func f() int { return c + 1 }
 
 **一个程序可能包含多个同名的声明，只要它们在不同的词法域就可以。内层的词法域会屏蔽外部的声明。** 编译器遇到一个名字引用是，
 会从最内层的词法域向全局查找（和`Javascript`相似）。
-
-## 工具
-Go 语言工具箱的命令：
-```bash
-$ go
-Go is a tool for managing Go source code.
-
-Usage:
-
-        go command [arguments]
-
-The commands are:
-
-        build       compile packages and dependencies
-        clean       remove object files and cached files
-        doc         show documentation for package or symbol
-        env         print Go environment information
-        bug         start a bug report
-        fix         update packages to use new APIs
-        fmt         gofmt (reformat) package sources
-        generate    generate Go files by processing source
-        get         download and install packages and dependencies
-        install     compile and install packages and dependencies
-        list        list packages
-        run         compile and run Go program
-        test        test packages
-        tool        run specified go tool
-        version     print Go version
-        vet         report likely mistakes in packages
-
-Use "go help [command]" for more information about a command.
-
-Additional help topics:
-
-        c           calling between Go and C
-        buildmode   build modes
-        cache       build and test caching
-        filetype    file types
-        gopath      GOPATH environment variable
-        environment environment variables
-        importpath  import path syntax
-        packages    package lists
-        testflag    testing flags
-        testfunc    testing functions
-
-Use "go help [topic]" for more information about that topic.
-```
-
-### 下载包
-使用`go get`命令下载一个包。如`go get github.com/golang/lint/golint`下载了`golint`包，`src`目录下会有`github.com/golang/lint/golint`包目录。
-`bin`目录下可以看到`golint`可执行程序。
-
-**OPTIONS**
-- `-u`，保证每个包是最新版本。
-
-### 构建包
-使用`go build`命令编译命令行参数指定的每个包。
-有两种情况：
-- `main`包，go build将调用链接器在当前目录创建一个可执行程序，以导入路径的最后一段作为可执行程序的名字。
-- 如果包是一个库，则忽略输出结果；这可以用于检测包是可以正确编译的。
-
-被编译的包会被保存到`$GOPATH/pkg`目录下，目录路径和`src`目录路径对应，可执行程序被保存到`$GOPATH/bin`目录。
-
-### 运行
-`go run`命令实际上是结合了构建和运行的两个步骤。
-
-### install
-`go install`命令和`go build`命令相似，不同的是`go install`会保存每个包的编译成果。
-
-### 包文档
-#### 注释
-在代码中添加注释，用于生成文档。Go 中的文档注释一般是完整的句子，**第一行通常是摘要说明，以被注释者的名字开头。**
-注释中函数的参数或其它的标识符并不需要额外的引号或其它标记注明。例如`fmt.Fprintf`的文档注释：
-```go
-// Fprintf formats according to a format specifier and writes to w.
-// It returns the number of bytes written and any write error encountered.
-func Fprintf(w io.Writer, format string, a ...interface{}) (int, error)
-```
-
-如果注释后仅跟着包声明语句，那注释对应整个包的文档。包文档注释只能有一个。可以在任意的源文件中。
-
-但是如果包的注释较长，一般会放到一个叫做`doc.go`的源文件中。
-
-#### go doc 命令
-`go doc`打印文档。
-```bash
-# 指定包
-go doc time
-
-# 指定包成员
-go doc time.Since
-
-# 一个方法
-go doc time.Duration.Seconds
-```
-#### godoc服务
-`godoc`服务提供可以相互交叉引用的 HTML 页面，godoc的[在线服务](https://godoc.org)。包含了成千上万的开源包的检索工具。
-
-也可以在启动本地的`godoc`服务：
-```bash
-# 在工作区目录下运行
-godoc -http :8080
-```
-
-然后访问`http://localhost:8000/pkg`。
-
-### 内部包
-Go 的构建工具对包含`internal`名字的路径段的包导入路径做了特殊处理。这种包叫`internal`包。如`net/http/internal/chunked`。
-一个`internal`包只能被和`internal`目录有同一个父目录的包所导入。如：`net/http/internal/chunked`只能被`net/http`包或者`net/http`下的包导入。
-
-什么时候使用`internal`包？
-当我们并不想将内部的子包结构暴露出去。同时，我们可能还希望在内部子包之间共享一些通用的处理包时。
-
-### 查询包
-使用`go list`命令查询可用包的信息。如`go list github.com/go-sql-driver/mysql`
-
-```bash
-# 列出工作区中的所有包
-go list ...
-
-# 列出指定目录下的所有包
-go list gopl.io/ch3/...
-
-# 某个主题相关的所有包
-go list ...xml...
-
-# 获取包完整的元信息 -json 参数表示用JSON格式打印每个包的元信息
-go list -json hash
-```
-### 查看 Go 相关环境变量
-使用`go env`命令查看 Go 所有相关的环境变量。
-
-## 工作区 GOPATH 
-### GOROOT
-环境变量`GOROOT`用来指定 Go 的安装目录，Go 的标准库也在这个位置。目录结构与`GOPATH`类似，下面会介绍到。
-
-### GOPATH
-我们安装好 Go 之后，需要配置一个环境变量`GOPATH`，这个`GOPATH`路径是用来指定当前工作目录的。如果需要切换工作目录，
-就修改`GOPATH`。比如`$HOME/code/go-demo`。
-
-工作区的目录结构：
-```bash
-GOPATH/
-    src/ # 源码目录
-    bin/ # 存放编译后的可执行程序
-    pkg/ # 存放编译后的包的目标文件
-```
-
-注意`src`目录下的包的绝对路径就是`$GOPATH/src/<package path>`，如`GOPTAH/src/packages/test`，导入包时不需要加`$GOPATH/src/`，如`import "packages/test"`

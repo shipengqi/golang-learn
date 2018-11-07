@@ -289,6 +289,11 @@ LOOP: for a < 20 {
 }  
 ```
 
+## make和new
+`make`只能用于内建类型（`map`、`slice` 和`channel`）的内存分配。`new`用于各种类型的内存分配。
+`make`返回初始化后的（非零）值。
+`new`返回指针。
+
 ## JSON
 `JavaScript`对象表示法（JSON）是一种用于发送和接收结构化信息的标准协议。Go 对于其他序列化协议如`XML`，`Protocol Buffers`，都有良好的支持，
 由标准库中的`encoding/json`、`encoding/xml`、`encoding/asn1`等包提供支持，`Protocol Buffers`的由`github.com/golang/protobuf`包提供支持，
