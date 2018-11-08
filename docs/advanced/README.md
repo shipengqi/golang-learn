@@ -273,4 +273,4 @@ func upload(w http.ResponseWriter, r *http.Request) {
 用了`io.Copy`来存储文件。
 
 ### 访问数据库
-Go定义了`database/sql`接口
+Go定义了`database/sql`接口。
