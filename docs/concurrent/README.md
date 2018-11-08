@@ -123,6 +123,28 @@ select {
 
 为了避免因为发送或者接收导致的阻塞，尤其是当`channel`没有准备好写或者读时。`default`可以设置当其它的操作都不能够马上被处理时程序需要执行哪些逻辑。
 
+### 超时
+我们可以利用`select`来设置超时，避免`goroutine`阻塞的情况：
+```go
+func main() {
+	c := make(chan int)
+	o := make(chan bool)
+	go func() {
+		for {
+			select {
+				case v := <- c:
+					fmt.println(v)
+				case <- time.After(5 * time.Second):
+					fmt.println("timeout")
+					o <- true
+					break
+			}
+		}
+	}()
+	<- o
+}
+```
+
 ## 共享变量
 无论任何时候，只要有两个以上`goroutine`并发访问同一变量，且至少其中的一个是写操作的时候就会发生数据竞争。
 避免数据竞争的三种方式：

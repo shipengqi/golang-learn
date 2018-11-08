@@ -34,6 +34,7 @@ module.exports = {
                 title: 'Go 语言入门（持续更新中...）',
                 children: [
                     '',
+                    'environment',
                     'basic_data_types',
                     'basic_syntax',
                     'function',
