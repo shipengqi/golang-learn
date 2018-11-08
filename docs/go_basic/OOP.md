@@ -30,7 +30,7 @@ func (c Circle) getArea() float64 {
 }
 ```
 
-Go 没有像其它语言那样用`this`或者`self`作为接收器。**Go 可以给任意类型定义方法。**
+Go 没有像其它语言那样用`this`或者`self`作为接收器。**Go 可以给任意类型定义方法。
 
 当调用一个函数时，会对其每一个参数值进行拷贝，**如果一个函数需要更新一个变量，或者函数的其中一个参数实在太大我们希望能够避免进行这种默认的拷贝，**
 **我们可以传入变量的指针。**
@@ -107,6 +107,8 @@ Go 支持接口数据类型，接口类型是一种抽象的类型。接口类�
 接口只有当有两个或两个以上的具体类型必须以相同的方式进行处理时才需要。
 
 接口的零值就是它的类型和值的部分都是`nil`。
+
+简单的说，`interface`是一组`method`的组合，我们通过`interface`来定义对象的一组行为。
 
 定义接口：
 ```go
@@ -187,7 +189,53 @@ type ReadWriter interface {
 ```
 
 ### 空接口类型
-`interface {}`被称为空接口类型，它没有任何方法，类似 Javascrit 的`Object`。
+`interface {}`被称为空接口类型，它没有任何方法，类似 Javascrit 的`Object`。所有的类型都实现了空`interface`，
+空`interface`在我们需要存储任意类型的数值的时候相当有用，因为它可以存储任意类型的数值。
+```go
+// 定义a为空接口
+var a interface{}
+var i int = 5
+s := "Hello world"
+// a可以存储任意类型的数值
+a = i
+a = s
+```
+一个函数把`interface{}`作为参数，那么他可以接受任意类型的值作为参数，如果一个函数返回`interface{}`,那么也就可以返回任意类型的值。
+
+`interface{}`可以存储任意类型，那么怎么判断存储了什么类型？
+
+Go语言里面有一个语法，可以直接判断是否是该类型的变量： `value, ok = element.(T)`，这里`value`就是变量的值，`ok`是一个`bool`类型，`element`是`interface`变量，`T`是断言的类型。
+```go
+// comma-ok
+for index, element := range list {
+	if value, ok := element.(int); ok {
+		fmt.Printf("list[%d] is an int and its value is %d\n", index, value)
+	} else if value, ok := element.(string); ok {
+		fmt.Printf("list[%d] is a string and its value is %s\n", index, value)
+	} else if value, ok := element.(Person); ok {
+		fmt.Printf("list[%d] is a Person and its value is %s\n", index, value)
+	} else {
+		fmt.Printf("list[%d] is of a different type\n", index)
+	}
+}
+
+
+// 或者 使用 switch
+for index, element := range list{
+	switch value := element.(type) {
+		case int:
+			fmt.Printf("list[%d] is an int and its value is %d\n", index, value)
+		case string:
+			fmt.Printf("list[%d] is a string and its value is %s\n", index, value)
+		case Person:
+			fmt.Printf("list[%d] is a Person and its value is %s\n", index, value)
+		default:
+			fmt.Println("list[%d] is of a different type", index)
+	}
+}
+```
+
+**注意，`element.(type)`语法不能在`switch`外的任何逻辑里面使用，如果你要在`switch`外面判断一个类型就使用`comma-ok`**。
 
 ### error 接口
 Go 内置了错误接口。

@@ -1,5 +1,7 @@
 ## Goroutines
-`goroutine`可以简单理解为一个线程，我们程序运行的`main`函数在一个单独的`goroutine`中运行，叫做`main goroutine`。
+`goroutine`可以简单理解为一个线程，但是它比线程更小，十几个`goroutine`可能体现在底层就是五六个线程，Go语言内部帮你实现
+了这些`goroutine`之间的内存共享。执行`goroutine`只需极少的栈内存(大概是`4~5KB`)，当然会根据相应的数据伸缩。也正因为如此，
+可同时运行成千上万个并发任务。`goroutine`比`thread`更易用、更高效、更轻便。我们程序运行的`main`函数在一个单独的`goroutine`中运行，叫做`main goroutine`。
 在代码中可以使用`go`关键字创建`goroutine`。
 ```go
 go f()
@@ -37,7 +39,7 @@ x = <-ch // 取出channel的值并复制给变量x
 使用`close`函数关闭`channel`，`channel`关闭后不能再发送数据，但是可以接受已经发送成功的数据，如果`channel`中没有
 数据，那么返回一个零值。
 
-因为关闭操作只用于断言不再向`channel`发送新的数据，所以只有在发送者所在的`goroutine`才会调用`close`函数，因此对一个只接收的`channel`调用`close`将是一个编译错误。
+**因为关闭操作只用于断言不再向`channel`发送新的数据，所以只有在发送者所在的`goroutine`才会调用`close`函数**，因此对一个只接收的`channel`调用`close`将是一个编译错误。
 
 使用`range`循环可直接在`channels`上面迭代。它依次从`channel`接收数据，当`channel`被关闭并且没有值可接收时跳出循环。
 ```go
@@ -178,7 +180,7 @@ func Balance() int {
 我们可以使用`defer`来`unlock`锁，保证在函数返回之后或者发生错误返回时一定会执行`unlock`。
 
 #### 读写锁
-如果有过个`goroutine`读取变量，那么是并发安全的，这个时候使用`sync.Mutex`加锁就没有必要。可以使用`sync.RWMutex`读写锁（多读单写锁）。
+如果有多个`goroutine`读取变量，那么是并发安全的，这个时候使用`sync.Mutex`加锁就没有必要。可以使用`sync.RWMutex`读写锁（多读单写锁）。
 ```go
 var mu sync.RWMutex
 var balance int
