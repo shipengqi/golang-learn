@@ -204,6 +204,8 @@ a = s
 
 `interface{}`可以存储任意类型，那么怎么判断存储了什么类型？
 
+#### 类型断言
+
 Go语言里面有一个语法，可以直接判断是否是该类型的变量： `value, ok = element.(T)`，这里`value`就是变量的值，`ok`是一个`bool`类型，`element`是`interface`变量，`T`是断言的类型。
 ```go
 // comma-ok
