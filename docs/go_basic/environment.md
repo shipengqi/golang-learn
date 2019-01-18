@@ -60,10 +60,16 @@ func main() {
   fmt.Printf("Hello, world.  Sqrt(2) = %v\n", mymath.Sqrt(2))
 }
 ```
-注意`src`目录下的包的绝对路径就是`$GOPATH/src/<package path>`，如`GOPTAH/src/mymath`，导入包时不需要加`$GOPATH/src/`，如`import "mymath"`
+注意`src`目录下的包的绝对路径就是`$GOPATH/src/<package path>`，如`GOPTAH/src/mymath`，**导入包时不需要加`$GOPATH/src/`，如`import "mymath"`**，
 `import`里面可以引入多级目录，如果你有多个`GOPATH`，Go会自动在多个`$GOPATH/src`中寻找。
 
 目录`mathapp`下执行`go build`编译后，可以运行可执行程序`mathapp`，也可以使用`go install`编译，可以在任意目录下运行`mathapp`。
+
+命令`go build`，`go install`。构建和安装代码包的时候都会执行编译、打包等操作，并且，这些操作生成的任何文件都会先被保存到某个临时的目录中。
+
+安装操作会先执行构建，然后还会进行链接操作，并且把结果文件搬运到指定目录。进一步说，如果安装的是库源码文件，那么结果文件会被搬运到它所在工作区的 pkg 目录下的某个子目录中。
+
+如果安装的是命令源码文件，那么结果文件会被搬运到它所在工作区的 bin 目录中，或者环境变量`GOBIN`指向的目录中。
 
 ## 命令
 ## 工具

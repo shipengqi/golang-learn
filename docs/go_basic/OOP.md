@@ -260,3 +260,92 @@ func (e *errorString) Error() string { return e.text }
 ```
 
 `fmt.Errorf`封装了`errors.New`函数，它会处理字符串格式化。
+
+### 接口的实际用途
+```go
+package main
+
+import (
+    "fmt"
+)
+
+//定义interface
+type VowelsFinder interface {
+    FindVowels() []rune
+}
+
+type MyString string
+
+//实现接口
+func (ms MyString) FindVowels() []rune {
+    var vowels []rune
+    for _, rune := range ms {
+        if rune == 'a' || rune == 'e' || rune == 'i' || rune == 'o' || rune == 'u' {
+            vowels = append(vowels, rune)
+        }
+    }
+    return vowels
+}
+
+func main() {
+    name := MyString("Sam Anderson") // 类型转换
+    var v VowelsFinder // 定义一个接口类型的变量
+    v = name
+    fmt.Printf("Vowels are %c", v.FindVowels())
+
+}
+```
+
+上面的代码`fmt.Printf("Vowels are %c", v.FindVowels())`是可以直接使用`fmt.Printf("Vowels are %c", name.FindVowels())`的，
+那么我们定义的变量V没有没有了意义。看下面的代码：
+```go
+package main
+
+import (
+	"fmt"
+)
+
+// 薪资计算器接口
+type SalaryCalculator interface {
+	CalculateSalary() int
+}
+// 普通挖掘机员工
+type Contract struct {
+	empId  int
+	basicpay int
+}
+// 有蓝翔技校证的员工
+type Permanent struct {
+	empId  int
+	basicpay int
+	jj int // 奖金
+}
+
+func (p Permanent) CalculateSalary() int {
+	return p.basicpay + p.jj
+}
+
+func (c Contract) CalculateSalary() int {
+	return c.basicpay
+}
+// 总开支
+func totalExpense(s []SalaryCalculator) {
+	expense := 0
+	for _, v := range s {
+		expense = expense + v.CalculateSalary()
+	}
+	fmt.Printf("总开支 $%d", expense)
+}
+
+func main() {
+	pemp1 := Permanent{1,3000,10000}
+	pemp2 := Permanent{2, 3000, 20000}
+	cemp1 := Contract{3, 3000}
+	employees := []SalaryCalculator{pemp1, pemp2, cemp1}
+	totalExpense(employees)
+}
+```
+
+这里作为一个js开发，理解不了接口的作用，因为js是弱类型语言，go是强类型语言，像上面的数组`employees`，js可以直接塞入实现了`CalculateSalary`方法的类。因为js数组的元素没有类型限制，
+可以塞入不同的类型。但是go不可以，所以这个时候体现出了接口的作用，`Contract`和`Permanent`是不一样的结构体类型，但是可以定义一个`SalaryCalculator`接口类型的数组，
+就可以在`totalExpense`中调用元素的`CalculateSalary`方法。否则就要分别调用`pemp1.SalaryCalculator()`，`pemp2.SalaryCalculator()`，`cemp1.SalaryCalculator()`。

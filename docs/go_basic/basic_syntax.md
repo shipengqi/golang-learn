@@ -199,6 +199,9 @@ mean = float32(sum)/float32(count)
 fmt.Printf("mean 的值为: %f\n",mean)
 ```
 
+对于整数类型值、整数常量之间的类型转换，原则上只要源值在目标类型的可表示范围内就是合法的。比如，uint8(255)可以把无类型的常量255转换为uint8类型的值，是因为255在 [0, 255] 的范围内。
+
+
 ## 条件语句
 ### if
 ```go
@@ -305,6 +308,7 @@ type Movie struct {
 	Title  string
 	Year   int  `json:"released"`
 	Color  bool `json:"color,omitempty"`
+	Actors []string
 	Actors []string
 }
 
