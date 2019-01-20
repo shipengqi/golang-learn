@@ -237,3 +237,32 @@ func soleTitle(doc *html.Node) (title string, err error) {
 
 上面的代码，`deferred`函数调用`recover`，并检查`panic value`。当`panic value`是`bailout{}`类型时，`deferred`函数生成一个`error`返回给调用者。
 当`panic value`是其他`non-nil`值时，表示发生了未知的`pani`c异常。
+
+#### 传入函数的那些参数值后来怎么样了
+```go
+package main
+
+import "fmt"
+
+func main() {
+	array1 := [3]string{"a", "b", "c"}
+	fmt.Printf("The array: %v\n", array1)
+	array2 := modifyArray(array1)
+	fmt.Printf("The modified array: %v\n", array2)
+	fmt.Printf("The original array: %v\n", array1)
+}
+
+func modifyArray(a [3]string) [3]string {
+	a[1] = "x"
+	return a
+}
+```
+在`main`函数中声明了一个数组`array1`，然后把它传给了函数`modify`，`modify`对参数值稍作修改后将其作为结果值返回。`main`函数中的代码拿到这个结果之后打印了它（即`array2`），以及原来的数组`array1`。关键问题是，原数组会因`modify`函数对参数值的修改而改变吗？
+
+答案是：原数组不会改变。为什么呢？原因是，**所有传给函数的参数值都会被复制，函数在其内部使用的并不是参数值的原值，而是它的副本**。
+
+由于数组是值类型，所以每一次复制都会拷贝它，以及它的所有元素值。
+
+注意，**对于引用类型，比如：切片、字典、通道，像上面那样复制它们的值，只会拷贝它们本身而已，并不会拷贝它们引用的底层数据。也就是说，这时只是浅表复制，而不是深层复制**。
+
+以切片值为例，如此复制的时候，只是拷贝了它指向底层数组中某一个元素的指针，以及它的长度值和容量值，而它的底层数组并不会被拷贝。

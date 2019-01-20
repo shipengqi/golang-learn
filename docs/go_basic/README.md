@@ -248,7 +248,7 @@ func main(){
 ```
 
 ##### `slice`
-`slice`实际上相当于对其依附的`array`的引用，它不存储数据，只是对`array`进行描述。因此，修改`slice`中的元素，改变会体现在`array`上，当然也会体现在该`array`的所有`slice`上。
+**`slice`实际上相当于对其依附的`array`的引用，它不存储数据，只是对`array`进行描述**。因此，修改`slice`中的元素，改变会体现在`array`上，当然也会体现在该`array`的所有`slice`上。
 
 ##### map
 
