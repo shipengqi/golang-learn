@@ -19,18 +19,18 @@ func TestNonPalindrome(t *testing.T) {
 
 func TestFrenchPalindrome(t *testing.T) {
 	if !IsPalindrome("été") {
-			t.Error(`IsPalindrome("été") = false`)
+		t.Error(`IsPalindrome("été") = false`)
 	}
 }
 
 func TestCanalPalindrome(t *testing.T) {
 	input := "A man, a plan, a canal: Panama"
 	if !IsPalindrome(input) {
-			t.Errorf(`IsPalindrome(%q) = false`, input)
+		t.Errorf(`IsPalindrome(%q) = false`, input)
 	}
 }
 func BenchmarkIsPalindrome(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-			IsPalindrome("A man, a plan, a canal: Panama")
+		IsPalindrome("A man, a plan, a canal: Panama")
 	}
 }
