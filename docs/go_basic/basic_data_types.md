@@ -483,6 +483,41 @@ x := 100
 (func()int)(f) // 有返回值的函数其实可以不加括号，但是加括号的话，语义清晰
 ```
 
+## 类型断言
+
+Go语言里面有一个语法，可以直接判断是否是该类型的变量： `value, ok = element.(T)`，这里`value`就是变量的值，`ok`是一个`bool`类型，`element`是`interface`变量，`T`是断言的类型。
+```go
+// comma-ok
+for index, element := range list {
+	if value, ok := element.(int); ok {
+		fmt.Printf("list[%d] is an int and its value is %d\n", index, value)
+	} else if value, ok := element.(string); ok {
+		fmt.Printf("list[%d] is a string and its value is %s\n", index, value)
+	} else if value, ok := element.(Person); ok {
+		fmt.Printf("list[%d] is a Person and its value is %s\n", index, value)
+	} else {
+		fmt.Printf("list[%d] is of a different type\n", index)
+	}
+}
+
+
+// 或者 使用 switch
+for index, element := range list{
+	switch value := element.(type) {
+		case int:
+			fmt.Printf("list[%d] is an int and its value is %d\n", index, value)
+		case string:
+			fmt.Printf("list[%d] is a string and its value is %s\n", index, value)
+		case Person:
+			fmt.Printf("list[%d] is a Person and its value is %s\n", index, value)
+		default:
+			fmt.Println("list[%d] is of a different type", index)
+	}
+}
+```
+
+**注意，`element.(type)`语法不能在`switch`外的任何逻辑里面使用，如果你要在`switch`外面判断一个类型就使用`comma-ok`**。
+
 ## 零值
 “零值”，所指并非是空值，而是一种“变量未填充前”的默认值，通常为`0`：
 ```
