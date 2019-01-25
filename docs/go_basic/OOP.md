@@ -303,7 +303,10 @@ type errorString struct { text string }
 func (e *errorString) Error() string { return e.text }
 ```
 
-`fmt.Errorf`封装了`errors.New`函数，它会处理字符串格式化。
+`fmt.Errorf`封装了`errors.New`函数，它会处理字符串格式化。**当我们想通过模板化的方式生成错误信息，并得到错误值时，可以使用`fmt.Errorf`函数。
+该函数所做的其实就是先调用`fmt.Sprintf`函数，得到确切的错误信息；再调用`errors.New`函数，得到包含该错误信息的`error`类型值，最后返回该值**。
+
+实际上，`error`类型值的`Error`方法就相当于其他类型值的`String`方法。
 
 ### 接口的实际用途
 ```go

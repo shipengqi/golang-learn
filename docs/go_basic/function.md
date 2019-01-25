@@ -33,9 +33,11 @@ func swap(x int, y string) (string, int) {
 func Size(rect image.Rectangle) (width, height int, err error)
 ```
 
-在函数体中，函数的形参作为局部变量，被初始化为调用者提供的值（函数调用必须按照声明顺序为所有参数提供实参）。函数的形参和有名返回值（也就是对返回值命名）作为函数最外层的局部变量，被存储在相同的词法块中。
+在函数体中，函数的形参作为局部变量，被初始化为调用者提供的值（函数调用必须按照声明顺序为所有参数提供实参）。函数的形参和有名返回值（也就是对返回值命名）作为函数最外层的局部变量，
+被存储在相同的词法块中。
 
-**Go 语言使用的是值传递，当我们传一个参数值到被调用函数里面时，实际上是传了这个值的一份copy，当在被调用函数中修改参数值的时候，调用函数中相应实参不会发生任何变化，因为数值变化只作用在copy上。但是如果是引用传递，在调用函数时将实际参数的地址传递到函数中，那么在函数中对参数所进行的修改，将影响到实际参数。**
+**Go 语言使用的是值传递，当我们传一个参数值到被调用函数里面时，实际上是传了这个值的一份copy，当在被调用函数中修改参数值的时候，调用函数中相应实参不会发生任何变化，
+因为数值变化只作用在copy上。但是如果是引用传递，在调用函数时将实际参数的地址传递到函数中，那么在函数中对参数所进行的修改，将影响到实际参数。**
 
 注意，如果实参是`slice`、`map`、`function`、`channel`等类型，实参可能会由于函数的间接引用被修改。
 
@@ -56,11 +58,27 @@ func main(){
 }
 ```
 
+### 函数作为参数
+声明一个名叫operate的函数类型，它有两个参数和一个结果，都是int类型的。
+```go
+type operate func(x, y int) int
+```
+
+编写calculate函数的签名部分。这个函数除了需要两个int类型的参数之外，还应该有一个operate类型的参数。
+```go
+func calculate(x int, y int, op operate) (int, error) {
+    if op == nil {
+        return 0, errors.New("invalid operation")
+    }
+    return op(x, y), nil
+}
+```
+
 ### 闭包
 Go 语言支持匿名函数，可作为闭包。
 ```go
 // 返回一个函数
-func getSequence() func() int {
+func getSequence() func() int { // func() 是没有参数也没有返回值的函数类型
 	 i:=0
 	 // 闭包
    return func() int {
@@ -125,7 +143,7 @@ for {
 
 在参数列表的最后一个参数类型之前加上省略符号`...`，表示该函数会接收任意数量的该类型参数。
 ```go
-func sum(vals...int) int {
+func sum(vals ...int) int {
 	total := 0
 	for _, val := range vals {
 			total += val
@@ -204,6 +222,15 @@ func triple(x int) (result int) {
 fmt.Println(triple(4)) // "12"
 ```
 
+#### 如果一个函数中有多条defer语句，那么那几个defer函数调用的执行顺序是怎样的
+在同一个函数中，defer函数调用的执行顺序与它们分别所属的defer语句的出现顺序（更严谨地说，是执行顺序）完全相反。
+
+在defer语句每次执行的时候，Go 语言会把它携带的defer函数及其参数值另行存储到一个队列中。
+
+这个队列与该defer语句所属的函数是对应的，并且，它是先进后出（FILO）的，相当于一个栈。
+
+在需要执行某个函数中的defer函数调用的时候，Go 语言会先拿到对应的队列，然后从该队列中一个一个地取出defer函数及其参数值，并逐个执行调用。
+
 ### Panic 异常
 Go 运行时错误会引起`painc`异常。
 一般而言，当`panic`异常发生时，程序会中断运行，并立即执行在该`goroutine`中被延迟的函数（defer 机制）。随后，程序崩溃并输出日志信息。
@@ -213,6 +240,43 @@ Go 运行时错误会引起`painc`异常。
 
 #### panic 函数
 `panic`函数接受任何值作为参数。当某些不应该发生的场景发生时，我们就应该调用`panic`。
+
+#### panic 详情中都有什么
+```bash
+panic: runtime error: index out of range
+
+goroutine 1 [running]:
+main.main()
+/Users/haolin/GeekTime/Golang_Puzzlers/src/puzzlers/article19/q0/demo47.go:5 +0x3d
+exit status 2
+```
+第一行是`panic: runtime error: index out of range`。其中的`runtime error`的含义是，这是一个`runtime`代码包中抛出的`panic`。
+
+`goroutine 1 [running]`，它表示有一个 ID 为1的 goroutine 在此 panic 被引发的时候正在运行。这里的 ID 其实并不重要。
+
+`main.main()`表明了这个 goroutine 包装的go函数就是命令源码文件中的那个`main`函数，也就是说这里的 goroutine 正是**主 goroutine**。
+
+再下面的一行，指出的就是这个 goroutine 中的哪一行代码在此 panic 被引发时正在执行。含了此行代码在其所属的源码文件中的行数，以及这个源码文件的绝对路径。
+
+`+0x3d`代表的是：此行代码相对于其所属函数的入口程序计数偏移量。用处并不大。
+
+`exit status 2`表明我的这个程序是以退出状态码2结束运行的。**在大多数操作系统中，只要退出状态码不是0，都意味着程序运行的非正常结束。**在 Go 语言中，
+**因 panic 导致程序结束运行的退出状态码一般都会是2**。
+
+
+#### 从 panic 被引发到程序终止运行的大致过程是什么
+
+此行代码所属函数的执行随即终止。紧接着，控制权并不会在此有片刻停留，它又会立即转移至再上一级的调用代码处。控制权如此一级一级地沿着调用栈的反方向传播至顶端，
+也就是我们编写的最外层函数那里。
+
+这里的最外层函数指的是go函数，对于主 goroutine 来说就是main函数。但是控制权也不会停留在那里，而是被 Go 语言运行时系统收回。
+
+随后，程序崩溃并终止运行，承载程序这次运行的进程也会随之死亡并消失。与此同时，在这个控制权传播的过程中，panic 详情会被逐渐地积累和完善，并会在程序终止之前被打印出来。
+
+#### 怎样让 panic 包含一个值，以及应该让它包含什么样的值
+其实很简单，在调用panic函数时，把某个值作为参数传给该函数就可以了。`panic`函数的唯一一个参数是空接口（也就是`interface{}`）类型的，所以从语法上讲，它可以接受任何类型的值。
+
+但是，我们**最好传入`error`类型的错误值，或者其他的可以被有效序列化的值。这里的“有效序列化”指的是，可以更易读地去表示形式转换**。
 
 ### Recover 捕获异常
 一般情况下，我们不能因为某个处理函数引发的`panic`异常，杀掉整个进程，可以使用`recover`函数恢复`panic`异常。
@@ -224,11 +288,11 @@ func soleTitle(doc *html.Node) (title string, err error) {
 	type bailout struct{}
 	defer func() {
 		switch p := recover(); p {
-		case nil:       // no panic
-		case bailout{}: // "expected" panic
-			err = fmt.Errorf("multiple title elements")
-		default:
-			panic(p) // unexpected panic; carry on panicking
+            case nil:       // no panic
+            case bailout{}: // "expected" panic
+                err = fmt.Errorf("multiple title elements")
+            default:
+                panic(p) // unexpected panic; carry on panicking
 		}
 	}()
   ...
@@ -238,7 +302,37 @@ func soleTitle(doc *html.Node) (title string, err error) {
 上面的代码，`deferred`函数调用`recover`，并检查`panic value`。当`panic value`是`bailout{}`类型时，`deferred`函数生成一个`error`返回给调用者。
 当`panic value`是其他`non-nil`值时，表示发生了未知的`pani`c异常。
 
-#### 传入函数的那些参数值后来怎么样了
+#### 正确调用 recover 函数
+```go
+package main
+
+import (
+    "fmt"
+    "errors"
+)
+
+func main() {
+    fmt.Println("Enter function main.")
+    // 引发 panic。
+    panic(errors.New("something wrong"))
+    p := recover()
+    fmt.Printf("panic: %s\n", p)
+    fmt.Println("Exit function main.")
+}
+```
+上面的代码，`recover`函数调用并不会起到任何作用，甚至都没有机会执行。因为panic 一旦发生，控制权就会讯速地沿着调用栈的反方向传播。所以，在panic函数调用之后的代码，
+根本就没有执行的机会。
+
+先调用recover函数，再调用panic函数会怎么样呢？
+如果在我们调用recover函数时未发生 panic，那么该函数就不会做任何事情，并且只会返回一个`nil`。
+
+`defer`语句调用recover函数才是正确的打开方式。
+
+无论函数结束执行的原因是什么，其中的defer函数调用都会在它即将结束执行的那一刻执行。即使导致它执行结束的原因是一个 panic 也会是这样。
+
+要注意，我们要**尽量把defer语句写在函数体的开始处，因为在引发 panic 的语句之后的所有语句，都不会有任何执行机会**。
+
+### 传入函数的那些参数值后来怎么样了
 ```go
 package main
 
