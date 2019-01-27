@@ -1,6 +1,5 @@
-# 高级编程
-## WEB 编程
-### 搭建一个web
+# WEB 编程
+## 搭建一个web
 ```go
 package main
 
@@ -72,7 +71,7 @@ func (srv *Server) Serve(l net.Listener) error {
 
 `srv.Serve(net.Listener)`函数，这个函数就是处理接收客户端的请求信息。这个函数里面起了一个`for{}`，首先通过`Listener`接收请求，其次创建一个`Conn`，最后单独开了一个`goroutin`e，把这个请求的数据当做参数扔给这个`conn`去服务：`go c.serve()`。这个就是高并发体现了，用户的每一次请求都是在一个新的`goroutine`去服务，相互不影响。
 
-#### http包
+### http包
 Go的`http`有两个核心功能：`Conn`、`ServeMux`。
 
 Go为了实现高并发和高性能, 使用了`goroutines`来处理`Conn`的读写事件, 这样每个请求都能保持独立，相互不会阻塞，可以高效的响应网络事件。
@@ -151,7 +150,7 @@ func (mux *ServeMux) handler(host, path string) (h Handler, pattern string) {
 根据用户请求的URL和路由器里面存储的`map`去匹配的，当匹配到之后返回存储的`handler`，调用这个`handler`的`ServeHTT`P接口就可以执
 行到相应的函数了。
 
-#### 自己实现一个简易的路由器
+### 自己实现一个简易的路由器
 Go其实支持外部实现的路由器，`ListenAndServe`的第二个参数就是用以配置外部路由器的，它是一个`Handler`接口，即外部路由器只要实
 现了`Handler`接口就可以,我们可以在自己实现的路由器的`ServeHTTP`里面实现自定义路由功能。
 ```go
@@ -184,7 +183,7 @@ func main() {
 }
 ```
 
-### 表单
+## 表单
 ```go
 func sayhelloName(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()       //解析url传递的参数，对于POST则解析响应包的主体（request body）
@@ -216,7 +215,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 `r.Form`里面包含了所有请求的参数，比如URL中`query-string`、`POST`的数据、`PUT`的数据，所有当你在URL的`query-string`字段和`POST`冲突时，
 会保存成一个`slice`，里面存储了多个值，Go官方文档中说在接下来的版本里面将会把`POST`、`GET`这些数据分离开来。
 
-#### 预防跨站脚本
+### 预防跨站脚本
 对`XSS`最佳的防护应该结合以下两种方法：
 - 验证所有输入数据，有效检测攻击
 - 对所有输出数据进行适当的处理，以防止任何已成功注入的脚本在浏览器端运行。
@@ -233,7 +232,7 @@ fmt.Println("password:", template.HTMLEscapeString(r.Form.Get("password")))
 template.HTMLEscape(w, []byte(r.Form.Get("username"))) //输出到客户端
 ```
 
-#### 文件上传
+### 文件上传
 ```go
 http.HandleFunc("/upload", upload)
 
@@ -272,5 +271,5 @@ func upload(w http.ResponseWriter, r *http.Request) {
 内存里面，如果文件大小超过了`maxMemory`，那么剩下的部分将存储在系统的临时文件中。我们可以通过`r.FormFile`获取上面的文件句柄，然后实例中使
 用了`io.Copy`来存储文件。
 
-### 访问数据库
+## 访问数据库
 Go定义了`database/sql`接口。
