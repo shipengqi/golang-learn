@@ -988,4 +988,208 @@ Go scheduler的任务：**将goroutines按照一定算法放到不同的操作�
 
 ![](../images/goroutine-scheduler-model.png)
 
-## 内存管理
+### 抢占式调度
+Go并没有时间片的概念。如果某个G没有进行system call调用、没有进行I/O操作、没有阻塞在一个channel操作上，那么M是**如何让G停下来并调度下一个runnable G**的呢？
+答案是：G是被抢占调度的。
+
+Go在设计之初并没考虑将goroutine设计成抢占式的。用户负责让各个goroutine交互合作完成任务。一个goroutine只有在涉及到加锁，读写通道或者主动让出CPU等操作时才会触发切换。
+
+垃圾回收器是需要stop the world的。如果垃圾回收器想要运行了，那么它必须先通知其它的goroutine合作停下来，这会造成较长时间的等待时间。考虑一种很极端的情况，所有
+的goroutine都停下来了，只有其中一个没有停，那么垃圾回收就会一直等待着没有停的那一个。
+
+抢占式调度可以解决这种问题，在抢占式情况下，如果一个goroutine运行时间过长，它就会被剥夺运行权。Go还只是引入了一些很初级的抢占，只有长时间阻塞于系统调用，或者运行了
+较长时间才会被抢占。runtime会在后台有一个检测线程，它会检测这些情况，并通知goroutine执行调度。
+
+Go程序的初始化过程中，runtime开了一条后台线程，运行一个sysmon函数(一般称为监控线程)。这个函数会周期性地做epoll操作，同时它还会检测每个P是否运行了较长时间。
+该 M 无需绑定 P 即可运行，该 M 在整个Go程序的运行过程中至关重要。
+
+sysmon每20us~10ms运行一次，sysmon主要完成如下工作：
+- 释放闲置超过5分钟的span物理内存；
+- 如果超过2分钟没有垃圾回收，强制执行；
+- 将长时间未处理的netpoll结果添加到任务队列；
+- 向长时间运行的G任务发出抢占调度；
+- 收回因syscall长时间阻塞的P；
+
+### channel阻塞或network I/O情况下的调度
+如果G被阻塞在某个channel操作或network I/O操作上时，G会被放置到某个wait队列中，而M会尝试运行下一个runnable的G；如果此时没有runnable的G供M运行，那么M将解绑P，
+并进入sleep状态。当I/O available或channel操作完成，在wait队列中的G会被唤醒，标记为runnable，放入到某P的队列中，绑定一个M继续执行。
+
+### system call阻塞情况下的调度
+如果G被阻塞在某个system call操作上，那么不光G会阻塞，执行该G的M也会解绑P(实质是被sysmon抢走了)，与G一起进入sleep状态。如果此时有idle的M，则P与其绑定继续执行其他G；
+如果没有idle M，但仍然有其他G要去执行，那么就会创建一个新M。
+
+当阻塞在syscall上的G完成syscall调用后，G会去尝试获取一个可用的P，如果没有可用的P，那么G会被标记为runnable，之前的那个sleep的M将再次进入sleep。
+
+# 内存管理
+## tcmalloc
+Golang 的内存管理基于 tcmalloc，什么是 tcmalloc。
+
+tcmalloc是google推出的一种内存分配器，常见的内存分配器还有glibc的ptmalloc和google的jemalloc。相比于ptmalloc，tcmalloc性能更好，特别适用于高并发场景。
+
+### tcmalloc策略
+tcmalloc分配的内存主要来自两个地方：全局缓存堆和进程的私有缓存。对于一些小容量的内存申请使用进程的私有缓存，私有缓存不足的时候可以再从全局缓存申请一部分作为私有缓存。
+对于大容量的内存申请则需要从全局缓存中进行申请。而**大小容量的边界就是32k**。缓存的组织方式是一个单链表数组，数组的每个元素是一个单链表，链表中的每个元素具有相同的大小。
+
+### 逃逸分析（escape analysis）
+对于手动管理内存的语言，比如 C/C++，我们使用`malloc`或者`new`申请的变量会被分配到堆上。但是 Golang 并不是这样，虽然 Golang 语言里面也有`new`。
+Golang 编译器决定变量应该分配到什么地方时会进行逃逸分析：
+```go
+package main
+
+func foo() *int {
+	var x int
+	return &x
+}
+
+func bar() int {
+	x := new(int)
+	*x = 1
+	return *x
+}
+
+func main() {}
+```
+将上面文件保存为`escape.go`，执行下面命令：
+```bash
+# command-line-arguments
+src\escape.go:5:9: &x escapes to heap
+src\escape.go:4:6: moved to heap: x
+src\escape.go:9:10: bar new(int) does not escape
+```
+`foo()`中的`x`最后在堆上分配，而`bar()`中的`x`最后分配在了栈上。
+在官网 (golang.org) FAQ 上有一个关于变量分配的问题如下：
+**如何得知变量是分配在栈（stack）上还是堆（heap）上**？
+> 准确地说，你并不需要知道。Golang 中的变量只要被引用就一直会存活，**存储在堆上还是栈上由内部实现决定而和具体的语法没有关系**。
+>
+> 知道变量的存储位置确实和效率编程有关系。如果可能，Golang 编译器会将函数的局部变量分配到函数栈帧（stack frame）上。然而，**如果编译器不能确保变量在函数`return`之后不再被引用，
+> 编译器就会将变量分配到堆上。而且，如果一个局部变量非常大，那么它也应该被分配到堆上而不是栈上**。
+>
+> 当前情况下，**如果一个变量被取地址，那么它就有可能被分配到堆上**。然而，还要对这些变量做逃逸分析，**如果函数`return`之后，变量不再被引用，则将其分配到栈上**。
+
+### 关键数据结构
+- mcache: per-P cache，可以认为是 local cache。
+- mcentral: 全局 cache，mcache 不够用的时候向 mcentral 申请。
+- mheap: 当 mcentral 也不够用的时候，通过 mheap 向操作系统申请。
+
+多级内存分配器。
+
+#### mcache
+每个 Gorontine 的运行都是绑定到一个 P 上面的，**mcache 是每个 P 的 cache**。这么做的好处是**分配内存时不需要加锁**。mcache 结构如下。
+
+#### mcentral
+到当 mcache 不够用的时候，会从 mcentral 申请。
+
+虽然在上面我们将 mcentral 和 mheap 作为两个部分来讲，但是作为全局的结构，这两部分是可以定义在一起的。实际上也是这样，mcentral 包含在 mheap 中。
+
+#### 内存分配
+给对象 object 分配内存的主要流程：
+
+1. object size > 32K，则使用 mheap 直接分配。
+2. object size < 16 byte，使用 mcache 的小对象分配器 tiny 直接分配。 （其实 tiny 就是一个指针，暂且这么说吧。）
+3. object size > 16 byte && size <= 32K byte 时，先使用 mcache 中对应的 size class 分配。
+4. 如果 mcache 对应的 size class 的 span 已经没有可用的块，则向 mcentral 请求。
+5. 如果 mcentral 也没有可用的块，则向 mheap 申请，并切分。
+6. 如果 mheap 也没有合适的 span，则向操作系统申请。
+
+## 垃圾回收
+Go语言中使用的垃圾回收使用的是**标记清扫算法**。标记清理最典型的做法是三⾊标记。进行垃圾回收时会stop the world。
+
+三色标记算法原理如下：
+1. 起初所有对象都是白色。
+2. 从根出发扫描所有可达对象，标记为灰色，放入待处理队列。
+3. 从队列取出灰色对象，将其引用对象标记为灰色放入队列，自身标记为黑色。
+4. 重复 3，直到灰色对象队列为空。此时白色对象即为垃圾，进行回收。
+
+### 何时触发 GC
+#### 自动垃圾回收
+在堆上分配大于 32K byte 对象的时候进行检测此时是否满足垃圾回收条件，如果满足则进行垃圾回收。
+```go
+func mallocgc(size uintptr, typ *_type, needzero bool) unsafe.Pointer {
+    ...
+    shouldhelpgc := false
+    // 分配的对象小于 32K byte
+    if size <= maxSmallSize {
+        ...
+    } else {
+        shouldhelpgc = true
+        ...
+    }
+    ...
+    // gcShouldStart() 函数进行触发条件检测
+    if shouldhelpgc && gcShouldStart(false) {
+        // gcStart() 函数进行垃圾回收
+        gcStart(gcBackgroundMode, false)
+    }
+}
+```
+
+#### 主动垃圾回收
+主动垃圾回收，通过调用 runtime.GC()，这是阻塞式的。
+```go
+// GC runs a garbage collection and blocks the caller until the
+// garbage collection is complete. It may also block the entire
+// program.
+func GC() {
+    gcStart(gcForceBlockMode, false)
+}
+```
+
+### GC 触发条件
+触发条件主要关注下面代码中的中间部分：`forceTrigger || memstats.heap_live >= memstats.gc_trigger`。
+`forceTrigger`是 forceGC 的标志；后面半句的意思是当前堆上的活跃对象大于我们初始化时候设置的 GC 触发阈值。在 malloc 以及 free 的时候 heap_live 会一直进行更新。
+```go
+// gcShouldStart returns true if the exit condition for the _GCoff
+// phase has been met. The exit condition should be tested when
+// allocating.
+//
+// If forceTrigger is true, it ignores the current heap size, but
+// checks all other conditions. In general this should be false.
+func gcShouldStart(forceTrigger bool) bool {
+    return gcphase == _GCoff && (forceTrigger || memstats.heap_live >= memstats.gc_trigger) && memstats.enablegc && panicking == 0 && gcpercent >= 0
+}
+
+//初始化的时候设置 GC 的触发阈值
+func gcinit() {
+    _ = setGCPercent(readgogc())
+    memstats.gc_trigger = heapminimum
+    ...
+}
+// 启动的时候通过 GOGC 传递百分比 x
+// 触发阈值等于 x * defaultHeapMinimum (defaultHeapMinimum 默认是 4M)
+func readgogc() int32 {
+    p := gogetenv("GOGC")
+    if p == "off" {
+        return -1
+    }
+    if n, ok := atoi32(p); ok {
+        return n
+    }
+    return 100
+}
+```
+
+### golang垃圾回收使用的标记清理
+#### STW(stop the world）
+在扫描之前执⾏ STW（Stop The World）操作，就是**Runtime把所有的线程全部冻结掉，所有的线程全部冻结掉意味着⽤户逻辑肯定都是暂停的，所有的⽤户对象都不会被修改了**，
+这时候去扫描肯定是安全的，对象要么活着要么死着，所以会造成在 STW 操作时所有的线程全部暂停，⽤户逻辑全部停掉，中间暂停时间可能会很⻓，⽤户逻辑对于⽤户的反应就中⽌了。
+
+如何减短这个过程呢， STW过程中有两部分逻辑可以分开处理。我们看⿊⽩对象，扫描完结束以后对象只有⿊⽩对象，⿊⾊对象是接下来程序恢复之后需要使⽤的对象，如果不碰⿊⾊对象只回
+收⽩⾊对象的话肯定不会给⽤户逻辑产⽣关联，因为⽩⾊对象肯定不会被⽤户线程引⽤的，所以回收操作实际上可以和⽤户逻辑并发的，因为可以保证回收的所有目标都不会被⽤户线程使⽤，
+所以第⼀步回收操作和⽤户逻辑可以并发，因为我们回收的是⽩⾊对象，扫描完以后⽩⾊对象不会被全局变量引⽤、线程栈引⽤。回收⽩⾊对象肯定不会对⽤户线程产⽣竞争，⾸先**回收操作
+肯定可以并发的，既然可以和⽤户逻辑并发，这样回收操作不放在 STW时间段⾥⾯缩短 STW 时间**。
+
+#### 写屏障 (write barrier)
+**该屏障之前的写操作和之后的写操作相比，先被系统其它组件感知**。
+
+刚把⼀个对象标记为⽩⾊的，⽤户逻辑执⾏了突然引⽤了它，或者说刚刚扫描了 100 个对象正准备回收结果⼜创建了1000个对象在⾥⾯，因为没法结束没办法扫描状态不稳定，像扫描操作就⽐较⿇烦。
+于是引⼊了写屏障的技术。
+
+先做⼀次很短暂的STW，为什么需要很短暂的呢，它⾸先要执⾏⼀些简单的状态处理，接下来对内存进⾏扫描，这个时候⽤户逻辑也可以执⾏。⽤户所有新建的对象认为就是⿊⾊的，这次不扫描了下次再说，
+新建对象不关⼼了，剩下来处理已经扫描过的对象是不是可能会出问题，已经扫描后的对象可能因为⽤户逻辑造成对象状态发⽣改变，所以**对扫描过后的对象使⽤操作系统写屏障功能⽤来监控⽤户
+逻辑这段内存。任何时候这段内存发⽣引⽤改变的时候就会造成写屏障发⽣⼀个信号，垃圾回收器会捕获到这样的信号后就知道这个对象发⽣改变，然后重新扫描这个对象，看看它的引⽤或者被
+引⽤是否被改变，这样利⽤状态的重置从⽽实现当对象状态发⽣改变的时候依然可以判断它是活着的还是死的**，这样扫描操作实际上可以做到⼀定程度上的并发，因为它没有办法完全屏蔽STW起
+码它当开始启动先拿到⼀个状态，但是它的确可以把扫描时间缩短，现在知道了扫描操作和回收操作都可以⽤户并发。
+
+#### golang回收的本质
+实际上把单次暂停时间分散掉了，本来程序执⾏可能是“⽤户逻辑、⼤段GC、⽤户逻辑”，那么分散以后实际上变成了“⽤户逻辑、⼩段 GC、⽤户逻辑、⼩段GC、⽤户逻辑”这样。其实这个很难说 GC 快了。
+因为被分散各个地⽅以后可能会频繁的保存⽤户状态，因为垃圾回收之前要保证⽤户状态是稳定的，原来只需要保存⼀次就可以了现在需要保存多次。
