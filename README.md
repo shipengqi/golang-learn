@@ -7,7 +7,7 @@
 # install dependencies
 yarn
 
-# start dev server, access http://localhost:8082/golang-learn
+# start dev server, access http://localhost:8083/golang-learn
 yarn start
 
 # deploy

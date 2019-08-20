@@ -24,8 +24,11 @@ $ git clone git@github.com:zalando-incubator/hexo-theme-doc-seed.git
 $ yarn
 ```
 
-4. 修改 `package.json`，直接运行 `hexo server` 或者 `hexo s` 可能会找不到命令。
+4. 修改 `package.json`，否则 `hexo server` 或者 `hexo s` 可能会找不到命令。
 ```js
+  "hexo": {
+    "version": "3.9.0"
+  },
   "scripts": {
     "start": "hexo s -p 8082"
   },
@@ -51,6 +54,9 @@ deploy:
 ```sh
 $ yarn start
 ```
+
+## Index
+`source` 目录下创建 `index.md` 文件。这个 `index.md` 文件就是文档首页。
 
 ## 添加文档
 `source` 目录下创建 `markdown` 文件，例如：
