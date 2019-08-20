@@ -1,3 +1,7 @@
+---
+title: Go 环境配置
+---
+
 # Go 环境配置
 ## 安装
 我是在 Windows 下安装，官网[下载安装包](https://golang.org/dl/)，直接安装。

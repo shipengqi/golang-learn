@@ -1,4 +1,8 @@
-# 并发
+---
+title: 并发编程
+---
+
+# 并发编程
 ```
 Don’t communicate by sharing memory; share memory by communicating.
 （不要通过共享内存来通信，而应该通过通信来共享内存。）
@@ -986,7 +990,7 @@ Go scheduler的任务：**将goroutines按照一定算法放到不同的操作�
 - M代表着真正的执行计算资源。goroutine就是跑在M之上的。在绑定有效的p后，进入schedule循环；而schedule循环的机制大致是从各种队列、p的本地队列中获取G，切换到G的执行
 栈上并执行G的函数，调用goexit做清理工作并回到m，如此反复。M并不保留G状态，这是G可以跨M调度的基础。
 
-![](../images/goroutine-scheduler-model.png)
+![](../imgs/goroutine-scheduler-model.png)
 
 ### 抢占式调度
 Go并没有时间片的概念。如果某个G没有进行system call调用、没有进行I/O操作、没有阻塞在一个channel操作上，那么M是**如何让G停下来并调度下一个runnable G**的呢？

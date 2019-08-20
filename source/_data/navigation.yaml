@@ -1,0 +1,55 @@
+logo:
+  text: Golang Learn
+  type: link
+  path: index.html
+main:
+- text: Golang 基础
+  type: label
+- text: Golang 入门
+  type: link
+  path: basic/README.html
+- text: Go 环境配置
+  type: link
+  path: basic/environment.html
+- text: 数据类型
+  type: link
+  path: basic/basic_data_types.html
+- text: 语法基础
+  type: link
+  path: basic/basic_syntax.html
+- text: 函数
+  type: link
+  path: basic/function.html
+- text: 面向对象
+  type: link
+  path: basic/OOP.html
+- text: 测试
+  type: link
+  path: basic/test.html
+- text: 反射
+  type: link
+  path: basic/reflect.html
+
+- text: 并发编程
+  type: label
+- text: 并发编程
+  type: link
+  path: concurrent/README.html
+
+- text: WEB 编程
+  type: label
+- text: WEB 编程
+  type: link
+  path: web/README.html
+
+- text: THEME
+  type: label
+- text: 使用文档主题
+  type: link
+  path: theme/theme-usage.html
+
+- text: SUPPORT AND FEEDBACK
+  type: label
+- text: Raise an Issue on Github
+  type: link
+  path: https://github.com/shipengqi/golang-learn/issues/new
