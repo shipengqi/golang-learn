@@ -290,7 +290,7 @@ fmt.Println(numbers1)
 - `goto`，将控制转移到被标记的语句。通常与条件语句配合使用。可用来实现条件转移， 构成循环，跳出循环体等功能。不推荐
 使用，以免造成流程混乱。
 
-`goto`实例：
+`goto` 实例：
 ```go
 LOOP: for a < 20 {
 	if a == 15 {
@@ -303,10 +303,10 @@ LOOP: for a < 20 {
 }  
 ```
 
-## make和new
-`make`只能用于内建类型（`map`、`slice` 和`channel`）的内存分配。`new`用于各种类型的内存分配。
-`make`返回初始化后的（非零）值。
-`new`返回指针。
+## make 和 new
+1. **`make` 只能用于内建类型（`map`、`slice` 和`channel`）的内存分配。`new` 用于各种类型的内存分配**。
+2. **`make` 返回初始化后的（非零）值**。
+3. **`new` 返回指针**。
 
 ## JSON
 `JavaScript`对象表示法（JSON）是一种用于发送和接收结构化信息的标准协议。Go 对于其他序列化协议如`XML`，`Protocol Buffers`，都有良好的支持，
