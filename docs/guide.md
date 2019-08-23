@@ -1,0 +1,7 @@
+- https://github.com/hyper0x/go_command_tutorial/blob/master/SUMMARY.md
+- https://github.com/unknwon/the-way-to-go_ZH_CN/blob/master/eBook/directory.md
+- https://github.com/ffhelicopter/Go42/blob/master/SUMMARY.md
+- Go 并发编程实战
+- Go 语言学习笔记
+- 极客时间 Go 语言核心三十六讲
+- 小册 Go 搭建企业级 Web

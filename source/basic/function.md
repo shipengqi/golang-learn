@@ -5,7 +5,7 @@ title: 函数
 # 函数
 
 ## 声明函数
-`func`关键字声明函数：
+`func` 关键字声明函数：
 ```go
 func 函数名(形式参数列表) (返回值列表) {
     函数体
@@ -15,7 +15,7 @@ func 函数名(形式参数列表) (返回值列表) {
 函数不会返回任何值。
 
 ```go
-// 两个int 类型参数 返回一个 int 类型的值
+// 两个 int 类型参数 返回一个 int 类型的值
 func max(num1, num2 int) int {
    /* 定义局部变量 */
    var result int
@@ -97,11 +97,12 @@ func getSequence() func() int { // func() 是没有参数也没有返回值的�
 递归，就是在运行的过程中调用自己。
 
 ## 错误
-Go 中，对于大部分函数而言，永远无法确保能否成功运行（有一部分函数总是能成功的运行。比如`strings.Contains`和`strconv.FormatBool`）。
-通常 Go 函数的最后一个返回值用来传递错误信息。如果导致失败的原因只有一个，返回值可以是一个布尔值，通常被命名为`ok`。否则应该返回一个`error`类型。
+Go 中，对于大部分函数而言，永远无法确保能否成功运行（有一部分函数总是能成功的运行。比如 `strings.Contains` 和 
+`strconv.FormatBool`）。通常 Go 函数的最后一个返回值用来传递错误信息。如果导致失败的原因只有一个，返回值可以是一个布尔值，
+通常被命名为 `ok`。否则应该返回一个 `error` 类型。
 
 ### error 类型
-`error`类型是内置的接口类型。`error`类型可能是`nil`或者`non-nil`，`nil`表示成功。
+`error` 类型是内置的接口类型。`error` 类型可能是 `nil` 或者 `non-nil`，`nil` 表示成功。
 
 ### 错误处理
 当函数调用返回错误时，最常用的处理方式是传播错误，如。
@@ -128,7 +129,7 @@ if err != nil {
 根据不同的场景，我们可能要对错误做些特殊处理，比如错误重试机制，或者打印错误日志，或者直接忽略错误。
 
 ### 文件结尾错误
-`io`包在任何由文件结束引起的读取失败都返回同一个错误`io.EOF`：
+`io` 包在任何由文件结束引起的读取失败都返回同一个错误 `io.EOF`：
 ```go
 in := bufio.NewReader(os.Stdin)
 for {
@@ -144,9 +145,9 @@ for {
 ```
 
 ## 可变参数函数
-可变参数函数值的是参数数量可变的函数。比如`fmt.Printf`，`Printf`接收一个的必备参数，之后接收任意个数的后续参数。
+可变参数函数值的是参数数量可变的函数。比如 `fmt.Printf`，`Printf` 接收一个的必备参数，之后接收任意个数的后续参数。
 
-在参数列表的最后一个参数类型之前加上省略符号`...`，表示该函数会接收任意数量的该类型参数。
+在参数列表的最后一个参数类型之前加上省略符号 `...`，表示该函数会接收任意数量的该类型参数。
 ```go
 func sum(vals ...int) int {
 	total := 0
@@ -167,10 +168,10 @@ fmt.Println(sum(values...)) // "10"
 ```
 
 ## 关键字 defer
-在普通函数或方法前加关键字`defer`，会使函数或方法延迟执行，直到包含该`defer`语句的函数执行完毕时（**无论函数是否出错**），
+在普通函数或方法前加关键字 `defer`，会使函数或方法延迟执行，直到包含该 `defer` 语句的函数执行完毕时（**无论函数是否出错**），
 `defer`后的函数才会被执行。
 
-`defer`语句一般被用于处理成对的操作，如打开、关闭、连接、断开连接、加锁、释放锁。因为`defer`可以保证让你更任何情况下，
+`defer` 语句一般被用于处理成对的操作，如打开、关闭、连接、断开连接、加锁、释放锁。因为 `defer` 可以保证让你更任何情况下，
 资源都会被释放。
 ```go
 package ioutil
@@ -194,7 +195,7 @@ func lookup(key string) int {
 
 // 记录何时进入和退出函数
 func bigSlowOperation() {
-	defer trace("bigSlowOperation")() // 运行trace函数，记录了进入函数的时间，并返回一个函数值，这个函数值会延迟执行
+	defer trace("bigSlowOperation")() // 运行 trace 函数，记录了进入函数的时间，并返回一个函数值，这个函数值会延迟执行
 	extra parentheses
 	// ...lots of work…
 	time.Sleep(10 * time.Second) // simulate slow
@@ -210,7 +211,7 @@ func trace(msg string) func() {
 
 // 观察函数的返回值
 func double(x int) (result int) { // 有名返回值
-  // 由于 defer 在 return 之后执行，所以这里的result 就是函数最终的返回值
+  // 由于 defer 在 return 之后执行，所以这里的 result 就是函数最终的返回值
 	defer func() { fmt.Printf("double(%d) = %d\n", x,result) }()
 
 	return x + x
@@ -218,7 +219,7 @@ func double(x int) (result int) { // 有名返回值
 
 _ = double(4) // 输出 "double(4) = 8"
 ```
-上面的例子中我们知道`defer`函数可以观察函数返回值，`defer`函数还可以修改函数的返回值：
+上面的例子中我们知道 `defer` 函数可以观察函数返回值，`defer` 函数还可以修改函数的返回值：
 ```go
 func triple(x int) (result int) {
 	defer func() { result += x }()
@@ -227,12 +228,12 @@ func triple(x int) (result int) {
 fmt.Println(triple(4)) // "12"
 ```
 
-### 如果一个函数中有多条defer语句，那么那几个defer函数调用的执行顺序是怎样的
-在同一个函数中，defer函数调用的执行顺序与它们分别所属的defer语句的出现顺序（更严谨地说，是执行顺序）完全相反。
+### 如果一个函数中有多条 defer 语句，那么那几个 defer 函数调用的执行顺序是怎样的
+在同一个函数中，`defer` 函数调用的执行顺序与它们分别所属的 `defer` 语句的出现顺序（更严谨地说，是执行顺序）完全相反。
 
-在defer语句每次执行的时候，Go 语言会把它携带的defer函数及其参数值另行存储到一个队列中。
+在 `defer` 语句每次执行的时候，Go 语言会把它携带的 `defer` 函数及其参数值另行存储到一个队列中。
 
-这个队列与该defer语句所属的函数是对应的，并且，它是先进后出（FILO）的，相当于一个栈。
+这个队列与该 `defer` 语句所属的函数是对应的，并且，它是先进后出（FILO）的，相当于一个栈。
 
 在需要执行某个函数中的defer函数调用的时候，Go 语言会先拿到对应的队列，然后从该队列中一个一个地取出defer函数及其参数值，并逐个执行调用。
 

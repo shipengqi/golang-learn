@@ -29,6 +29,9 @@ main:
 - text: 反射
   type: link
   path: basic/reflect.html
+- text: 垃圾回收
+  type: link
+  path: basic/gc.html
 
 - text: 并发编程
   type: label

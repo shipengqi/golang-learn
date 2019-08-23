@@ -1,8 +1,6 @@
 # Summary
 - Go 并发编程实战
 - Go 语言学习笔记
-- Go 内存管理与垃圾回收
-- Go 并发调度
 - 极客时间 Go 语言核心三十六讲
 - 小册 Go 搭建企业级 Web
 - [GO 入门指南](https://github.com/Unknwon/the-way-to-go_ZH_CN)
