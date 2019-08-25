@@ -7,13 +7,38 @@ title: 反射
 反射机制，能够在运行时更新变量和检查它们的值、调用它们的方法和它们支持的内在操作，而不需要在编译时就知道
 这些变量的具体类型。弥补了静态语言在动态行为上的一些不足。
 
+## reflect.TypeOf
+`reflect.TypeOf` 获取类型信息。
 `reflect.TypeOf` 接受任意的 `interface{}` 类型, 并以 `reflect.Type` 形式返回其动态类型：
 ```go
 t := reflect.TypeOf(3)  // a reflect.Type
 fmt.Println(t.String()) // "int"
 fmt.Println(t)          // "int"
+
+type X int
+func main() {
+	var a X = 20
+	t := reflect.TypeOf(a)
+	fmt.Println(t.Name(), t.Kind()) // X int
+}
 ```
 
+上面的代码，**注意区分 Type 和 Kind，前者表示真实类型（静态类型），后者表示底层类型**。所以在判断类型时，
+要选择正确的方式。
+```go
+type X int
+type Y int
+func main() {
+	var a, b X = 10, 20
+	var c Y = 30
+	ta, tb, tc := reflect.TypeOf(a), reflect.TypeOf(b), reflect.TypeOf(c)
+	fmt.Println(ta == tb, ta == tc) // true false
+	fmt.Println(ta.Kind() == tc.Kind()) // true
+}
+```
+
+## reflect.ValueOf
+`reflect.ValueOf` 专注于对象实例数据读写。
 `reflect.ValueOf` 接受任意的 `interface{}` 类型, 并以 `reflect.Value` 形式返回其动态值：
 ```go
 v := reflect.ValueOf(3) // a reflect.Value
