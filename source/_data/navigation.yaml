@@ -78,6 +78,18 @@ main:
   type: link
   path: concurrent/sync_lock.html
 
+- text: 内存分配
+  type: label
+- text: 内存分配
+  type: link
+  path: advance/mm.html
+
+- text: 垃圾回收
+  type: label
+- text: 垃圾回收
+  type: link
+  path: advance/gc.html
+
 - text: THEME
   type: label
 - text: 使用文档主题

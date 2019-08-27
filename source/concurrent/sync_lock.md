@@ -387,6 +387,18 @@ func coordinateWithWaitGroup() {
 }
 ```
 
+**尽量不要在 `go` 函数内部调用 `Add`，以免 `Add` 还未执行，`Wait` 已经退出**：
+```go
+var wg sync.WaitGroup
+go func(){
+	wg.Add(1)
+	fmt.Println("test")
+}()
+
+wg.Wait()
+fmt.Println("exit.")
+```
+
 ### sync.WaitGroup 类型值中计数器的值可以小于 0 吗
 不可以。**小于 0，会引发一个 panic**。
 

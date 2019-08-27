@@ -9,7 +9,7 @@ Don’t communicate by sharing memory; share memory by communicating.
 ```
 这是作为 Go 语言最重要的编程理念。
 
-通道类型的值本身就是**并发安全**的，这也是 **Go 语言自带的、唯一一个可以满足并发安全性的类型**。
+通道类型的值是**并发安全**的，这也是 **Go 语言自带的、唯一一个可以满足并发安全性的类型**。
 
 `channels` 是 `goroutine` 之间的通信机制。`goroutine` 通过 `channel` 向另一个 `goroutine` 发送消息
 `channel` 和 `goroutine` 结合，可以实现用通信代替共享内存的 `CSP` 模型。
