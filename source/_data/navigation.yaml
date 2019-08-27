@@ -14,6 +14,9 @@ main:
 - text: 基础数据类型
   type: link
   path: basic/basic_data.html
+- text: 变量
+  type: link
+  path: basic/var.html
 - text: 常量
   type: link
   path: basic/constant.html

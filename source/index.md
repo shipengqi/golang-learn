@@ -91,72 +91,20 @@ for _, arg := range os.Args[1:] {
 
 每个文件以 `package` 声明语句。比如 `package main`。
 
-## 变量
-`var` 声明变量，必须使用空格隔开：
-```go
-var 变量名字 类型 = 表达式
-```
-**类型**或者**表达式**可以省略其中的一个。也就是如果没有类型，可以通过表达式推断出类型，**没有表达式，将会根据类型初始化为对应的零值**。
-对应关系：
-- 数值类型：`0`
-- 布尔类型：`false`
-- 字符串: `""`
-- 接口或引用类型（包括 `slice`、指针、`map`、`chan` 和函数）：`nil`
-
-### 声明一组变量
-```go
-var 变量名字, 变量名字, 变量名字 ... 类型 = 表达式, 表达式, 表达式, ...
-```
-比如：
-```go
-// 声明一组 `int` 类型
-var i, j, k int                 // int, int, int
-
-// 声明一组不同类型
-var b, f, s = true, 2.3, "four" // bool, float64, string
-
-var (
-  i int
-  pi float32
-  prefix string
-)
-```
-
-### 简短声明
-** `:=` 只能在函数内使用，不能提供数据类型**，Go 会自动推断类型：
-```go
-变量名字 := 表达式
-```
-
-```go
-var x = 100
-
-func main() {
-	fmt.Println(&x, x)
-	x := "abc"
-	fmt.Println(&x, x)
-}
-```
-上面的代码中 `x := "abc"` 相当于重新定义并初始化了同名的局部变量 `x`，所以打印出来的结果完全不同。
-
-如何避免重新定义，首先要在同一个作用域中，至少有一个新的变量被定义：
-```go
-func main() {
-	x := 100
-	fmt.Println(&x, x)
-	x, y := 200, 300   // 一个新的变量 y，这里的简短声明就是赋值操作
-	fmt.Println(&x, x)
-}
-```
-
 ## make 和 new
 1. **`make` 只能用于内建类型（`map`、`slice` 和`channel`）的内存分配。`new` 用于各种类型的内存分配**。
-2. **`make` 返回初始化后的（非零）值**。
-3. **`new` 返回指针**。
+2. **`make` 返回初始化后的（非零）值，`new` 返回指针**。
+3. **`new` 函数可以为引用类型分配内存，但这是不完整的创建。比如 `map`，它仅分配了字典本身需要的内存，但是并没有为
+字典内的健值对分配内存，因此无法正常工作**。
 
 ## 类型转换
 **Go 强制使用显示类型转换**。这样可以确定语句和表达式的明确含义。**类型转换在编译期完成，包括强制转换和隐式转换**。
 
+```go
+a := 10
+b := byte(a)
+c := a + int(b) // 混合类型表达式必须保证类型一致
+```
 类型转换用于将一种数据类型的变量转换为另外一种类型的变量：
 ```go
 类型名(表达式)
@@ -201,6 +149,42 @@ x := 100
 (func()int)(f) // 有返回值的函数其实可以不加括号，但是加括号的话，语义清晰
 ```
 
+## 自定义类型
+使用 `type` 自定义类型，一般出现在包一级，与变量一样，如果类型名字的首字母是大写，则在包外部也可以使用：
+```go
+type 类型名字 底层类型
+```
+
+如不同温度单位分别定义为不同的类型：
+```go
+type Celsius float64    // 摄氏温度
+type Fahrenheit float64 // 华氏温度
+
+const (
+	AbsoluteZeroC Celsius = -273.15 // 绝对零度
+	FreezingC     Celsius = 0       // 结冰点温度
+	BoilingC      Celsius = 100     // 沸水温度
+)
+
+func CToF(c Celsius) Fahrenheit { return Fahrenheit(c*9/5 + 32) }
+
+func FToC(f Fahrenheit) Celsius { return Celsius((f - 32) * 5 / 9) }
+```
+
+**自定义类型虽然置顶了底层类型，但是只是底层数据结构相同，不会继承底层类型的其他信息，比如（方法）。
+不能隐式转换，不能直接用于比较表达式**。
+
+```go
+type data int
+var d data = 10
+
+var x int = d       // 错误：cannot use d (type data) as type int in assignment
+
+fmt.Println(d == x) // 错误：invalid operation: d == x (mismatched types data and int)
+```
+
+## 未命名类型
+比如数组，切片，字典，通道等类型与内部具体的元素类型和长度等属性有关，所以叫做**未命名类型**（unnamed type）。
 ## 类型断言
 
 断言，顾名思义就是果断的去猜测一个未知的事物。在 go 语言中，`interface{}` 就是这个神秘的未知类型，其**断言操作就是用来
@@ -244,42 +228,10 @@ for index, element := range list{
 
 **注意，`x.(type)` 语法不能在 `switch` 外的任何逻辑里面使用，如果你要在 `switch` 外面判断一个类型就使用 `comma-ok`**。
 
-## 零值
-“零值”，所指并非是空值，而是一种“变量未填充前”的默认值，通常为 `0`：
-```
-int     0
-int8    0
-int32   0
-int64   0
-uint    0x0
-rune    0 //rune的实际类型是 int32
-byte    0x0 // byte的实际类型是 uint8
-float32 0 //长度为 4 byte
-float64 0 //长度为 8 byte
-bool    false
-string  ""
-```
-
 ### 生命周期
 对于在包一级声明的变量，它们的生命周期和程序的运行周期是一致的。
 局部变量（包括函数的参数和返回值也是局部变量）的生命周期则是动态的：每次从创建一个新变量的声明语句开始，
 直到该变量不再被引用为止，然后变量的存储空间可能被回收。
-
-## 赋值
-常见的赋值的方式：
-```go
-x = 1                       // 命名变量的赋值
-*p = true                   // 通过指针间接赋值
-person.name = "bob"         // 结构体字段赋值
-count[x] = count[x] * scale // 数组、slice或map的元素赋值
-count[x] *= scale           // 等价于 count[x] = count[x] * scale，但是省去了对变量表达式的重复计算
-x, y = y, x                 // 交换值
-f, err = os.Open("foo.txt") // 左边变量的数目必须和右边一致，函数一般会返回一个`error`类型
-v, ok = m[key]              // map查找，返回布尔值类表示操作是否成功
-v = m[key]                  // map查找，也可以返回一个值，失败时返回零值
-```
-
-不管是隐式还是显式地赋值，在赋值语句左边的变量和右边最终的求到的值必须有相同的数据类型。这就是**可赋值性**。
 
 ## 编码
 Go 语言的源码文件必须使用 UTF-8 编码格式进行存储。如果源码文件中出现了非 UTF-8 编码的字符，那么在构建、安装以及运行的时候，

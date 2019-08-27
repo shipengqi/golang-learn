@@ -180,28 +180,3 @@ w = Wheel{
 **不过，即使被屏蔽了，我们仍然可以通过链式的选择表达式，选择到嵌入字段的字段或方法**。
 
 嵌入字段本身也有嵌入字段的情况，这种情况下，“屏蔽”现象会以嵌入的层级为依据，嵌入层级越深的字段或方法越可能被“屏蔽”。
-
-## 自定义类型
-使用 `type` 自定义类型，一般出现在包一级，与变量一样，如果类型名字的首字母是大写，则在包外部也可以使用：
-```go
-type 类型名字 底层类型
-```
-
-如不同温度单位分别定义为不同的类型：
-```go
-type Celsius float64    // 摄氏温度
-type Fahrenheit float64 // 华氏温度
-
-const (
-	AbsoluteZeroC Celsius = -273.15 // 绝对零度
-	FreezingC     Celsius = 0       // 结冰点温度
-	BoilingC      Celsius = 100     // 沸水温度
-)
-
-func CToF(c Celsius) Fahrenheit { return Fahrenheit(c*9/5 + 32) }
-
-func FToC(f Fahrenheit) Celsius { return Celsius((f - 32) * 5 / 9) }
-```
-
-自定义类型虽然置顶了底层类型，但是只是底层数据结构相同，不会继承底层类型的其他信息，比如（方法）。
-不能隐式转换，不能直接用于比较表达式。

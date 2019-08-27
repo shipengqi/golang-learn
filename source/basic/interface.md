@@ -5,7 +5,7 @@ title: 接口
 # 接口
 
 Go 支持接口数据类型，接口类型是一种抽象的类型。接口类型具体描述了一系列方法的集合，任何其他类型只要实现了这些方法就是实
-现了这个接口。接口只有当有两个或两个以上的具体类型必须以相同的方式进行处理时才需要。
+现了这个接口，无须显示声明。**接口只有当有两个或两个以上的具体类型必须以相同的方式进行处理时才需要**。
 
 接口的零值就是它的类型和值的部分都是 `nil`。
 
@@ -90,7 +90,7 @@ type ReadWriter interface {
 ```
 
 ### 空接口类型
-`interface {}` 被称为空接口类型，它没有任何方法。所有的类型都实现了空`interface`，
+`interface {}` 被称为空接口类型，它没有任何方法。所有的类型都实现了空 `interface`，
 空 `interface` 在我们需要存储任意类型的数值的时候相当有用，因为它可以存储任意类型的数值。
 ```go
 // 定义a为空接口
@@ -141,7 +141,7 @@ import (
     "fmt"
 )
 
-//定义interface
+//定义 interface
 type VowelsFinder interface {
     FindVowels() []rune
 }
@@ -168,7 +168,7 @@ func main() {
 }
 ```
 
-上面的代码 `fmt.Printf("Vowels are %c", v.FindVowels())` 是可以直接使用`fmt.Printf("Vowels are %c", name.FindVowels())`
+上面的代码 `fmt.Printf("Vowels are %c", v.FindVowels())` 是可以直接使用 `fmt.Printf("Vowels are %c", name.FindVowels())`
 的，那么我们定义的变量 `V` 没有没有了意义。看下面的代码：
 ```go
 package main
