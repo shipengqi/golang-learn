@@ -1,5 +1,13 @@
-## io包中的接口和工具
-`strings.Reader`类型主要用于读取字符串，它的指针类型实现的接口比较多，包括：
+---
+title: io
+---
+
+# io
+`io` 是对输入输出设备的抽象。`io` 库对这些功能进行了抽象，通过统一的接口对输入输出设备进行操作。
+最重要的是两个接口：`Reader` 和 `Writer`。
+ 
+## io 包中的接口和工具
+`strings.Reader` 类型主要用于读取字符串，它的指针类型实现的接口比较多，包括：
 - io.Reader；
 - io.ReaderAt；
 - io.ByteReader；
@@ -9,7 +17,7 @@
 - io.RuneScanner；
 - io.WriterTo；
 
-`io.ByteScanner`是`io.ByteReader`的扩展接口，而`io.RuneScanner`又是`io.RuneReader`的扩展接口。
+`io.ByteScanner` 是`io.ByteReader`的扩展接口，而`io.RuneScanner`又是`io.RuneReader`的扩展接口。
 
 `bytes.Buffer`该指针类型实现的读取相关的接口有下面几个：
 - io.Reader；
