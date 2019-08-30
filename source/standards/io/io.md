@@ -5,7 +5,55 @@ title: io
 # io
 `io` 是对输入输出设备的抽象。`io` 库对这些功能进行了抽象，通过统一的接口对输入输出设备进行操作。
 最重要的是两个接口：`Reader` 和 `Writer`。
- 
+
+## Reader 接口
+
+Reader 接口：
+
+```go
+type Reader interface {
+    Read(p []byte) (n int, err error)
+}
+```
+
+> Read 将 len(p) 个字节读取到 p 中。它返回读取的字节数 n（0 <= n <= len(p)） 以及任何遇到的错误。即使 Read 返回的 n < len(p)，
+它也会在调用过程中占用 len(p) 个字节作为暂存空间。若可读取的数据不到 len(p) 个字节，Read 会返回可用数据，而不是等待更多数据。
+
+> 当 Read 在成功读取 n > 0 个字节后遇到一个错误或 EOF (end-of-file)，它会返回读取的字节数。它可能会同时在本次的调用中返回一
+个non-nil错误,或在下一次的调用中返回这个错误（且 n 为 0）。 一般情况下, Reader会返回一个非0字节数n, 若 n = len(p) 个字节从输入
+源的结尾处由 Read 返回，Read可能返回 err == EOF 或者 err == nil。并且之后的 Read() 都应该返回 (n:0, err:EOF)。
+
+> 调用者在考虑错误之前应当首先处理返回的数据。这样做可以正确地处理在读取一些字节后产生的 I/O 错误，同时允许 EOF 的出现。
+
+```go
+func ReadFrom(reader io.Reader, num int) ([]byte, error) {
+	p := make([]byte, num)
+	n, err := reader.Read(p)
+	if n > 0 {
+		return p[:n], nil
+	}
+	return p, err
+}
+```
+
+`ReadFrom` 函数将 `io.Reader` 作为参数，也就是说，`ReadFrom` 可以从任意的地方读取数据，只要来源实现了 `io.Reader` 接口。
+比如，我们可以从标准输入、文件、字符串等读取数据，示例代码如下：
+
+```go
+// 从标准输入读取
+data, err = ReadFrom(os.Stdin, 11)
+
+// 从普通文件读取，其中 file 是 os.File 的实例
+data, err = ReadFrom(file, 9)
+
+// 从字符串读取
+data, err = ReadFrom(strings.NewReader("from string"), 12)
+```
+
+`io.EOF` 变量的定义：`var EOF = errors.New("EOF")`，是 error 类型。根据 reader 接口的说明，在 n > 0 且数据被读完了
+的情况下，当次返回的 error 有可能是 EOF 也有可能是 nil。
+
+
 ## io 包中的接口和工具
 `strings.Reader` 类型主要用于读取字符串，它的指针类型实现的接口比较多，包括：
 - io.Reader；
