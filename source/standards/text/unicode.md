@@ -9,7 +9,8 @@ go 对 unicode 的支持包含三个包 :
 - `unicode/utf8`
 - `unicode/utf16`
 
-unicode 包包含基本的字符判断函数。utf8 包主要负责 `rune` 和 `byte` 之间的转换。utf16 包负责 `rune` 和 `uint16` 数组之间的转换。
+unicode 包包含基本的字符判断函数。utf8 包主要负责 `rune` 和 `byte` 之间的转换。utf16 包负责 `rune` 和 `uint16` 数组之间
+的转换。
 
 ## unicode 包
 

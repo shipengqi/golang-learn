@@ -4,8 +4,6 @@ title: time
 
 # time
 
-`time` 包 [官方文档](http://golang.org/pkg/time/)。
-
 `time` 提供了一个数据类型 `time.Time`（作为值使用）以及显示和测量时间和日期的功能函数，比如：
 - `time.Now()` 获取当前时间。
 - `t.Day()`、`t.Minute()` 获取时间的一部分。
@@ -17,8 +15,8 @@ title: time
 ## Format
 自定义时间格式化字符串，例如： `fmt.Printf("%02d.%02d.%4d\n", t.Day(), t.Month(), t.Year())` 将会输出 `21.07.2011`。
 
-包中的一个预定义函数 `func (t Time) Format(layout string) string` 可以根据一个格式化字符串来将一个时间 t 转换为相应格式的字符串，
-你可以使用一些预定义的格式，如：`time.ANSIC` 或 `time.RFC822`。 
+包中的一个预定义函数 `func (t Time) Format(layout string) string` 可以根据一个格式化字符串来将一个时间 t 转换为相应
+格式的字符串，你可以使用一些预定义的格式，如：`time.ANSIC` 或 `time.RFC822`。
 
 一般的格式化设计是通过对于一个标准时间的格式化描述来展现的，示例：
 

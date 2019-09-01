@@ -72,7 +72,8 @@ strings.Contains(s, substr string) bool
 strings.Index(s, str string) int
 ```
 
-`LastIndex` 返回字符串 `str` 在字符串 `s` 中最后出现位置的索引（`str` 的第一个字符的索引），`-1` 表示字符串 `s` 不包含字符串 `str`：
+`LastIndex` 返回字符串 `str` 在字符串 `s` 中最后出现位置的索引（`str` 的第一个字符的索引），`-1` 表示字符串 `s` 不包含字符
+串 `str`：
 
 ```go
 strings.LastIndex(s, str string) int
@@ -354,7 +355,8 @@ fmt.Printf("%q\n", strings.Split("", "Bernardo O'Higgins"))              // [""]
 ```
 ## 从字符串中读取内容
 
-函数 `strings.NewReader(str)` 用于生成一个 `Reader` 并读取字符串中的内容，然后返回指向该 `Reader` 的指针，从其它类型读取内容的函数还有：
+函数 `strings.NewReader(str)` 用于生成一个 `Reader` 并读取字符串中的内容，然后返回指向该 `Reader` 的指针，从其它类型读取
+内容的函数还有：
 
 - `Read()` 从 []byte 中读取内容。
 - `ReadByte()` 和 `ReadRune()` 从字符串中读取下一个 byte 或者 rune。
