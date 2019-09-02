@@ -6,7 +6,7 @@ title: io
 `io` 是对输入输出设备的抽象。`io` 库对这些功能进行了抽象，通过统一的接口对输入输出设备进行操作。
 最重要的是两个接口：`Reader` 和 `Writer`。
 
-## Reader 接口
+## Reader
 
 Reader 接口：
 
@@ -16,14 +16,16 @@ type Reader interface {
 }
 ```
 
-> Read 将 len(p) 个字节读取到 p 中。它返回读取的字节数 n（0 <= n <= len(p)） 以及任何遇到的错误。即使 Read 返回的 n < len(p)，
-它也会在调用过程中占用 len(p) 个字节作为暂存空间。若可读取的数据不到 len(p) 个字节，Read 会返回可用数据，而不是等待更多数据。
+> `Read` 将 `len(p)` 个字节读取到 `p` 中。它返回读取的字节数 `n`（`0 <= n <= len(p)`） 以及任何遇到的错误。
+即使 `Read` 返回的 `n < len(p)`，它也会在调用过程中占用 `len(p)` 个字节作为暂存空间。若可读取的数据不到 `len(p)` 个
+字节，`Read` 会返回可用数据，而不是等待更多数据。
 
-> 当 Read 在成功读取 n > 0 个字节后遇到一个错误或 EOF (end-of-file)，它会返回读取的字节数。它可能会同时在本次的调用中返回一
-个non-nil错误,或在下一次的调用中返回这个错误（且 n 为 0）。 一般情况下, Reader会返回一个非0字节数n, 若 n = len(p) 个字节从输入
-源的结尾处由 Read 返回，Read可能返回 err == EOF 或者 err == nil。并且之后的 Read() 都应该返回 (n:0, err:EOF)。
+> 当 `Read` 在成功读取 `n > 0` 个字节后遇到一个错误或 `EOF` (`end-of-file`)，它会返回读取的字节数。它可能会同时在本次的调
+用中返回一个 `non-nil` 错误,或在下一次的调用中返回这个错误（且 `n` 为 0）。 一般情况下, `Reader` 会返回一个 非 0 字节数 `n`, 
+若 `n = len(p)` 个字节从输入源的结尾处由 `Read` 返回，`Read` 可能返回 `err == EOF` 或者 `err == nil`。并且之后的 `Read` 
+都应该返回 (`n:0, err:EOF`)。
 
-> 调用者在考虑错误之前应当首先处理返回的数据。这样做可以正确地处理在读取一些字节后产生的 I/O 错误，同时允许 EOF 的出现。
+> 调用者在考虑错误之前应当首先处理返回的数据。这样做可以正确地处理在读取一些字节后产生的 I/O 错误，同时允许 `EOF` 的出现。
 
 ```go
 func ReadFrom(reader io.Reader, num int) ([]byte, error) {
@@ -50,9 +52,278 @@ data, err = ReadFrom(file, 9)
 data, err = ReadFrom(strings.NewReader("from string"), 12)
 ```
 
-`io.EOF` 变量的定义：`var EOF = errors.New("EOF")`，是 error 类型。根据 reader 接口的说明，在 n > 0 且数据被读完了
-的情况下，当次返回的 error 有可能是 EOF 也有可能是 nil。
+`io.EOF` 变量的定义：`var EOF = errors.New("EOF")`，是 `error` 类型。根据 `reader` 接口的说明，在 `n > 0` 且数据被读完了
+的情况下，当次返回的 `error` 有可能是 `EOF` 也有可能是 `nil`。
 
+## Writer
+
+Writer 接口：
+
+```go
+type Writer interface {
+    Write(p []byte) (n int, err error)
+}
+```
+
+> `Write` 将 `len(p)` 个字节从 `p` 中写入到基本数据流中。它返回从 `p` 中被写入的字节数 `n`（`0 <= n <= len(p)`）以及任何遇到的引
+起写入提前停止的错误。若 `Write` 返回的 `n < len(p)`，它就必须返回一个 **非 nil** 的错误。
+
+所有实现了 `Write` 方法的类型都实现了 `io.Writer` 接口。
+
+以 `fmt.Fprintln` 为例，`fmt.Println` 函数的源码。
+
+```go
+func Println(a ...interface{}) (n int, err error) {
+	return Fprintln(os.Stdout, a...)
+}
+```
+
+`fmt.Println` 会将内容输出到标准输出中。
+
+
+## 实现了 io.Reader 接口或 io.Writer 接口的类型
+
+标准库中有哪些类型实现了 `io.Reader` 或 `io.Writer` 接口？
+
+`os.File` 同时实现了这两个接口。我们还看到 `os.Stdin/Stdout` 这样的代码，它们分别实现了 `io.Reader/io.Writer` 接口：
+
+```go
+var (
+    Stdin  = NewFile(uintptr(syscall.Stdin), "/dev/stdin")
+    Stdout = NewFile(uintptr(syscall.Stdout), "/dev/stdout")
+    Stderr = NewFile(uintptr(syscall.Stderr), "/dev/stderr")
+)
+```
+
+也就是说，`Stdin/Stdout/Stderr` 只是三个特殊的文件类型的标识（即都是 `os.File` 的实例），自然也实现了 `io.Reader` 和 `io.Writer`。
+
+列出实现了 io.Reader 或 io.Writer 接口的类型（导出的类型）：
+
+- `os.File` 同时实现了 `io.Reader` 和 `io.Writer`
+- `strings.Reader` 实现了 `io.Reader`
+- `bufio.Reader/Writer` 分别实现了 `io.Reader` 和 `io.Writer`
+- `bytes.Buffer` 同时实现了 `io.Reader` 和 `io.Writer`
+- `bytes.Reader` 实现了 `io.Reader`
+- `compress/gzip.Reader/Writer` 分别实现了 `io.Reader` 和 `io.Writer`
+- `crypto/cipher.StreamReader/StreamWriter` 分别实现了 `io.Reader` 和 `io.Writer`
+- `crypto/tls.Conn` 同时实现了 `io.Reader` 和 `io.Writer`
+- `encoding/csv.Reader/Writer` 分别实现了 `io.Reader` 和 `io.Writer`
+- `mime/multipart.Part` 实现了 `io.Reader`
+- `net/conn` 分别实现了 `io.Reader` 和 `io.Writer`(Conn接口定义了Read/Write)
+
+除此之外，io 包本身也有这两个接口的实现类型。如：
+
+	实现了 Reader 的类型：LimitedReader、PipeReader、SectionReader
+	实现了 Writer 的类型：PipeWriter
+
+以上类型中，常用的类型有：os.File、strings.Reader、bufio.Reader/Writer、bytes.Buffer、bytes.Reader
+
+## ReaderAt 和 WriterAt
+
+**`ReaderAt` 接口**：
+
+```go
+type ReaderAt interface {
+    ReadAt(p []byte, off int64) (n int, err error)
+}
+```
+
+> `ReadAt` 从基本输入源的偏移量 `off` 处开始，将 `len(p)` 个字节读取到 `p` 中。它返回读取的字节数 `n`（`0 <= n <= len(p)`）以及任
+何遇到的错误。
+
+> 当 `ReadAt` 返回的 `n < len(p)` 时，它就会返回一个 **非 nil** 的错误来解释为什么没有返回更多的字节。
+
+> 即使 `ReadAt` 返回的 `n < len(p)`，它也会在调用过程中使用 `p` 的全部作为暂存空间。若可读取的数据不到 `len(p)` 字节，`ReadAt` 就会
+阻塞,直到所有数据都可用或一个错误发生。
+
+> 若 `n = len(p)` 个字节从输入源的结尾处由 `ReadAt` 返回，`Read` 可能返回 `err == EOF` 或者 `err == nil`
+
+> 若 `ReadAt` 携带一个偏移量从输入源读取，`ReadAt` 应当既不影响偏移量也不被它所影响。
+
+> 可对相同的输入源并行执行 `ReadAt` 调用。
+
+可见，`ReadAt` 接口使得可以从指定偏移量处开始读取数据。
+
+简单示例代码如下：
+
+```go
+reader := strings.NewReader("Hello world")
+p := make([]byte, 6)
+n, err := reader.ReadAt(p, 2)
+if err != nil {
+    panic(err)
+}
+fmt.Printf("%s, %d\n", p, n) // llo wo, 6
+```
+
+**`WriterAt` 接口**：
+
+```go
+type WriterAt interface {
+    WriteAt(p []byte, off int64) (n int, err error)
+}
+```
+
+
+> `WriteAt` 从 `p` 中将 `len(p)` 个字节写入到偏移量 `off` 处的基本数据流中。它返回从 `p` 中被写入的字节数 `n`（`0 <= n <= len(p)`）
+以及任何遇到的引起写入提前停止的错误。若 `WriteAt` 返回的 `n < len(p)`，它就必须返回一个 **非 nil** 的错误。
+
+> 若 `WriteAt` 携带一个偏移量写入到目标中，`WriteAt` 应当既不影响偏移量也不被它所影响。
+
+> 若被写区域没有重叠，可对相同的目标并行执行 `WriteAt` 调用。
+
+我们可以通过该接口将数据写入到数据流的特定偏移量之后。
+
+```go
+file, err := os.Create("writeAt.txt")
+if err != nil {
+    panic(err)
+}
+defer file.Close()
+_, _ = file.WriteString("Hello world----ignore")
+n, err := file.WriteAt([]byte("Golang"), 15)
+if err != nil {
+    panic(err)
+}
+fmt.Println(n)
+```
+
+打开文件 `WriteAt.txt`，内容是：`Hello world----Golang`。
+
+分析：
+
+`file.WriteString("Hello world----ignore")` 往文件中写入 `Hello world----ignore`，之后 
+`file.WriteAt([]byte("Golang"), 15)` 在文件流的 `offset=15` 处写入 `Golang`（会覆盖该位置的内容）。
+
+## ReaderFrom 和 WriterTo
+这两个接口实现了**一次性从某个地方读或写到某个地方去**。
+**ReaderFrom**：
+
+```go
+type ReaderFrom interface {
+    ReadFrom(r Reader) (n int64, err error)
+}
+```
+
+> `ReadFrom` 从 `r` 中读取数据，直到 `EOF` 或发生错误。其返回值 `n` 为读取的字节数。除 `io.EOF` 之外，在读取过程中遇到的任何错误也
+将被返回。
+
+> 如果 `ReaderFrom` 可用，`Copy` 函数就会使用它。
+
+注意：`ReadFrom` 方法不会返回 `err == EOF`。
+
+下面的例子简单的实现将文件中的数据全部读取（显示在标准输出）：
+
+```go
+file, err := os.Open("writeAt.txt")
+if err != nil {
+    panic(err)
+}
+defer file.Close()
+writer := bufio.NewWriter(os.Stdout)
+writer.ReadFrom(file)
+writer.Flush()
+```
+
+也可以通过 `ioutil` 包的 `ReadFile` 函数获取文件全部内容。其实，跟踪一下 `ioutil.ReadFile` 的源码，会发现其实也是通过 `ReadFrom` 方
+法实现（用的是 `bytes.Buffer`，它实现了 `ReaderFrom` 接口）。
+
+**WriterTo**：
+
+```go
+type WriterTo interface {
+    WriteTo(w Writer) (n int64, err error)
+}
+```
+
+> `WriteTo` 将数据写入 `w` 中，直到没有数据可写或发生错误。其返回值 `n` 为写入的字节数。 在写入过程中遇到的任何错误也将被返回。
+
+> 如果 `WriterTo` 可用，`Copy` 函数就会使用它。
+
+将一段文本输出到标准输出：
+
+```go
+reader := bytes.NewReader([]byte("Hello world"))
+reader.WriteTo(os.Stdout)
+```
+
+## Seeker
+
+```go
+type Seeker interface {
+    Seek(offset int64, whence int) (ret int64, err error)
+}
+```
+
+> `Seek` 设置下一次 `Read` 或 `Write` 的偏移量为 `offset`，它的解释取决于 `whence`：  0 表示相对于文件的起始处，1 表示相对
+于当前的偏移，而 2 表示相对于其结尾处。 `Seek` 返回新的偏移量和一个错误，如果有的话。
+
+也就是说，`Seek` 方法是用于设置偏移量的，这样可以从某个特定位置开始操作数据流。听起来和 `ReaderAt/WriteA`t 接口有些类似，
+不过 `Seeker` 接口更灵活，可以更好的控制读写数据流的位置。
+
+获取倒数第二个字符（需要考虑 UTF-8 编码，这里的代码只是一个示例）：
+
+```go
+reader := strings.NewReader("Hello world")
+reader.Seek(-6, io.SeekEnd)
+r, _, _ := reader.ReadRune()
+fmt.Printf("%c\n", r)
+```
+
+`whence` 的值，在 io 包中定义了相应的常量，应该使用这些常量
+
+```go
+const (
+  SeekStart   = 0 // seek relative to the origin of the file
+  SeekCurrent = 1 // seek relative to the current offset
+  SeekEnd     = 2 // seek relative to the end
+)
+```
+
+而原先 `os` 包中的常量已经被标注为 Deprecated
+
+```go
+// Deprecated: Use io.SeekStart, io.SeekCurrent, and io.SeekEnd.
+const (
+  SEEK_SET int = 0 // seek relative to the origin of the file
+  SEEK_CUR int = 1 // seek relative to the current offset
+  SEEK_END int = 2 // seek relative to the end
+)
+```
+
+## Closer
+
+```go
+type Closer interface {
+    Close() error
+}
+```
+
+该接口比较简单，只有一个 `Close()` 方法，用于关闭数据流。
+
+文件 (`os.File`)、归档（压缩包）、数据库连接、`Socket` 等需要手动关闭的资源都实现了 `Closer` 接口。
+
+实际编程中，经常将 `Close` 方法的调用放在 `defer` 语句中。
+
+```go
+file, err := os.Open("studygolang.txt")
+defer file.Close()
+if err != nil {
+	...
+}
+```
+
+当文件 `studygolang.txt` 不存在或找不到时，`file.Close()` 会返回错误，因为 `file` 是 `nil`。
+因此，应该**将 `defer file.Close()` 放在错误检查之后**。
+
+```go
+func (f *File) Close() error {
+	if f == nil {
+		return ErrInvalid
+	}
+	return f.file.close()
+}
+```
 
 ## io 包中的接口和工具
 `strings.Reader` 类型主要用于读取字符串，它的指针类型实现的接口比较多，包括：
@@ -83,9 +354,9 @@ data, err = ReadFrom(strings.NewReader("from string"), 12)
 
 这些类型实现了这么多的接口，目的是什么？
 
-为了提高不同程序实体之间的互操作性。以io包中的一些函数为例。
+为了提高不同程序实体之间的互操作性。以 io 包中的一些函数为例。
 
-io包中，有这样几个用于拷贝数据的函数，它们是：`io.Copy`、`io.CopyBuffer`和`io.CopyN`。这几个函数在功能上都略有差别，但是它们都首先会接受两个参数，即：
+io 包中，有这样几个用于拷贝数据的函数，它们是：`io.Copy`、`io.CopyBuffer`和`io.CopyN`。这几个函数在功能上都略有差别，但是它们都首先会接受两个参数，即：
 用于代表**数据目的地、`io.Writer`类型的参数`dst`**，以及用于代表**数据来源的、`io.Reader`类型的参数`src`**。大致上都是把数据从`src`拷贝到`dst`。
 
 **不论第一个参数值是什么类型的，只要这个类型实现了`io.Writer`接口即可**。同样的第二个参数值只要该类型实现了`io.Reader`接口就行。
@@ -111,62 +382,3 @@ io包中，有这样几个用于拷贝数据的函数，它们是：`io.Copy`、
 实际上，`io.PipeReader`类型和`io.PipeWriter`类型拥有的所有指针方法都是以它为基础的。这些方法都只是代理了`io.pipe`类型值所拥有的某一个方法而已。
 又因为`io.Pipe`函数会返回这两个类型的指针值并分别把它们作为其生成的同步内存管道的两端，所以可以说，`*io.pipe`类型就是io包提供的同步内存管道的核心实现。
 - `io.PipeReader`：此类型可以被视为`io.pipe`类型的代理类型。
-
-## bufio包中的数据类型
-bufio包中的数据类型主要有：
-- `Reader`；
-- `Scanner`；
-- `Writer`和`ReadWriter`。
-
-### `bufio.Reader`类型值中的缓冲区的作用
-缓冲区其实就是一个**数据存储中介，它介于底层读取器与读取方法及其调用方之间**。所谓的底层读取器，就是在初始化此类值的时候传入的`io.Reader`类型的参数值。
-
-Reader值的读取方法一般都会先从其所属值的缓冲区中读取数据。同时，在必要的时候，它们还会预先从底层读取器那里读出一部分数据，并暂存于缓冲区之中以备后用。
-
-缓冲区的好处是，可以在大多数的时候降低读取方法的执行时间。
-
-`bufio.Reader`类型并不是开箱即用的，因为它包含了一些需要显式初始化的字段。一些字段：
-- `buf`：`[]byte`类型的字段，即字节切片，代表缓冲区。虽然它是切片类型的，但是其长度却会在初始化的时候指定，并在之后保持不变。
-- `rd`：`io.Reader`类型的字段，代表底层读取器。缓冲区中的数据就是从这里拷贝来的。
-- `r`：`int`类型的字段，代表对缓冲区进行下一次读取时的开始索引。我们可以称它为已读计数。
-- `w`：`int`类型的字段，代表对缓冲区进行下一次写入时的开始索引。我们可以称之为已写计数。
-- `err`：`error`类型的字段。它的值用于表示在从底层读取器获得数据时发生的错误。这里的值在被读取或忽略之后，该字段会被置为`nil`。
-- `lastByte`：`int`类型的字段，用于记录缓冲区中最后一个被读取的字节。读回退时会用到它的值。
-- `lastRuneSize`：`int`类型的字段，用于记录缓冲区中最后一个被读取的 Unicode 字符所占用的字节数。读回退的时候会用到它的值。这个字段只会在其所
-属值的`ReadRune`方法中才会被赋予有意义的值。在其他情况下，它都会被置为`-1`。
-
-两个用于初始化`Reader`值的函数，分别叫`NewReader`和`NewReaderSize`，它们都会返回一个`*bufio.Reader`类型的值。
-
-- `NewReader`函数初始化的`Reade`r值会拥有一个默认尺寸的缓冲区。这个默认尺寸是 4096 个字节，即：4 KB。
-- `NewReaderSize`函数则将缓冲区尺寸的决定权抛给了使用方。
-
-### bufio.Writer类型值中缓冲的数据什么时候会被写到它的底层写入器
-`bufio.Writer`类型的字段:
-- `err`：`error`类型的字段。它的值用于表示在向底层写入器写数据时发生的错误。
-- `buf`：`[]byte`类型的字段，代表缓冲区。在初始化之后，它的长度会保持不变。
-- `n`：`int`类型的字段，代表对缓冲区进行下一次写入时的开始索引。我们可以称之为已写计数。
-- `wr`：`io.Writer`类型的字段，代表底层写入器。
-
-`bufio.Writer`类型有一个名为`Flush`的方法，它的主要功能是把相应缓冲区中暂存的所有数据，都写到底层写入器中。数据一旦被写进底层写入器，该方法就会把它们
-从缓冲区中删除掉。
-
-`bufio.Writer`类型值（以下简称Writer值）拥有的所有数据写入方法都会在必要的时候调用它的`Flush`方法。
-
-比如，`Write`方法有时候会在把数据写进缓冲区之后，调用`Flush`方法，以便为后续的新数据腾出空间。`WriteString`方法的行为与之类似。
-
-`WriteByte`方法和`WriteRune`方法，都会在发现缓冲区中的可写空间不足以容纳新的字节，或 Unicode 字符的时候，调用`Flush`方法。
-
-在**通常情况下，只要缓冲区中的可写空间无法容纳需要写入的新数据，`Flush`方法就一定会被调用**。
-
-
-### bufio.Reader类型读取方法
-`bufio.Reader`类型拥有很多用于读取数据的指针方法，这里面有 4 个方法可以作为不同读取流程的代表，它们是：`Peek`、`Read`、`ReadSlice`和`ReadBytes`。
-
-- `Peek`方法的特点是即使读取了缓冲区中的数据，也不会更改已读计数的值。而`Read`方法会在参数值的长度过大，且缓冲区中已无未读字节时，跨过缓冲区并直接向底层读取器索要数据。
-`Peek`方法有一个鲜明的特点，那就是：即使它读取了缓冲区中的数据，也不会更改已读计数的值。
-- `ReadSlice`方法会在缓冲区的未读部分中寻找给定的分隔符，并在必要时对缓冲区进行填充。如果在填满缓冲区之后仍然未能找到分隔符，那么该方法就会把整个缓冲区作为第一个结果值返回，
-同时返回缓冲区已满的错误。
-- `ReadBytes`方法会通过调用`ReadSlice`方法，一次又一次地填充缓冲区，并在其中寻找分隔符。除非发生了未预料到的错误或者找到了分隔符，否则这一过程将会一直进行下去。
-- Reader值的`ReadLine`方法会依赖于它的`ReadSlice`方法，而其`ReadString`方法则完全依赖于`ReadBytes`方法。
-
-**`Peek`方法、`ReadSlice`方法和`ReadLine`方法都有可能会造成内容泄露。这主要是因为它们在正常的情况下都会返回直接基于缓冲区的字节切片**。
