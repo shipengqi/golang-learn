@@ -68,9 +68,7 @@ type Writer interface {
 > `Write` 将 `len(p)` 个字节从 `p` 中写入到基本数据流中。它返回从 `p` 中被写入的字节数 `n`（`0 <= n <= len(p)`）以及任何遇到的引
 起写入提前停止的错误。若 `Write` 返回的 `n < len(p)`，它就必须返回一个 **非 nil** 的错误。
 
-所有实现了 `Write` 方法的类型都实现了 `io.Writer` 接口。
-
-以 `fmt.Fprintln` 为例，`fmt.Println` 函数的源码。
+以 `fmt.Fprintln` 为例：
 
 ```go
 func Println(a ...interface{}) (n int, err error) {
@@ -78,14 +76,14 @@ func Println(a ...interface{}) (n int, err error) {
 }
 ```
 
-`fmt.Println` 会将内容输出到标准输出中。
+可以看出 `fmt.Println` 会将内容输出到标准输出中。
 
 
 ## 实现了 io.Reader 接口或 io.Writer 接口的类型
 
 标准库中有哪些类型实现了 `io.Reader` 或 `io.Writer` 接口？
 
-`os.File` 同时实现了这两个接口。我们还看到 `os.Stdin/Stdout` 这样的代码，它们分别实现了 `io.Reader/io.Writer` 接口：
+例如 `os.Stdin/Stdout`，它们分别实现了 `io.Reader/io.Writer` 接口：
 
 ```go
 var (
@@ -95,9 +93,10 @@ var (
 )
 ```
 
-也就是说，`Stdin/Stdout/Stderr` 只是三个特殊的文件类型的标识（即都是 `os.File` 的实例），自然也实现了 `io.Reader` 和 `io.Writer`。
+上面的代码可以看出，`Stdin/Stdout/Stderr` 只是三个特殊的文件类型的标识（都是 `os.File` 的实例），`os.File` 实现
+了 `io.Reader` 和 `io.Writer`。
 
-列出实现了 io.Reader 或 io.Writer 接口的类型（导出的类型）：
+实现了 `io.Reader` 或 `io.Writer` 接口的类型：
 
 - `os.File` 同时实现了 `io.Reader` 和 `io.Writer`
 - `strings.Reader` 实现了 `io.Reader`
@@ -111,12 +110,11 @@ var (
 - `mime/multipart.Part` 实现了 `io.Reader`
 - `net/conn` 分别实现了 `io.Reader` 和 `io.Writer`(Conn接口定义了Read/Write)
 
-除此之外，io 包本身也有这两个接口的实现类型。如：
+**io 包本身实现这两个接口的类型**：
 
-	实现了 Reader 的类型：LimitedReader、PipeReader、SectionReader
-	实现了 Writer 的类型：PipeWriter
+- 实现了 `Reader` 的类型：`LimitedReader`、`PipeReader`、`SectionReader`
+- 实现了 `Writer` 的类型：`PipeWriter`
 
-以上类型中，常用的类型有：os.File、strings.Reader、bufio.Reader/Writer、bytes.Buffer、bytes.Reader
 
 ## ReaderAt 和 WriterAt
 
@@ -128,7 +126,7 @@ type ReaderAt interface {
 }
 ```
 
-> `ReadAt` 从基本输入源的偏移量 `off` 处开始，将 `len(p)` 个字节读取到 `p` 中。它返回读取的字节数 `n`（`0 <= n <= len(p)`）以及任
+> `ReadAt` 从基本输入源的偏移量 `off` 处开始，将 `len(p)` 个字节读到 `p` 中。它返回读取的字节数 `n`（`0 <= n <= len(p)`）以及任
 何遇到的错误。
 
 > 当 `ReadAt` 返回的 `n < len(p)` 时，它就会返回一个 **非 nil** 的错误来解释为什么没有返回更多的字节。
@@ -212,7 +210,7 @@ type ReaderFrom interface {
 
 注意：`ReadFrom` 方法不会返回 `err == EOF`。
 
-下面的例子简单的实现将文件中的数据全部读取（显示在标准输出）：
+将文件中的数据全部读取（显示在标准输出）：
 
 ```go
 file, err := os.Open("writeAt.txt")
@@ -255,10 +253,10 @@ type Seeker interface {
 }
 ```
 
-> `Seek` 设置下一次 `Read` 或 `Write` 的偏移量为 `offset`，它的解释取决于 `whence`：  0 表示相对于文件的起始处，1 表示相对
-于当前的偏移，而 2 表示相对于其结尾处。 `Seek` 返回新的偏移量和一个错误，如果有的话。
+> `Seek` 设置下一次 `Read` 或 `Write` 的偏移量为 `offset`，它的解释取决于 `whence`：  **0 表示相对于文件的起始处，1 表示相对
+于当前的偏移，而 2 表示相对于其结尾处**。 `Seek` 返回新的偏移量和一个错误，如果有的话。
 
-也就是说，`Seek` 方法是用于设置偏移量的，这样可以从某个特定位置开始操作数据流。听起来和 `ReaderAt/WriteA`t 接口有些类似，
+也就是说，`Seek` 方法是用于设置偏移量的，这样可以从某个特定位置开始操作数据流。听起来和 `ReaderAt/WriteAt` 接口有些类似，
 不过 `Seeker` 接口更灵活，可以更好的控制读写数据流的位置。
 
 获取倒数第二个字符（需要考虑 UTF-8 编码，这里的代码只是一个示例）：
@@ -325,60 +323,428 @@ func (f *File) Close() error {
 }
 ```
 
-## io 包中的接口和工具
-`strings.Reader` 类型主要用于读取字符串，它的指针类型实现的接口比较多，包括：
-- io.Reader；
-- io.ReaderAt；
-- io.ByteReader；
-- io.RuneReader；
-- io.Seeker；
-- io.ByteScanner；
-- io.RuneScanner；
-- io.WriterTo；
+## 其他接口
 
-`io.ByteScanner` 是`io.ByteReader`的扩展接口，而`io.RuneScanner`又是`io.RuneReader`的扩展接口。
+### ByteReader 和 ByteWriter
 
-`bytes.Buffer`该指针类型实现的读取相关的接口有下面几个：
-- io.Reader；
-- io.ByteReader；
-- io.RuneReader；
-- io.ByteScanner；
-- io.RuneScanner；
-- io.WriterTo；
+读或写一个字节：
 
-实现的写入相关的接口：
-- io.Writer；
-- io.ByteWriter；
-- io.stringWriter；
-- io.ReaderFrom；
+```go
+type ByteReader interface {
+    ReadByte() (c byte, err error)
+}
 
-这些类型实现了这么多的接口，目的是什么？
+type ByteWriter interface {
+    WriteByte(c byte) error
+}
+```
 
-为了提高不同程序实体之间的互操作性。以 io 包中的一些函数为例。
+下面类型都实现了这两个接口:
 
-io 包中，有这样几个用于拷贝数据的函数，它们是：`io.Copy`、`io.CopyBuffer`和`io.CopyN`。这几个函数在功能上都略有差别，但是它们都首先会接受两个参数，即：
-用于代表**数据目的地、`io.Writer`类型的参数`dst`**，以及用于代表**数据来源的、`io.Reader`类型的参数`src`**。大致上都是把数据从`src`拷贝到`dst`。
+- `bufio.Reader/Writer` 分别实现了 `io.ByteReader` 和 `io.ByteWriter`
+- `bytes.Buffer` 同时实现了 `io.ByteReader` 和 `io.ByteWriter`
+- `bytes.Reader` 实现了 `io.ByteReader`
+- `strings.Reader` 实现了 `io.ByteReader`
 
-**不论第一个参数值是什么类型的，只要这个类型实现了`io.Writer`接口即可**。同样的第二个参数值只要该类型实现了`io.Reader`接口就行。
+通过 `bytes.Buffer` 来一次读取或写入一个字节：
 
-很多数据类型实现了`io.Reader`接口，是因为它们提供了从某处读取数据的功能。类似的，许多能够把数据写入某处的数据类型，也都会去实现`io.Writer`接口。
+```go
+var ch byte
+fmt.Scanf("%c\n", &ch)
 
-### io.Reader的扩展接口和实现类型
-`io.Reader`的扩展接口：
-- `io.ReadWriter`：此接口既是`io.Reader`的扩展接口，也是`io.Writer`的扩展接口。
-- `io.ReadCloser`：此接口除了包含基本的字节序列读取方法之外，还拥有一个基本的关闭方法`Close`。后者一般用于关闭数据读写的通路。这个接口其实是`io.Reader`接口和`io.Closer`接口的组合。
-- `io.ReadWriteCloser`：`io.Reader`、`io.Writer`和`io.Closer`这三个接口的组合。
-- `io.ReadSeeker`：此接口的特点是拥有一个用于寻找读写位置的基本方法`Seek`。更具体地说，该方法可以根据给定的偏移量基于数据的起始位置、末尾位置，或者当前读写
-位置去寻找新的读写位置。这个新的读写位置用于表明下一次读或写时的起始索引。`Seek`是`io.Seeker`接口唯一拥有的方法。
-- `io.ReadWriteSeeker`：`io.Reader`、`io.Writer`和`io.Seeker`的组合。
+buffer := new(bytes.Buffer)
+err := buffer.WriteByte(ch)
+if err == nil {
+	fmt.Println("写入一个字节成功！准备读取该字节……")
+	newCh, _ := buffer.ReadByte()
+	fmt.Printf("读取的字节：%c\n", newCh)
+} else {
+	fmt.Println("写入错误")
+}
+```
 
-`io.Reader`接口的实现类型：
-- `*io.LimitedReader`：此类型的基本类型会包装`io.Reader`类型的值，并提供一个额外的受限读取的功能。。
-- `*io.SectionReader`：此类型的基本类型可以包装`io.ReaderAt`类型的值，并且会限制它的`Read`方法，只能够读取原始数据中的某一个部分（或者说某一段）。
-- `*io.teeReader`：此类型是一个包级私有的数据类型，也是io.TeeReader函数结果值的实际类型。这个函数接受两个参数r和w，类型分别是`io.Reader`和`io.Writer`。
-- `io.multiReader`：此类型也是一个包级私有的数据类型。类似的，io包中有一个名为`MultiReader`的函数，它可以接受若干个`io.Reader`类型的参数值，并返回一个实
-际类型为`io.multiReader`的结果值。
-- `io.pipe`：此类型为一个包级私有的数据类型，它比上述类型都要复杂得多。它不但实现了`io.Reader`接口，而且还实现了`io.Writer`接口。
-实际上，`io.PipeReader`类型和`io.PipeWriter`类型拥有的所有指针方法都是以它为基础的。这些方法都只是代理了`io.pipe`类型值所拥有的某一个方法而已。
-又因为`io.Pipe`函数会返回这两个类型的指针值并分别把它们作为其生成的同步内存管道的两端，所以可以说，`*io.pipe`类型就是io包提供的同步内存管道的核心实现。
-- `io.PipeReader`：此类型可以被视为`io.pipe`类型的代理类型。
+程序从标准输入接收一个字节（ASCII 字符），调用 `buffer` 的 `WriteByte` 将该字节写入 `buffer` 中，之后通过 `ReadByte` 读取该字节。
+
+### ByteScanner、RuneReader 和 RuneScanner
+
+`ByteScanner` 接口：
+
+```go
+type ByteScanner interface {
+    ByteReader
+    UnreadByte() error
+}
+```
+
+内嵌了 `ByteReader` 接口，`UnreadByte` 方法的意思是：将上一次 `ReadByte` 的字节还原，使得再次调用 `ReadByte` 返回的结果和上一次调
+用相同，也就是说，`UnreadByte` 是重置上一次的 `ReadByte`。注意，**`UnreadByte` 调用之前必须调用了 `ReadByte`，且不能连续调
+用 `UnreadByte`**。即：
+
+```go
+buffer := bytes.NewBuffer([]byte{'a', 'b'})
+err := buffer.UnreadByte()
+```
+
+和
+
+```go
+buffer := bytes.NewBuffer([]byte{'a', 'b'})
+buffer.ReadByte()
+err := buffer.UnreadByte()
+err = buffer.UnreadByte()
+```
+
+`err` 都 **非 nil**，错误为：`bytes.Buffer: UnreadByte: previous operation was not a read`
+
+`RuneReader` 接口和 `ByteReader` 类似，只是 `ReadRune` 方法读取单个 UTF-8 字符，返回其 `rune` 和该字符占用的字节数。
+
+`RuneScanner` 接口和 `ByteScanner` 类似。
+
+### ReadCloser、ReadSeeker、ReadWriteCloser、ReadWriteSeeker、ReadWriter、WriteCloser 和 WriteSeeker
+
+这些接口是上面介绍的接口的两个或三个组合而成的新接口。`ReadWriter` 接口：
+
+```go
+type ReadWriter interface {
+    Reader
+    Writer
+}
+```
+
+`Reader` 和 `Writer` 接口的组合。
+
+这些接口的作用是：有些时候同时需要某两个接口的所有功能，即必须同时实现了某两个接口的类型才能够被传入使用。
+
+## SectionReader 类型
+
+`SectionReader` 是一个 `struct`，实现了 `Read`, `Seek` 和 `ReadAt`，同时，内嵌了 `ReaderAt` 接口。结构定义如下：
+
+```go
+type SectionReader struct {
+	r     ReaderAt	// 该类型最终的 Read/ReadAt 最终都是通过 r 的 ReadAt 实现
+	base  int64		// NewSectionReader 会将 base 设置为 off
+	off   int64		// 从 r 中的 off 偏移处开始读取数据
+	limit int64		// limit - off = SectionReader 流的长度
+}
+```
+
+该类型读取数据流中部分数据。
+
+```go
+func NewSectionReader(r ReaderAt, off int64, n int64) *SectionReader
+```
+
+
+> `NewSectionReader` 返回一个 `SectionReader`，它从 `r` 中的偏移量 `off` 处读取 `n` 个字节后以 `EOF` 停止。
+
+也就是说，SectionReader 只是内部 ReaderAt 表示的数据流的一部分：从 off 开始后的 n 个字节。
+
+这个类型的作用是：方便重复操作某一段 (section) 数据流；或者同时需要 ReadAt 和 Seek 的功能。
+
+由于该类型所支持的操作，前面都有介绍，因此不提供示例代码了。
+
+## LimitedReader 类型
+
+```go
+type LimitedReader struct {
+    R Reader // underlying reader，最终的读取操作通过 R.Read 完成
+    N int64  // max bytes remaining
+}
+```
+
+
+> 从 `R` 读取但将返回的数据量限制为 `N` 字节。每调用一次 `Read` 都将更新 `N` 来反应新的剩余数量。
+
+也就是说，最多只能返回 `N` 字节数据。
+
+`LimitedReader` 只实现了 `Read` 方法。
+
+示例：
+
+```go
+content := "This Is LimitReader Example"
+reader := strings.NewReader(content)
+limitReader := &io.LimitedReader{R: reader, N: 8}
+for limitReader.N > 0 {
+	tmp := make([]byte, 2)
+	limitReader.Read(tmp)
+	fmt.Printf("%s", tmp) // This Is
+}
+```
+
+通过该类型可以达到 **只允许读取一定长度数据** 的目的。
+
+在 `io` 包中，`LimitReader` 函数的实现其实就是调用 `LimitedReader`：
+
+```go
+func LimitReader(r Reader, n int64) Reader { return &LimitedReader{r, n} }
+```
+
+## PipeReader 和 PipeWriter 类型
+
+`PipeReader` 是管道的读取端。它实现了 `io.Reader` 和 `io.Closer` 接口：
+```go
+type PipeReader struct {
+	p *pipe
+}
+```
+
+> 从管道中读取数据。该方法会堵塞，直到管道写入端开始写入数据或写入端被关闭。如果写入端关闭时带有 `error`（即调用 `CloseWithError` 关闭），
+该 `Read` 返回的 `err` 就是写入端传递的 `error`；否则 `err` 为 `EOF`。
+
+`PipeWriter` 是管道的写入端。它实现了 `io.Writer` 和 `io.Closer` 接口：
+```go
+type PipeWriter struct {
+	p *pipe
+}
+```
+
+> 写数据到管道中。该方法会堵塞，直到管道读取端读完所有数据或读取端被关闭。如果读取端关闭时
+带有 `error`（即调用 `CloseWithError` 关闭），该 `Write` 返回的 `err` 就是读取端传递的 `error`；否则 `err` 为 `ErrClosedPipe`。
+
+示例：
+
+```go
+func main() {
+    pipeReader, pipeWriter := io.Pipe()
+    go PipeWrite(pipeWriter)
+    go PipeRead(pipeReader)
+    time.Sleep(30 * time.Second)
+}
+
+func PipeWrite(writer *io.PipeWriter){
+	data := []byte("Go语言中文网")
+	for i := 0; i < 3; i++{
+		n, err := writer.Write(data)
+		if err != nil{
+			fmt.Println(err)
+			return
+		}
+		fmt.Printf("写入字节 %d\n",n)
+	}
+	writer.CloseWithError(errors.New("写入段已关闭"))
+}
+
+func PipeRead(reader *io.PipeReader){
+	buf := make([]byte, 128)
+	for{
+		fmt.Println("接口端开始阻塞5秒钟...")
+		time.Sleep(5 * time.Second)
+		fmt.Println("接收端开始接受")
+		n, err := reader.Read(buf)
+		if err != nil{
+			fmt.Println(err)
+			return
+		}
+		fmt.Printf("收到字节: %d\n buf内容: %s\n",n,buf)
+	}
+}
+```
+
+`io.Pipe()` 用于创建一个同步的内存管道：
+
+```go
+func Pipe() (*PipeReader, *PipeWriter)
+```
+
+它将 `io.Reader` 连接到 `io.Writer`。一端的读取匹配另一端的写入，直接在这两端之间复制数据；它没有内部缓存。它对于并行调用 `Read`
+ 和 `Write` 以及其它函数或 `Close` 来说都是安全的。一旦等待的 I/O 结束，`Close` 就会完成。并行调用 `Read` 或并行调用 `Write` 也
+同样安全：同种类的调用将按顺序进行控制。
+
+正因为是**同步**的，因此不能在一个 goroutine 中进行读和写。
+
+另外，对于管道的 `close` 方法（非 `CloseWithError` 时），`err` 会被置为 `EOF`。
+
+## Copy 和 CopyN 函数
+
+**Copy 函数**：
+
+```go
+func Copy(dst Writer, src Reader) (written int64, err error)
+```
+
+函数文档：
+
+> `Copy` 将 `src` 复制到 `dst`，直到在 `src` 上到达 `EOF` 或发生错误。它返回复制的字节数，如果有错误的话，还会返回在复制时遇到的第一
+个错误。
+
+> 成功的 `Copy` 返回 `err == nil`，而非 `err == EOF`。由于 `Copy` 被定义为从 `src` 读取直到 `EOF` 为止，因此它不会将来
+自 `Read` 的 `EOF` 当做错误来报告。
+
+> 若 `dst` 实现了 `ReaderFrom` 接口，其复制操作可通过调用 `dst.ReadFrom(src)` 实现。此外，若 `src` 实现了 `WriterTo` 接口，其复
+制操作可通过调用 `src.WriteTo(dst)` 实现。
+
+代码：
+
+```go
+io.Copy(os.Stdout, strings.NewReader("Go语言中文网"))
+```
+
+直接将内容输出（写入 Stdout 中）：
+
+```go
+package main
+
+import (
+	"fmt"
+	"io"
+	"os"
+)
+
+func main() {
+	_, _ = io.Copy(os.Stdout, os.Stdin)
+	fmt.Println("Got EOF -- bye")
+}
+```
+
+执行：`echo "Hello, World" | go run main.go`
+
+
+**CopyN 函数**：
+
+```go
+func CopyN(dst Writer, src Reader, n int64) (written int64, err error)
+```
+
+> `CopyN` 将 `n` 个字节(或到一个 `error`)从 `src` 复制到 `dst`。 它返回复制的字节数以及在复制时遇到的最早的错误。
+当且仅当 `err == nil` 时,`written == n` 。
+
+> 若 `dst` 实现了 `ReaderFrom` 接口，复制操作也就会使用它来实现。
+
+代码：
+
+```go
+io.CopyN(os.Stdout, strings.NewReader("Go语言中文网"), 8) // Go语言
+```
+
+## ReadAtLeast 和 ReadFull 函数
+
+**ReadAtLeast 函数**：
+
+```go
+func ReadAtLeast(r Reader, buf []byte, min int) (n int, err error)
+```
+
+函数文档：
+
+> `ReadAtLeast` 将 `r` 读取到 `buf` 中，直到读了最少 `min` 个字节为止。它返回复制的字节数，如果读取的字节较少，还会返回一个错误。
+若没有读取到字节，错误就只是 `EOF`。如果一个 `EOF` 发生在读取了少于 `min` 个字节之后，`ReadAtLeast` 就会返回 `ErrUnexpectedEOF`。
+若 `min` 大于 `buf` 的长度，`ReadAtLeast` 就会返回 `ErrShortBuffer`。对于返回值，当且仅当 `err == nil` 时，才有 `n >= min`。
+
+**ReadFull 函数**：
+
+```go
+func ReadFull(r Reader, buf []byte) (n int, err error)
+```
+
+函数文档：
+
+> `ReadFull` 精确地从 `r` 中将 `len(buf)` 个字节读取到 `buf` 中。它返回复制的字节数，如果读取的字节较少，还会返回一个错误。若没有读
+取到字节，错误就只是 `EOF`。如果一个 `EOF` 发生在读取了一些但不是所有的字节后，`ReadFull` 就会返回 `ErrUnexpectedEOF`。对于返回值，
+当且仅当 `err == nil` 时，才有 `n == len(buf)`。
+
+注意该函数和 `ReadAtLeast` 的区别：
+- `ReadFull` 将 `buf` 读满
+- `ReadAtLeast` 是最少读取 `min` 个字节。
+
+
+## WriteString 函数
+
+这是为了方便写入 `string` 类型提供的函数，函数签名：
+
+```go
+func WriteString(w Writer, s string) (n int, err error)
+```
+
+函数文档：
+
+> `WriteString` 将 ``s 的内容写入 `w` 中，当 `w` 实现了 `WriteString` 方法时，会直接调用该方法，否则执行 `w.Write([]byte(s))`。
+
+## MultiReader 和 MultiWriter 函数
+
+```go
+func MultiReader(readers ...Reader) Reader
+func MultiWriter(writers ...Writer) Writer
+```
+
+它们接收多个 `Reader` 或 `Writer`，返回一个 `Reader` 或 `Writer`。我们可以猜想到这两个函数就是操作多个 `Reader` 或 `Writer` 就像
+操作一个。
+
+事实上，在 `io` 包中定义了两个非导出类型：`mutilReader` 和 `multiWriter`，它们分别实现了 `io.Reader` 和 `io.Writer` 接口：
+
+```go
+type multiReader struct {
+	readers []Reader
+}
+
+type multiWriter struct {
+	writers []Writer
+}
+```
+
+对于这两种类型对应的实现方法（`Read` 和 `Write` 方法）的使用，示例：
+
+**MultiReader 的使用**：
+
+```go
+readers := []io.Reader{
+	strings.NewReader("from strings reader"),
+	bytes.NewBufferString("from bytes buffer"),
+}
+reader := io.MultiReader(readers...)
+data := make([]byte, 0, 128)
+buf := make([]byte, 10)
+	
+for n, err := reader.Read(buf); err != io.EOF ; n, err = reader.Read(buf){
+	if err != nil{
+		panic(err)
+	}
+	data = append(data,buf[:n]...)
+}
+fmt.Printf("%s\n", data) // from strings readerfrom bytes buffer
+```
+
+代码中首先构造了一个 `io.Reader` 的 `slice`，然后通过 `MultiReader` 得到新的 `Reader`，循环读取新 `Reader` 中的内容。从输出结果
+可以看到，第一次调用 `Reader` 的 `Read` 方法获取到的是 `slice` 中第一个元素的内容……也就是说，`MultiReader` 只是逻辑上将多
+个 `Reader` 组合起来，并不能通过调用一次 `Read` 方法获取所有 `Reader` 的内容。在所有的 `Reader` 内容都被读
+完后，`Reader` 会返回 `EOF`。
+
+**MultiWriter 的使用**：
+
+```go
+file, err := os.Create("tmp.txt")
+if err != nil {
+    panic(err)
+}
+defer file.Close()
+writers := []io.Writer{
+	file,
+	os.Stdout,
+}
+writer := io.MultiWriter(writers...)
+writer.Write([]byte("Go语言中文网"))
+```
+
+这段程序执行后在生成 `tmp.txt` 文件，同时在文件和屏幕中都输出：`Go语言中文网`。这和 Unix 中的 tee 命令类似。
+
+
+
+## TeeReader 函数
+
+
+```go
+func TeeReader(r Reader, w Writer) Reader
+```
+
+> `TeeReader` 返回一个 `Reader`，它将从 `r` 中读到的数据写入 `w` 中。所有经由它处理的从 `r` 的读取都匹配于对应的对 `w` 的写入。它没
+有内部缓存，即写入必须在读取完成前完成。任何在写入时遇到的错误都将作为读取错误返回。
+
+也就是说，我们通过 `Reader` 读取内容后，会自动写入到 `Writer` 中去。例子代码如下：
+
+```go
+reader := io.TeeReader(strings.NewReader("Go语言中文网"), os.Stdout)
+reader.Read(make([]byte, 20)) // Go语言中文网
+```
+
+
+这种功能的实现其实挺简单，无非是在 `Read` 完后执行 `Write`。
