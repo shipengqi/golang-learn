@@ -28,10 +28,10 @@ ch = make(chan int, 3) // buffered channel with capacity 3
 发送和接收两个操作使用 `<-` 运算符，一个左尖括号紧接着一个减号形象地代表了元素值的传输方向：
 ```go
 // 发送一个值
-ch <- x // 我的理解就是这里将数据push到channel
+ch <- x // 将数据 push 到 channel
 
 // 接受一个值
-x = <-ch // 取出channel的值并复制给变量x
+x = <-ch // 取出 channel 的值并复制给变量x
 
 <-ch // 接受的值会被丢弃
 ```

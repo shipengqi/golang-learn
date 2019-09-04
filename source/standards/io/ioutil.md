@@ -32,8 +32,6 @@ func ReadAll(r io.Reader) ([]byte, error)
 
 ## ReadDir 函数
 
-
-
 在 Go 中如何输出目录下的所有文件呢？
 
 在 `ioutil` 中提供了一个方便的函数：`ReadDir`，它读取目录并返回排好序的文件和子目录名（ `[]os.FileInfo` ）。
