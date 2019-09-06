@@ -90,6 +90,60 @@ main:
   type: link
   path: advance/gc.html
 
+- text: 标准库
+  type: label
+- text: fmt
+  type: link
+  path: standards/io/fmt.html
+- text: io
+  type: link
+  path: standards/io/io.html
+- text: ioutil
+  type: link
+  path: standards/io/ioutil.html
+- text: bufio
+  type: link
+  path: standards/io/bufio.html
+- text: os
+  type: link
+  path: standards/os/os.html
+- text: filepath
+  type: link
+  path: standards/os/filepath.html
+- text: strings
+  type: link
+  path: standards/text/strings.html
+- text: strconv
+  type: link
+  path: standards/text/strconv.html
+- text: unicode
+  type: link
+  path: standards/text/unicode.html
+- text: log
+  type: link
+  path: standards/log.html
+- text: time
+  type: link
+  path: standards/time.html
+- text: http
+  type: link
+  path: standards/net/http.html
+- text: math
+  type: link
+  path: standards/data/math.html
+- text: sort
+  type: link
+  path: standards/data/sort.html
+- text: big
+  type: link
+  path: standards/data/big.html
+- text: container
+  type: link
+  path: standards/data/container.html
+- text: sql
+  type: link
+  path: standards/database/sql.html
+
 - text: THEME
   type: label
 - text: 使用文档主题

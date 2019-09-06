@@ -52,32 +52,31 @@ func NewRequest(method, url string, body io.Reader) (*Request, error)
 `Request` 对象主要用于数据的存储，结构：
 ```go
 type Request struct {
-       
-        Method string // HTTP方法
-        URL *url.URL // URL
-        
-        Proto      string // "HTTP/1.0"
-        ProtoMajor int    // 1
-        ProtoMinor int    // 0
+    Method string // HTTP方法
+    URL *url.URL // URL
+    
+    Proto      string // "HTTP/1.0"
+    ProtoMajor int    // 1
+    ProtoMinor int    // 0
 
-        Header Header // 报文头
-        Body io.ReadCloser // 报文体
-        GetBody func() (io.ReadCloser, error)
-        ContentLength int64 // 报文长度
-        TransferEncoding []string // 传输编码
-        Close bool // 关闭连接
-        Host string // 主机名
-        
-        Form url.Values // 
-        PostForm url.Values // POST表单信息
-        MultipartForm *multipart.Form // multipart，
+    Header Header // 报文头
+    Body io.ReadCloser // 报文体
+    GetBody func() (io.ReadCloser, error)
+    ContentLength int64 // 报文长度
+    TransferEncoding []string // 传输编码
+    Close bool // 关闭连接
+    Host string // 主机名
+    
+    Form url.Values // 
+    PostForm url.Values // POST表单信息
+    MultipartForm *multipart.Form // multipart，
 
-        Trailer Header
-        RemoteAddr string
-        RequestURI string
-        TLS *tls.ConnectionState
-        Cancel <-chan struct{}
-        Response *Response
+    Trailer Header
+    RemoteAddr string
+    RequestURI string
+    TLS *tls.ConnectionState
+    Cancel <-chan struct{}
+    Response *Response
 }
 ```
 
@@ -87,7 +86,7 @@ func ReadRequest(b *bufio.Reader) (req *Request, err error)
 
 // 给 request 添加 cookie, AddCookie 向请求中添加一个 cookie.按照RFC 6265 
 // section 5.4的规则, AddCookie 不会添加超过一个 Cookie 头字段.
-// 这表示所有的 cookie 都写在同一行, 用分号分隔（cookie内部用逗号分隔属性） 
+// 这表示所有的 cookie 都写在同一行, 用分号分隔（cookie 内部用逗号分隔属性） 
 func (r *Request) AddCookie(c *Cookie)
 
 // 返回 request 中指定名 name 的 cookie，如果没有发现，返回 ErrNoCookie 
@@ -96,66 +95,66 @@ func (r *Request) Cookie(name string) (*Cookie, error)
 // 返回该请求的所有cookies 
 func (r *Request) Cookies() []*Cookie
 
-// 利用提供的用户名和密码给http基本权限提供具有一定权限的header。
-// 当使用http基本授权时，用户名和密码是不加密的 
+// 利用提供的用户名和密码给 http 基本权限提供具有一定权限的 header。
+// 当使用 http 基本授权时，用户名和密码是不加密的 
 func (r *Request) SetBasicAuth(username, password string)
 
-// 如果在request中发送，该函数返回客户端的user-Agent
+// 如果在 request 中发送，该函数返回客户端的 user-Agent
 func (r *Request) UserAgent() string
 
-// 对于指定格式的key，FormFile返回符合条件的第一个文件，如果有必要的话，
-// 该函数会调用ParseMultipartForm和ParseForm。 
+// 对于指定格式的 key，FormFile 返回符合条件的第一个文件，如果有必要的话，
+// 该函数会调用 ParseMultipartForm 和 ParseForm。 
 func (r *Request) FormFile(key string) (multipart.File, *multipart.FileHeader, error)
 
-// 返回key获取的队列中第一个值。在查询过程中post和put中的主题参数优先级
-// 高于url中的value。为了访问相同key的多个值，调用ParseForm然后直接
-// 检查RequestForm。 
+// 返回 key 获取的队列中第一个值。在查询过程中 post 和 put 中的主题参数优先级
+// 高于 url 中的 value。为了访问相同 key 的多个值，调用 ParseForm 然后直接
+// 检查 RequestForm。 
 func (r *Request) FormValue(key string) string
 
-// 如果这是一个有多部分组成的post请求，该函数将会返回一个MIME 多部分reader，
-// 否则的话将会返回一个nil和error。使用本函数代替ParseMultipartForm
-// 可以将请求body当做流stream来处理。 
+// 如果这是一个有多部分组成的 post 请求，该函数将会返回一个 MIME 多部分 reader，
+// 否则的话将会返回一个 nil 和 error。使用本函数代替 ParseMultipartForm
+// 可以将请求 body 当做流 stream 来处理。 
 func (r *Request) MultipartReader() (*multipart.Reader, error)
 
-// 解析URL中的查询字符串，并将解析结果更新到r.Form字段。对于POST或PUT
-// 请求，ParseForm还会将body当作表单解析，并将结果既更新到r.PostForm也
-// 更新到r.Form。解析结果中，POST或PUT请求主体要优先于URL查询字符串
+// 解析URL中的查询字符串，并将解析结果更新到 r.Form 字段。对于POST 或 PUT
+// 请求，ParseForm 还会将 body 当作表单解析，并将结果既更新到 r.PostForm 也
+// 更新到 r.Form。解析结果中，POST 或 PUT 请求主体要优先于 URL 查询字符串
 // （同名变量，主体的值在查询字符串的值前面）。如果请求的主体的大小没有被
-// MaxBytesReader函数设定限制，其大小默认限制为开头10MB。
-// ParseMultipartForm会自动调用ParseForm。重复调用本方法是无意义的。
+// MaxBytesReader 函数设定限制，其大小默认限制为开头 10MB。
+// ParseMultipartForm 会自动调用 ParseForm。重复调用本方法是无意义的。
 func (r *Request) ParseForm() error 
 
-// ParseMultipartForm将请求的主体作为multipart/form-data解析。
-// 请求的整个主体都会被解析，得到的文件记录最多 maxMemery字节保存在内存，
-// 其余部分保存在硬盘的temp文件里。如果必要，ParseMultipartForm会
+// ParseMultipartForm 将请求的主体作为 multipart/form-data 解析。
+// 请求的整个主体都会被解析，得到的文件记录最多 maxMemery 字节保存在内存，
+// 其余部分保存在硬盘的 temp 文件里。如果必要，ParseMultipartForm 会
 // 自行调用 ParseForm。重复调用本方法是无意义的。
 func (r *Request) ParseMultipartForm(maxMemory int64) error 
 
-// 返回post或者put请求body指定元素的第一个值，其中url中的参数被忽略。
+// 返回 post 或者 put 请求 body 指定元素的第一个值，其中 url 中的参数被忽略。
 func (r *Request) PostFormValue(key string) string 
 
-// 检测在request中使用的http协议是否至少是major.minor 
+// 检测在 request 中使用的 http 协议是否至少是 major.minor 
 func (r *Request) ProtoAtLeast(major, minor int) bool
 
-// 如果request中有refer，那么refer返回相应的url。Referer在request
-// 中是拼错的，这个错误从http初期就已经存在了。该值也可以从Headermap中
-// 利用Header["Referer"]获取；在使用过程中利用Referer这个方法而
-// 不是map的形式的好处是在编译过程中可以检查方法的错误，而无法检查map中
-// key的错误。
+// 如果 request 中有 refer，那么 refer 返回相应的 url。Referer 在 request
+// 中是拼错的(Referrer)，这个错误从 http 初期就已经存在了。该值也可以从 Headermap 中
+// 利用 Header["Referer"] 获取；在使用过程中利用 Referer 这个方法而
+// 不是 map 的形式的好处是在编译过程中可以检查方法的错误，而无法检查 map 中
+// key 的错误。
 func (r *Request) Referer() string 
 
-// Write方法以有线格式将HTTP/1.1请求写入w（用于将请求写入下层TCPConn等）
+// Write 方法以有线格式将 HTTP/1.1 请求写入 w（用于将请求写入下层 TCPConn 等）
 // 。本方法会考虑请求的如下字段：Host URL Method (defaults to "GET")
 //  Header ContentLength TransferEncoding Body如果存在Body，
 // ContentLength字段<= 0且TransferEncoding字段未显式设置为
-// ["identity"]，Write方法会显式添加”Transfer-Encoding: chunked”
-// 到请求的头域。Body字段会在发送完请求后关闭。
+// ["identity"]，Write 方法会显式添加 ”Transfer-Encoding: chunked”
+// 到请求的头域。Body 字段会在发送完请求后关闭。
 func (r *Request) Write(w io.Writer) error 
 
-// 该函数与Write方法类似，但是该方法写的request是按照http代理的格式去写。
-// 尤其是，按照RFC 2616 Section 5.1.2，WriteProxy会使用绝对URI
+// 该函数与 Write 方法类似，但是该方法写的 request 是按照 http 代理的格式去写。
+// 尤其是，按照 RFC 2616 Section 5.1.2，WriteProxy 会使用绝对 URI
 // （包括协议和主机名）来初始化请求的第1行（Request-URI行）。无论何种情况，
-// WriteProxy都会使用r.Host或r.URL.Host设置Host头。
+// WriteProxy 都会使用 r.Host 或 r.URL.Host 设置 Host 头。
 func (r *Request) WriteProxy(w io.Writer) error 
 ```
 
@@ -164,41 +163,41 @@ func (r *Request) WriteProxy(w io.Writer) error
 Response 也是一个数据对象，描述 HTTP 响应：
 ```go
 type Response struct {
-        Status     string // HTTP 状态码
-        StatusCode int    // 状态码 200
-        Proto      string // 版本号 "HTTP/1.0"
-        ProtoMajor int    // 主版本号 
-        ProtoMinor int    // 次版本号
+    Status     string // HTTP 状态码
+    StatusCode int    // 状态码 200
+    Proto      string // 版本号 "HTTP/1.0"
+    ProtoMajor int    // 主版本号 
+    ProtoMinor int    // 次版本号
 
-        Header Header // 响应报文头
-        Body io.ReadCloser // 响应报文体
-        ContentLength int64 // 报文长度
-        TransferEncoding []string // 报文编码
-        Close bool 
-        Trailer Header
-        Request *Request // 请求对象
-        TLS *tls.ConnectionState
+    Header Header // 响应报文头
+    Body io.ReadCloser // 响应报文体
+    ContentLength int64 // 报文长度
+    TransferEncoding []string // 报文编码
+    Close bool 
+    Trailer Header
+    Request *Request // 请求对象
+    TLS *tls.ConnectionState
 }
 ```
 
 ```go
-// ReadResponse从r读取并返回一个HTTP 回复。req参数是可选的，指定该回复
-// 对应的请求（即是对该请求的回复）。如果是nil，将假设请 求是GET请求。
-// 客户端必须在结束resp.Body的读取后关闭它。读取完毕并关闭后，客户端可以
-// 检查resp.Trailer字段获取回复的 trailer的键值对。
+// ReadResponse 从 r 读取并返回一个 HTTP 回复。req 参数是可选的，指定该回复
+// 对应的请求（即是对该请求的回复）。如果是 nil，将假设请 求是 GET 请求。
+// 客户端必须在结束 resp.Body 的读取后关闭它。读取完毕并关闭后，客户端可以
+// 检查 resp.Trailer 字段获取回复的 trailer 的键值对。
 func ReadResponse(r *bufio.Reader, req *Request) (*Response, error)
 
-// 解析cookie并返回在header中利用set-Cookie设定的cookie值。
+// 解析 cookie 并返回在 header 中利用 set-Cookie 设定的 cookie 值。
 func (r *Response) Cookies() []*Cookie 
 
-// 返回response中Location的header值的url。如果该值存在的话，则对于
+// 返回 response 中 Location 的 header 值的 url。如果该值存在的话，则对于
 // 请求问题可以解决相对重定向的问题，如果该值为nil，则返回ErrNOLocation。
 func (r *Response) Location() (*url.URL, error) 
 
-// 判定在response中使用的http协议是否至少是major.minor的形式。
+// 判定在 response 中使用的 http 协议是否至少是 major.minor 的形式。
 func (r *Response) ProtoAtLeast(major, minor int) bool 
 
-// 将response中信息按照线性格式写入w中。
+// 将 response 中信息按照线性格式写入 w 中。
 func (r *Response) Write(w io.Writer) error 
 ```
 
@@ -384,7 +383,7 @@ func (srv *Server) ListenAndServe() error
 
 func (srv *Server) ListenAndServeTLS(certFile, keyFile string) error 
 
-// 接受 Listener l 的连接，创建一个新的服务协程。该服务协程读取请求然后调用
+// 接受 l Listener 的连接，创建一个新的服务协程。该服务协程读取请求然后调用
 // srv.Handler 来应答。实际上就是实现了对某个端口进行监听，然后创建相应的连接。 
 func (srv *Server) Serve(l net.Listener) error
 
@@ -416,10 +415,10 @@ func (mux *ServeMux) Handler(r *Request) (h Handler, pattern string)
 func (mux *ServeMux) ServeHTTP(w ResponseWriter, r *Request)
 ```
 
-`Handler` 接口是 `server.go` 中最关键的接口，如果我们仔细看这个文件的源代码，将会发现很多结构体实现了这个接口的ServeHTTP方法。
+`Handler` 接口是 `server.go` 中最关键的接口，如果我们仔细看这个文件的源代码，将会发现很多结构体实现了这个接口的 `ServeHTTP` 方法。
 
-注意这个接口的注释：Handler 响应 HTTP 请求。没错，最终我们的 HTTP 服务是通过实现 `ServeHTTP(ResponseWriter, *Request)` 来达到服务端
-接收客户端请求并响应。
+注意这个接口的注释：`Handler` 响应 HTTP 请求。没错，最终我们的 HTTP 服务是通过实现 `ServeHTTP(ResponseWriter, *Request)` 来达
+到服务端接收客户端请求并响应。
 
 ```go
 func main() {
@@ -431,7 +430,7 @@ func main() {
 以上两行代码，就成功启动了一个 HTTP 服务器。我们通过 `net/http` 包源代码分析发现，调用 `Http.HandleFunc`，按顺序做了几件事：
 
 
-1. `Http.HandleFunc`调用了 `DefaultServeMux` 的 `HandleFunc`
+1. `Http.HandleFunc` 调用了 `DefaultServeMux` 的 `HandleFunc`
 
 ```go
 func HandleFunc(pattern string, handler func(ResponseWriter, *Request)) {
@@ -444,30 +443,44 @@ func HandleFunc(pattern string, handler func(ResponseWriter, *Request)) {
 （其实就是 `http.HandlerFunc` 函数类型变量）。
 
 ```go
+type ServeMux struct {
+	mu    sync.RWMutex
+	m     map[string]muxEntry // 保存路由规则 和 handler
+	hosts bool // whether any patterns contain hostnames
+}
+
+type muxEntry struct {
+	h       Handler
+	pattern string
+}
+
 var DefaultServeMux = &defaultServeMux
 var defaultServeMux ServeMux
 
 func (mux *ServeMux) HandleFunc(pattern string, handler func(ResponseWriter, *Request)) {
-	mux.Handle(pattern, HandlerFunc(handler))
+	if handler == nil {
+		panic("http: nil handler")
+	}
+	mux.Handle(pattern, HandlerFunc(handler)) // 这个 handler 就是 MyHandler
 }
 ```
 注意：
-上面的方法命名Handle，HandleFunc和HandlerFunc，Handler（接口），他们很相似，容易混淆。记住Handle和HandleFunc和pattern 匹配有关，
-也即往DefaultServeMux的map[string]muxEntry中增加对应的handler和路由规则。
+上面的方法命名 `Handle`，`HandleFunc` 和 `HandlerFunc`，`Handler`（接口），他们很相似，容易混淆。记住 **`Handle` 和 `HandleFunc` 
+和 `pattern` 匹配有关，也即往 `DefaultServeMux` 的 `map[string]muxEntry` 中增加对应的 `handler` 和路由规则**。
 
-接着我们看看myfunc的声明和定义：
+接着我们看看 `MyHandler` 的声明和定义：
 
 ```go
-func myfunc(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "hi")
+func MyHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "hello")
 }
 ```
-而type HandlerFunc func(ResponseWriter, *Request) 是一个函数类型，而我们定义的myfunc的函数签名刚好符合这个函数类型。
+而 `type HandlerFunc func(ResponseWriter, *Request)` 是一个函数类型，而我们定义的 `MyHandler` 的函数签名刚好符合这个函数类型。
 
-所以http.HandleFunc("/", myfunc)，实际上是mux.Handle("/", HandlerFunc(myfunc))。
+所以 `http.HandleFunc("/", MyHandler)`，实际上是 `mux.Handle("/", HandlerFunc(MyHandler))`。
 
-HandlerFunc(myfunc) 让myfunc成为了HandlerFunc类型，我们称myfunc为handler。而HandlerFunc类型是具有ServeHTTP方法的，而有了
-ServeHTTP方法也就是实现了Handler接口。
+`HandlerFunc(MyHandler)` 让 `MyHandler` 成为了 `HandlerFunc` 类型，我们称 `MyHandler` 为 `handler`。而 `HandlerFunc` 类型是
+具有 `ServeHTTP` 方法的，而有了 `ServeHTTP` 方法也就是实现了 `Handler` 接口。
 
 ```go
 func (f HandlerFunc) ServeHTTP(w ResponseWriter, r *Request) {
@@ -475,9 +488,10 @@ func (f HandlerFunc) ServeHTTP(w ResponseWriter, r *Request) {
 }
 
 ```
-现在ServeMux和Handler都和我们的myfunc联系上了，myfunc是一个Handler接口变量也是HandlerFunc类型变量，接下来和结构体server有关了。
+现在 `ServeMux` 和 `Handler` 都和我们的 `MyHandler` 联系上了，`MyHandler` 是一个 `Handler` 接口变量也是 `HandlerFunc` 类型变量，
+接下来和结构体 `server` 有关了。
 
-从http.ListenAndServe的源码可以看出，它创建了一个server对象，并调用server对象的ListenAndServe方法：
+从 `http.ListenAndServe` 的源码可以看出，它创建了一个 `server` 对象，并调用 `server` 对象的 `ListenAndServe` 方法：
 
 ```go
 func ListenAndServe(addr string, handler Handler) error {
@@ -485,49 +499,80 @@ func ListenAndServe(addr string, handler Handler) error {
     return server.ListenAndServe()
 }
 ```
-而我们HTTP服务器中第二行代码：
+而我们 HTTP 服务器中第二行代码：
 
 ```go
 http.ListenAndServe(":8080", nil)
 ```
-创建了一个server对象，并调用server对象的ListenAndServe方法，这里没有直接传递Handler，而是默认使用DefautServeMux作为multiplexer，
-myfunc是存在于handler和路由规则中的。
 
-Server的ListenAndServe方法中，会初始化监听地址Addr，同时调用Listen方法设置监听。
+创建了一个 `server` 对象，并调用 `server` 对象的 `ListenAndServe` 方法，这里没有直接传递 `Handler`，而是默认
+使用 `DefautServeMux` 作为 `multiplexer`。
+
+`Server` 的 `ListenAndServe` 方法中，会初始化监听地址 `Addr`，同时调用 `Listen` 方法设置监听。
 
 ```go
 for {
     rw, e := l.Accept()
-    ...
+    if e != nil {
+        select {
+        case <-srv.getDoneChan():
+            return ErrServerClosed
+        default:
+        }
+        if ne, ok := e.(net.Error); ok && ne.Temporary() {
+            if tempDelay == 0 {
+                tempDelay = 5 * time.Millisecond
+            } else {
+                tempDelay *= 2
+            }
+            if max := 1 * time.Second; tempDelay > max {
+                tempDelay = max
+            }
+            srv.logf("http: Accept error: %v; retrying in %v", e, tempDelay)
+            time.Sleep(tempDelay)
+            continue
+        }
+        return e
+    }
+    tempDelay = 0
     c := srv.newConn(rw)
-c.setState(c.rwc, StateNew) 
-go c.serve(ctx)
+    c.setState(c.rwc, StateNew) // before Serve can return
+    go c.serve(ctx)
 }
 ```
-监听开启之后，一旦客户端请求过来，Go就开启一个协程go c.serve(ctx)处理请求，主要逻辑都在serve方法之中。
+监听开启之后，一旦客户端请求过来，Go 就开启一个协程 `go c.serve(ctx)` 处理请求，主要逻辑都在 `serve` 方法之中。
 
-func (c *conn) serve(ctx context.Context)，这个方法很长，里面主要的一句：serverHandler{c.server}.ServeHTTP(w, w.req)。
-其中w由w, err := c.readRequest(ctx)得到，因为有传递context。
+`func (c *conn) serve(ctx context.Context)`，这个方法很长，里面主要的一句：`serverHandler{c.server}.ServeHTTP(w, w.req)`。
+其中 `w` 由 `w, err := c.readRequest(ctx)` 得到，因为有传递 `context`。
 
 还是来看源代码：
 
 ```go
+// serverHandler delegates to either the server's Handler or
+// DefaultServeMux and also handles "OPTIONS *" requests.
 type serverHandler struct {
-srv *Server
+	srv *Server
 }
 
-func (sh serverHandler) ServeHTTP(rw ResponseWriter, req Request) {
-handler := sh.srv.Handler
-if handler == nil {
-handler = DefaultServeMux
-}
-if req.RequestURI == "" && req.Method == "OPTIONS" {
-handler = globalOptionsHandler{}
-}
-handler.ServeHTTP(rw, req)
+
+func (sh serverHandler) ServeHTTP(rw ResponseWriter, req *Request) {
+    // 此 handler 即为 http.ListenAndServe 中的第二个参数
+    handler := sh.srv.Handler 
+    if handler == nil {
+        // 如果 handler 为空则使用内部的 DefaultServeMux 进行处理
+        handler = DefaultServeMux
+    }
+    if req.RequestURI == "*" && req.Method == "OPTIONS" {
+        handler = globalOptionsHandler{}
+    }
+    // 这里就开始处理 http 请求
+    // 如果需要使用自定义的 mux，就需要实现 ServeHTTP 方法，即实现 Handler 接口。
+    // ServeHTTP(rw, req) 默认情况下是 func (mux *ServeMux) ServeHTTP(w ResponseWriter, r *Request)
+    handler.ServeHTTP(rw, req)
 }
 ```
-从http.ListenAndServe(":8080", nil)开始，handler是nil，所以最后实际ServeHTTP方法是DefaultServeMux.ServeHTTP(rw, req)。
+从 `http.ListenAndServe(":8080", nil)` 开始，`handler` 是 `nil`，所以最后实际 `ServeHTTP` 方法
+是 `DefaultServeMux.ServeHTTP(rw, req)`。
 
 ```go
 func (mux *ServeMux) ServeHTTP(w ResponseWriter, r *Request) {
@@ -538,17 +583,72 @@ func (mux *ServeMux) ServeHTTP(w ResponseWriter, r *Request) {
 		w.WriteHeader(StatusBadRequest)
 		return
 	}
-	h, _ := mux.Handler(r)
-	h.ServeHTTP(w, r)
+	h, _ := mux.Handler(r) // 会匹配路由，h 就是 MyHandler
+	h.ServeHTTP(w, r) // 调用自己
+}
+
+func (mux *ServeMux) Handler(r *Request) (h Handler, pattern string) {
+
+	// CONNECT requests are not canonicalized.
+	if r.Method == "CONNECT" {
+		// If r.URL.Path is /tree and its handler is not registered,
+		// the /tree -> /tree/ redirect applies to CONNECT requests
+		// but the path canonicalization does not.
+		if u, ok := mux.redirectToPathSlash(r.URL.Host, r.URL.Path, r.URL); ok {
+			return RedirectHandler(u.String(), StatusMovedPermanently), u.Path
+		}
+
+		return mux.handler(r.Host, r.URL.Path)
+	}
+
+	// All other requests have any port stripped and path cleaned
+	// before passing to mux.handler.
+	host := stripHostPort(r.Host)
+	path := cleanPath(r.URL.Path)
+
+	// If the given path is /tree and its handler is not registered,
+	// redirect for /tree/.
+	if u, ok := mux.redirectToPathSlash(host, path, r.URL); ok {
+		return RedirectHandler(u.String(), StatusMovedPermanently), u.Path
+	}
+
+	if path != r.URL.Path {
+		_, pattern = mux.handler(host, path)
+		url := *r.URL
+		url.Path = path
+		return RedirectHandler(url.String(), StatusMovedPermanently), pattern
+	}
+
+	return mux.handler(host, r.URL.Path)
+}
+
+// handler is the main implementation of Handler.
+// The path is known to be in canonical form, except for CONNECT methods.
+func (mux *ServeMux) handler(host, path string) (h Handler, pattern string) {
+	mux.mu.RLock()
+	defer mux.mu.RUnlock()
+
+	// Host-specific pattern takes precedence over generic ones
+	if mux.hosts {
+		h, pattern = mux.match(host + path)
+	}
+	if h == nil {
+		h, pattern = mux.match(path)
+	}
+	if h == nil {
+		h, pattern = NotFoundHandler(), ""
+	}
+	return
 }
 ```
 
-通过func (mux *ServeMux) Handler(r *Request) (h Handler, pattern string)，我们得到Handler h，然后执行h.ServeHTTP(w, r)方法，
-也就是执行我们的myfunc函数（别忘了myfunc是HandlerFunc类型，而他的ServeHTTP(w, r)方法这里其实就是自己调用自己），把response写
-到http.ResponseWriter对象返回给客户端，fmt.Fprintf(w, "hi")，我们在客户端会接收到hi 。至此整个HTTP服务执行完成。
+通过 `func (mux *ServeMux) Handler(r *Request) (h Handler, pattern string)`，我们得到 `Handler h`，然后执
+行 `h.ServeHTTP(w, r)` 方法，也就是执行我们的 `MyHandler` 函数（别忘了 `MyHandler` 是HandlerFunc类型，而他的 `ServeHTTP(w, r)` 
+方法这里其实就是自己调用自己），把 `response` 写到 `http.ResponseWriter` 对象返回给客户端，`fmt.Fprintf(w, "hello")`，我们在客
+户端会接收到 "hello" 。至此整个 HTTP 服务执行完成。
 
 
-总结下，HTTP服务整个过程大概是这样：
+总结下，HTTP 服务整个过程大概是这样：
 ```go
 Request -> ServeMux(Multiplexer) -> handler-> Response
 ```
@@ -563,8 +663,8 @@ func ListenAndServe(addr string, handler Handler) error {
 }
 ```
 
-上面代码实际上就是server.ListenAndServe()执行的实际效果，只不过简单声明了一个结构体Server{Addr: addr, Handler: handler}实例。
-如果我们声明一个Server实例，完全可以达到深度自定义 http.Server的目的：
+上面代码实际上就是 `server.ListenAndServe()` 执行的实际效果，只不过简单声明了一个结构体 `Server{Addr: addr, Handler: handler}` 实例。
+如果我们声明一个 `Server` 实例，完全可以达到深度自定义 `http.Server` 的目的：
 
 
 ```go
@@ -575,7 +675,7 @@ import (
 	"net/http"
 )
 
-func myfunc(w http.ResponseWriter, r *http.Request) {
+func MyHandler(w http.ResponseWriter, r *http.Request) {
 	_, _ = fmt.Fprintf(w, "hi")
 }
 
@@ -586,15 +686,14 @@ func main() {
 		ReadTimeout:  0,
 		WriteTimeout: 0,
 	}
-	http.HandleFunc("/", myfunc)
+	http.HandleFunc("/", MyHandler)
 	_ = server.ListenAndServe()
 }
 ```
-这样服务也能跑起来，而且我们完全可以根据情况来自定义我们的Server！
+我们完全可以根据情况来自定义我们的 `Server`。
 
-还可以指定Servemux的用法:
+还可以指定 `Servemux` 的用法:
 
-`GOPATH\src\go42\chapter-15\15.3\7\main.go`
 ```go
 package main
 
@@ -603,19 +702,20 @@ import (
 	"net/http"
 )
 
-func myfunc(w http.ResponseWriter, r *http.Request) {
+func MyHandler(w http.ResponseWriter, r *http.Request) {
 	_, _ = fmt.Fprintf(w, "hi")
 }
 
 func main() {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/", myfunc)
+	mux.HandleFunc("/", MyHandler)
 	_ = http.ListenAndServe(":8080", mux)
 }
 ```
 
-如果既指定Servemux又自定义 http.Server，因为Server中有字段Handler，所以我们可以直接把Servemux变量作为Server.Handler：
+如果既指定 `Servemux` 又自定义 `http.Server`，因为 `Server` 中有字段 `Handler`，所以我们可以直接把 `Servemux` 变量作
+为 `Server.Handler`：
 
 
 ```go
@@ -626,7 +726,7 @@ import (
 	"net/http"
 )
 
-func myfunc(w http.ResponseWriter, r *http.Request) {
+func MyHandler(w http.ResponseWriter, r *http.Request) {
 	_, _ = fmt.Fprintf(w, "hi")
 }
 
@@ -639,30 +739,16 @@ func main() {
 	mux := http.NewServeMux()
 	server.Handler = mux
 
-	mux.HandleFunc("/", myfunc)
+	mux.HandleFunc("/", MyHandler)
 	_ = server.ListenAndServe()
 }
 ```
 
-在前面pprof 包的内容中我们也用了本章开头这段代码，当我们访问http://localhost:8080/debug/pprof/ 时可以看到对应的性能分析报告。
-因为我们这样导入 _"net/http/pprof" 包时，在文件 pprof.go 文件中init 函数已经定义好了handler：
+## 自定义处理器
 
-```go
-func init() {
-	http.HandleFunc("/debug/pprof/", Index)
-	http.HandleFunc("/debug/pprof/cmdline", Cmdline)
-	http.HandleFunc("/debug/pprof/profile", Profile)
-	http.HandleFunc("/debug/pprof/symbol", Symbol)
-	http.HandleFunc("/debug/pprof/trace", Trace)
-}
-```
-所以，我们就可以通过浏览器访问上面地址来看到报告。现在再来看这些代码，我们就明白怎么回事了！
+自定义的 `Handler`：
 
-## 36.5 自定义处理器（Custom Handlers）
-
-自定义的Handler：
-
-标准库http提供了Handler接口，用于开发者实现自己的handler。只要实现接口的ServeHTTP方法即可。
+标准库 http 提供了 `Handler` 接口，用于开发者实现自己的 `handler`。只要实现接口的 `ServeHTTP` 方法即可。
 
 ```go
 package main
@@ -692,81 +778,21 @@ func main() {
 	_ = http.ListenAndServe(":3000", mux)
 }
 ```
-我们知道，NewServeMux可以创建一个ServeMux实例，ServeMux同时也实现了ServeHTTP方法，因此代码中的mux也是一种handler。把它当成参数
-传给http.ListenAndServe方法，后者会把mux传给Server实例。因为指定了handler，因此整个http服务就不再是DefaultServeMux，而是mux，
-无论是在注册路由还是提供请求服务的时候。
+我们知道，`NewServeMux` 可以创建一个 `ServeMux` 实例，`ServeMux` 同时也实现了 `ServeHTTP` 方法，因此代码中的 `mux` 也是
+一种 `handler`。把它当成参数传给 `http.ListenAndServe` 方法，后者会把 `mux` 传给 `Server` 实例。因为指定了 `handler`，
+因此整个 `http` 服务就不再是 `DefaultServeMux`，而是 `mux`，无论是在注册路由还是提供请求服务的时候。
 
-任何有 func(http.ResponseWriter，*http.Request) 签名的函数都能转化为一个 HandlerFunc 类型。这很有用，因为 HandlerFunc 对象
-内置了 ServeHTTP 方法，后者可以聪明又方便的调用我们最初提供的函数内容。
-
-## 将函数作为处理器
-
-```go
-package main
-
-import (
-	"log"
-	"net/http"
-	"time"
-)
-
-func timeHandler(w http.ResponseWriter, r *http.Request) {
-	tm := time.Now().Format(time.RFC1123)
-	_, _ = w.Write([]byte("The time is: " + tm))
-}
-
-func main() {
-	mux := http.NewServeMux()
-
-	// Convert the timeHandler function to a HandlerFunc type
-	th := http.HandlerFunc(timeHandler)
-	// And add it to the ServeMux
-	mux.Handle("/time", th)
-
-	log.Println("Listening...")
-	_ = http.ListenAndServe(":3000", mux)
-}
-```
-创建新的server：
-
-```go
-func index(w http.ResponseWriter, r *http.Request) {
-    w.Header().Set("Content-Type", "text/html")
-
-    html := `<doctype html>
-        <html>
-        <head>
-          <title>Hello World</title>
-        </head>
-        <body>
-        <p>
-          Welcome
-        </p>
-        </body>
-</html>`
-    fmt.Fprintln(w, html)
-}
-
-func main(){
-    http.HandleFunc("/", index)
-
-    server := &http.Server{
-        Addr: ":8000", 
-        ReadTimeout: 60 * time.Second, 
-        WriteTimeout: 60 * time.Second, 
-    }
-    server.ListenAndServe()
-}
-```
+任何有 `func(http.ResponseWriter，*http.Request)` 签名的函数都能转化为一个 `HandlerFunc` 类型。这很有用，因为 `HandlerFunc` 对象
+内置了 `ServeHTTP` 方法，后者可以聪明又方便的调用我们最初提供的函数内容。
 
 ## 中间件 Middleware
 
-所谓中间件，就是连接上下级不同功能的函数或者软件，通常进行一些包裹函数的行为，为被包裹函数提供添加一些功能或行为。前文的HandleFunc就
-能把签名为 func(w http.ResponseWriter, r *http.Reqeust)的函数包裹成handler。这个函数也算是中间件。
+所谓中间件，就是连接上下级不同功能的函数或者软件，通常进行一些包裹函数的行为，为被包裹函数提供添加一些功能或行为。前文的 `HandleFunc` 就
+能把签名为 `func(w http.ResponseWriter, r *http.Reqeust)` 的函数包裹成 `handler`。这个函数也算是中间件。
 
-Go的HTTP中间件很简单，只要实现一个函数签名为func(http.Handler) http.Handler的函数即可。http.Handler是一个接口，接口方法我们
-熟悉的为serveHTTP。返回也是一个handler。因为Go中的函数也可以当成变量传递或者或者返回，因此也可以在中间件函数中传递定义好的函数，
-只要这个函数是一个handler即可，即实现或者被handlerFunc包裹成为handler处理器。
+Go 的 HTTP 中间件很简单，只要实现一个函数签名为 `func(http.Handler) http.Handler` 的函数即可。`http.Handler` 是一个接口，
+接口方法我们熟悉的为 `serveHTTP`。返回也是一个 `handler`。因为 Go 中的函数也可以当成变量传递或者或者返回，因此也可以在中间件函数
+中传递定义好的函数，只要这个函数是一个 `handler` 即可，即实现或者被 `handlerFunc` 包裹成为 `handler` 处理器。
 
 ```go
 func index(w http.ResponseWriter, r *http.Request) {
@@ -788,9 +814,9 @@ func index(w http.ResponseWriter, r *http.Request) {
 
 func middlewareHandler(next http.Handler) http.Handler{
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
-        // 执行handler之前的逻辑
+        // 执行 handler 之前的逻辑
         next.ServeHTTP(w, r)
-        // 执行完毕handler后的逻辑
+        // 执行完毕 handler 后的逻辑
     })
 }
 
