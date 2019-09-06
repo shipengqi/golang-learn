@@ -13,7 +13,6 @@ type struct_variable_type struct {
    member definition;
 }
 
-// 声明
 variable_name := structure_variable_type{value1, value2...valuen}
 // 或
 variable_name := structure_variable_type{ key1: value1, key2: value2..., keyn: valuen}
@@ -45,7 +44,7 @@ func main() {
 	fmt.Printf( "Book 1 book_id : %d\n", Book1.book_id)
 }
 ```
-`.`点操作符也可以和指向结构体的指针一起工作:
+`.` 点操作符也可以和指向结构体的指针一起工作:
 ```go
 var employeeOfTheMonth *Employee = &dilbert
 employeeOfTheMonth.Position += " (proactive team player)"
@@ -149,7 +148,7 @@ w.Spokes = 20
 ```
 
 上面的代码中，`Circle` 和 `Wheel` 各自都有一个匿名成员。我们可以说 `Point` 类型被嵌入到了 `Circle` 结构体，
-同时 `Circle` 类型被嵌入到了 `Wheel` 结构体。但是结构体字面值并没有简短表示匿名成员的语法，所以下面的代码，
+同时 `Circle` 类型被嵌入到了 `Wheel` 结构体。但是**结构体字面值并没有简短表示匿名成员的语法**，所以下面的代码，
 会编译失败：
 ```go
 w = Wheel{8, 8, 5, 20}                       // compile error: unknown fields

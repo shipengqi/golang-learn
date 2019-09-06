@@ -58,7 +58,7 @@ Go 运行时错误会引起 `painc` 异常。
 `panic` 函数接受任何值作为参数。当某些不应该发生的场景发生时，我们就应该调用 `panic`。
 
 ### panic 详情中都有什么
-```bash
+```sh
 panic: runtime error: index out of range
 
 goroutine 1 [running]:
@@ -105,7 +105,7 @@ exit status 2
 一般情况下，我们不能因为某个处理函数引发的 `panic` 异常，杀掉整个进程，可以使用 `recover` 函数恢复 `panic` 异常。
 
 `panic` 时会调用 `recover`，但是 `recover` 不能滥用，可能会引起资源泄漏或者其他问题。我们可以将 `panic value` 设置成特
-殊类型，来标识某个 `panic` 是否应该被恢复。
+殊类型，来标识某个 `panic` 是否应该被恢复。**`recover` 只能在 `defer` 修饰的函数中使用**:
 ```go
 func soleTitle(doc *html.Node) (title string, err error) {
 	type bailout struct{}
@@ -118,7 +118,7 @@ func soleTitle(doc *html.Node) (title string, err error) {
                 panic(p) // unexpected panic; carry on panicking
 		}
 	}()
-  ...
+    panic(bailout{}) 
 }
 ```
 

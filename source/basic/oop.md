@@ -156,3 +156,18 @@ fmt.Printf("The animal category: %s\n", category)
 
 `fmt.Printf` 函数会自己去寻找它。此时的打印内容会是 `The animal category: cat`。显而易见，`category` 的 `String` 方法成
 功地引用了当前值的所有字段。
+
+当你广泛使用一个自定义类型时，最好为它定义 `String()` 方法。
+
+**不要在 `String()` 方法里面调用涉及 `String()` 方法的方法，它会导致意料之外的错误**，比如：
+```go
+type TT float64
+
+func (t TT) String() string {
+    return fmt.Sprintf("%v", t)
+}
+t.String()
+```
+
+它导致了一个无限递归调用（`TT.String()` 调用 `fmt.Sprintf`，而 `fmt.Sprintf` 又会反过来调用 `TT.String()`...），很快就会导
+致内存溢出。
