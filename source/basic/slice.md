@@ -16,19 +16,19 @@ var 变量名 []类型
 
 初始化切片：
 ```go
-// 直接初始化切片，[] 表示是切片类型，{1,2,3}初始化值依次是1,2,3.其 cap=len=3
+// 直接初始化切片，[] 表示是切片类型，{1,2,3} 初始化值依次是 1,2,3.其 cap=len=3
 s :=[]int {1,2,3}
 
-// 初始化切片s,是数组arr的引用
+// 初始化切片 s,是数组 arr 的引用
 s := arr[:]
 
-// 将arr中从下标startIndex到endIndex-1 下的元素创建为一个新的切片
+// 将 arr 中从下标 startIndex 到 endIndex-1 下的元素创建为一个新的切片
 s := arr[startIndex:endIndex] 
 
-// 缺省endIndex时将表示一直到arr的最后一个元素
+// 缺省 endIndex 时将表示一直到 arr 的最后一个元素
 s := arr[startIndex:] 
 
-// 缺省startIndex时将表示从arr的第一个元素开始
+// 缺省 startIndex 时将表示从 arr 的第一个元素开始
 s := arr[:endIndex]
 
 // 使用 make 函数来创建切片
@@ -50,7 +50,7 @@ s := make([]int, len, capacity)
 /* 创建切片 */
 numbers := []int{0,1,2,3,4,5,6,7,8}   
 
-/* 打印子切片从索引1(包含) 到索引4(不包含)*/
+/* 打印子切片从索引 1 (包含) 到索引 4(不包含)*/
 fmt.Println("numbers[1:4] ==", numbers[1:4]) // numbers[1:4] == [1 2 3]
 
 /* 默认下限为 0*/
@@ -61,10 +61,10 @@ fmt.Println("numbers[4:] ==", numbers[4:]) // numbers[4:] == [4 5 6 7 8]
 
 numbers1 := make([]int,0,5)
 
-/* 打印子切片从索引  0(包含) 到索引 2(不包含) */
+/* 打印子切片从索引  0 (包含) 到索引 2 (不包含) */
 number2 := numbers[:2]
 fmt.Printf("len=%d cap=%d slice=%v\n",len(number2),cap(number2),number2) // len=2 cap=9 slice=[0 1]
-/* 打印子切片从索引 2(包含) 到索引 5(不包含) */
+/* 打印子切片从索引 2 (包含) 到索引 5 (不包含) */
 number3 := numbers[2:5]
 fmt.Printf("len=%d cap=%d slice=%v\n",len(number3),cap(number3),number3) // len=3 cap=7 slice=[2 3 4]
 ```
@@ -83,3 +83,9 @@ fmt.Printf("len=%d cap=%d slice=%v\n",len(number3),cap(number3),number3) // len=
 的切片作为了新底层数组的窗口，而没有对原切片及其底层数组做任何改动。
 
 **在无需扩容时，`append` 函数返回的是指向原底层数组的新切片，而在需要扩容时，`append` 函数返回的是指向新底层数组的新切片**。
+
+## 长度和容量
+`Slice` 有两个比较混淆的概念，就是长度和容量。这个长度跟数组的长度是一个概念，即在内存中进行了初始化实际存在的元素的个数。何谓容量？
+如果通过 `make` 函数创建 `Slice` 的时候指定了容量参数，那内存管理器会根据指定的容量的值先划分一块内存空间，然后才在其中存放有数组元素，
+多余部分处于空闲状态，在 `Slice` 上追加元素的时候，首先会放到这块空闲的内存中，如果添加的参数个数超过了容量值，内存管理器会重新划
+分一块容量值为原容量值 `*2` 大小的内存空间，依次类推。这个机制的好处在能够提升运算性能，因为内存的重新划分会降低性能。
