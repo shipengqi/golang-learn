@@ -45,7 +45,20 @@ s := make([]int, len, capacity)
 - `append` 向切片追加新元素
 - `copy` 拷贝切片
 
-## 截取切片
+### append 的使用
+使用 `append` 函数时要注意，`append` 总是从 `slice` 的尾部开始追加数据。比如下面的代码：
+```go
+urls := make([]string, 3) 
+append(urls, "hello")
+len(urls) // 4
+
+urls2 := make([]string, 0)
+append(urls, "hello")
+len(urls) // 1
+```
+
+## 切片操作
+### 截取切片
 ```go
 /* 创建切片 */
 numbers := []int{0,1,2,3,4,5,6,7,8}   
@@ -69,6 +82,11 @@ number3 := numbers[2:5]
 fmt.Printf("len=%d cap=%d slice=%v\n",len(number3),cap(number3),number3) // len=3 cap=7 slice=[2 3 4]
 ```
 
+### 切片初始化要注意的事情
+初始化切片可以使用两种方式：
+1. 比如 `s := []string{}`，这种方式初始化的切片长度为 0，不能直接使用下标赋值（`s[0] = "hello"`），会报错 `index out of range`。
+2. 使用 `make` 初始化切片，要注意使用 `append` 函数时，是从末尾开始添加数据，注意 `slice` 的 `len` 参数。
+
 ## 怎样估算切片容量的增长
 
 一旦**一个切片无法容纳更多的元素，Go 语言就会想办法扩容。但它并不会改变原来的切片，而是会生成一个容量更大的切片，
@@ -82,7 +100,7 @@ fmt.Printf("len=%d cap=%d slice=%v\n",len(number3),cap(number3),number3) // len=
 一个切片的底层数组永远不会被替换。为什么？虽然在扩容的时候 Go 语言一定会生成新的底层数组，但是它也同时生成了新的切片。它是把新
 的切片作为了新底层数组的窗口，而没有对原切片及其底层数组做任何改动。
 
-**在无需扩容时，`append` 函数返回的是指向原底层数组的新切片，而在需要扩容时，`append` 函数返回的是指向新底层数组的新切片**。
+**在无需扩容时，`append` 函数返回的是指向“原底层数组”的新切片，而在需要扩容时，`append` 函数返回的是指向“新底层数组”的新切片**。
 
 ## 长度和容量
 `Slice` 有两个比较混淆的概念，就是长度和容量。这个长度跟数组的长度是一个概念，即在内存中进行了初始化实际存在的元素的个数。何谓容量？
