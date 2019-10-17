@@ -168,6 +168,107 @@ w = Wheel{
 
 **不能同时包含两个类型相同的匿名成员，这会导致名字冲突**。
 
+### 嵌入接口类型
+Go 语言的结构体还可以嵌入接口类型。
+
+```go
+type Interface interface {
+    Len() int
+    Less(i, j int) bool
+    Swap(i, j int)
+}
+
+// Array 实现Interface接口
+type Array []int
+
+func (arr Array) Len() int {
+    return len(arr)
+}
+
+func (arr Array) Less(i, j int) bool {
+    return arr[i] < arr[j]
+}
+
+func (arr Array) Swap(i, j int) {
+    arr[i], arr[j] = arr[j], arr[i]
+}
+
+// 匿名接口(anonymous interface)
+type reverse struct {
+    Interface
+}
+
+// 重写(override)
+func (r reverse) Less(i, j int) bool {
+    return r.Interface.Less(j, i)
+}
+
+// 构造reverse Interface
+func Reverse(data Interface) Interface {
+    return &reverse{data}
+}
+
+func main() {
+    arr := Array{1, 2, 3}
+    rarr := Reverse(arr)
+    fmt.Println(arr.Less(0,1))
+    fmt.Println(rarr.Less(0,1))
+}
+```
+`reverse` 结构体内嵌了一个名为 `Interface` 的 `interface`，并且实现 `Less` 函数，但是
+却没有实现 `Len`, `Swap` 函数。
+
+为什么这么设计？
+
+通过这种方法可以让 **`reverse` 实现 `Interface` 这个接口类型，并且仅实现某个指定的方法，而不需要实现这个接口下的所有方法**。
+
+对比一下传统的组合匿名结构体实现重写的写法：
+```go
+type Interface interface {
+    Len() int
+    Less(i, j int) bool
+    Swap(i, j int)
+}
+
+type Array []int
+
+func (arr Array) Len() int {
+    return len(arr)
+}
+
+func (arr Array) Less(i, j int) bool {
+    return arr[i] < arr[j]
+}
+
+func (arr Array) Swap(i, j int) {
+    arr[i], arr[j] = arr[j], arr[i]
+}
+
+// 匿名struct
+type reverse struct {
+    Array
+}
+
+// 重写
+func (r reverse) Less(i, j int) bool {
+    return r.Array.Less(j, i)
+}
+
+// 构造reverse Interface
+func Reverse(data Array) Interface {
+    return &reverse{data}
+}
+
+func main() {
+    arr := Array{1, 2, 3}
+    rarr := Reverse(arr)
+    fmt.Println(arr.Less(0, 1))
+    fmt.Println(rarr.Less(0, 1))
+}
+```
+
+匿名接口的优点，**匿名接口的方式不依赖具体实现，可以对任意实现了该接口的类型进行重写**。
+
 ### 如果被嵌入类型和嵌入类型有同名的方法，那么调用哪一个的方法
 **只要名称相同，无论这两个方法的签名是否一致，被嵌入类型的方法都会“屏蔽”掉嵌入字段的同名方法**。
 

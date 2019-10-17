@@ -128,7 +128,7 @@ fmt.Printf("mean 的值为: %f\n",mean)
 ```go
 a := 100
 b := byte(a)
-c := a + int(b) 混合类型表达式，类型必须保持一致
+c := a + int(b) // 混合类型表达式，类型必须保持一致
 ```
 在 Go 中，非布尔值不能当做 `true/false` 使用，这点和我常用的js不同：
 ```go
