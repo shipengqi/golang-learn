@@ -120,6 +120,13 @@ Sscanln
 
 	占位符						说明												举例									输出
 	%s		输出字符串表示（string 类型或 []byte)							Printf("%s", []byte ("Hello world"))		Hello world
+	%5s		指定长度的字符串，这里是以 5 为例，表示最小宽度为 5				    Printf("%5s", []byte ("Hello world"))		Hello
+    %-5s	最小宽度为 5（左对齐）
+    %.5s	最大宽度为 5
+    %5.7s	最小宽度为 5，最大宽度为 7
+    %-5.7s	最小宽度为 5，最大宽度为 7（左对齐）
+    %5.3s	如果宽度大于 3，则截断
+    %05s	如果宽度小于 5，就会在字符串前面补零
 	%q		双引号围绕的字符串，由 Go 语法安全地转义							Printf("%q", "Hello world")				    "Hello world"
 	%x		十六进制，小写字母，每字节两个字符								Printf("%x", "golang")						676f6c616e67
 	%X		十六进制，大写字母，每字节两个字符								Printf("%X", "golang")						676F6C616E67
