@@ -18,3 +18,5 @@
 - [Go 实战开发](https://github.com/astaxie/go-best-practice)
 - [go-internals](https://github.com/go-internals-cn/go-internals)
 - [Learning Go](https://github.com/mikespook/Learning-Go-zh-cn)
+- [Golang kancloud](https://www.kancloud.cn/uvohp5na133/golang/933968)
+- [Uber style guide](https://github.com/xxjwxc/uber_go_guide_cn)
