@@ -75,6 +75,53 @@ func (P) f() { /* ... */ } // compile error: invalid receiver type
 - 值方法，就是接收者类型是非指针的自定义数据类型的方法。
 - 指针方法，就是接收者类型是指针类型的方法。
 
+#### 实现了 interface 的方法
+如果一个类型实现的某个接口的方法，如果接收者是指针类型，那么只能指针赋值：
+```go
+type I interface {
+	Get()
+}
+type S struct {
+}
+
+func (s *S) Get() {
+	fmt.Println("get")
+}
+
+func main() {
+	ss := S{}
+
+	var i I
+	//i = ss , 此处编译不过
+	//i.Get()
+
+	i = &ss // 必须是指针赋值
+	i.Get()
+}
+```
+
+如果接收者是非指针类型，那么值和指针都可以赋值：
+```go
+	ss := S{}
+
+	var i I
+	i = ss  // 可以赋值
+	i.Get()
+
+	i = &ss // 可以赋值
+	i.Get()
+```
+
+### 方法集
+Golang 方法集 ：每个类型都有与之关联的方法集，这会影响到接口实现规则。
+```
+• 类型 T 方法集包含全部 receiver T 方法。
+• 类型 *T 方法集包含全部 receiver T + *T 方法。
+• 如类型 S 包含匿名字段 T，则 S 和 *S 方法集包含 T 方法。 
+• 如类型 S 包含匿名字段 *T，则 S 和 *S 方法集包含 T + *T 方法。 
+• 不管嵌入 T 或 *T，*S 方法集总是包含 T + *T 方法。
+```
+
 ## 嵌入结构体扩展类型
 ```go
 import "image/color"
