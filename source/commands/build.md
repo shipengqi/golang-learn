@@ -1,61 +1,132 @@
-## 命令
-## 工具
-Go 命令：
-```bash
-$ go
-Go is a tool for managing Go source code.
+---
+title: build
+---
 
-Usage:
+# build
+```sh
+usage: go build [-o output] [-i] [build flags] [packages]
 
-        go command [arguments]
+Build compiles the packages named by the import paths,
+along with their dependencies, but it does not install the results.
 
-The commands are:
+If the arguments to build are a list of .go files, build treats
+them as a list of source files specifying a single package.
 
-        build       compile packages and dependencies
-        clean       remove object files and cached files
-        doc         show documentation for package or symbol
-        env         print Go environment information
-        bug         start a bug report
-        fix         update packages to use new APIs
-        fmt         gofmt (reformat) package sources
-        generate    generate Go files by processing source
-        get         download and install packages and dependencies
-        install     compile and install packages and dependencies
-        list        list packages
-        run         compile and run Go program
-        test        test packages
-        tool        run specified go tool
-        version     print Go version
-        vet         report likely mistakes in packages
+When compiling a single main package, build writes
+the resulting executable to an output file named after
+the first source file ('go build ed.go rx.go' writes 'ed' or 'ed.exe')
+or the source code directory ('go build unix/sam' writes 'sam' or 'sam.exe').
+The '.exe' suffix is added when writing a Windows executable.
 
-Use "go help [command]" for more information about a command.
+When compiling multiple packages or a single non-main package,
+build compiles the packages but discards the resulting object,
+serving only as a check that the packages can be built.
 
-Additional help topics:
+When compiling packages, build ignores files that end in '_test.go'.
 
-        c           calling between Go and C
-        buildmode   build modes
-        cache       build and test caching
-        filetype    file types
-        gopath      GOPATH environment variable
-        environment environment variables
-        importpath  import path syntax
-        packages    package lists
-        testflag    testing flags
-        testfunc    testing functions
+The -o flag, only allowed when compiling a single package,
+forces build to write the resulting executable or object
+to the named output file, instead of the default behavior described
+in the last two paragraphs.
 
-Use "go help [topic]" for more information about that topic.
+The -i flag installs the packages that are dependencies of the target.
+
+The build flags are shared by the build, clean, get, install, list, run,
+and test commands:
+
+        -a
+                force rebuilding of packages that are already up-to-date.
+        -n
+                print the commands but do not run them.
+        -p n
+                the number of programs, such as build commands or
+                test binaries, that can be run in parallel.
+                The default is the number of CPUs available.
+        -race
+                enable data race detection.
+                Supported only on linux/amd64, freebsd/amd64, darwin/amd64 and windows/amd64.
+        -msan
+                enable interoperation with memory sanitizer.
+                Supported only on linux/amd64, linux/arm64
+                and only with Clang/LLVM as the host C compiler.
+        -v
+                print the names of packages as they are compiled.
+        -work
+                print the name of the temporary work directory and
+                do not delete it when exiting.
+        -x
+                print the commands.
+
+        -asmflags '[pattern=]arg list'
+                arguments to pass on each go tool asm invocation.
+        -buildmode mode
+                build mode to use. See 'go help buildmode' for more.
+        -compiler name
+                name of compiler to use, as in runtime.Compiler (gccgo or gc).
+        -gccgoflags '[pattern=]arg list'
+                arguments to pass on each gccgo compiler/linker invocation.
+        -gcflags '[pattern=]arg list'
+                arguments to pass on each go tool compile invocation.
+        -installsuffix suffix
+                a suffix to use in the name of the package installation directory,
+                in order to keep output separate from default builds.
+                If using the -race flag, the install suffix is automatically set to race
+                or, if set explicitly, has _race appended to it. Likewise for the -msan
+                flag. Using a -buildmode option that requires non-default compile flags
+                has a similar effect.
+        -ldflags '[pattern=]arg list'
+                arguments to pass on each go tool link invocation.
+        -linkshared
+                link against shared libraries previously created with
+                -buildmode=shared.
+        -mod mode
+                module download mode to use: readonly or vendor.
+                See 'go help modules' for more.
+        -pkgdir dir
+                install and load all packages from dir instead of the usual locations.
+                For example, when building with a non-standard configuration,
+                use -pkgdir to keep generated packages in a separate location.
+        -tags 'tag list'
+                a space-separated list of build tags to consider satisfied during the
+                build. For more information about build tags, see the description of
+                build constraints in the documentation for the go/build package.
+        -toolexec 'cmd args'
+                a program to use to invoke toolchain programs like vet and asm.
+                For example, instead of running asm, the go command will run
+                'cmd args /path/to/asm <arguments for asm>'.
+
+The -asmflags, -gccgoflags, -gcflags, and -ldflags flags accept a
+space-separated list of arguments to pass to an underlying tool
+during the build. To embed spaces in an element in the list, surround
+it with either single or double quotes. The argument list may be
+preceded by a package pattern and an equal sign, which restricts
+the use of that argument list to the building of packages matching
+that pattern (see 'go help packages' for a description of package
+patterns). Without a pattern, the argument list applies only to the
+packages named on the command line. The flags may be repeated
+with different patterns in order to specify different arguments for
+different sets of packages. If a package matches patterns given in
+multiple flags, the latest match on the command line wins.
+For example, 'go build -gcflags=-S fmt' prints the disassembly
+only for package fmt, while 'go build -gcflags=all=-S fmt'
+prints the disassembly for fmt and all its dependencies.
+
+For more about specifying packages, see 'go help packages'.
+For more about where packages and binaries are installed,
+run 'go help gopath'.
+For more about calling between Go and C/C++, run 'go help c'.
+
+Note: Build adheres to certain conventions such as those described
+by 'go help gopath'. Not all projects can follow these conventions,
+however. Installations that have their own conventions or that use
+a separate software build system may choose to use lower-level
+invocations such as 'go tool compile' and 'go tool link' to avoid
+some of the overheads and design decisions of the build tool.
+
+See also: go install, go get, go clean.
+
 ```
 
-### 下载包
-使用`go get`命令下载一个包。如`go get github.com/golang/lint/golint`下载了`golint`包，`src`目录下会有`github.com/golang/lint/golint`包目录。
-`bin`目录下可以看到`golint`可执行程序。
-
-`go get`本质上可以理解为首先第一步是通过源码工具`clone`代码到`src`下面，然后执行`go install`。
-
-**OPTIONS**
-- `-u` 保证每个包是最新版本。
-
-### 构建包
 主要用于编译代码，使用`go build`命令编译，命令行参数指定的每个包。
 有两种情况：
 - `main`包，`go build`将调用链接器在当前目录创建一个可执行程序，以导入路径的最后一段作为可执行程序的名字。
@@ -82,7 +153,7 @@ Use "go help [topic]" for more information about that topic.
 - `-tags 'tag list'` 设置在编译的时候可以适配的那些tag，详细的tag限制参考里面的 Build Constraints
 
 ### 运行
-`go run`命令实际上是结合了构建和运行的两个步骤。
+
 
 ### install
 `go install`命令和`go build`命令相似，不同的是`go install`会保存每个包的编译成果，并把`main`包生产的可执行程序放到`bin`目录，
