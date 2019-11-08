@@ -177,6 +177,15 @@ go mod tidy
 
 接下来就可以运行 `go run main.go` 了。
 
+## 迁移到 vendor
+如果不想使用 go mod 的缓存方式，可以使用 `go mod vendor` 回到使用的 vendor 目录进行包管理的方式。
+
+这个命令并只是单纯地把 `go.sum` 中的所有依赖下载到 vendor 目录里。
+
+再使用 `go build -mod=vendor` 来构建项目，因为在 go modules 模式下 `go build` 是屏蔽 vendor 机制的:
+
+发布时需要带上 vendor 目录。
+
 ## 添加新依赖包
 添加新依赖包有下面几种方式：
 1. 直接修改 `go.mod` 文件，然后执行 `go mod download`。
@@ -184,12 +193,7 @@ go mod tidy
 3. `go run`、`go build` 也会自动下载依赖。
 
 `go get` 拉取新的依赖：
-- 拉取最新的版本(优先择取 tag)：`go get golang.org/x/text@latest`
-- 拉取 master 分支的最新 commit：`go get golang.org/x/text@master`
-- 拉取 tag 为 `v0.3.2` 的 commit：`go get golang.org/x/text@v0.3.2`
-- 拉取 hash 为 342b231 的 commit，最终会被转换为 `v0.3.2`：`go get golang.org/x/text@342b2e`。因为 Go modules 会与 tag 进
-行对比，若发现对应的 commit 与 tag 有关联，则进行转换。
-- 用 `go get -u` 更新现有的依赖，`go get -u all` 更新所有模块。
+
 
 ## 依赖包冲突问题
 迁移后遇到了下面的报错：
@@ -213,3 +217,76 @@ github.com/gin-gonic/gin@v1.3.1-0.20190120102704-f38a3fe65f10 github.com/ugorji/
 - Golang 1.13 新增了 `go env -w` 用于写入环境变量，写入到 `$HOME/.config/go/env` （`os.UserConfigDir` 返回的路径）文件中。
 - `go env -w` 不会覆盖系统环境变量。
 - 建议删除 Go 相关的系统环境变量，使用 `go env -w` 配置。
+
+## 控制包的版本
+`go get` 进行包管理时：
+- 拉取最新的版本(优先择取 tag)：`go get golang.org/x/text@latest`
+- 拉取 master 分支的最新 commit：`go get golang.org/x/text@master`
+- 拉取 tag 为 `v0.3.2` 的 commit：`go get golang.org/x/text@v0.3.2`
+- 拉取 hash 为 342b231 的 commit，最终会被转换为 `v0.3.2`：`go get golang.org/x/text@342b2e`。因为 Go modules 会与 tag 进
+行对比，若发现对应的 commit 与 tag 有关联，则进行转换。
+- 用 `go get -u` 更新现有的依赖，`go get -u all` 更新所有模块。
+
+## 发布 module
+### 语义化版本
+Golang 官方推荐的最佳实践叫做 semver（Semantic Versioning），也就是语义化版本。
+
+就是一种清晰可读的，明确反应版本信息的版本格式。
+```
+版本格式：主版本号.次版本号.修订号
+```
+
+- 主版本号：做了不兼容的 API 修改
+- 次版本号：向下兼容的新增功能
+- 修订号： 向下兼容的问题修正。
+
+形如 `vX.Y.Z`。
+
+#### 语义化版本的问题
+如果你使用和发布的包没有版本 tag 或者处于 1.x 版本，那么可能体会不到什么区别，主要的区别体现在 `v2.x` 以及更高版本的包上。
+
+go module 的谦容性规则：**如果旧软件包和新软件包具有相同的导入路径，则新软件包必须向后兼容旧软件包**
+也就是说如果导入路径不同，就无需保持兼容。
+
+`v2.x` 表示发生了重大变化，无法保证向后兼容，这时就需要在包的导入路径的末尾附加版本信息：
+```go
+module my-module/v2
+
+require (
+  some/pkg/v2 v2.0.0
+  some/pkg/v2/mod1 v2.0.0
+  my/pkg/v3 v3.0.1
+)
+```
+格式总结为 `pkgpath/vN`，其中 N 是大于 1 的主要版本号。代码里导入时也需要附带上这个版本信息，如 `import "some/my-module/v2"`。
+
+### go.sum
+npm 的 `package-lock.json` 会记录所有库的准确版本，来源以及校验和，发布时不需要带上它，因为内容过于详细会对版本控制以及变更记录
+等带来负面影响。
+
+`go.sum` 也有类似的作用，会记录当前 module 所有的顶层和间接依赖，以及这些依赖的校验和，从而提供一个可以 100% 复现的构建过程并对构建对
+象提供安全性的保证。同时还会保留过去使用的包的版本信息，以便日后可能的版本回退，这一点也与普通的锁文件不同。
+
+准确地说，`go.sum` 是一个构建状态跟踪文件。
+
+所以应该把 **`go.sum` 和 `go.mod` 一同添加进版本控制工具的跟踪列表，同时需要随着你的模块一起发布**。
+
+### 包版本
+当发布一个 `v2.x` 版本的库时，需要进行以下操作：
+1. 将 `module my-module` 改成 `module my-module/v2`
+2. 将源代码中使用了 v2+ 版本包的 `import "my-module"` 改为 `import "my-module/v2"`
+3. 仔细检查你的代码中所有 `my-module` 包的版本是否统一，修改那些不兼容的问题
+4. 在 changelog 中仔细列出所有 breaking changes
+
+官方推荐将 `v2.x` 版本放在在一个新分支来避免混淆，如：
+```sh
+git checkout -b v2 
+
+go mod edit --module=github.com/example/my-module/v2
+
+git commit go.mod -m "upgrade to v2"
+
+git tag v2.0.0
+
+git push --tags origin v2
+```
