@@ -3,7 +3,7 @@
 - Go 语言学习笔记
 - 极客时间 Go 语言核心三十六讲
 - 小册 Go 搭建企业级 Web
-- [Golang 煎鱼](https://book.eddycjy.com/golang)
+- [Golang 煎鱼](https://github.com/EDDYCJY/blog)
 - [GO 入门指南](https://github.com/Unknwon/the-way-to-go_ZH_CN)
 - [Go 42](https://github.com/ffhelicopter/Go42)
 - [Go example](https://github.com/polaris1119/The-Golang-Standard-Library-by-Example)
