@@ -156,3 +156,21 @@ func main() {
 个 panic 也会是这样。
 
 要注意，我们要**尽量把 `defer` 语句写在函数体的开始处，因为在引发 panic 的语句之后的所有语句，都不会有任何执行机会**。
+
+注意下面的方式，也是无法捕获 panic 的：
+```go
+func main() {
+    go func() {
+        defer func() {
+            if err := recover(); err != nil {
+                log.Printf("recover: %v", err)
+            }
+        }()
+    }()
+
+    panic("EDDYCJY.")
+}
+```
+
+因为 **`panic` 发生时，程序会中断运行，并执行在当前 `goroutine` 中 `defer` 的函数**，新起一个 `goroutine` 中的 `defer`
+函数并不会执行。
