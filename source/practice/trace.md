@@ -83,7 +83,7 @@ Minimum mutator utilization
 
 Network/Sync/Syscall blocking profile 是分析锁竞争的最佳选择。
 
-### Scheduler latency profile
+## Scheduler latency profile
 
 查看问题时，除非是很明显的现象，否则先查看 “Scheduler latency profile”，能通过 Graph 看到整体的调用开销情况，如下：
 
@@ -91,7 +91,7 @@ Network/Sync/Syscall blocking profile 是分析锁竞争的最佳选择。
 
 这里只有两块，一个是 `trace` 本身，另外一个是 `channel` 的收发。
 
-### Goroutine analysis
+## Goroutine analysis
 
 通过 “Goroutine analysis” 这个功能看到整个运行过程中，每个函数块有多少个有 Goroutine 在跑，并且观察每个的 Goroutine 的运行
 开销都花费在哪个阶段。如下：
@@ -116,7 +116,7 @@ Network/Sync/Syscall blocking profile 是分析锁竞争的最佳选择。
 | GC Sweeping | GC 清扫 | 0ns
 | GC Pause | GC 暂停 | 0ns
 
-### View trace
+## View trace
 
 ![image](../imgs/trace4.png)
 
@@ -143,7 +143,7 @@ Network/Sync/Syscall blocking profile 是分析锁竞争的最佳选择。
 - Following events：之后的事件
 - All connected：所有连接的事件
 
-### View Events
+## View Events
 
 可以通过点击 View Options-Flow events、Following events 等方式，查看应用运行中的事件流情况。如下：
 
@@ -158,13 +158,25 @@ Network/Sync/Syscall blocking profile 是分析锁竞争的最佳选择。
 
 结合开头的代码去看的话，很明显就是 `ch` 的输入输出的过程了。
 
-## 结合实战
+## 收集 trace
+1. 使用 `runtime/trace` 包  
 
+调用 `trace.Start` 和 `trace.Stop`。
+
+2. 使用 `-trace=<file>` 测试标志  
+
+用来收集关于被测试代码的 trace 时比较有用。
+
+3 使用 `debug/pprof/trace` handler
+
+用来收集运行中的 web 应用的 trace。
+
+### 跟踪一个 web 应用
 如果早已埋好 `_ "net/http/pprof"` 这个工具，就可以执行：
 -  curl http://127.0.0.1:6060/debug/pprof/trace\?seconds\=20 > trace.out
 -  go tool trace trace.out
 
-### View trace
+#### View trace
 
 点开了 View trace 界面：
 
@@ -180,14 +192,16 @@ Network/Sync/Syscall blocking profile 是分析锁竞争的最佳选择。
 
 继续追踪 View trace 深入进去，“Network blocking profile” 和 “Syscall blocking profile” 所提供的信息，如下：
 
-### Network blocking profile
+#### Network blocking profile
 
 ![image](../imgs/trace11.jpg)
 
-### Syscall blocking profile
+#### Syscall blocking profile
 
 ![image](../imgs/trace12.jpg)
 
 通过对以上三项的跟踪分析，加上这个泄露，这个阻塞的耗时，这个涉及的内部方法名，很明显就是忘记关闭客户端连接了。
+
+不建议将 pprof handlers 暴露给 Internet，参考 https://mmcloughlin.com/posts/your-pprof-is-showing。
 
 **内容来自** [Go 大杀器之跟踪剖析 trace](https://github.com/EDDYCJY/blog/blob/7b021d0dee/tools/go-tool-trace.md)
