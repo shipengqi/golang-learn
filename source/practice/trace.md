@@ -167,14 +167,14 @@ Network/Sync/Syscall blocking profile 是分析锁竞争的最佳选择。
 
 用来收集关于被测试代码的 trace 时比较有用。
 
-3 使用 `debug/pprof/trace` handler
+3. 使用 `debug/pprof/trace` handler
 
 用来收集运行中的 web 应用的 trace。
 
 ### 跟踪一个 web 应用
 如果早已埋好 `_ "net/http/pprof"` 这个工具，就可以执行：
--  curl http://127.0.0.1:6060/debug/pprof/trace\?seconds\=20 > trace.out
--  go tool trace trace.out
+-  `curl http://127.0.0.1:6060/debug/pprof/trace\?seconds\=20 > trace.out`
+-  `go tool trace trace.out`
 
 #### View trace
 
