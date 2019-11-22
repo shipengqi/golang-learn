@@ -104,6 +104,6 @@ if err := json.Unmarshal(data, &titles); err != nil {
 }
 fmt.Println(titles) // "[{Casablanca} {Cool Hand Luke} {Bullitt}]"
 ```
-通过定义合适的Go语言数据结构，我们可以选择性地解码JSON中感兴趣的成员。
+通过定义合适的 Go 语言数据结构，我们可以选择性地解码 JSON 中感兴趣的成员。
 
 基于流式的解码器 `json.Decoder`。针对输出流的  `json.Encoder` 编码对象
