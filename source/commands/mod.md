@@ -55,6 +55,52 @@ replace example.com/apple v0.1.2 => example.com/rda v0.1.0
 replace example.com/banana => example.com/hugebanana
 ```
 
+### replace 使用
+如果找不到 proxy,那么可以用 `replace`.用文本编辑器打开 `go.mod`,加入如下内容:
+```
+// Fix unable to access 'https://go.googlesource.com/xxx/': The requested URL returned error: 502
+replace (
+	golang.org/x/crypto => github.com/golang/crypto latest
+	golang.org/x/lint => github.com/golang/lint latest
+	golang.org/x/net => github.com/golang/net latest
+	golang.org/x/oauth2 => github.com/golang/oauth2 latest
+	golang.org/x/sync => github.com/golang/sync latest
+	golang.org/x/sys => github.com/golang/sys latest
+	golang.org/x/text => github.com/golang/text latest
+	golang.org/x/time => github.com/golang/time latest
+	golang.org/x/tools => github.com/golang/tools latest
+)
+```
+
+`go mod tidy` 命令会把 `latest` 自动替换成最新的版本号：
+```
+replace (
+	golang.org/x/crypto => github.com/golang/crypto v0.0.0-20191206172530-e9b2fee46413
+	golang.org/x/lint => github.com/golang/lint v0.0.0-20191125180803-fdd1cda4f05f
+	golang.org/x/net => github.com/golang/net v0.0.0-20191207000613-e7e4b65ae663
+	golang.org/x/oauth2 => github.com/golang/oauth2 v0.0.0-20191202225959-858c2ad4c8b6
+	golang.org/x/sync => github.com/golang/sync v0.0.0-20190911185100-cd5d95a43a6e
+	golang.org/x/sys => github.com/golang/sys v0.0.0-20191206220618-eeba5f6aabab
+	golang.org/x/text => github.com/golang/text v0.3.2
+	golang.org/x/time => github.com/golang/time v0.0.0-20191024005414-555d28b269f0
+	golang.org/x/tools => github.com/golang/tools v0.0.0-20191206204035-259af5ff87bd
+)
+```
+
+如果是老项目，可能会出现类似错误：
+```
+go: golang.org/x/net@v0.0.0-20190628185345-da137c7871d7: 
+git fetch -f origin refs/heads/*:refs/heads/* refs/tags/*:refs/tags/* 
+in /go/pkg/mod/cache/vcs/4a22365141bc4eea5d5ac4a1395e653f2669485db75ef119e7bbec8e19b12a21: exit status 128:
+	fatal: unable to access 'https://go.googlesource.com/net/': The requested URL returned error: 502
+```
+
+
+原因就是提示 net 包除了最新版之外,还需要其它的版本 `v0.0.0-20190628185345-da137c7871d7`，需要修改 `go.mod`:
+```
+golang.org/x/net v0.0.0-20190628185345-da137c7871d7 => github.com/golang/net v0.0.0-20191207000613-e7e4b65ae663
+```
+
 ## go.sum
 
 `go.sum` 类似于 dep 的 `Gopkg.lock`。列出了当前项目直接或间接依赖的所有模块版本，并写明了那些模块版本的 SHA-256 哈希值以备 Go 在今
