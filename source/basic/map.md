@@ -55,7 +55,39 @@ for key, value := range mapName {
 **`Map` 的迭代顺序是不确定的。可以先使用 `sort` 包排序**。
 
 #### map 为什么是无序的
-前面知道 map 遍历
+编译器对于 slice 和 map 的循环迭代有不同的实现方式，`for` 遍历 map，调用了两个方法：
+- `runtime.mapiterinit`
+- `runtime.mapiternext`
+
+```go
+func mapiterinit(t *maptype, h *hmap, it *hiter) {
+	...
+	it.t = t
+	it.h = h
+	it.B = h.B
+	it.buckets = h.buckets
+	if t.bucket.kind&kindNoPointers != 0 {
+		h.createOverflow()
+		it.overflow = h.extra.overflow
+		it.oldoverflow = h.extra.oldoverflow
+	}
+
+	r := uintptr(fastrand())
+	if h.B > 31-bucketCntBits {
+		r += uintptr(fastrand()) << 31
+	}
+	it.startBucket = r & bucketMask(h.B)
+	it.offset = uint8(r >> h.B & (bucketCnt - 1))
+	it.bucket = it.startBucket
+    ...
+
+	mapiternext(it)
+}
+```
+
+`fastrand` 部分，它是一个生成随机数的方法，它生成了随机数。用于决定从哪里开始循环迭代。
+因此**每次 `for range map` 的结果都是不一样的。那是因为它的起始位置根本就不固定**。
+
 #### map 的键类型不能是哪些类型
 `map` 的键和元素的最大不同在于，前者的类型是受限的，而后者却可以是任意类型的。
 

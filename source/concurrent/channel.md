@@ -23,7 +23,7 @@ ch = make(chan int, 3) // buffered channel with capacity 3
 
 上面的代码中，`int` 代表这个 `channel` 要发送的数据的类型。第二个参数代表创建一带缓存的 `channel`，容量为 `3`。
 
-`channel` 的零值是 `nil`。
+**`channel` 的零值是 `nil`。关闭一个 `nil` 的 `channel` 会导致程序 `panic`**。
 
 发送和接收两个操作使用 `<-` 运算符，一个左尖括号紧接着一个减号形象地代表了元素值的传输方向：
 ```go

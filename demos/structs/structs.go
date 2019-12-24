@@ -20,6 +20,26 @@ type Triangle struct {
 	Height float64
 }
 
+type Person struct {
+	AgeYears int
+	Name string
+	Friends []Person
+}
+
+func NewPerson() Person {
+	var p Person
+	return p
+}
+
+func NewPersonPointer() *Person {
+	var p *Person
+	return p
+}
+
+func NewPersonPointer2() *Person {
+	p := &Person{}
+	return p
+}
 func Perimeter(rectangle Rectangle) float64 {
 	return 2 * (rectangle.Width + rectangle.Height)
 }

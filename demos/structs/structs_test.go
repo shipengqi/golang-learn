@@ -48,3 +48,18 @@ func TestArea(t *testing.T) {
 		}
 	}
 }
+
+func TestNewPerson(t *testing.T) {
+	p := NewPerson()
+	t.Log(p)
+}
+
+func TestNewPersonPointer(t *testing.T) {
+	p := NewPersonPointer()
+	t.Log(p)
+}
+
+func TestNewPersonPointer2(t *testing.T) {
+	p := NewPersonPointer2()
+	t.Log(p)
+}

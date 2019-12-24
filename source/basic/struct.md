@@ -71,6 +71,20 @@ type tree struct {
 }
 ```
 
+## 结构体的零值
+```go
+type Person struct {
+  AgeYears int
+  Name string
+  Friends []Person
+}
+
+var p Person // Person{0, "", nil}
+```
+变量 `p` 只声明但没有赋值，所以 `p` 的所有字段都有对应的零值。
+
+**注意如果声明结构体指针使用 `var p *Person` 的方式，那么 `p` 只是一个 `nil` 指针，建议使用 `p := &Person{}` 的方式声明，
+`p` 的值是 `&Person{0, "", nil}`，避免 json unmarshal 出错**。
 
 ## 结构体字面值
 
