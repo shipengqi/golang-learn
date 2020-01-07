@@ -2,6 +2,15 @@
 title: Golang 介绍
 ---
 
+Go 语言特性有哪些：
+- 跨平台，支持大部分主流操作系统。
+- **静态类型**，编译型语言，但是语法却和解释型脚本语言（如 Javascript）一样简单。
+- 自动垃圾回收机制。
+- **原生的并发编程模型**（`goroutine` 和 `channel`，以及关键字 `go`）。
+- **静态链接**，只须编译好一个可执行文件，就能部署。静态编译的好处，将 runtime，依赖库，全都打到可执行文件，简化部署发布操作。
+- 强制统一的代码风格。
+- 丰富的标准库。
+
 # Golang 介绍
 Go 语言非常简单，只有 25 个关键字：
 
@@ -185,6 +194,22 @@ fmt.Println(d == x) // 错误：invalid operation: d == x (mismatched types data
 
 ## 未命名类型
 比如数组，切片，字典，通道等类型与内部具体的元素类型和长度等属性有关，所以叫做**未命名类型**（unnamed type）。
+
+**具有相同声明的未命名类型被视作同一类型**。注意结构体的 tag，也属于类型的组成部分。
+```go
+var a struct {
+    x int `x`
+}
+
+var b struct {
+    x int
+}
+
+b = a // error: cannot use a type struct {x int "x"} as type struct {x int}
+```
+
+**函数的参数顺序也属于类型的组成部分**。
+
 ## 类型断言
 
 断言，顾名思义就是果断的去猜测一个未知的事物。在 go 语言中，`interface{}` 就是这个神秘的未知类型，其**断言操作就是用来

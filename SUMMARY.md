@@ -4,6 +4,7 @@
 - 极客时间 Go 语言核心三十六讲
 - 小册 Go 搭建企业级 Web
 - [Golang 煎鱼](https://github.com/EDDYCJY/blog)
+- [高性能 Go 代码工坊 中译](https://www.yuque.com/ksco/uiondt)
 - [GO 入门指南](https://github.com/Unknwon/the-way-to-go_ZH_CN)
 - [Go 42](https://github.com/ffhelicopter/Go42)
 - [Go example](https://github.com/polaris1119/The-Golang-Standard-Library-by-Example)

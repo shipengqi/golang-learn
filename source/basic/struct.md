@@ -192,7 +192,7 @@ type Interface interface {
     Swap(i, j int)
 }
 
-// Array 实现Interface接口
+// Array 实现 Interface 接口
 type Array []int
 
 func (arr Array) Len() int {
@@ -217,7 +217,7 @@ func (r reverse) Less(i, j int) bool {
     return r.Interface.Less(j, i)
 }
 
-// 构造reverse Interface
+// 构造 reverse Interface
 func Reverse(data Interface) Interface {
     return &reverse{data}
 }
@@ -268,7 +268,7 @@ func (r reverse) Less(i, j int) bool {
     return r.Array.Less(j, i)
 }
 
-// 构造reverse Interface
+// 构造 reverse Interface
 func Reverse(data Array) Interface {
     return &reverse{data}
 }
