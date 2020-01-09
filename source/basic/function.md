@@ -50,9 +50,8 @@ Go 语言使用的是**值传递**，当我们传一个参数值到被调用函�
 没有函数体的函数声明，这表示该函数不是以 Go 实现的。这样的声明定义了函数标识符。
 
 **表面上看，指针参数性能会更好，但是要注意被复制的指针会延长目标对象的生命周期，还可能导致它被分配到堆上，其性能消耗要加上堆内存分配和
-垃圾回收的成本**。
+垃圾回收的成本。在栈上复制小对象，要比堆上分配内存要快的多**。如果复制成本高，或者需要修改原对象，使用指针更好。
 
-在栈上复制小对象，要比堆上分配内存要快的多。
 ## 可变参数
 **变参本质上就是一个切片，只能接受一到多个同类型参数，而且必须在参数列表的最后一个**。比如 `fmt.Printf`，`Printf` 接收一个的必备参数，之
 后接收任意个数的后续参数。
@@ -124,7 +123,7 @@ func getSequence() func() int { // func() 是没有参数也没有返回值的�
 
 ## 错误
 Go 中，对于大部分函数而言，永远无法确保能否成功运行（有一部分函数总是能成功的运行。比如 `strings.Contains` 和 
-`strconv.FormatBool`）。通常 Go 函数的最后一个返回值用来传递错误信息。如果导致失败的原因只有一个，返回值可以是一个布尔值，
+`strconv.FormatBool`）。**通常 Go 函数的最后一个返回值用来传递错误信息**。如果导致失败的原因只有一个，返回值可以是一个布尔值，
 通常被命名为 `ok`。否则应该返回一个 `error` 类型。
 
 
@@ -188,6 +187,64 @@ func triple(x int) (result int) {
 }
 fmt.Println(triple(4)) // "12"
 ```
+
+### defer 的性能
+相比直接用 CALL 汇编指令调用函数，`defer` 要花费更大代价，包括注册，调用操作，额为的缓存开销。
+```go
+func call () {
+	m.Lock()
+	m.Unlock()
+}
+
+func deferCall()  {
+	m.Lock()
+	defer m.Unlock()
+}
+
+func BenchmarkCall(b *testing.B)  {
+	for i := 0; i < b.N; i ++ {
+		call()
+	}
+}
+
+
+func BenchmarkDeferCall(b *testing.B)  {
+	for i := 0; i < b.N; i ++ {
+		deferCall()
+	}
+}
+```
+
+```sh
+$ go test -bench=.
+goos: windows
+goarch: amd64
+pkg: github.com/shipengqi/golang-learn/demos/defers
+BenchmarkCall-8         92349604                12.9 ns/op
+BenchmarkDeferCall-8    34305316                36.3 ns/op
+PASS
+ok      github.com/shipengqi/golang-learn/demos/defers  2.571s
+
+```
+性能相差三倍，尽量避免使用 `defer`。
+
+### 什么时候不应该使用 defer
+比如处理日志文件，不恰当的 `defer` 会导致关闭文件延时。
+```go
+func main() {
+    for i := 0; i < 100; i ++ {
+        f, err := os.Open(fmt.Sprintf("%d.log", i))
+        if err != nil {
+            continue
+        }
+        defer f.Close()
+        // something
+    }
+}
+
+```
+上面的 `defer` 导致所有的 `f` 都是在 `main` 函数退出时才调用，白白消耗了资源。所以应该直接调用 `Close` 函数，
+将文件操作封装到一个函数中，在该函数中调用 `Close` 函数。
 
 ### 如果一个函数中有多条 defer 语句，那么那几个 defer 函数调用的执行顺序是怎样的
 在同一个函数中，**`defer` 函数调用的执行顺序与它们分别所属的 `defer` 语句的出现顺序（更严谨地说，是执行顺序）完全相反**。

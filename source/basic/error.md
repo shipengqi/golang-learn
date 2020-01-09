@@ -174,3 +174,5 @@ func main() {
 
 因为 **`panic` 发生时，程序会中断运行，并执行在当前 `goroutine` 中 `defer` 的函数**，新起一个 `goroutine` 中的 `defer`
 函数并不会执行。
+
+**注意连续调用 `panic` 只有最后一个会被 `recover` 捕获**。

@@ -68,6 +68,9 @@ main:
 
 - text: 并发编程
   type: label
+- text: 并发和并行
+  type: link
+  path: concurrent/concurrent.html
 - text: goroutine
   type: link
   path: concurrent/goroutine.html
