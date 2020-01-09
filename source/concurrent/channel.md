@@ -11,8 +11,8 @@ Don’t communicate by sharing memory; share memory by communicating.
 
 通道类型的值是**并发安全**的，这也是 **Go 语言自带的、唯一一个可以满足并发安全性的类型**。
 
-`channels` 是 `goroutine` 之间的通信机制。`goroutine` 通过 `channel` 向另一个 `goroutine` 发送消息
-`channel` 和 `goroutine` 结合，可以实现用通信代替共享内存的 `CSP` 模型。
+`channel` 是 `goroutine` 之间的通信机制。`goroutine` 通过 `channel` 向另一个 `goroutine` 发送消息
+`channel` 和 `goroutine` 结合，可以实现用通信代替共享内存的 `CSP` (Communicating Sequential Process)模型。
 
 创建 `channel`：
 ```go
@@ -73,7 +73,7 @@ ch <- 3
 close(ch)
 
 for v := range ch {
-    fmt.Println(v)
+    fmt.Println(v) 
 }
 ```
 
@@ -165,11 +165,11 @@ select {
   case <-ch1:
       ...     
   case x := <-ch2:
-			... 
-	case ch3 <- y:
-	    ...		
+  	  ...
+  case ch3 <- y:
+	  ...		
   default:
-			... 
+	  ... 
 }	
 ```
 每一个 `case` 代表一个通信操作，发送或者接收。**如果没有 `case` 可运行，它将阻塞，直到有 `case` 可运行**。
@@ -205,8 +205,8 @@ func main() {
 说都没有满足求值的条件，那么默认分支就会被选中并执行。
 2. 如果没有加入默认分支，那么一旦所有的 `case` 表达式都没有满足求值条件，那么 `select` 语句就会被阻塞。
 直到至少有一个 `case` 表达式满足条件为止。
-3. 还记得吗？我们可能会因为通道关闭了，而直接从通道接收到一个其元素类型的零值。所以，在很多时候，我们需要通过接收表达式
-的第二个结果值来判断通道是否已经关闭。一旦发现某个通道关闭了，我们就应该及时地屏蔽掉对应的分支或者采取其他措施。这对
+3. 还记得吗？我们可能会因为通道关闭了，而直接从通道接收到一个其元素类型的零值。所以，**在很多时候，我们需要通过接收表达式
+的第二个结果值来判断通道是否已经关闭**。一旦发现某个通道关闭了，我们就应该及时地屏蔽掉对应的分支或者采取其他措施。这对
 于程序逻辑和程序性能都是有好处的。
 4. `select` 语句只能对其中的每一个 `case` 表达式各求值一次。所以，如果我们想连续或定时地操作其中的通道的话，就往往需要
 通过在 `for` 语句中嵌入 `select` 语句的方式实现。但这时要注意，**简单地在 `select` 语句的分支中使用 `break` 语句，只能结
@@ -234,7 +234,7 @@ time.AfterFunc(time.Second, func() {
 })
 select {
   case _, ok := <-intChan:
-    if !ok {
+    if !ok { // 使用 ok-idom，判断 channel 是否被关闭
       fmt.Println("The candidate case is closed.")
       break
     }
@@ -244,3 +244,18 @@ select {
 
 上面的代码 `select` 语句只有一个候选分支，我在其中利用接收表达式的第二个结果值对 `intChan` 通道是否已关闭做了判断，并在
 得到肯定结果后，通过 `break` 语句立即结束当前 `select` 语句的执行。
+
+## channel 的性能
+channel 队列使用锁同步机制，也就意味着，频繁加锁会带来性能问题。要改善这个问题，就要减少通道的传输次数，将发送到通道的数据打包，
+避免频繁加锁。[示例](github.com/shipengqi/golang-learn/demos/channels)
+
+```sh
+$ go test -bench=. -v
+goos: windows
+goarch: amd64
+pkg: github.com/shipengqi/golang-learn/demos/channels
+BenchmarkMultiSend-8           1        4694289200 ns/op
+BenchmarkBlockSend-8          13          80106754 ns/op
+PASS
+ok      github.com/shipengqi/golang-learn/demos/channels        5.949s
+```
