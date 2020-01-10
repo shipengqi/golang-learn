@@ -1,6 +1,7 @@
 package reflection
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 )
@@ -126,4 +127,51 @@ func assertContains(t *testing.T, haystack []string, needle string)  {
 	if !contains {
 		t.Errorf("expected %+v to contain '%s' but it didnt", haystack, needle)
 	}
+}
+
+func TestGetElem(t *testing.T) {
+	t.Run("Elem is string", func(t *testing.T) {
+		v := map[string]string{}
+		e := GetElem(v)
+		want := "string"
+		fmt.Println("------------", e)
+		if e.String() != want {
+			t.Errorf("got '%s' want '%s'", e.String(), want)
+		}
+	})
+
+	t.Run("Elem is int", func(t *testing.T) {
+		v := map[string]int{}
+		e := GetElem(v)
+		want := "int"
+		fmt.Println("------------", e)
+		if e.String() != want {
+			t.Errorf("got '%s' want '%s'", e.String(), want)
+		}
+	})
+
+	t.Run("Elem is struct Person", func(t *testing.T) {
+		v := map[string]Person{}
+		e := GetElem(v)
+		want := "reflection.Person"
+		fmt.Println("------------", e)
+		if e.String() != want {
+			t.Errorf("got '%s' want '%s'", e.String(), want)
+		}
+	})
+
+	t.Run("Elem is basic type int", func(t *testing.T) {
+		type IntType int
+		v := map[string]IntType{}
+		e := GetElem(v)
+		want := "reflection.IntType"
+		fmt.Println("------------", e)
+		if e.String() != want {
+			t.Errorf("got '%s' want '%s'", e.String(), want)
+		}
+		fmt.Println("------------", e.Kind())
+		if e.Kind() != reflect.Int {
+			t.Errorf("got '%s' want '%s'", e.String(), want)
+		}
+	})
 }

@@ -38,3 +38,7 @@ func getValue(x interface{}) reflect.Value {
 
 	return val
 }
+
+func GetElem(v interface{}) reflect.Type {
+	return reflect.TypeOf(v).Elem()
+}
