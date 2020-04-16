@@ -3,6 +3,10 @@
 - Go 语言学习笔记
 - 极客时间 Go 语言核心三十六讲
 - 小册 Go 搭建企业级 Web
+- [Scheduling In Go](https://www.jianshu.com/p/c38a22d8f913)
+- [gotraining](https://github.com/ardanlabs/gotraining/tree/master/topics/go)
+- [Go 语言机制](https://studygolang.com/subject/74)
+- [Go 系列教程](https://studygolang.com/subject/2)
 - [Golang 煎鱼](https://github.com/EDDYCJY/blog)
 - [高性能 Go 代码工坊 中译](https://www.yuque.com/ksco/uiondt)
 - [GO 入门指南](https://github.com/Unknwon/the-way-to-go_ZH_CN)
