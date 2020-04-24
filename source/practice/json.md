@@ -19,7 +19,7 @@ var authResponse AuthResponse
 err = json.Unmarshal(response.Body(), &authResponse)
 ```
 
-`encoding/json` 包的 `json.Marshal/Unmarshal`是非常慢的，因为是通过大量反射来实现的。
+`encoding/json` 包的 `json.Marshal/Unmarshal` 是非常慢的，因为是通过大量反射来实现的。
 
 可以使用第三方库来替代标准库：
 - [json-iterator/go](https://github.com/json-iterator/go)，完全兼容标准库，性能有很大提升。

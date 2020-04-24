@@ -48,7 +48,7 @@ for {
 
 ## Panic 异常
 Go 运行时错误会引起 `painc` 异常。
-一般而言，当 `panic` 异常发生时，程序会中断运行，并立即执行在该 `goroutine` 中被延迟的函数（`defer` 机制）。随后，程序崩溃
+一般而言，当 `panic` 异常发生时，程序会中断运行，并立即执行在该 goroutine 中被延迟的函数（`defer` 机制）。随后，程序崩溃
 并输出日志信息。
 
 由于 `panic` 会引起程序的崩溃，因此 `panic` 一般用于严重错误，如程序内部的逻辑不一致。但是对于大部分漏洞，我们应该使
@@ -69,12 +69,12 @@ exit status 2
 第一行是 `panic: runtime error: index out of range`。其中的 `runtime error` 的含义是，这是一个 `runtime` 代码包中
 抛出的` panic`。
 
-`goroutine 1 [running]`，它表示有一个 ID 为1的 `goroutine` 在此 `panic` 被引发的时候正在运行。这里的 ID 其实并不重要。
+`goroutine 1 [running]`，它表示有一个 ID 为1的 goroutine 在此 `panic` 被引发的时候正在运行。这里的 ID 其实并不重要。
 
-`main.main()` 表明了这个 `goroutine` 包装的 go 函数就是命令源码文件中的那个`main`函数，也就是说这里的 `goroutine` 正
+`main.main()` 表明了这个 goroutine 包装的 go 函数就是命令源码文件中的那个`main`函数，也就是说这里的 goroutine 正
 是**主 goroutine**。
 
-再下面的一行，指出的就是这个 `goroutine` 中的哪一行代码在此 panic 被引发时正在执行。含了此行代码在其所属的源码文件中的行数，
+再下面的一行，指出的就是这个 goroutine 中的哪一行代码在此 panic 被引发时正在执行。含了此行代码在其所属的源码文件中的行数，
 以及这个源码文件的绝对路径。
 
 `+0x3d` 代表的是：此行代码相对于其所属函数的入口程序计数偏移量。用处并不大。
@@ -172,7 +172,7 @@ func main() {
 }
 ```
 
-因为 **`panic` 发生时，程序会中断运行，并执行在当前 `goroutine` 中 `defer` 的函数**，新起一个 `goroutine` 中的 `defer`
+因为 **`panic` 发生时，程序会中断运行，并执行在当前 goroutine 中 `defer` 的函数**，新起一个 goroutine 中的 `defer`
 函数并不会执行。
 
 **注意连续调用 `panic` 只有最后一个会被 `recover` 捕获**。

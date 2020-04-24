@@ -11,8 +11,8 @@ Don’t communicate by sharing memory; share memory by communicating.
 
 通道类型的值是**并发安全**的，这也是 **Go 语言自带的、唯一一个可以满足并发安全性的类型**。
 
-`channel` 是 `goroutine` 之间的通信机制。`goroutine` 通过 `channel` 向另一个 `goroutine` 发送消息
-`channel` 和 `goroutine` 结合，可以实现用通信代替共享内存的 `CSP` (Communicating Sequential Process)模型。
+`channel` 是 goroutine 之间的通信机制。goroutine 通过 `channel` 向另一个 goroutine 发送消息
+`channel` 和 goroutine 结合，可以实现用通信代替共享内存的 `CSP` (Communicating Sequential Process)模型。
 
 创建 `channel`：
 ```go
@@ -43,7 +43,7 @@ x = <-ch // 取出 channel 的值并复制给变量x
 
 注意，**`close` 函数不是一个清理操作，而是一个控制操作**，在确定这个 `channel` 不会继续发送数据时调用。
 
-**因为关闭操作只用于断言不再向 `channel` 发送新的数据，所以只有在 "发送者" 所在的 `goroutine` 才会调用 `close` 函数**，
+**因为关闭操作只用于断言不再向 `channel` 发送新的数据，所以只有在 "发送者" 所在的 goroutine 才会调用 `close` 函数**，
 因此对一个只接收的 `channel` 调用 `close` 将是一个编译错误。
 
 使用 `range` 循环可直接在 `channels` 上面迭代。它依次从 `channel` 接收数据，当 `channel` 被关闭并且没有值可接收时
@@ -59,7 +59,7 @@ for x := range naturals {
 ```
 
 **注意上面的代码会报 `fatal error: all goroutines are asleep - deadlock!`。这个是死锁的错误，因为 `range` 不等到信
-道关闭是不会结束读取的。也就是如果 `channel` 没有数据了，那么 `range` 就会阻塞当前 `goroutine`, 直到信道关闭，所以导
+道关闭是不会结束读取的。也就是如果 `channel` 没有数据了，那么 `range` 就会阻塞当前 goroutine, 直到信道关闭，所以导
 致了死锁**。
 
 为了避免这种情况，对于有缓存的信道，显式地关闭信道:
@@ -78,10 +78,10 @@ for v := range ch {
 ```
 
 ### 无缓存 channel
-**无缓存 `channel` 也叫做同步 `channel`**，这是因为**如果一个 `goroutine` 基于一个无缓存 `channel` 发送数据，那么就会
-阻塞，直到另一个 `goroutine` 在相同的 `channel` 上执行接收操作**。同样的，**如果一个 `goroutine` 基于一个无缓存 `channel` 
-先执行了接受操作，也会阻塞，直到另一个 `goroutine` 在相同的 `channel` 上执行发送操作**。在 `channel` 成功传输之后，两个 
-`goroutine` 之后的语句才会继续执行。
+**无缓存 `channel` 也叫做同步 `channel`**，这是因为**如果一个 goroutine 基于一个无缓存 `channel` 发送数据，那么就会
+阻塞，直到另一个 goroutine 在相同的 `channel` 上执行接收操作**。同样的，**如果一个 goroutine 基于一个无缓存 `channel` 
+先执行了接受操作，也会阻塞，直到另一个 goroutine 在相同的 `channel` 上执行发送操作**。在 `channel` 成功传输之后，两个 
+goroutine 之后的语句才会继续执行。
 
 ### 带缓存 channel
 ```go
@@ -90,8 +90,8 @@ ch = make(chan int, 3)
 带缓存的 `channel` 内部持有一个元素队列。`make` 函数创建 `channel` 时通过第二个参数指定队列的最大容量。
 
 发送操作会向 `channel` 的缓存队列 `push` 元素，接收操作则是 `pop` 元素，如果队列被塞满了，那么发送操作将阻
-塞直到另一个 `goroutine` 执行接收操作而释放了新的队列空间。
-相反，如果 `channel` 是空的，接收操作将阻塞直到有另一个 `goroutine` 执行发送操作而向队列插入元素。
+塞直到另一个 goroutine 执行接收操作而释放了新的队列空间。
+相反，如果 `channel` 是空的，接收操作将阻塞直到有另一个 goroutine 执行发送操作而向队列插入元素。
 
 在大多数情况下，缓冲通道会作为收发双方的中间件。正如前文所述，元素值会先从发送方复制到缓冲通道，之后再由缓冲通道复制给接收方。
 
@@ -179,7 +179,7 @@ select {
 都不能够马上被处理时程序需要执行哪些逻辑**。
 
 ### 超时
-我们可以利用 `select` 来设置超时，避免 `goroutine` 阻塞的情况：
+我们可以利用 `select` 来设置超时，避免 goroutine 阻塞的情况：
 ```go
 func main() {
 	c := make(chan int)

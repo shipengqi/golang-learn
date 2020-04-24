@@ -316,7 +316,7 @@ time.Sleep(10 * time.Second)
 
 #### Sleep
 
-`Sleep` 的是通过 `Timer` 实现的（查看 `runtime/time.go` 文件）。用于暂停当前 `goroutine`。
+`Sleep` 的是通过 `Timer` 实现的（查看 `runtime/time.go` 文件）。用于暂停当前 goroutine。
 
 ## Ticker
 
