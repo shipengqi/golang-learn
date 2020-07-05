@@ -2,7 +2,6 @@
 title: test
 ---
 
-# test
 ```sh
 usage: go test [build/test flags] [packages] [build/test flags & test binary flags]
 

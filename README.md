@@ -1,17 +1,20 @@
-# Go 语言学习笔记
-- GitHub 地址：https://github.com/shipengqi/golang-learn
-- 在线浏览：https://www.shipengqi.top/golang-learn
-- 代码示例：https://github.com/shipengqi/golang-learn/tree/master/demos
+# golang-learn
+
+Golang language learning ...
 
 ## Usage
+
+development:
+
 ```sh
-# install dependencies
-yarn
+# git clone  https://github.com/alex-shpak/hugo-book themes/book
+git submodule add https://github.com/alex-shpak/hugo-book themes/book
 
-# start dev server, access http://localhost:8083/golang-learn
-yarn start
-
-# deploy
-yarn deploy
+hugo server --minify --theme book
 ```
 
+deploy:
+
+```sh
+./deploy.sh
+```

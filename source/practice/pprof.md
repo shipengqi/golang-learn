@@ -2,7 +2,6 @@
 title: Go PProf
 ---
 
-# Go PProf
 
 PProf 是 Go 提供的用于可视化和分析性能分析数据的工具。
 
@@ -10,6 +9,7 @@ PProf 是 Go 提供的用于可视化和分析性能分析数据的工具。
 - `net/http/pprof`：采集 HTTP Server 的运行时数据进行分析
 
 主要可以用于：
+
 - CPU Profiling：CPU 分析，按照一定的频率采集所监听的应用程序 CPU（含寄存器）的使用情况，可确定应用程序在主动消耗 CPU 周期
 时花费时间的位置。
 - Memory Profiling：内存分析，在应用程序进行堆分配时记录堆栈跟踪，用于监视当前和历史内存使用情况，以及检查内存泄漏。
@@ -17,33 +17,36 @@ PProf 是 Go 提供的用于可视化和分析性能分析数据的工具。
 - Mutex Profiling：互斥锁分析，报告互斥锁的竞争情况。
 
 ## 性能分析
+
 ### 分析 HTTP Server
+
 #### Web
+
 ```go
 import (
-	"log"
-	"net/http"
-	_ "net/http/pprof"
+ "log"
+ "net/http"
+ _ "net/http/pprof"
 )
 
 var datas []string
 
 func Add(str string) string {
-	data := []byte(str)
-	sData := string(data)
-	datas = append(datas, sData)
+ data := []byte(str)
+ sData := string(data)
+ datas = append(datas, sData)
 
-	return sData
+ return sData
 }
 
 func main() {
-	go func() {
-		for {
-			log.Println(Add("https://github.com/shipengqi"))
-		}
-	}()
+ go func() {
+  for {
+   log.Println(Add("https://github.com/shipengqi"))
+  }
+ }()
 
-	_ = http.ListenAndServe("0.0.0.0:8080", nil)
+ _ = http.ListenAndServe("0.0.0.0:8080", nil)
 }
 ```
 
@@ -64,6 +67,7 @@ func main() {
 - trace: 当前程序的执行轨迹。可以在 GET 参数 `seconds` 中指定持续时间。获取跟踪文件之后，使用 `go tool trace` 命令来分析。
 
 #### 交互式终端
+
 ```sh
 # seconds 可以调整等待的时间，当前命令设置等待 60 秒后会进行 CPU Profiling
 go tool pprof http://localhost:8080/debug/pprof/profile?seconds=60
@@ -94,6 +98,7 @@ Showing top 10 nodes out of 14
 ```
 
 上面的输出：
+
 - `flat`：给定函数上运行耗时
 - `flat%`：同上的 CPU 运行耗时总比例
 - `sum%`：给定函数累积使用 CPU 总比例
@@ -123,22 +128,25 @@ go tool pprof http://localhost:6060/debug/pprof/mutex
 - `-alloc_objects`：分析应用程序的内存临时分配情况
 
 ## PProf 可视化界面
+
 `data.go`：
+
 ```go
 package pdata
 
 var datas []string
 
 func Add(str string) string {
-	data := []byte(str)
-	sData := string(data)
-	datas = append(datas, sData)
+ data := []byte(str)
+ sData := string(data)
+ datas = append(datas, sData)
 
-	return sData
+ return sData
 }
 ```
 
 `data_test.go`：
+
 ```go
 package pdata
 
@@ -147,19 +155,21 @@ import "testing"
 const url = "https://github.com/"
 
 func TestAdd(t *testing.T) {
-	s := Add(url)
-	if s == "" {
-		t.Errorf("Test.Add error!")
-	}
+ s := Add(url)
+ if s == "" {
+  t.Errorf("Test.Add error!")
+ }
 }
 
 func BenchmarkAdd(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		Add(url)
-	}
+ for i := 0; i < b.N; i++ {
+  Add(url)
+ }
 }
 ```
+
 运行基准测试：
+
 ```sh
 # 下面的命令会生成 cprof 文件, 使用 go tool pprof 分析
 go test -bench . -cpuprofile=cprof
@@ -172,13 +182,15 @@ ok      github.com/shipengqi/golang-learn/demos/pprof/pdata     2.960s
 ```
 
 启动可视化界面：
+
 ```sh
 $ go tool pprof -http=:8080 cpu.prof
 
 # 或者
-$ go tool pprof cpu.prof 
+$ go tool pprof cpu.prof
 $ (pprof) web
 ```
+
 如果出现 `Could not execute dot; may need to install graphviz.`，参考 "安裝 Graphviz"
 
 ![](../imgs/profile2.png)
@@ -199,9 +211,11 @@ PProf 的可视化界面能够更方便、更直观的看到 Go 应用程序的�
 官网 [下载地址](http://www.graphviz.org/download/)
 
 ### 配置环境变量
+
 将 bin 目录添加到 Path 环境变量中，如 `C:\Program Files (x86)\Graphviz2.38\bin`。
 
 ### 验证
+
 ```sh
 dot -version
 ```

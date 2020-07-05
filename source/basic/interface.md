@@ -2,7 +2,6 @@
 title: 接口
 ---
 
-# 接口
 
 Go 支持接口数据类型，接口类型是一种抽象的类型。接口类型具体描述了一系列方法的集合，任何其他类型只要实现了这些方法就是实
 现了这个接口，无须显示声明。**接口只有当有两个或两个以上的具体类型必须以相同的方式进行处理时才需要**。
@@ -14,6 +13,7 @@ Go 支持接口数据类型，接口类型是一种抽象的类型。接口类�
 简单的说，`interface` 是一组 `method` 的组合，我们通过 `interface` 来定义对象的一组行为。
 
 定义接口：
+
 ```go
 type 接口名 interface {
   方法名1 [返回类型]
@@ -38,6 +38,7 @@ func (struct_name_variable struct_name) 方法名2() [返回类型] {
 ```
 
 实例：
+
 ```go
 type Phone interface {
   call()
@@ -69,6 +70,7 @@ func main() {
 ```
 
 接口类型也可以通过组合已有的接口来定义：
+
 ```go
 type Reader interface {
   Read(p []byte) (n int, err error)
@@ -92,8 +94,10 @@ type ReadWriter interface {
 ```
 
 ### 空接口类型
+
 `interface {}` 被称为空接口类型，它没有任何方法。所有的类型都实现了空 `interface`，
 空 `interface` 在我们需要存储任意类型的数值的时候相当有用，因为它可以存储任意类型的数值。
+
 ```go
 // 定义a为空接口
 var a interface{}
@@ -103,22 +107,26 @@ s := "Hello world"
 a = i
 a = s
 ```
+
 一个函数把 `interface{}` 作为参数，那么他可以接受任意类型的值作为参数，如果一个函数返回 `interface{}`,
 那么也就可以返回任意类型的值。
 
 `interface{}` 可以存储任意类型，那么怎么判断存储了什么类型？
 
-
 ### error 接口
+
 Go 内置了错误接口。
+
 ```go
 type error interface {
   Error() string
 }
 ```
+
 创建一个 `error` 最简单的方法就是调用 `errors.New` 函数。
 
 `error`包：
+
 ```go
 package errors
 
@@ -136,6 +144,7 @@ func (e *errorString) Error() string { return e.text }
 实际上，`error` 类型值的 `Error` 方法就相当于其他类型值的 `String` 方法。
 
 ### 接口的实际用途
+
 ```go
 package main
 
@@ -172,51 +181,52 @@ func main() {
 
 上面的代码 `fmt.Printf("Vowels are %c", v.FindVowels())` 是可以直接使用 `fmt.Printf("Vowels are %c", name.FindVowels())`
 的，那么我们定义的变量 `V` 没有没有了意义。看下面的代码：
+
 ```go
 package main
 
 import (
-	"fmt"
+ "fmt"
 )
 
 // 薪资计算器接口
 type SalaryCalculator interface {
-	CalculateSalary() int
+ CalculateSalary() int
 }
 // 普通挖掘机员工
 type Contract struct {
-	empId  int
-	basicpay int
+ empId  int
+ basicpay int
 }
 // 有蓝翔技校证的员工
 type Permanent struct {
-	empId  int
-	basicpay int
-	jj int // 奖金
+ empId  int
+ basicpay int
+ jj int // 奖金
 }
 
 func (p Permanent) CalculateSalary() int {
-	return p.basicpay + p.jj
+ return p.basicpay + p.jj
 }
 
 func (c Contract) CalculateSalary() int {
-	return c.basicpay
+ return c.basicpay
 }
 // 总开支
 func totalExpense(s []SalaryCalculator) {
-	expense := 0
-	for _, v := range s {
-		expense = expense + v.CalculateSalary()
-	}
-	fmt.Printf("总开支 $%d", expense)
+ expense := 0
+ for _, v := range s {
+  expense = expense + v.CalculateSalary()
+ }
+ fmt.Printf("总开支 $%d", expense)
 }
 
 func main() {
-	pemp1 := Permanent{1,3000,10000}
-	pemp2 := Permanent{2, 3000, 20000}
-	cemp1 := Contract{3, 3000}
-	employees := []SalaryCalculator{pemp1, pemp2, cemp1}
-	totalExpense(employees)
+ pemp1 := Permanent{1,3000,10000}
+ pemp2 := Permanent{2, 3000, 20000}
+ cemp1 := Contract{3, 3000}
+ employees := []SalaryCalculator{pemp1, pemp2, cemp1}
+ totalExpense(employees)
 }
 ```
 

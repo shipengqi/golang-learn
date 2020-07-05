@@ -2,7 +2,6 @@
 title: tool
 ---
 
-# tool
 ```sh
 usage: go tool [-n] command [args...]
 

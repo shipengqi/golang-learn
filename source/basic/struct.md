@@ -2,8 +2,10 @@
 title: 结构体
 ---
 # 结构体
+
 结构体是由一系列具有相同类型或不同类型的数据构成的数据集合。
 结构体定义需要使用 `type` 和 `struct` 语句, `struct` 语句定义一个新的数据类型, `type` 语句定义了结构体的名称：
+
 ```go
 // 定义了结构体类型
 type struct_variable_type struct {
@@ -19,32 +21,35 @@ variable_name := structure_variable_type{ key1: value1, key2: value2..., keyn: v
 ```
 
 用点号 `.` 操作符访问结构体成员, 实例：
+
 ```go
 type Books struct {
-	title string
-	author string
-	subject string
-	book_id int
+ title string
+ author string
+ subject string
+ book_id int
 }
 
 
 func main() {
-	var Book1 Books        /* 声明 Book1 为 Books 类型 */
+ var Book1 Books        /* 声明 Book1 为 Books 类型 */
 
-	/* book 1 描述 */
-	Book1.title = "Go 语言"
-	Book1.author = "www.runoob.com"
-	Book1.subject = "Go 语言教程"
-	Book1.book_id = 6495407
+ /* book 1 描述 */
+ Book1.title = "Go 语言"
+ Book1.author = "www.runoob.com"
+ Book1.subject = "Go 语言教程"
+ Book1.book_id = 6495407
 
-		/* 打印 Book1 信息 */
-	fmt.Printf( "Book 1 title : %s\n", Book1.title)
-	fmt.Printf( "Book 1 author : %s\n", Book1.author)
-	fmt.Printf( "Book 1 subject : %s\n", Book1.subject)
-	fmt.Printf( "Book 1 book_id : %d\n", Book1.book_id)
+  /* 打印 Book1 信息 */
+ fmt.Printf( "Book 1 title : %s\n", Book1.title)
+ fmt.Printf( "Book 1 author : %s\n", Book1.author)
+ fmt.Printf( "Book 1 subject : %s\n", Book1.subject)
+ fmt.Printf( "Book 1 book_id : %d\n", Book1.book_id)
 }
 ```
+
 `.` 点操作符也可以和指向结构体的指针一起工作:
+
 ```go
 var employeeOfTheMonth *Employee = &dilbert
 employeeOfTheMonth.Position += " (proactive team player)"
@@ -54,24 +59,27 @@ employeeOfTheMonth.Position += " (proactive team player)"
 未导出的成员, 不允许在外部包修改。**
 
 通常一行对应一个结构体成员，成员的名字在前类型在后，不过如果相邻的成员类型如果相同的话可以被合并到一行:
+
 ```go
 type Employee struct {
-	ID            int
-	Name, Address string
-	Salary        int
+ ID            int
+ Name, Address string
+ Salary        int
 }
 ```
 
 一个命名为 S 的结构体类型将不能再包含 S 类型的成员：因为一个聚合的值不能包含它自身。（该限制同样适应于数组。）
 但是S类型的结构体可以包含 `*S` 指针类型的成员，这可以让我们创建递归的数据结构，比如链表和树结构等：
+
 ```go
 type tree struct {
-	value       int
-	left, right *tree
+ value       int
+ left, right *tree
 }
 ```
 
 ## 结构体的零值
+
 ```go
 type Person struct {
   AgeYears int
@@ -81,6 +89,7 @@ type Person struct {
 
 var p Person // Person{0, "", nil}
 ```
+
 变量 `p` 只声明但没有赋值，所以 `p` 的所有字段都有对应的零值。
 
 **注意如果声明结构体指针使用 `var p *Person` 的方式，那么 `p` 只是一个 `nil` 指针，建议使用 `p := &Person{}` 的方式声明，
@@ -89,6 +98,7 @@ var p Person // Person{0, "", nil}
 ## 结构体字面值
 
 结构体字面值可以指定每个成员的值:
+
 ```go
 type Point struct{ X, Y int }
 
@@ -98,6 +108,7 @@ p := Point{1, 2}
 ## 结构体比较
 
 两个结构体将可以使用 `==` 或 `!=` 运算符进行比较。
+
 ```go
 type Point struct{ X, Y int }
 
@@ -108,8 +119,10 @@ fmt.Println(p == q)                   // "false"
 ```
 
 ## 结构体嵌入 匿名成员
+
 Go 语言提供的不同寻常的结构体嵌入机制让一个命名的结构体包含另一个结构体类型的匿名成员，
 这样就可以通过简单的点运算符 `x.f` 来访问匿名成员链中嵌套的 `x.d.e.f` 成员。
+
 ```go
 type Point struct {
     X, Y int
@@ -127,6 +140,7 @@ type Wheel struct {
 ```
 
 上面的代码，会使访问每个成员变得繁琐：
+
 ```go
 var w Wheel
 w.Circle.Center.X = 8
@@ -138,6 +152,7 @@ w.Spokes = 20
 Go 语言有一个特性可以**只声明一个成员对应的数据类型而定义成员的名字；这类成员就叫匿名成员**。Go 语言规范规定，
 如果一个字段的声明中只有字段的类型名而没有字段的名称，那么它就是一个嵌入字段，也可以被称为匿名字段。
 匿名成员的数据类型必须是命名的类型或指向一个命名的类型的指针。
+
 ```go
 type Point struct {
     X, Y int
@@ -164,6 +179,7 @@ w.Spokes = 20
 上面的代码中，`Circle` 和 `Wheel` 各自都有一个匿名成员。我们可以说 `Point` 类型被嵌入到了 `Circle` 结构体，
 同时 `Circle` 类型被嵌入到了 `Wheel` 结构体。但是**结构体字面值并没有简短表示匿名成员的语法**，所以下面的代码，
 会编译失败：
+
 ```go
 w = Wheel{8, 8, 5, 20}                       // compile error: unknown fields
 w = Wheel{X: 8, Y: 8, Radius: 5, Spokes: 20} // compile error: unknown fields
@@ -183,6 +199,7 @@ w = Wheel{
 **不能同时包含两个类型相同的匿名成员，这会导致名字冲突**。
 
 ### 嵌入接口类型
+
 Go 语言的结构体还可以嵌入接口类型。
 
 ```go
@@ -229,6 +246,7 @@ func main() {
     fmt.Println(rarr.Less(0,1))
 }
 ```
+
 `reverse` 结构体内嵌了一个名为 `Interface` 的 `interface`，并且实现 `Less` 函数，但是
 却没有实现 `Len`, `Swap` 函数。
 
@@ -237,6 +255,7 @@ func main() {
 通过这种方法可以让 **`reverse` 实现 `Interface` 这个接口类型，并且仅实现某个指定的方法，而不需要实现这个接口下的所有方法**。
 
 对比一下传统的组合匿名结构体实现重写的写法：
+
 ```go
 type Interface interface {
     Len() int
@@ -284,6 +303,7 @@ func main() {
 匿名接口的优点，**匿名接口的方式不依赖具体实现，可以对任意实现了该接口的类型进行重写**。
 
 ### 如果被嵌入类型和嵌入类型有同名的方法，那么调用哪一个的方法
+
 **只要名称相同，无论这两个方法的签名是否一致，被嵌入类型的方法都会“屏蔽”掉嵌入字段的同名方法**。
 
 类似的，由于我们同样可以像访问被嵌入类型的字段那样，直接访问嵌入字段的字段，所以**如果这两个结构体类型里存在同名的字段，

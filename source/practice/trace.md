@@ -2,7 +2,6 @@
 title: Go trace
 ---
 
-# Go trace
 Go PProf 很难完成 Goroutine 的分析。这就需要使用 `go tool trace` 命令。
 
 `go tool pprof` 可以跟踪运行缓慢的函数，或者找到大部分 CPU 时间花费在哪里。
@@ -11,29 +10,29 @@ Go PProf 很难完成 Goroutine 的分析。这就需要使用 `go tool trace` �
 ```go
 package main
 
-import (    
+import (
     "os"
     "runtime/trace"
 )
 
 func main() {
-	f, err := os.Create("trace.out")
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
+ f, err := os.Create("trace.out")
+ if err != nil {
+  panic(err)
+ }
+ defer f.Close()
 
-	err = trace.Start(f)
-	if err != nil {
-		panic(err)
-	}
-	defer trace.Stop()
+ err = trace.Start(f)
+ if err != nil {
+  panic(err)
+ }
+ defer trace.Stop()
 
-    ch := make(chan string)    
+    ch := make(chan string)
 
     go func() {
         ch <- "hello"
-    }()    
+    }()
     // read from channel
     <-ch
 
@@ -43,7 +42,7 @@ func main() {
 生成跟踪文件：
 
 ```
-$ go run main.go
+go run main.go
 ```
 
 启动可视化界面：
@@ -159,6 +158,7 @@ Network/Sync/Syscall blocking profile 是分析锁竞争的最佳选择。
 结合开头的代码去看的话，很明显就是 `ch` 的输入输出的过程了。
 
 ## 收集 trace
+
 1. 使用 `runtime/trace` 包  
 
 调用 `trace.Start` 和 `trace.Stop`。
@@ -172,9 +172,11 @@ Network/Sync/Syscall blocking profile 是分析锁竞争的最佳选择。
 用来收集运行中的 web 应用的 trace。
 
 ### 跟踪一个 web 应用
+
 如果早已埋好 `_ "net/http/pprof"` 这个工具，就可以执行：
--  `curl http://127.0.0.1:6060/debug/pprof/trace\?seconds\=20 > trace.out`
--  `go tool trace trace.out`
+
+- `curl http://127.0.0.1:6060/debug/pprof/trace\?seconds\=20 > trace.out`
+- `go tool trace trace.out`
 
 #### View trace
 
@@ -202,6 +204,6 @@ Network/Sync/Syscall blocking profile 是分析锁竞争的最佳选择。
 
 通过对以上三项的跟踪分析，加上这个泄露，这个阻塞的耗时，这个涉及的内部方法名，很明显就是忘记关闭客户端连接了。
 
-不建议将 pprof handlers 暴露给 Internet，参考 https://mmcloughlin.com/posts/your-pprof-is-showing。
+不建议将 pprof handlers 暴露给 Internet，参考 <https://mmcloughlin.com/posts/your-pprof-is-showing>。
 
 **内容来自** [Go 大杀器之跟踪剖析 trace](https://github.com/EDDYCJY/blog/blob/7b021d0dee/tools/go-tool-trace.md)

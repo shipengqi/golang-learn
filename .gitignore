@@ -1,20 +1,10 @@
-# IDE
+# Editor directories and files
 .idea
 .vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw*
 
-# Static
-db.json
 public
-themes/doc
-
-# Node
-node_modules
-.deploy_git
-
-# logs
-*.log
-logs
-log
-
-# dist
-docs/.vuepress/dist

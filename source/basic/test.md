@@ -2,17 +2,18 @@
 title: 测试
 ---
 
-# 测试
 `go test` 命令测试代码，包目录内，所有以 `_test.go` 为后缀名的源文件在执行 `go build` 时不会被构建成包的一部分，
 它们是 `go test` 测试的一部分。
 
 在 `*_test.go` 文件中，有三种类型的函数：
+
 - 测试函数，测试程序的一些逻辑行为是否正确。`go test` 命令会调用这些测试函数并报告测试结果是 `PASS` 或 `FAIL`。
 - 基准测试函数，衡量一些函数的性能。`go test` 命令会多次运行基准函数以计算一个平均的执行时间。
 - 示例函数，提供一个由编译器保证正确性的示例文档。
 
 `go test` 会生成一个临时 `main` 包调用测试函数。
 **参数**
+
 - `-v`，打印每个测试函数的名字和运行时间。
 - `-run`，指定一个正则表达式，只有匹配到的测试函数名才会被 `go test` 运行，如 `go test -v -run="French|Canal"`。
 - `-cover`，测试覆盖率。
@@ -23,8 +24,10 @@ title: 测试
 - `-o`，指定用于运行测试的可执行文件的名称。追加该标记不会影响测试代码的运行，除非同时追加了标记 `-c` 或 `-i`。
 
 ## 测试函数
-**测试函数必须导入 `testing` 包，并以 `Test` 为函数名前缀，后缀名必须以大写字母开头，并且参数列表中只应有一个 `*testing.T` 
+
+**测试函数必须导入 `testing` 包，并以 `Test` 为函数名前缀，后缀名必须以大写字母开头，并且参数列表中只应有一个 `*testing.T`
 类型的参数声明**：
+
 ```go
 func TestName(t *testing.T) {
   ...
@@ -35,6 +38,7 @@ func TestName(t *testing.T) {
 `go test` 命令如果没有参数指定包那么将默认采用当前目录对应的包。
 
 表格驱动测试在我们要创建一系列相同测试方式的测试用例时很有用。例如:
+
 ```go
 func TestIsPalindrome(t *testing.T) {
     var tests = []struct {
@@ -64,8 +68,10 @@ func TestIsPalindrome(t *testing.T) {
 ```
 
 ## 覆盖率
+
 `go test` 命令中集成了测试覆盖率工具。
 运行 `go tool cover`：
+
 ```bash
 $ go tool cover
 Usage of 'go tool cover':
@@ -81,38 +87,47 @@ Open a web browser displaying annotated source code:
 这可以用于衡量哪些是被频繁执行的热点代码。
 
 ## 基准测试
+
 **测试函数必须导入 `testing` 包，并以 `Benchmark` 为函数名前缀，后缀名必须以大写字母开头，并且唯一参数的类型必须
 是 `*testing.B` 类型的**：
+
 ```go
 func BenchmarkName(b *testing.B) {
   ...
 }
 ```
+
 `*testing.B` 参数除了提供和 `*testing.T` 类似的方法，还有额外一些和性能测量相关的方法。
 
 ### 运行基准测试
+
 运行基准测试需要使用 `-bench` 参数，指定要运行的基准测试函数。该参数是一个正则表达式，用于匹配要执行的基准测试函数的名字，
 默认值是空的。
 
 `.` 会匹配所有基准测试函数。
 
 ### 剖析
+
 基准测试对于衡量特定操作的性能是有帮助的，Go 语言支持多种类型的剖析性能分析：
+
 1. CPU 剖析数据标识了最耗 CPU 时间的函数。
 2. 堆剖析则标识了最耗内存的语句。
 3. 阻塞剖析则记录阻塞 goroutine 最久的操作，例如系统调用、管道发送和接收，还有获取锁等。
 
 ```bash
-$ go test -cpuprofile=cpu.out
-$ go test -blockprofile=block.out
-$ go test -memprofile=mem.out
+go test -cpuprofile=cpu.out
+go test -blockprofile=block.out
+go test -memprofile=mem.out
 ```
 
 #### go tool pprof
+
 `go tool pprof` 命令可以用来分析上面的命令生成的数据。
 
 ## 示例函数
+
 并以 `Benchmark` 为函数名前缀，示例函数没有函数参数和返回值：
+
 ```go
 func ExampleName() {
   ...
@@ -120,11 +135,13 @@ func ExampleName() {
 ```
 
 三个用处:
+
 1. 作为文档，如 `ExampleIsPalindrome` 示例函数将是 `IsPalindrome` 函数文档的一部分。
 2. `go test` 会运行示例函数测试。
 3. 提供 Go Playground，可以在浏览器中在线编辑和运行每个示例函数。
 
 ## go test 命令执行的主要测试流程
+
 `go test` 命令在开始运行时，会先做一些准备工作，比如，确定内部需要用到的命令，检查我们指定的代码包或源码文件的有效性，
 以及判断我们给予的标记是否合法，等等。
 
@@ -139,10 +156,12 @@ func ExampleName() {
 由于**并发的测试会让性能测试的结果存在偏差，所以性能测试一般都是串行进行的**。
 
 ## 功能测试的测试结果
+
 ```bash
 $ go test puzzlers/article20/q2
 ok   puzzlers/article20/q2 (cached)
 ```
+
 `(cached)` 表明，由于测试代码与被测代码都没有任何变动，所以 `go test` 命令直接把之前缓存测试成功的结果打印出来了。
 
 go 命令通常会缓存程序构建的结果，以便在将来的构建中重用。我们可以通过运行 `go env GOCACHE` 命令来查看缓存目录的路径。
@@ -153,6 +172,7 @@ go 命令通常会缓存程序构建的结果，以便在将来的构建中重�
 过任何的缓存数据，而真正地执行操作并重新生成所有结果，然后再去检查新的结果与现有的缓存数据是否一致。
 
 ## 性能测试的测试结果
+
 ```bash
 $ go test -bench=. -run=^$ puzzlers/article20/q3
 goos: darwin
@@ -183,6 +203,7 @@ ok   puzzlers/article20/q3 1.192s
 测试名称右边的是执行次数。**它指的是被测函数的执行次数，而不是性能测试函数的执行次数**。
 
 ## `-parallel` 标记
+
 该标记的作用是：设置同一个被测代码包中的功能测试函数的最大并发执行数。
 该标记的默认值是测试运行时的最大 P 数量（这可以通过调用表达 式`runtime.GOMAXPROCS(0)` 获得）。
 
@@ -193,13 +214,16 @@ ok   puzzlers/article20/q3 1.192s
 由 `-parallel` 标记值决定的。要注意，同一个功能测试函数的多次执行之间一定是串行的。
 
 ## 性能测试函数中的计时器
+
 `testing.B` 类型有这么几个指针方法：`StartTimer`、`StopTimer` 和 `ResetTimer`。这些方法都是用于操作当前的性能测试函数
 专属的计时器的。
 
 这些字段用于记录：当前测试函数在当次执行过程中耗费的时间、分配的堆内存的字节数以及分配次数。
 
 ## 性能分析
+
 Go 语言为程序开发者们提供了丰富的性能分析 API，和非常好用的标准工具。这些 API 主要存在于：
+
 - `runtime/pprof`；
 - `net/http/pprof`；
 - `runtime/trace`；
@@ -209,16 +233,19 @@ Go 语言为程序开发者们提供了丰富的性能分析 API，和非常好�
 
 在 Go 语言中，用于分析程序性能的概要文件有三种，分别是：**CPU 概要文件（CPU Profile）、内存概要文件（Mem Profile）和阻塞概
 要文件（Block Profile）**。
+
 - CPU 概要文件，其中的每一段独立的概要信息都记录着，在进行某一次采样的那个时刻，CPU 上正在执行的 Go 代码。
 - 内存概要文件，其中的每一段概要信息都记载着，在某个采样时刻，正在执行的 Go 代码以及堆内存的使用情况，这里包含已分配和已释放的
 字节数量和对象数量。
 - 阻塞概要文件，其中的每一段概要信息，都代表着 Go 程序中的一个 goroutine 阻塞事件。
 
 ### 程序对 CPU 概要信息进行采样
+
 这需要用到 `runtime/pprof` 包中的 API。想让程序开始对 CPU 概要信息进行采样的时候，需要调用这个代码包中
 的 `StartCPUProfile` 函数，而在停止采样的时候则需要调用该包中的`StopCPUProfile`函数。
 
 ### 设定内存概要信息的采样频率
+
 针对内存概要信息的采样会按照一定比例收集 Go 程序在运行期间的堆内存使用情况。设定内存概要信息采样频率的方法很简单，
 只要为 `runtime.MemProfileRate` 变量赋值即可。
 
@@ -235,6 +262,7 @@ Go 语言为程序开发者们提供了丰富的性能分析 API，和非常好�
 生的**。如果你想要实时的信息，那么可以调用 `runtime.ReadMemStats` 函数。不过要特别注意，该函数会引起 Go 语言调度器的短暂停顿。
 
 ### 获取到阻塞概要信息
+
 调用 `runtime` 包中的 `SetBlockProfileRate` 函数，即可对阻塞概要信息的采样频率进行设定。该函数有一个名叫 `rate` 的参数，
 它是 `int` 类型的。
 
