@@ -1,20 +1,23 @@
 ---
 title: slice
 ---
-# slice
+
 `slice` 的语法和数组很像，由于数组长度是固定的，所以使用 `slice` 相比数组会更灵活，`slice` 是动态的，
 长度可以增加也可以减少。还有一点与数组不同，切片不需要说明长度。
 
 **切片（slice） 是对底层数组一个连续片段的引用，所以切片是一个引用类型**。
 
 **定义切片，和定义数组的区别就是不需要指定 `SIZE`**：
+
 ```go
 var 变量名 []类型
 ```
+
 一个 `slice` 由三个部分构成：指针、长度和容量。长度不能超过容量。
 一个切片在未初始化之前默认为 `nil`，长度为 `0`。
 
 初始化切片：
+
 ```go
 // 直接初始化切片，[] 表示是切片类型，{1,2,3} 初始化值依次是 1,2,3.其 cap=len=3
 s :=[]int {1,2,3}
@@ -23,10 +26,10 @@ s :=[]int {1,2,3}
 s := arr[:]
 
 // 将 arr 中从下标 startIndex 到 endIndex-1 下的元素创建为一个新的切片
-s := arr[startIndex:endIndex] 
+s := arr[startIndex:endIndex]
 
 // 缺省 endIndex 时将表示一直到 arr 的最后一个元素
-s := arr[startIndex:] 
+s := arr[startIndex:]
 
 // 缺省 startIndex 时将表示从 arr 的第一个元素开始
 s := arr[:endIndex]
@@ -38,17 +41,21 @@ s := make([]int, len, capacity)
 ```
 
 ## len() 和 cap()
+
 - `len`获取切片长度。
 - `cap`计算切片的最大容量
 
 ## append() 和 copy()
+
 - `append` 向切片追加新元素
 - `copy` 拷贝切片
 
 ### append 的使用
+
 使用 `append` 函数时要注意，`append` 总是从 `slice` 的尾部开始追加数据。比如下面的代码：
+
 ```go
-urls := make([]string, 3) 
+urls := make([]string, 3)
 append(urls, "hello")
 len(urls) // 4
 
@@ -58,10 +65,12 @@ len(urls) // 1
 ```
 
 ## 切片操作
+
 ### 截取切片
+
 ```go
 /* 创建切片 */
-numbers := []int{0,1,2,3,4,5,6,7,8}   
+numbers := []int{0,1,2,3,4,5,6,7,8}
 
 /* 打印子切片从索引 1 (包含) 到索引 4(不包含)*/
 fmt.Println("numbers[1:4] ==", numbers[1:4]) // numbers[1:4] == [1 2 3]
@@ -83,7 +92,9 @@ fmt.Printf("len=%d cap=%d slice=%v\n",len(number3),cap(number3),number3) // len=
 ```
 
 ### 切片初始化要注意的事情
+
 初始化切片可以使用两种方式：
+
 1. 比如 `s := []string{}`，这种方式初始化的切片长度为 0，不能直接使用下标赋值（`s[0] = "hello"`），会报错 `index out of range`。
 2. 使用 `make` 初始化切片，要注意使用 `append` 函数时，是从末尾开始添加数据，注意 `slice` 的 `len` 参数。
 
@@ -103,6 +114,7 @@ fmt.Printf("len=%d cap=%d slice=%v\n",len(number3),cap(number3),number3) // len=
 **在无需扩容时，`append` 函数返回的是指向“原底层数组”的新切片，而在需要扩容时，`append` 函数返回的是指向“新底层数组”的新切片**。
 
 ## 长度和容量
+
 `Slice` 有两个比较混淆的概念，就是长度和容量。这个长度跟数组的长度是一个概念，即在内存中进行了初始化实际存在的元素的个数。何谓容量？
 如果通过 `make` 函数创建 `Slice` 的时候指定了容量参数，那内存管理器会根据指定的容量的值先划分一块内存空间，然后才在其中存放有数组元素，
 多余部分处于空闲状态，在 `Slice` 上追加元素的时候，首先会放到这块空闲的内存中，如果添加的参数个数超过了容量值，内存管理器会重新划
