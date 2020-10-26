@@ -9,6 +9,7 @@
 - [调度系列 深度解密 历史文章](http://mp.weixin.qq.com/mp/homepage?__biz=MjM5MDUwNTQwMQ==&hid=1&sn=e47afe02b972f5296e1e3073982cf1b6&scene=18#wechat_redirect)
 - [Go 语言原本](https://changkun.de/golang/)
 - [Go 夜读](https://github.com/developer-learning/reading-go)
+- [over-golang](https://github.com/overnote/over-golang)
 - [golang-notes](https://github.com/cch123/golang-notes)
 - [Scheduling In Go](https://www.jianshu.com/p/c38a22d8f913)
 - [gotraining](https://github.com/ardanlabs/gotraining/tree/master/topics/go)
