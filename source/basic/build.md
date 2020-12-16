@@ -38,11 +38,11 @@ package testpkg
 // +build 386
 ```
 
-这个将限制此源文件只能在 linux/386 或者 darwin/386 平台下编译.
+这个将限制此源文件只能在 `linux/386` 或者 `darwin/386` 平台下编译.
 
 除了添加系统相关的 tag，还可以自由添加自定义 tag 达到其它目的。
 编译方法:
-只需要在go build指令后用 `-tags` 指定编译条件即可
+只需要在 `go build` 指令后用 `-tags` 指定编译条件即可
 
 ```bash
 go build -tags mytag1 mytag2
@@ -72,7 +72,7 @@ mypkg_plan9.go       // only builds on plan9
 
 编译标签和文件后缀的功能上有重叠，例如一个文件名：`mypkg_linux.go` 包含了 `// +build linux` 将会出现冗余
 
-通常情况下，如果源文件与平台或者cpu架构完全匹配，那么用文件后缀，例如：
+通常情况下，如果源文件与平台或者 cpu 架构完全匹配，那么用文件后缀，例如：
 
 ```bash
 mypkg_linux.go         // only builds on linux systems
@@ -81,6 +81,6 @@ mypkg_windows_amd64.go // only builds on windows 64bit platforms
 
 相反，如果满足以下任何条件，那么使用编译标签：
 
-- 这个源文件可以在超过一个平台或者超过一个cpu架构下可以使用
+- 这个源文件可以在超过一个平台或者超过一个 cpu 架构下可以使用
 - 需要去除指定平台
 - 有一些自定义的编译条件
