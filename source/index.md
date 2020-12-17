@@ -3,6 +3,7 @@ title: Golang 介绍
 ---
 
 Go 语言特性有哪些：
+
 - 跨平台，支持大部分主流操作系统。
 - **静态类型**，编译型语言，但是语法却和解释型脚本语言（如 Javascript）一样简单。
 - 自动垃圾回收机制。
@@ -12,6 +13,7 @@ Go 语言特性有哪些：
 - 丰富的标准库。
 
 # Golang 介绍
+
 Go 语言非常简单，只有 25 个关键字：
 
 - `var` 和 `const` 声明变量和常量
@@ -30,30 +32,37 @@ Go 语言非常简单，只有 25 个关键字：
 - `range` 用于读取 `slice`、`map`、`channel` 数据
 
 ## 数据类型
+
 Go 语言的四类数据类型
+
 - 基础类型，数值、字符串和布尔型
 - 复合类型，数组和结构体
 - 引用类型，指针、切片、字典、函数、通道
 - 接口类型
 
 ## 三种文件
+
 - 命令源码文件，如果一个源码文件声明属于 `main` 包，并且包含一个无参数声明且无结果声明的 `main` 函数，那么它就是命令源码文件。
 - 库源码文件，库源码文件是不能被直接运行的源码文件，它仅用于存放程序实体，这些程序实体可以被其他代码使用
 - 测试源码文件
 
-
 ## package
+
 在写 Go 语言的代码时，每个文件的头部都有一行 `package` 声明语句。比如 `package main`。这个声明表示这个源
 文件属于哪个包（类似其他语言的 `modules` 或者 `libraries`）。 Go 语言的代码就是通过这个 `package` 来组织。
 
 ## 注释
+
 使用 `//` 添加注释。一般我们会在包声明前添加注释，来对整个包挥着程序做整体的描述。
 
 ## 行分隔符
-Go 中，一行代表一个语句结束，不需要以分号 `;` 结尾。多个语句写在同一行，则必须使用 `;`（不推荐使用）。 
+
+Go 中，一行代表一个语句结束，不需要以分号 `;` 结尾。多个语句写在同一行，则必须使用 `;`（不推荐使用）。
 
 ## os.Args
+
 程序的命令行参数可使用 `os.Args` 访问。`os.Args` 是一个字符串的切片。我们打印看一下：
+
 ```go
 package main
 
@@ -65,27 +74,31 @@ import (
 // ++ 和 -- 都只能放在变量名,如 i ++
 func main() {
   for i := 1; i < len(os.Args); i ++ {
-  	fmt.Println(os.Args[i])
+   fmt.Println(os.Args[i])
   }
 }
 ```
+
 然后运行：
+
 ```bash
 go run args1.go arg1 arg2 arg3
 ```
 
 ## 空标识符
+
 `_` 代表空标识符，**Go 不允许有无用的变量，空标识符可以作为忽略占位符**，比如：
+
 ```go
 var s, sep string
 for _, arg := range os.Args[1:] {
-	s += sep + arg
-	sep = " "
+ s += sep + arg
+ sep = " "
 }
 ```
 
-
 ## 命名
+
 所有命名只能以字母或者 `_` 开头，可以包含字母，数字或者 `_`。区分大小写。
 关键字不能定义变量名，如 `func`，`default`。
 
@@ -93,6 +106,7 @@ for _, arg := range os.Args[1:] {
 并且，是在函数外定义的名字，如果以大写字母开头，那么会被导出，也就是在包的外部也可以访问，所以定义名字时，要注意大小写。**
 
 ## 声明
+
 - `var` 声明变量
 - `const` 声明常量
 - `type` 声明类型
@@ -101,12 +115,14 @@ for _, arg := range os.Args[1:] {
 每个文件以 `package` 声明语句。比如 `package main`。
 
 ## make 和 new
+
 1. **`make` 只能用于内建类型（`map`、`slice` 和`channel`）的内存分配。`new` 用于各种类型的内存分配**。
-2. **`make` 返回初始化后的（非零）值，`new` 返回指针**。
+2. **`make` 返回初始化后的（非零）值，`new` 返回指针**。new 的功能就很简单了，它只能接收一个类型作为参数然后返回一个指向该类型的指针
 3. **`new` 函数可以为引用类型分配内存，但这是不完整的创建。比如 `map`，它仅分配了字典本身需要的内存，但是并没有为
 字典内的健值对分配内存，因此无法正常工作**。
 
 ## 类型转换
+
 **Go 强制使用显示类型转换**。这样可以确定语句和表达式的明确含义。**类型转换在编译期完成，包括强制转换和隐式转换**。
 
 ```go
@@ -114,12 +130,15 @@ a := 10
 b := byte(a)
 c := a + int(b) // 混合类型表达式必须保证类型一致
 ```
+
 类型转换用于将一种数据类型的变量转换为另外一种类型的变量：
+
 ```go
 类型名(表达式)
 ```
 
 实例：
+
 ```go
 var sum int = 17
 var count int = 5
@@ -129,7 +148,7 @@ mean = float32(sum)/float32(count)
 fmt.Printf("mean 的值为: %f\n",mean)
 ```
 
-对于整数类型值、整数常量之间的类型转换，原则上只要源值在目标类型的可表示范围内就是合法的。比如，`uint8(255)` 
+对于整数类型值、整数常量之间的类型转换，原则上只要源值在目标类型的可表示范围内就是合法的。比如，`uint8(255)`
 可以把无类型的常量 255 转换为 `uint8` 类型的值，是因为 255 在 `[0, 255]` 的范围内。
 
 这种类型转换主要在**切换同一基础类型不同精度范围**时使用，比如我们要将 `int` 型转为 `int64` 类型时。
@@ -139,7 +158,9 @@ a := 100
 b := byte(a)
 c := a + int(b) // 混合类型表达式，类型必须保持一致
 ```
+
 在 Go 中，非布尔值不能当做 `true/false` 使用，这点和我常用的js不同：
+
 ```go
 x := 100
 
@@ -149,6 +170,7 @@ if x { // 错误 x 不是布尔值
 ```
 
 如果**要转换为指针类型，或者单向 `channel`，或者函数，要给类型加上 `()`，避免编译器分析错误**，如：
+
 ```go
 x := 100
 (*int)(&x) // *int 加括号，否则会被解析为*(int(&x))
@@ -159,20 +181,23 @@ x := 100
 ```
 
 ## 自定义类型
+
 使用 `type` 自定义类型，一般出现在包一级，与变量一样，如果类型名字的首字母是大写，则在包外部也可以使用：
+
 ```go
 type 类型名字 底层类型
 ```
 
 如不同温度单位分别定义为不同的类型：
+
 ```go
 type Celsius float64    // 摄氏温度
 type Fahrenheit float64 // 华氏温度
 
 const (
-	AbsoluteZeroC Celsius = -273.15 // 绝对零度
-	FreezingC     Celsius = 0       // 结冰点温度
-	BoilingC      Celsius = 100     // 沸水温度
+ AbsoluteZeroC Celsius = -273.15 // 绝对零度
+ FreezingC     Celsius = 0       // 结冰点温度
+ BoilingC      Celsius = 100     // 沸水温度
 )
 
 func CToF(c Celsius) Fahrenheit { return Fahrenheit(c*9/5 + 32) }
@@ -193,9 +218,11 @@ fmt.Println(d == x) // 错误：invalid operation: d == x (mismatched types data
 ```
 
 ## 未命名类型
+
 比如数组，切片，字典，通道等类型与内部具体的元素类型和长度等属性有关，所以叫做**未命名类型**（unnamed type）。
 
 **具有相同声明的未命名类型被视作同一类型**。注意结构体的 tag，也属于类型的组成部分。
+
 ```go
 var a struct {
     x int `x`
@@ -224,51 +251,55 @@ Go 语言里面有一个语法，可以直接**判断是否是该类型的变量
 ```go
 // comma-ok
 for index, element := range list {
-	if value, ok := element.(int); ok {
-		fmt.Printf("list[%d] is an int and its value is %d\n", index, value)
-	} else if value, ok := element.(string); ok {
-		fmt.Printf("list[%d] is a string and its value is %s\n", index, value)
-	} else if value, ok := element.(Person); ok {
-		fmt.Printf("list[%d] is a Person and its value is %s\n", index, value)
-	} else {
-		fmt.Printf("list[%d] is of a different type\n", index)
-	}
+ if value, ok := element.(int); ok {
+  fmt.Printf("list[%d] is an int and its value is %d\n", index, value)
+ } else if value, ok := element.(string); ok {
+  fmt.Printf("list[%d] is a string and its value is %s\n", index, value)
+ } else if value, ok := element.(Person); ok {
+  fmt.Printf("list[%d] is a Person and its value is %s\n", index, value)
+ } else {
+  fmt.Printf("list[%d] is of a different type\n", index)
+ }
 }
 
 
 // 或者 使用 switch
 for index, element := range list{
-	switch value := element.(type) {
-		case int:
-			fmt.Printf("list[%d] is an int and its value is %d\n", index, value)
-		case string:
-			fmt.Printf("list[%d] is a string and its value is %s\n", index, value)
-		case Person:
-			fmt.Printf("list[%d] is a Person and its value is %s\n", index, value)
-		default:
-			fmt.Println("list[%d] is of a different type", index)
-	}
+ switch value := element.(type) {
+  case int:
+   fmt.Printf("list[%d] is an int and its value is %d\n", index, value)
+  case string:
+   fmt.Printf("list[%d] is a string and its value is %s\n", index, value)
+  case Person:
+   fmt.Printf("list[%d] is a Person and its value is %s\n", index, value)
+  default:
+   fmt.Println("list[%d] is of a different type", index)
+ }
 }
 ```
 
 **注意，`x.(type)` 语法不能在 `switch` 外的任何逻辑里面使用，如果你要在 `switch` 外面判断一个类型就使用 `comma-ok`**。
 
 ### 生命周期
+
 对于在包一级声明的变量，它们的生命周期和程序的运行周期是一致的。
 局部变量（包括函数的参数和返回值也是局部变量）的生命周期则是动态的：每次从创建一个新变量的声明语句开始，
 直到该变量不再被引用为止，然后变量的存储空间可能被回收。
 
 ## 编码
+
 Go 语言的源码文件必须使用 UTF-8 编码格式进行存储。如果源码文件中出现了非 UTF-8 编码的字符，那么在构建、安装以及运行的时候，
 `go` 命令就会报告错误 “illegal UTF-8 encoding”。
 
 ### ASCII 编码
+
 ASCII 是英文 “American Standard Code for Information Interchange” 的缩写，中文译为美国信息交换标准代码。
 
 ASCII 编码方案使用单个字节（byte）的二进制数来编码一个字符。标准的 ASCII 编码用一个字节的最高比特（bit）位作为奇偶校验位，
 而扩展的 ASCII 编码则将此位也用于表示字符。ASCII 编码支持的可打印字符和控制字符的集合也被叫做 ASCII 编码集。
 
 ### unicode 编码
+
 **unicode 编码规范，实际上是另一个更加通用的、针对书面字符和文本的字符编码标准。它为世界上现存的所有自然语言中的每一个字符，
 都设定了一个唯一的二进制编码**。它定义了不同自然语言的文本数据在国际间交换的统一方式，并为全球化软件创建了一个重要的基础。
 

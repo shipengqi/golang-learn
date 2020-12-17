@@ -1,7 +1,6 @@
 ---
 title: 控制语句
 ---
-# 控制语句
 
 ## if
 
@@ -171,4 +170,4 @@ for i, c := range str {
 <https://zhuanlan.zhihu.com/p/91044663>
 <https://www.jianshu.com/p/86a99efeece5>
 <https://blog.csdn.net/u011957758/article/details/82230316>
-https://www.cnblogs.com/howo/p/10507934.html
+<https://www.cnblogs.com/howo/p/10507934.html>

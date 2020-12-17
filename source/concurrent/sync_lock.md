@@ -3,22 +3,29 @@ title: 同步和锁
 ---
 
 # 同步和锁
+
 channel 不是用来代替锁的，channel 倾向于解决逻辑层次的并发处理，而锁用来保护局部范围的数据安全。
 
 ## 共享变量
+
 无论任何时候，只要有两个以上 goroutine 并发访问同一变量，且至少其中的一个是写操作的时候就会发生数据竞争。
 避免数据竞争的三种方式：
+
 1. 不去写变量。读取不可能出现数据竞争。
 2. 避免从多个 goroutine 访问变量，尽量把变量限定在了一个单独的 goroutine 中。(**不要使用共享数据来通信，使用通信
 来共享数据**)
 3. 互斥锁
 
 ## 同步锁
+
 Go 语言包中的 `sync` 包提供了两种锁类型：`sync.Mutex` 和 `sync.RWMutex`，前者是互斥锁，后者是读写锁。
+
 ### 互斥锁
 
 #### 使用 channel 实现互斥锁
+
 我们可以使用容量只有 `1` 的 `channel` 来保证最多只有一个 goroutine 在同一时刻访问一个共享变量：
+
 ```go
 var (
   sema = make(chan struct{}, 1) // a binary semaphore guarding balance
@@ -40,7 +47,9 @@ func Balance() int {
 ```
 
 #### sync.Mutex
+
 **注意，如果 Mutex 作为匿名字段，那么接收器必须是指针。否则会导致锁失效**
+
 ```go
 type data struct {
     sync.Mutex
@@ -52,8 +61,8 @@ func (d *Data) test() {
 }
 ```
 
-
 使用 `sync.Mutex` 互斥锁：
+
 ```go
 import "sync"
 
@@ -82,6 +91,7 @@ func Balance() int {
 我们可以**使用 `defer` 来 `unlock` 锁，保证在函数返回之后或者发生错误返回时一定会执行 `unlock`**。
 
 ### 读写锁 `sync.RWMutex`
+
 如果有多个 goroutine 读取变量，那么是并发安全的，这个时候使用 `sync.Mutex` 加锁就没有必要。可以使
 用 `sync.RWMutex` 读写锁（多读单写锁）。
 
@@ -101,9 +111,11 @@ func Balance() int {
   return balance
 }
 ```
+
 **`RLock` 只能在共享变量没有任何写入操作时可用**。
 
 **为什么只读操作也需要加锁**？
+
 ```go
 var x, y int
 go func() {
@@ -117,6 +129,7 @@ go func() {
 ```
 
 上面的代码打印的结果可能是：
+
 ```bash
 y:0 x:1
 x:0 y:1
@@ -134,6 +147,7 @@ y:0 x:0
 所以可能的话，将变量限定在 goroutine 内部；如果是多个 goroutine 都需要访问的变量，使用互斥条件来访问。
 
 ### 注意事项
+
 - 不要重复锁定互斥锁；**对一个已经被锁定的互斥锁进行锁定，是会立即阻塞当前的 goroutine 的**。这个 goroutine 所执行的流程，
 会一直停滞在调用该互斥锁的 `Lock` 方法的那行代码上。直到该互斥锁的 `Unlock`方法被调用，并且这里的锁定操作成功完成，后续的代码
 （也就是临界区中的代码）才会开始执行。这也正是互斥锁能够保护临界区的原因所在。
@@ -155,6 +169,7 @@ Go 语言运行时系统是不允许这种情况出现的，只要它发现所�
 **最简单、有效的方式就是让每一个互斥锁都只保护一个临界区或一组相关临界区**。
 
 ## 条件变量 sync.Cond
+
 条件变量是基于互斥锁的，它必须有互斥锁的支撑才能发挥作用。条件变量并不是被用来保护临界区和共享资源的，它是用于协调想要访问共享
 资源的那些线程的。**当共享资源的状态发生变化时，它可以被用来通知被互斥锁阻塞的线程**。
 
@@ -162,7 +177,10 @@ Go 语言运行时系统是不允许这种情况出现的，只要它发现所�
 只要等待通知就好了。
 
 ### 条件变量怎样与互斥锁配合使用
+
 条件变量的初始化离不开互斥锁，并且它的方法有的也是基于互斥锁的。
+
+Go 语言标准库中的 sync.Cond 一个条件变量，它可以让一系列的 Goroutine 都在满足特定条件时被唤醒。
 
 条件变量提供的方法有三个：等待通知（wait）、单发通知（signal）和广播通知（broadcast）。我们在利用条件变量等待通知的时候，
 需要在它基于的那个互斥锁保护下进行。而在进行单发通知或广播通知的时候，却是恰恰相反的，也就是说，需要在对应的互斥锁解锁之后
@@ -209,6 +227,7 @@ recvCond.Signal()
 然后发通知，“信箱里已经有新情报了”，我们调用 `recvCond` 的 `Signal` 方法就可以实现这一步骤。
 
 另一方面，你现在是另一个 goroutine，想要适时地从信箱中获取情报，然后通知我。
+
 ```go
 lock.RLock()
 for mailbox == 0 {
@@ -218,6 +237,7 @@ mailbox = 0
 lock.RUnlock()
 sendCond.Signal()
 ```
+
 事情在流程上其实基本一致，只不过每一步操作的对象是不同的。
 
 **为什么先要锁定条件变量基于的互斥锁，才能调用它的 Wait 方法？**
@@ -258,6 +278,7 @@ sendCond.Signal()
 这种情况是很有可能发生的。
 
 ### 条件变量的 `Signal` 方法和 `Broadcast` 方法有哪些异同
+
 条件变量的 `Signal` 方法和 `Broadcast` 方法都是被用来发送通知的，不同的是，前者的通知只会唤醒一个因此而等待的 goroutine，
 而后者的通知却会唤醒所有为此等待的 goroutine。
 
@@ -265,6 +286,7 @@ sendCond.Signal()
 唤醒的 goroutine。所以，因 `Signal` 方法的通知而被唤醒的 goroutine 一般都是最早等待的那一个。
 
 ## 原子操作
+
 Go 语言的原子操作当然是基于 CPU 和操作系统的，所以它也只针对少数数据类型的值提供了原子操作函数。这些函数都存在于标准库代
 码包 `sync/atomic` 中。
 
@@ -272,7 +294,7 @@ Go 语言的原子操作当然是基于 CPU 和操作系统的，所以它也只
 存储（store）和交换（swap）。
 
 这些函数针对的数据类型并不多。对这些类型中的每一个，`sync/atomic` 包都会有一套函数给予支持。这些数据类型有：
-`int32`、`int64`、`uint32`、`uint64`、`uintptr`，以及 `unsafe` 包中的 `Pointer`。不过，针对 
+`int32`、`int64`、`uint32`、`uint64`、`uintptr`，以及 `unsafe` 包中的 `Pointer`。不过，针对
 `unsafe.Pointer` 类型，该包并未提供进行原子加法操作的函数。
 
 `sync/atomic` 包还提供了一个名为 `Value` 的类型，它可以被用来存储任意类型的值。
@@ -288,11 +310,13 @@ Go 语言的原子操作当然是基于 CPU 和操作系统的，所以它也只
 存地址上的数据。
 
 ## 比较并交换操作与交换操作相比有什么不同
+
 **比较并交换操作即 CAS 操作**，是有条件的交换操作，**只有在条件满足的情况下才会进行值的交换**。
 
 **所谓的交换指的是，把新值赋给变量，并返回变量的旧值**。
 
 CAS 操作用途要更广泛一些。例如，我们将它与 `for` 语句联用就可以实现一种简易的自旋锁（spinlock）。
+
 ```go
 for {
     if atomic.CompareAndSwapInt32(&num2, 10, 0) {
@@ -302,6 +326,7 @@ for {
     time.Sleep(time.Millisecond * 500)
 }
 ```
+
 在 `for` 语句中的 CAS 操作可以不停地检查某个需要满足的条件，一旦条件满足就退出 `for` 循环。这就相当于，只要条件未被满足，
 当前的流程就会被一直“阻塞”在这里。
 
@@ -321,7 +346,18 @@ for {
 
 所以，一旦你决定了要对一个共享资源进行保护，那就要做到完全的保护。不完全的保护基本上与不保护没有什么区别。
 
+### ABA 问题
+
+2.什么是ABA问题？怎么解决？
+答：当一个值从A更新为B，再从B更新为A，普通CAS机制会误判通过检测。解决方案是使用版本号，通过比较值和版本号才判断是否可以替换。
+
+https://blog.csdn.net/weixin_41832850/article/details/100095677
+
+添加版本号解决 ABA 问题
+真正要做到严谨的CAS机制，我们在 compare 阶段不仅需要比较内存地址V中的值是否和旧的期望值A相同，还需要比较变量的版本号是否一致。
+
 ## `sync/atomic.Value`
+
 此类型的值相当于一个容器，可以被用来“原子地”存储和加载任意的值。开箱即用。
 
 它只有两个指针方法—— `Store` 和 `Load`。不过，虽然简单，但还是有一些值得注意的地方的。
@@ -339,8 +375,10 @@ v6 := []int{1, 2, 3}
 box6.Store(v6)
 v6[1] = 4 // 注意，此处的操作不是并发安全的！
 ```
+
 切片类型属于引用类型。所以，我在外面改动这个切片值，就等于修改了 `box6` 中存储的那个值。这相当于绕过了原子值而进行了非并发
 安全的操作。怎样修补：
+
 ```go
 store := func(v []int) {
     replica := make([]int, len(v))
@@ -355,6 +393,7 @@ v6[2] = 5 // 此处的操作是安全的。
 无论我再对 `v6` 的值做怎样的修改，都不会破坏 `box6` 提供的安全保护。
 
 ## sync.WaitGroup
+
 在一些场合下里，我们使用通道的方式看起来都似乎有些蹩脚。比如：声明一个通道，使它的容量与我们手动启用的 goroutine 的数量相同。
 之后利用这个通道，让主 goroutine 等待其他 goroutine 的运行结束。更具体地说就是：让其他的 goroutine 在运行结束之前，
 都向这个通道发送一个元素值，并且，让主 goroutine 在最后从这个通道中接收元素值，接收的次数需要与其他的 goroutine 的数量相同。
@@ -375,6 +414,7 @@ func coordinateWithChan() {
     <-sign
 }
 ```
+
 `coordinateWithChan` 函数中最后的那两行代码了吗？重复的两个接收表达式 `<-sign`，很丑陋。
 我们可以选用另外一个同步工具，即：`sync` 包的 `WaitGroup` 类型。它比通道更加适合实现这种一对多的 goroutine 协作流程。
 
@@ -389,25 +429,27 @@ func coordinateWithChan() {
 而**此类型的 `Wait` 方法的功能是，阻塞当前的 goroutine，直到其所属值中的计数器归零**。
 
 改造版本：
+
 ```go
 func coordinateWithWaitGroup() {
-	var wg sync.WaitGroup
-	wg.Add(2)
-	num := int32(0)
-	fmt.Printf("The number: %d [with sync.WaitGroup]\n", num)
-	max := int32(10)
-	go addNum(&num, 3, max, wg.Done)
-	go addNum(&num, 4, max, wg.Done)
-	wg.Wait()
+ var wg sync.WaitGroup
+ wg.Add(2)
+ num := int32(0)
+ fmt.Printf("The number: %d [with sync.WaitGroup]\n", num)
+ max := int32(10)
+ go addNum(&num, 3, max, wg.Done)
+ go addNum(&num, 4, max, wg.Done)
+ wg.Wait()
 }
 ```
 
 **尽量不要在 `go` 函数内部调用 `Add`，以免 `Add` 还未执行，`Wait` 已经退出**：
+
 ```go
 var wg sync.WaitGroup
 go func(){
-	wg.Add(1)
-	fmt.Println("test")
+ wg.Add(1)
+ fmt.Println("test")
 }()
 
 wg.Wait()
@@ -415,6 +457,7 @@ fmt.Println("exit.")
 ```
 
 ### sync.WaitGroup 类型值中计数器的值可以小于 0 吗
+
 不可以。**小于 0，会引发一个 panic**。
 
 **`WaitGroup` 值是可以被复用的，但需要保证其计数周期的完整性**。这里的计数周期指的是这样一个过程：该值中的计数器值由 0 变为
@@ -423,7 +466,8 @@ fmt.Println("exit.")
 如果在一个此类值的 `Wait` 方法被执行期间，跨越了两个计数周期，那么就会引发一个 panic。
 
 ### 使用注意
-- 不要把增加其计数器值的操作和调用其 `Wait` 方法的代码，放在不同的 goroutine 中执行。换句话说，要**杜绝对同一个 
+
+- 不要把增加其计数器值的操作和调用其 `Wait` 方法的代码，放在不同的 goroutine 中执行。换句话说，要**杜绝对同一个
 `WaitGroup` 值的两种操作的并发执行**。
 
 ## sync.Once
@@ -440,6 +484,7 @@ func Icon(name string) image.Image {
   return icons[name]
 }
 ```
+
 `Once` 类型的 `Do` 方法只接受一个参数，这个参数的类型必须是 `func()`，即：无参数声明和结果声明的函数。该方法的功能并
 不是对每一种参数函数都只执行一次，而是只**执行“首次被调用时传入的”那个函数，并且之后不会再执行任何参数函数**。
 
@@ -454,19 +499,21 @@ func Icon(name string) image.Image {
 发现该值为 1 就会直接返回。这也初步保证了“`Do` 方法，只会执行首次被调用时传入的函数”。
 
 ### Do 方法在功能方面的两个特点
+
 - 由于 `Do` 方法只会在参数函数执行结束之后把 `done` 字段的值变为 1，因此，如果参数函数的执行需要很长时间或者根本就不会结束
 （比如执行一些守护任务），那么就有可能会导致相关 goroutine 的同时阻塞
 - `Do` 方法在参数函数执行结束后，对 `done` 字段的赋值用的是原子操作，并且，这一操作是被挂在 `defer` 语句中的。因此，不论参数
 函数的执行会以怎样的方式结束，`done` 字段的值都会变为 1。
 
 ## context.Context 类型
+
 使用 `WaitGroup` 值的时候，我们最好用**先统一 `Add`，再并发 `Done`，最后 `Wait`** 的标准模式来构建协作流程。如果在调用
 该值的 `Wait` 方法的同时，为了增大其计数器的值，而并发地调用该值的 `Add` 方法，那么就很可能会引发 panic。
 
-但是**如果，我们不能在一开始就确定执行子任务的 goroutine 的数量，那么使用 `WaitGroup` 值来协调它们和分发子任
-务的 goroutine，就是有一定风险的**。一个解决方案是：**分批地启用执行子任务的 goroutine**。
+但是**如果，我们不能在一开始就确定执行子任务的 goroutine 的数量，那么使用 `WaitGroup` 值来协调它们和分发子任务的 goroutine，就是有一定风险的**。一个解决方案是：**分批地启用执行子任务的 goroutine**。
 
 只要我们在严格遵循上述规则的前提下，分批地启用执行子任务的 goroutine，就肯定不会有问题。
+
 ```go
 func coordinateWithWaitGroup() {
     total := 12
@@ -486,25 +533,28 @@ func coordinateWithWaitGroup() {
 ```
 
 ### 使用 `context` 包中的程序实体，实现一对多的 goroutine 协作流程
+
 用 `context` 包中的函数和 `Context` 类型作为实现工具，实现 `coordinateWithContext` 的函数。这个函数应该具有上
 面 `coordinateWithWaitGroup` 函数相同的功能。
+
 ```go
 func coordinateWithContext() {
-	total := 12
-	var num int32
-	fmt.Printf("The number: %d [with context.Context]\n", num)
-	cxt, cancelFunc := context.WithCancel(context.Background())
-	for i := 1; i <= total; i++ {
-		go addNum(&num, i, func() {
-			if atomic.LoadInt32(&num) == int32(total) {
-				cancelFunc()
-			}
-		})
-	}
-	<-cxt.Done()
-	fmt.Println("End.")
+ total := 12
+ var num int32
+ fmt.Printf("The number: %d [with context.Context]\n", num)
+ cxt, cancelFunc := context.WithCancel(context.Background())
+ for i := 1; i <= total; i++ {
+  go addNum(&num, i, func() {
+   if atomic.LoadInt32(&num) == int32(total) {
+    cancelFunc()
+   }
+  })
+ }
+ <-cxt.Done()
+ fmt.Println("End.")
 }
 ```
+
 先后调用了 `context.Background` 函数和 `context.WithCancel` 函数，并得到了一个可撤销的 `context.Context` 类型的值
 （由变量 `cxt` 代表），以及一个 `context.CancelFunc`类型的撤销函数（由变量 `cancelFunc` 代表）。
 
@@ -521,6 +571,7 @@ func coordinateWithContext() {
 行完毕”的功能。
 
 ### context.Context 类型
+
 `Context` 类型的值（以下简称 `Context` 值）是可以繁衍的，这意味着我们可以通过一个 `Context` 值产生出任意个子值。这些子值
 可以携带其父值的属性和数据，也可以响应通过其父值传达的信号。
 
@@ -574,15 +625,17 @@ func coordinateWithContext() {
 后两者只是被简单地存储在前者的相应字段中而已。
 
 ## 临时对象池 sync.Pool
+
  Go 语言标准库中最重要的那几个同步工具，这包括:
- - 互斥锁
- - 读写锁
- - 条件变量
- - 原子操作
- - `sync/atomic.Value`
- - `sync.Once`
- - `sync.WaitGroup`
- - `context.Context`
+
+- 互斥锁
+- 读写锁
+- 条件变量
+- 原子操作
+- `sync/atomic.Value`
+- `sync.Once`
+- `sync.WaitGroup`
+- `context.Context`
 
 Go 语言标准库中的还有另一个同步工具：`sync.Pool`。
 
@@ -615,6 +668,7 @@ Go 语言标准库中的还有另一个同步工具：`sync.Pool`。
 来要高效得多。
 
 `sync.Pool` 缓存对象的期限是很诡异的，先看一下 `src/pkg/sync/pool.go` 里面的一段实现代码：
+
 ```go
 func init() {
     runtime_registerPoolCleanup(poolCleanup)
@@ -625,6 +679,7 @@ func init() {
 之后会在每次 gc 之前都会调用，因此 **`sync.Pool` 缓存的期限只是两次gc之间这段时间**。
 
 ## sync.Map
+
 Go 语言自带的字典类型 `map` 并不是并发安全的。换句话说，在同一时间段内，让不同 goroutine 中的代码，对同一个字典进行读写操
 作是不安全的。
 
@@ -648,6 +703,7 @@ Go 语言官方终于在 2017 年发布的 Go 1.9 中正式加入了并发安全
 型值（即：`reflect.Type` 类型的值），然后再调用这个值的 `Comparable` 方法，得到确切的判断结果。
 
 ### 并发安全字典如何做到尽量避免使用锁
+
 `sync.Map` 类型在内部使用了**大量的原子操作来存取键和值，并使用了两个原生的 map 作为存储介质**。
 
 其中一个原生 map 被存在了 `sync.Map` 的 `read` 字段中，该字段是 `sync/atomic.Value` 类型的。简称它为**只读字典**。
@@ -695,6 +751,7 @@ Go 语言官方终于在 2017 年发布的 Go 1.9 中正式加入了并发安全
 如果被操作的键值对已经存在于 `sync.Map` 的只读字典中，并且没有被逻辑删除，那么修改它并不会使用到锁，对其性能的影响就会很小。
 
 ## 竞争检查器
+
 在 `go build`，`go run` 或者 `go test` 命令后面加上 `-race`，就会使编译器创建一个你的应用的“修改”版。
 
 会记录下每一个读或者写共享变量的 goroutine 的身份信息。记录下所有的同步事件，比如 `go` 语句，`channel` 操作，

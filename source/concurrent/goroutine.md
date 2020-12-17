@@ -2,12 +2,12 @@
 title: goroutine
 ---
 
-# goroutine
 goroutine 是 Go 语言最显著的特征，**Go 从根上将一切都并发化，用 goroutine 运行一切，包括入口函数 `main`。**
 goroutine 用类似协程的方式处理并发单元，并且做的更深度的优化。这就让并发编程变的简单，不需要处理回调，不需要关注
 执行绪切换，一个 `go` 就搞定。
 
 ## goroutine
+
 Go 语言在语言层面上支持了并发，简单将 goroutine 归为协程并不合适。Go runtime 会创建多个线程来执行并发任务，而且任务
 可以跨线程调度。所以 goroutine 更像是多线程和协程的结合体。
 
@@ -24,19 +24,21 @@ go f()
 的通信来让一个 goroutine 请求其它的 goroutine，使被请求 goroutine 自行结束执行。
 
 ### 什么是主 goroutine，它与我们启用的其他 goroutine 有什么不同
+
 ```go
 package main
 
 import "fmt"
 
 func main() {
-	for i := 0; i < 10; i++ {
-		go func() {
-			fmt.Println(i)
-		}()
-	}
+ for i := 0; i < 10; i++ {
+  go func() {
+   fmt.Println(i)
+  }()
+ }
 }
 ```
+
 上面的代码会打印出什么内容？
 
 回答是：不会有任何内容被打印出来。这是为什么？
@@ -44,6 +46,7 @@ func main() {
 因为**`go` 函数真正被执行的时间总会与其所属的 `go` 语句被执行的时间不同**。
 
 这里需要先简单了解一下 **goroutine 调度器**，主要有 3 个重要部分，分别是 M、G、P。
+
 - G（goroutine 的缩写）， 协程的实体，包括了调用栈，重要的调度信息，例如 channel 等。
 - P（processor 的缩写），是衔接 M 和 G 的调度上下文，一个 P 可以承载若干个 G，且能够使这些 G 适时地与 M 进行
 对接，并得到真正运行的中介。P 的数量可以通过 `runtime.GOMAXPROCS()` 来设置，P 的数量决定了系统内最大可并行的 G 的数量，
@@ -83,6 +86,7 @@ Go 语言并不会去保证这些 goroutine 会以怎样的顺序运行。由于
 干预。
 
 ### 怎样才能让主 goroutine 等待其他 goroutine
+
 刚才说过，一旦主 goroutine 中的代码执行完毕，当前的 Go 程序就会结束运行，无论其他的 goroutine 是否已经在运行了。
 那么，怎样才能做到等其他的 goroutine 运行完毕之后，再让主 goroutine 结束运行呢？
 
@@ -96,7 +100,9 @@ Go 语言并不会去保证这些 goroutine 会以怎样的顺序运行。由于
 2. **使用 `sync` 包的 `sync.WaitGroup` 类型**
 
 ### 怎样让启用的多个 goroutine 按照既定的顺序运行
+
 首先，我们需要稍微改造一下 `for` 语句中的那个 `go` 函数:
+
 ```go
 for i := 0; i < 10; i++ {
     go func(i int) {
@@ -104,6 +110,7 @@ for i := 0; i < 10; i++ {
     }(i)
 }
 ```
+
 只有这样，Go 语言才能保证每个 goroutine 都可以拿到一个唯一的整数。这里有点像 js。
 
 在 `go` 语句被执行时，我们**传给 `go` 函数的参数 `i` 会先被求值**，如此就得到了当次迭代的序号。之后，无论 `go` 函数
@@ -131,11 +138,12 @@ for i := uint32(0); i < 10; i++ {
 }
 trigger(10, func(){})
 ```
+
 上面的代码中调用了一个名叫 `trigger` 的函数，并把 `go` 函数的参数 `i` 和刚刚声明的变量 `fn` 作为参数传给了它。
 **`func()` 代表的是既无参数声明也无结果声明的函数类型**。
 
 `trigger` 函数会不断地获取一个名叫 `count` 的变量的值，并判断该值是否与参数 `i` 的值相同。如果相同，那么就立
-即调用 `fn` 代表的函数，然后把 `count` 变量的值加 `1`，最后显式地退出当前的循环。否则，我们就先让当前的 
+即调用 `fn` 代表的函数，然后把 `count` 变量的值加 `1`，最后显式地退出当前的循环。否则，我们就先让当前的
 goroutine “睡眠”一个纳秒再进入下一个迭代。
 
 操作变量 `count` 的时候使用的都是原子操作。这是由于 `trigger` 函数会被多个 goroutine 并发地调用，所以它用到的
@@ -149,27 +157,34 @@ goroutine “睡眠”一个纳秒再进入下一个迭代。
 这个序号其实就是启用 goroutine 时，那个当次迭代的序号。
 
 依然想让主 goroutine 最后一个运行完毕，所以还需要加一行代码。不过既然有了 `trigger` 函数，就没有再使用通道。
+
 ```go
 trigger(10, func(){})
 ```
 
 ### Gosched
+
 `runtime.Gosched()` 暂停，释放线程去执行其他任务。
+
 ### Goexit
+
 `runtime.Goexit()` 立即终止当前任务，runtime 会确保所有 defer 函数被执行。该函数不会影响其他并发任务。
 
 ### goroutine 泄漏
+
 goroutine 被永远卡住，就会导致 goroutine 泄漏，例如当使用了无缓存的 `channel`，goroutine 因为 `channel` 的
 数据没有被接收而被卡住。泄漏的 goroutine 不会被自动回收。
 
 ## Goroutine 调度器
 
 ### 调度器
-Go 的 runtime 负责对 goroutine 进行“调度”。调度本质上就是决定何时哪个 goroutine 将获得资源开始执行、哪个 goroutine 
+
+Go 的 runtime 负责对 goroutine 进行“调度”。调度本质上就是决定何时哪个 goroutine 将获得资源开始执行、哪个 goroutine
 应该停止执行让出资源、哪个 goroutine 应该被唤醒恢复执行等。
 
 操作系统对进程、线程的调度是指操作系统调度器将系统中的多个线程按照一定算法调度到物理 CPU 上去运行。C、C++ 等的并发实现就是基
 于操作系统调度的，即程序负责创建线程，操作系统负责调度。但是这种支持并发的方式有不少缺陷：
+
 - 对于很多网络服务程序，由于不能大量创建 thread，就要在少量 thread 里做网络多路复用，即：
 使用 `epoll/kqueue/IoCompletionPort` 这套机制，即便有 `libevent/libev` 这样的第三方库帮忙，写起这样的程序也是很不易的
 - 一个 thread 的代价已经比进程小了很多了，但我们依然不能大量创建 thread，因为除了每个 thread 占用的资源不小之外，操
@@ -179,7 +194,7 @@ Go 的 runtime 负责对 goroutine 进行“调度”。调度本质上就是决
 Go采用了**用户层轻量级 thread** 或者说是**类 coroutine** 的概念来解决这些问题，Go 将之称为 **goroutine**。
 
 **goroutine 占用的资源非常小(goroutine stack 的 size 默认为 2k)，goroutine 调度的切换也不用操作系统内核层完成，代价很低**。
-所有的 Go 代码都在 goroutine 中执行，go runtime 也一样。将这些 goroutines 按照一定算法放到“CPU”上执行的程序就叫做 
+所有的 Go 代码都在 goroutine 中执行，go runtime 也一样。将这些 goroutines 按照一定算法放到“CPU”上执行的程序就叫做
 **goroutine 调度器**或 **goroutine scheduler**。
 
 **一个 Go 程序对于操作系统来说只是一个用户层程序，对于操作系统而言，它的眼中只有 thread，它并不知道什么是 Goroutine。
@@ -198,6 +213,7 @@ Go scheduler 的任务：**将 goroutines 按照一定算法放到不同的操�
 ### G-P-M 模型
 
 调度器的主要有 3 个重要部分，分别是 M、G、P。
+
 - G（goroutine 的缩写）， 协程的实体，并不是执行体，仅保存了并发任务的状态，包括了调用栈，重要的调度信息，例如 channel 等。
 G 任务创建之后被放置在 P 本地队列或者全局队列，等待工作线程调度。
 - P（processor 的缩写），是衔接 M 和 G 的调度上下文，一个 P 可以承载若干个 G，且能够使这些 G 适时地与 M 进行
@@ -219,6 +235,7 @@ M 是由调度器按需创建的**。比如，如果一个 M 因系统调用时�
 所有 P 是在调度器初始化阶段创建的，虽然可以使用 `runtime.GOMAXPROCS()` 在运行期间修改 P 的数量，但是代价很大。
 
 ### 抢占式调度
+
 Go 并没有时间片的概念，只是在目标 G 上设置一个抢占标志。如果某个 G 没有进行 syscall、没有进行 I/O 操作、没有阻塞在一
 个 channel 操作上，那么 M 是**如何让 G 停下来并调度下一个 runnable G** 的呢？
 
@@ -238,6 +255,7 @@ Go 程序的初始化过程中，runtime 开了一条后台线程，运行一个
 同时它还会检测每个 P 是否运行了较长时间。该 M 无需绑定 P 即可运行，该 M 在整个 Go 程序的运行过程中至关重要。
 
 `sysmon` 每 `20us~10ms` 运行一次，`sysmon` 主要完成如下工作：
+
 - 释放闲置超过 5 分钟的 span 物理内存；
 - 如果超过 2 分钟没有垃圾回收，强制执行；
 - 将长时间未处理的 netpoll 结果添加到任务队列；
@@ -245,14 +263,27 @@ Go 程序的初始化过程中，runtime 开了一条后台线程，运行一个
 - 收回因 syscall 长时间阻塞的 P；
 
 ### channel 阻塞或 network I/O 情况下的调度
-如果 G 被阻塞在某个 channel 操作或 network I/O 操作上时，G 会被放置到某个 wait 队列中，而 M 会尝试运行下一个 runnable 
+
+如果 G 被阻塞在某个 channel 操作或 network I/O 操作上时，G 会被放置到某个 wait 队列中，而 M 会尝试运行下一个 runnable
 的 G；如果此时没有 runnable 的 G 供 M 运行，那么 M 将解绑 P，并进入 sleep 状态。当 I/O available 或 channel 操作完成，
 在 wait 队列中的 G 会被唤醒，标记为 runnable，放入到某 P 的队列中，绑定一个 M 继续执行。
 
 ### system call 阻塞情况下的调度
+
 如果 G 被阻塞在某个 system call 操作上，那么不光 G 会阻塞，执行该 G 的 M 也会解绑 P(实质是被 sysmon 抢走了)，
 与 G 一起进入 sleep 状态。如果此时有 idle 的 M，则 P 与其绑定继续执行其他 G；如果没有 idle M，但仍然有其他 G 要去执行，
 那么就会创建一个新 M。
 
 当阻塞在 syscall 上的 G 完成 syscall 调用后，G 会去尝试获取一个可用的 P，如果没有可用的 P，那么 G 会被标记为 runnable，
 之前的那个 sleep 的 M 将再次进入 sleep。
+
+等待中：Goroutine 正在等待某些条件满足，例如：系统调用结束等，包括 _Gwaiting、_Gsyscall 和 _Gpreempted 几个状态；
+可运行：Goroutine 已经准备就绪，可以在线程运行，如果当前程序中有非常多的 Goroutine，每个 Goroutine 就可能会等待更多的时间，即_Grunnable；
+运行中：Goroutine 正在某个线程上运行，即 _Grunning；
+
+运行时触发调度的几个路径：
+
+主动挂起 — runtime.gopark -> runtime.park_m
+系统调用 — runtime.exitsyscall -> runtime.exitsyscall0
+协作式调度 — runtime.Gosched -> runtime.gosched_m -> runtime.goschedImpl
+系统监控 — runtime.sysmon -> runtime.retake -> runtime.preemptone

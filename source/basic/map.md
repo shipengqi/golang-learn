@@ -174,22 +174,22 @@ index := hash("Key6") % array.len
 ```go
 type hmap struct {
  count     int        // 哈希表中的元素数量
- flags     uint8 
+ flags     uint8      // 状态标识，主要是 goroutine 写入和扩容机制的相关状态控制。并发读写的判断条件之一就是该值
  B         uint8      // 哈希表持有的 buckets 数量，但是因为哈希表中桶的数量都 2 的倍数，所以该字段会存储对数，也就是 len(buckets) == 2^B
- noverflow uint16
+ noverflow uint16     // 溢出桶的数量
  hash0     uint32     // 哈希的种子，它能为哈希函数的结果引入随机性，这个值在创建哈希表时确定，并在调用哈希函数时作为参数传入
 
- buckets    unsafe.Pointer
+ buckets    unsafe.Pointer  // 当前桶
  oldbuckets unsafe.Pointer  // 哈希在扩容时用于保存之前 buckets 的字段，它的大小是当前 buckets 的一半
- nevacuate  uintptr
+ nevacuate  uintptr         // 迁移进度
 
  extra *mapextra
 }
 
 type mapextra struct {
- overflow    *[]*bmap
- oldoverflow *[]*bmap
- nextOverflow *bmap
+ overflow    *[]*bmap   为 hmap.buckets （当前）溢出桶的指针地址
+ oldoverflow *[]*bmap   为 hmap.oldbuckets （旧）溢出桶的指针地址
+ nextOverflow *bmap     为空闲溢出桶的指针地址
 }
 ```
 
@@ -217,6 +217,10 @@ type bmap struct {
 }
 
 ```
+
+存储 k 和 v 的载体并不是用 `k/v/k/v/k/v/k/v` 的模式，而是 `k/k/k/k/v/v/v/v` 的形式去存储。这是为什么呢？
+
+例如一个 map `map[int64]int8`，如果按照 `k/v` 的形式存放 int64 的 key 占用 8 个字节，最然值 int8 只占用一个字节，但是却需要 7 个填充字节来做内存对齐，就会浪费大量内存空间。
 
 随着哈希表存储的数据逐渐增多，我们会扩容哈希表或者使用额外的桶存储溢出的数据，不会让单个桶中的数据超过 8 个，不过溢出桶只是临时的解决方案，创建过多的溢出桶最终也会导致哈希的扩容。
 
@@ -268,6 +272,8 @@ bucketloop 循环中，哈希会依次遍历正常桶和溢出桶中的数据，
 ![](hashmap-mapaccess.png)
 
 每一个桶都是一整片的内存空间，当发现桶中的 tophash 与传入键的 tophash 匹配之后，我们会通过指针和偏移量获取哈希中存储的键 `keys[0]` 并与 key 比较，如果两者相同就会获取目标值的指针 `values[0]` 并返回。
+
+判断是否正在发生扩容（h.oldbuckets 是否为 nil），若正在扩容，则到老的 buckets 中查找（因为 buckets 中可能还没有值，搬迁未完成），若该 bucket 已经搬迁完毕。则到 buckets 中继续查找
 
 ## 写入
 
@@ -357,7 +363,7 @@ done:
 
 哈希的扩容不是一个原子的过程，所以 `runtime.mapassign` 还需要**判断当前哈希是否已经处于扩容状态，避免二次扩容造成混乱**。
 
-根据触发的条件不同扩容的方式分成两种，如果这次扩容是溢出的桶太多导致的，那么这次扩容就是等量扩容 sameSizeGrow，sameSizeGrow 是一种特殊情况下发生的扩容，当我们持续向哈希中插入数据并将它们全部删除时，如果哈希表中的数据量没有超过阈值，就会不断积累溢出桶造成缓慢的内存泄漏4。runtime: limit the number of map overflow buckets 引入了 sameSizeGrow 通过复用已有的哈希扩容机制解决该问题，一旦哈希中出现了过多的溢出桶，它会创建新桶保存数据，垃圾回收会清理老的溢出桶并释放内存5。
+根据触发的条件不同扩容的方式分成两种，如果这次扩容是溢出的桶太多导致的，那么这次扩容就是**等量扩容 `sameSizeGrow`**，sameSizeGrow 是一种特殊情况下发生的扩容，当我们持续向哈希中插入数据并将它们全部删除时，如果哈希表中的数据量没有超过阈值，就会不断积累溢出桶造成缓慢的内存泄漏。runtime: limit the number of map overflow buckets 引入了 **sameSizeGrow 通过复用已有的哈希扩容机制解决该问题，一旦哈希中出现了过多的溢出桶，它会创建新桶保存数据，垃圾回收会清理老的溢出桶并释放内存**。
 
 扩容的入口是 `runtime.hashGrow`：
 
@@ -387,3 +393,63 @@ func hashGrow(t *maptype, h *hmap) {
 哈希在扩容的过程中会通过 runtime.makeBucketArray 创建一组新桶和预创建的溢出桶，随后将原有的桶数组设置到 oldbuckets 上并将新的空桶设置到 buckets 上，溢出桶也使用了相同的逻辑更新，下图展示了触发扩容后的哈希：
 
 ![](hashmap-hashgrow.png)
+
+为什么是增量扩容？
+
+“渐进式”地方式，原有的 key 并不会一次性搬迁完毕，每次最多只会搬迁 2 个 bucket。
+
+如果是全量扩容的话，那问题就来了。假设当前 hmap 的容量比较大，直接全量扩容的话，就会导致扩容要花费大量的时间和内存，导致系统卡顿，最直观的表现就是慢。
+
+```go
+type evacDst struct {
+ b *bmap  // 当前目标桶
+ i int    // 当前目标桶存储的键值对数量
+ k unsafe.Pointer  // 指向当前 key 的内存地址
+ v unsafe.Pointer  // 指向当前 value 的内存地址
+}
+```
+
+evacDst 是迁移中的基础数据结构
+
+```go
+func evacuate(t *maptype, h *hmap, oldbucket uintptr) {
+ b := (*bmap)(add(h.oldbuckets, oldbucket*uintptr(t.bucketsize)))
+ newbit := h.noldbuckets()
+ if !evacuated(b) {
+  var xy [2]evacDst
+  x := &xy[0]
+  x.b = (*bmap)(add(h.buckets, oldbucket*uintptr(t.bucketsize)))
+  x.k = add(unsafe.Pointer(x.b), dataOffset)
+  x.v = add(x.k, bucketCnt*uintptr(t.keysize))
+
+  if !h.sameSizeGrow() {
+   y := &xy[1]
+   y.b = (*bmap)(add(h.buckets, (oldbucket+newbit)*uintptr(t.bucketsize)))
+   y.k = add(unsafe.Pointer(y.b), dataOffset)
+   y.v = add(y.k, bucketCnt*uintptr(t.keysize))
+  }
+
+  for ; b != nil; b = b.overflow(t) {
+            ...
+  }
+
+  if h.flags&oldIterator == 0 && t.bucket.kind&kindNoPointers == 0 {
+   b := add(h.oldbuckets, oldbucket*uintptr(t.bucketsize))
+   ptr := add(b, dataOffset)
+   n := uintptr(t.bucketsize) - dataOffset
+   memclrHasPointers(ptr, n)
+  }
+ }
+
+ if oldbucket == h.nevacuate {
+  advanceEvacuationMark(h, t, newbit)
+ }
+}
+```
+
+计算并得到 oldbucket 的 bmap 指针地址
+计算 hmap 在增长之前的桶数量
+判断当前的迁移（搬迁）状态，以便流转后续的操作。若没有正在进行迁移 !evacuated(b) ，则根据扩容的规则的不同，当规则为等量扩容 sameSizeGrow 时，只使用一个 evacDst 桶用于分流。而为双倍扩容时，就会使用两个 evacDst 进行分流操作
+当分流完毕后，需要迁移的数据都会通过 typedmemmove 函数迁移到指定的目标桶上
+若当前不存在 flags 使用标志、使用 oldbucket 迭代器、bucket 不为指针类型。则取消链接溢出桶、清除键值
+在最后 advanceEvacuationMark 函数中会对迁移进度 hmap.nevacuate 进行累积计数，并调用 bucketEvacuated 对旧桶 oldbuckets 进行不断的迁移。直至全部迁移完毕。那么也就表示扩容完毕了，会对 hmap.oldbuckets 和 h.extra.oldoverflow 进行清空
