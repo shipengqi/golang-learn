@@ -21,7 +21,7 @@ Golang 支持两种条件编译方式：
 2. 每个编译选项由**逗号分隔**的条件项以逻辑"与"的关系组成
 3. 每个条件项的名字用字母+数字表示，在前面加 `!` 表示否定的意思
 
-例子（编译标签要放在源文件顶部，与 package 空行隔开）
+`+build` 之后必须有空行，否则会被编译器当做普通注释
 
 ```go
 // +build darwin freebsd netbsd openbsd
@@ -31,7 +31,7 @@ package testpkg
 
 这个将会让这个源文件只能在支持 kqueue 的 BSD 系统里编译
 
-一个源文件里可以有多个编译标签，多个编译标签之间是逻辑"与"的关系
+一个源文件里可以有多行编译标签，多行编译标签之间是逻辑"与"的关系
 
 ```go
 // +build linux darwin
@@ -39,6 +39,35 @@ package testpkg
 ```
 
 这个将限制此源文件只能在 `linux/386` 或者 `darwin/386` 平台下编译.
+
+同一行的多个编译标签，**逗号分隔**表示**与**，**空格分隔**表示**或**。
+```go
+// +build hello,world
+```
+
+```go
+// +build hello world
+```
+
+标签前加 `!` 表示**非**。
+
+```go
+// +build !linux
+
+package testpkg // correct
+```
+
+不会在 linux 平台下编译。
+
+`-tags` 也有这个 `!` 规则，它表示的是没有这个标签。
+
+```go
+// +build !hello
+```
+
+```bash
+go build -tags=!hello
+```
 
 除了添加系统相关的 tag，还可以自由添加自定义 tag 达到其它目的。
 编译方法:
@@ -48,15 +77,7 @@ package testpkg
 go build -tags mytag1 mytag2
 ```
 
-`!` 表示否定的意思：
-
-```go
-// +build !linux
-
-package testpkg // correct
-```
-
-不会在 linux 平台下编译。
+对于 `-tags`，多个标签既可以用逗号分隔，也可以用空格分隔，但它们都表示与的关系。早期 go 版本用空格分隔，后来改成了用逗号分隔，但空格依然可以识别。
 
 ## 文件后缀
 
@@ -84,3 +105,32 @@ mypkg_windows_amd64.go // only builds on windows 64bit platforms
 - 这个源文件可以在超过一个平台或者超过一个 cpu 架构下可以使用
 - 需要去除指定平台
 - 有一些自定义的编译条件
+
+
+## 编译指令
+
+Go 编译指令必须放在文件开头，和代码或普通注释之间要有空行。
+
+```go
+//go:指令 [值]
+```
+
+另一种是用于函数的编译指令，必须紧挨函数声明，不能有空行：
+
+```go
+//go:指令
+func min(a, b int) int
+```
+
+### go:build
+
+`//go:build` 功能和 `// +build` 一样。只不过在 go 1.17 这个版本才实现对 `//go:build` 的支持。
+
+为了兼容旧版本，`//go:build xxx` 后必须同时有 `// +build xxx` ，否则编译器就会报错。
+
+```go
+//go:build windows
+// +build windows
+```
+
+[Command compile](https://golang.google.cn/pkg/cmd/compile/)
