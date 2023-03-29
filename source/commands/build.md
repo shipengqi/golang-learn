@@ -32,14 +32,40 @@ go build [-o output] [-i] [build flags] [packages]
 - `-gccgoflags 'arg list'` 传递参数给gccgo编译连接调用
 - `-gcflags 'arg list'` 编译器参数
 - `-installsuffix suffix` 为了和默认的安装包区别开来，采用这个前缀来重新安装那些依赖的包，-race的时候默认已经是-installsuffix race,大家可以通过-n命令来验证
-- `-ldflags 'arg list'` 连接器参数
+- `-ldflags 'arg list'` 链接器参数
 - `-tags 'tag list'` 设置在编译的时候可以适配的那些tag，详细的tag限制参考里面的 Build Constraints
 
 ### gcflags
 
+`-gcflags` 参数的格式是
+
+```bash
+-gcflags="pattern=arg list"
+```
+
+#### pattern
+
+pattern 是选择包的模式，它可以有以下几种定义:
+
+- `main`: 表示 `main` 函数所在的顶级包路径
+- `all`: 表示 `GOPATH` 中的所有包。如果是 `go modules` 模式，则表示主模块和它所有的依赖，包括 `test` 文件的依赖
+- `std`: 表示 Go 标准库中的所有包
+- `...`: `...` 是一个通配符，可以匹配任意字符串(包括空字符串)。
+    - `net/...` 表示 net 模块和它的所有子模块
+    - `./...` 表示当前主模块和所有子模块
+    - 如果 pattern 中包含了 `/` 和 `...`，那么就不会匹配 `vendor` 目录
+      例如: `./...` 不会匹配 `./vendor` 目录。可以使用 `./vendor/...` 匹配 `vendor` 目录和它的子模块
+
+`go help packages` 查看模式说明。
+
+#### arg list
+
+空格分隔，如果编译选项中含有空格，可以使用引号包起来。
+
+- `-N`: 禁止编译器优化
+- `-l`: 关闭内联 (`inline`)
+- `-c`: `int` 编译过程中的并发数，默认是 `1`
 - `-B` 禁用越界检查
-- `-N` 禁用优化
-- `-l` 禁用内联
 - `-u` 禁用 unsafe
 - `-S` 输出汇编代码
 - `-m` 输出优化信息
@@ -48,8 +74,13 @@ go build [-o output] [-i] [build flags] [packages]
 
 - `-s` 禁用符号表
 - `-w` 禁用 DRAWF 调试信息
-- `-X` 设置字符串全局变量值   -X ver="0.99"
-- `-H` 设置可执行文件格式     -H windowsgui
+- `-X` 设置字符串全局变量值 `-X ver="0.99"`
+- `-H` 设置可执行文件格式 `-H windowsgui`
+
+`-w` 和 `-s` 通常一起使用，用来减少可执行文件的体积。但删除了调试信息后，可执行文件将无法使用 gdb/dlv 调试
+```bash
+go build -ldflags="-w -s" ./abc.go
+```
 
 ### 运行
 
