@@ -4,6 +4,7 @@
 - Go 语言学习笔记
 - 极客时间 Go 语言核心三十六讲
 - 小册 Go 搭建企业级 Web
+- [Go 语言高性能编程](https://github.com/geektutu/high-performance-go)
 - [Go Questions](https://github.com/qcrao/Go-Questions)
 - [Go 语言调度器源代码情景分析](http://mp.weixin.qq.com/mp/homepage?__biz=MzU1OTg5NDkzOA==&hid=1&sn=8fc2b63f53559bc0cee292ce629c4788&scene=18#wechat_redirect)
 - [调度系列 深度解密 历史文章](http://mp.weixin.qq.com/mp/homepage?__biz=MjM5MDUwNTQwMQ==&hid=1&sn=e47afe02b972f5296e1e3073982cf1b6&scene=18#wechat_redirect)
