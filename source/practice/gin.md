@@ -165,10 +165,15 @@ func installController(g *gin.Engine) {
 
 上面的路由 `g.StaticFS("/static", http.FS(NewResource("dist/stat-web")))` ，路径之所以是 `/static` 是因为在打包 Angular 项目时使用了 `--deploy-url`：
 
+`assets` 目录下会有 icon，image，json 等静态资源。
+
+> 注意 index.html 中 `link rel="icon" type="image/x-icon" href="assets/favicon.ico"`，`href` 的路径是 `assets/favicon.ico`，
+> `deploy-url` 并不会给 `href="assets/favicon.ico"` 添加 static 前缀。所以如果是 `href="favicon.ico"`，编译后会找不到该文件。
+
 ```bash
 ng build <project> --configuration production --deploy-url /static/
 ```
 
-`--deploy-url` 将被弃用，之后需要考虑其他方式。暂时不适用 `--base-href` 是因为 `--base-href` 会将整个项目的路径全部加上 `--base-href` 指定的路径，例如
-
-`--base-href /stat/` 访问路径是 `localhost:8080/stat`，这在配置子项目时比较有用。但是这里作为一个独立的项目，就不合适，需要给所有的 API 都加上 `stat`。
+> `--deploy-url` 将被弃用，之后需要考虑其他方式。暂时不使用 `--base-href` 是因为：
+> deploy url 和 base href 都可用于初始脚本、样式表、惰性脚本和 css 资源。 但是，定义 base href 有一些独有的作用。
+> base href 可用于定位相对路径模板 (HTML) 资产和针对相对路径的 fetch/XMLHttpRequests。base href 也可用于定义 Angular 路由器的默认基地址。
