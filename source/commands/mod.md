@@ -259,6 +259,27 @@ github.com/gin-gonic/gin@v1.3.1-0.20190120102704-f38a3fe65f10 github.com/ugorji/
 
 应该是 `go` 把这两个 `path` 当成不同的模块引入导致的冲突。[workaround](https://github.com/ugorji/go/issues/279)。
 
+## Go get/install 代理问题
+
+设置代理之后，go 程序会使用指定的代理：
+
+```bash
+# windows
+set http_proxy=http://[user]:[pass]@[proxy_ip]:[proxy_port]/
+set https_proxy=http://[user]:[pass]@[proxy_ip]:[proxy_port]/
+
+# linux
+export http_proxy=http://[user]:[pass]@[proxy_ip]:[proxy_port]/
+export https_proxy=http://[user]:[pass]@[proxy_ip]:[proxy_port]/
+```
+
+注意如果你要拉去的依赖是使用 Git 作为源控制管理器，那么 Git 的 proxy 也需要配置：
+
+```bash
+git config --global http.proxy http://[user]:[pass]@[proxy_ip]:[proxy_port]/
+git config --global https.proxy http://[user]:[pass]@[proxy_ip]:[proxy_port]/
+```
+
 ## 管理 Go 的环境变量
 - Golang 1.13 新增了 `go env -w` 用于写入环境变量，写入到 `$HOME/.config/go/env` （`os.UserConfigDir` 返回的路径）文件中。
 - `go env -w` 不会覆盖系统环境变量。
@@ -272,6 +293,47 @@ github.com/gin-gonic/gin@v1.3.1-0.20190120102704-f38a3fe65f10 github.com/ugorji/
 - 拉取 hash 为 342b231 的 commit，最终会被转换为 `v0.3.2`：`go get golang.org/x/text@342b2e`。因为 Go modules 会与 tag 进
 行对比，若发现对应的 commit 与 tag 有关联，则进行转换。
 - 用 `go get -u` 更新现有的依赖，`go get -u all` 更新所有模块。
+
+### 为什么 go get 拉取的是 v0.0.0
+
+为什么 go get 拉取的是 v0.0.0，它什么时候会拉取正常带版本号的 tags 呢。实际上这需要区分两种情况，如下：
+
+- 所拉取的模块有发布 tags
+  - 如果只有单个模块，那么就取主版本号最大的那个 tag。
+  - 如果有多个模块，则推算相应的模块路径，取主版本号最大的那个 tag（子模块的 tag 的模块路径会有前缀要求）
+- 所拉取的模块没有发布过 tags
+  - 默认取主分支最新一次 commit 的 commithash。`github.com/ugorji/go/codec@v0.0.0-20181204163529-d75b2dcb6bc8`
+    是因为 `github.com/ugorji/go/codec` 没有发布任何的 tag。因此它默认取的是主分支最新一次 commit 的 commit 时间和 commithash，
+    也就是 `20181204163529-d75b2dcb6bc8`。
+
+### 发布 tags 的多种模式
+
+例如一个项目中，一共打了两个 tag，分别是：`v0.0.1` 和 `module/codec/v0.0.1`，`module/codec/v0.0.1` 这种 tag，有什么用？
+
+其实是 Go modules 在同一个项目下多个模块的 tag 表现方式，其主要目录结构为：
+
+```bash
+demomodules
+├── go.mod
+├── module
+│   └── codec
+│       ├── go.mod
+│       └── codec.go
+└── demomodules.go
+```
+
+demomodules 这个项目的根目录有一个 go.mod 文件，而在 module/codec 目录下也有一个 go.mod 文件，其模块导入和版本信息的对应关系如下：
+
+| tag | 模块导入路径                                    | 含义   |
+| ---- |-------------------------------------------|------|
+| v0.0.1 | github.com/pooky/demomodules              | demomodules 项目的 v 0.0.1 版本 |
+| module/codec/v0.01 | github.com/pooky/demomodules/module/codec | demomodules 项目下的子模块 module/codec 的 v0.0.1 版本 |
+
+拉取子模块，执行如下命令：
+
+```bash
+$ go get github.com/pooky/demomodules/module/codec@v0.0.1
+```
 
 ## 发布 module
 ### 语义化版本
@@ -289,10 +351,19 @@ Golang 官方推荐的最佳实践叫做 semver（Semantic Versioning），也�
 形如 `vX.Y.Z`。
 
 #### 语义化版本的问题
+
 如果你使用和发布的包没有版本 tag 或者处于 1.x 版本，那么可能体会不到什么区别，主要的区别体现在 `v2.x` 以及更高版本的包上。
 
 go module 的谦容性规则：**如果旧软件包和新软件包具有相同的导入路径，则新软件包必须向后兼容旧软件包**
 也就是说如果导入路径不同，就无需保持兼容。
+
+实际上 Go modules 在主版本号为 v0 和 v1 的情况下省略了版本号，而在主版本号为 v2 及以上则需要明确指定出主版本号，否则会出现冲突，其 tag 与模块导入路径的大致对应关系如下：
+
+| tag                              | 模块导入路径                    |
+|----------------------------------|---------------------------|
+| v0.0.0                           | github.com/pooky/demomodules |
+| v1.0.0 | github.com/pooky/demomodules |
+| v2.0.0 | github.com/pooky/demomodules/v2 |
 
 `v2.x` 表示发生了重大变化，无法保证向后兼容，这时就需要在包的导入路径的末尾附加版本信息：
 ```go
@@ -306,7 +377,13 @@ require (
 ```
 格式总结为 `pkgpath/vN`，其中 N 是大于 1 的主要版本号。代码里导入时也需要附带上这个版本信息，如 `import "some/my-module/v2"`。
 
+#### 为什么忽略 v0 和 v1 的主版本号
+
+忽略 v1 版本的原因：考虑到许多开发人员创建一旦到达 v1 版本便永不改变的软件包，这是官方所鼓励的
+忽略了 v0 版本的原因：根据语义化版本规范，v0 的这些版本完全没有兼容性保证。需要一个显式的 v0 版本的标识对确保兼容性没有多大帮助。
+
 ### go.sum
+
 npm 的 `package-lock.json` 会记录所有库的准确版本，来源以及校验和，发布时不需要带上它，因为内容过于详细会对版本控制以及变更记录
 等带来负面影响。
 
@@ -316,23 +393,3 @@ npm 的 `package-lock.json` 会记录所有库的准确版本，来源以及校�
 准确地说，`go.sum` 是一个构建状态跟踪文件。
 
 所以应该把 **`go.sum` 和 `go.mod` 一同添加进版本控制工具的跟踪列表，同时需要随着你的模块一起发布**。
-
-### 包版本
-当发布一个 `v2.x` 版本的库时，需要进行以下操作：
-1. 将 `module my-module` 改成 `module my-module/v2`
-2. 将源代码中使用了 v2+ 版本包的 `import "my-module"` 改为 `import "my-module/v2"`
-3. 仔细检查你的代码中所有 `my-module` 包的版本是否统一，修改那些不兼容的问题
-4. 在 changelog 中仔细列出所有 breaking changes
-
-官方推荐将 `v2.x` 版本放在在一个新分支来避免混淆，如：
-```sh
-git checkout -b v2 
-
-go mod edit --module=github.com/example/my-module/v2
-
-git commit go.mod -m "upgrade to v2"
-
-git tag v2.0.0
-
-git push --tags origin v2
-```
