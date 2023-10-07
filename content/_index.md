@@ -3,6 +3,7 @@ title: Go 环境配置
 ---
 
 # Go 环境配置
+
 ## 安装
 Windows 下安装，官网 [下载安装包](https://golang.org/dl/)，直接安装。
 默认情况下 `.msi` 文件会安装在 `c:\Go` 目录下。安装完成后默认会将 `c:\Go\bin` 目录添加到 `PATH` 环境变量中。
@@ -11,6 +12,7 @@ Windows 下安装，官网 [下载安装包](https://golang.org/dl/)，直接安
 打开 CMD 输入 `go` 命令，验证是否安装成功。否则检查环境变量 `Path` 和 `GOROOT`。
 
 ## 工作区
+
 ### GOROOT
 环境变量 `GOROOT` 用来指定 Go 的安装目录，Go 的标准库也在这个位置。目录结构与 `GOPATH` 类似。
 
@@ -35,14 +37,14 @@ golang 1.11 已经支持 Go Module。这是官方提倡的新的包管理，乃�
 
 ### Module 机制
 Go Module 不同于以往基于 `GOPATH` 和 Vendor 的项目构建，其主要是通过 `$GOPATH/pkg/mod` 下的缓存包来对项目进行构建。
- Go Module 可以通过 `GO111MODULE` 来控制是否启用，`GO111MODULE` 有三种类型:
+Go Module 可以通过 `GO111MODULE` 来控制是否启用，`GO111MODULE` 有三种类型:
 - `on` 所有的构建，都使用 Module 机制
 - `off` 所有的构建，都不使用 Module 机制，而是使用 `GOPATH` 和 Vendor
 - `auto` 在 GOPATH 下的项目，不使用 Module 机制，不在 `GOPATH` 下的项目使用
 
 ### 和 dep 的区别
 - dep 是解析所有的包引用，然后在 `$GOPATH/pkg/dep` 下进行缓存，再在项目下生成 vendor，然后基于 vendor 来构建项目，
-无法脱离 `GOPATH`。
+  无法脱离 `GOPATH`。
 - mod 是解析所有的包引用，然后在 `$GOPATH/pkg/mod` 下进行缓存，直接基于缓存包来构建项目，所以可以脱离 `GOPATH`
 
 ### 准备环境
@@ -102,11 +104,4 @@ require (
 )
 
 ```
-
-## 开发工具
-常用 IDE：
-- LiteIDE
-- Sublime
-- GoLand
-- VS Code
 

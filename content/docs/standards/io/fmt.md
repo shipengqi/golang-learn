@@ -1,8 +1,9 @@
 ---
-title: fmt 包
+title: fmt
 ---
 
-# fmt 包
+# fmt
+
 `fmt` 包实现了格式化 I/O 函数，有关格式化输入输出的方法有两大类：`Scan` 和 `Print`。
 
 `print.go` 文件中定义了如下函数：
