@@ -8,15 +8,6 @@
     <language>en</language><atom:link href="http://shipengqi.github.io/golang-learn/docs/practice/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title></title>
-      <link>http://shipengqi.github.io/golang-learn/docs/practice/errors/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://shipengqi.github.io/golang-learn/docs/practice/errors/</guid>
-      <description>错误处理#go mod tidy error message: &amp;ldquo;but go 1.16 would select&amp;rdquo;#$ go mod tidy github.com/shipengqi/crtctl/internal/secret-writer imports github.com/shipengqi/kube imports k8s.io/client-go/kubernetes imports k8s.io/client-go/kubernetes/typed/admissionregistration/v1 imports k8s.io/client-go/applyconfigurations/admissionregistration/v1 imports k8s.io/apimachinery/pkg/util/managedfields imports k8s.io/kube-openapi/pkg/util/proto tested by k8s.io/kube-openapi/pkg/util/proto.test imports github.com/onsi/ginkgo imports github.com/onsi/ginkgo/internal/remote imports github.com/nxadm/tail imports github.com/nxadm/tail/winfile loaded from github.com/nxadm/tail@v1.4.4, but go 1.16 would select v1.4.8 To upgrade to the versions selected by go 1.16: go mod tidy -go=1.16 &amp;amp;&amp;amp; go mod tidy -go=1.17 If reproducibility with go 1.</description>
-    </item>
-    
-    <item>
-      <title></title>
       <link>http://shipengqi.github.io/golang-learn/docs/practice/gin/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
@@ -82,6 +73,21 @@ backend├── app│ ├── cmd│ │ └── cmd.go│ ├─�
     </item>
     
     <item>
+      <title>Golang 条件编译</title>
+      <link>http://shipengqi.github.io/golang-learn/docs/practice/build/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://shipengqi.github.io/golang-learn/docs/practice/build/</guid>
+      <description>Golang 支持两种条件编译方式：
+编译标签( build tag) 文件后缀 编译标签#编译标签添加的规则：
+a build tag is evaluated as the OR of space-separated options each option evaluates as the AND of its comma-separated terms each term is an alphanumeric word or, preceded by !, its negation 翻译了就是：
+编译标签由空格分隔的编译选项(options)以&amp;quot;或&amp;quot;的逻辑关系组成 每个编译选项由逗号分隔的条件项以逻辑&amp;quot;与&amp;quot;的关系组成 每个条件项的名字用字母+数字表示，在前面加 ! 表示否定的意思 +build 之后必须有空行，否则会被编译器当做普通注释
+// +build darwin freebsd netbsd openbsd package testpkg 这个将会让这个源文件只能在支持 kqueue 的 BSD 系统里编译
+一个源文件里可以有多行编译标签，多行编译标签之间是逻辑&amp;quot;与&amp;quot;的关系
+// +build linux darwin // +build 386 这个将限制此源文件只能在 linux/386 或者 darwin/386 平台下编译.</description>
+    </item>
+    
+    <item>
       <title>Json Unmarshal</title>
       <link>http://shipengqi.github.io/golang-learn/docs/practice/json/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -91,6 +97,15 @@ backend├── app│ ├── cmd│ │ └── cmd.go│ ├─�
 type AuthResponse struct { Auth AuthData `json:&amp;#34;auth&amp;#34;` } type AuthData struct { ClientToken string `json:&amp;#34;client_token&amp;#34;` } var authResponse AuthResponse err = json.Unmarshal(response.Body(), &amp;amp;authResponse) encoding/json 包的 json.Marshal/Unmarshal 是非常慢的，因为是通过大量反射来实现的。
 可以使用第三方库来替代标准库：
 json-iterator/go，完全兼容标准库，性能有很大提升。 ffjson </description>
+    </item>
+    
+    <item>
+      <title>错误处理</title>
+      <link>http://shipengqi.github.io/golang-learn/docs/practice/errors/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://shipengqi.github.io/golang-learn/docs/practice/errors/</guid>
+      <description>错误处理#go mod tidy error message: &amp;ldquo;but go 1.16 would select&amp;rdquo;#$ go mod tidy github.com/shipengqi/crtctl/internal/secret-writer imports github.com/shipengqi/kube imports k8s.io/client-go/kubernetes imports k8s.io/client-go/kubernetes/typed/admissionregistration/v1 imports k8s.io/client-go/applyconfigurations/admissionregistration/v1 imports k8s.io/apimachinery/pkg/util/managedfields imports k8s.io/kube-openapi/pkg/util/proto tested by k8s.io/kube-openapi/pkg/util/proto.test imports github.com/onsi/ginkgo imports github.com/onsi/ginkgo/internal/remote imports github.com/nxadm/tail imports github.com/nxadm/tail/winfile loaded from github.com/nxadm/tail@v1.4.4, but go 1.16 would select v1.4.8 To upgrade to the versions selected by go 1.16: go mod tidy -go=1.16 &amp;amp;&amp;amp; go mod tidy -go=1.17 If reproducibility with go 1.</description>
     </item>
     
   </channel>

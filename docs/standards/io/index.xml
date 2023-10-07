@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Golang Learning</title>
+    <title>io on Golang Learning</title>
     <link>http://shipengqi.github.io/golang-learn/docs/standards/io/</link>
-    <description>Recent content on Golang Learning</description>
+    <description>Recent content in io on Golang Learning</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language><atom:link href="http://shipengqi.github.io/golang-learn/docs/standards/io/index.xml" rel="self" type="application/rss+xml" />
     <item>
@@ -22,12 +22,12 @@ type Reader struct { buf []byte rd io.Reader r, w int err error lastByte int las
     </item>
     
     <item>
-      <title>fmt 包</title>
+      <title>fmt</title>
       <link>http://shipengqi.github.io/golang-learn/docs/standards/io/fmt/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>http://shipengqi.github.io/golang-learn/docs/standards/io/fmt/</guid>
-      <description>fmt 包#fmt 包实现了格式化 I/O 函数，有关格式化输入输出的方法有两大类：Scan 和 Print。
+      <description>fmt#fmt 包实现了格式化 I/O 函数，有关格式化输入输出的方法有两大类：Scan 和 Print。
 print.go 文件中定义了如下函数：
 Print#// 普通输出，不带换行符 func Print(a ...interface{}) (n int, err error) func Fprint(w io.Writer, a ...interface{}) (n int, err error) func Sprint(a ...interface{}) string // 输出内容时会加上换行符 func Println(a ...interface{}) (n int, err error) func Fprintln(w io.Writer, a ...interface{}) (n int, err error) func Sprintln(a ...interface{}) string // 按照指定格式化文本输出内容 func Printf(format string, a ...interface{}) (n int, err error) func Fprintf(w io.</description>
     </item>

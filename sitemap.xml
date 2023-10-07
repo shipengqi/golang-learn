@@ -20,34 +20,10 @@
     <loc>http://shipengqi.github.io/golang-learn/docs/advance/</loc>
     <lastmod>2023-10-07T14:26:47+08:00</lastmod>
   </url><url>
-    <loc>http://shipengqi.github.io/golang-learn/docs/practice/errors/</loc>
-    <lastmod>2023-10-07T14:03:42+08:00</lastmod>
-  </url><url>
     <loc>http://shipengqi.github.io/golang-learn/docs/practice/gin/</loc>
     <lastmod>2023-10-07T14:03:42+08:00</lastmod>
   </url><url>
     <loc>http://shipengqi.github.io/golang-learn/docs/practice/ginkgo/</loc>
-    <lastmod>2023-10-07T14:03:42+08:00</lastmod>
-  </url><url>
-    <loc>http://shipengqi.github.io/golang-learn/docs/standards/data/</loc>
-    <lastmod>2023-10-07T14:26:47+08:00</lastmod>
-  </url><url>
-    <loc>http://shipengqi.github.io/golang-learn/docs/standards/database/</loc>
-    <lastmod>2023-10-07T14:26:47+08:00</lastmod>
-  </url><url>
-    <loc>http://shipengqi.github.io/golang-learn/docs/standards/io/</loc>
-    <lastmod>2023-10-07T14:26:47+08:00</lastmod>
-  </url><url>
-    <loc>http://shipengqi.github.io/golang-learn/docs/standards/net/</loc>
-    <lastmod>2023-10-07T14:26:47+08:00</lastmod>
-  </url><url>
-    <loc>http://shipengqi.github.io/golang-learn/docs/standards/os/</loc>
-    <lastmod>2023-10-07T14:26:47+08:00</lastmod>
-  </url><url>
-    <loc>http://shipengqi.github.io/golang-learn/docs/standards/text/</loc>
-    <lastmod>2023-10-07T14:26:47+08:00</lastmod>
-  </url><url>
-    <loc>http://shipengqi.github.io/golang-learn/docs/standards/unsafe/</loc>
     <lastmod>2023-10-07T14:03:42+08:00</lastmod>
   </url><url>
     <loc>http://shipengqi.github.io/golang-learn/docs/standards/data/big/</loc>
@@ -67,11 +43,17 @@
     <loc>http://shipengqi.github.io/golang-learn/docs/standards/data/container/</loc>
     <lastmod>2023-10-07T14:03:42+08:00</lastmod>
   </url><url>
+    <loc>http://shipengqi.github.io/golang-learn/docs/standards/data/</loc>
+    <lastmod>2023-10-07T15:17:42+08:00</lastmod>
+  </url><url>
+    <loc>http://shipengqi.github.io/golang-learn/docs/standards/database/</loc>
+    <lastmod>2023-10-07T15:17:42+08:00</lastmod>
+  </url><url>
     <loc>http://shipengqi.github.io/golang-learn/docs/commands/doc/</loc>
     <lastmod>2023-10-07T14:03:42+08:00</lastmod>
   </url><url>
     <loc>http://shipengqi.github.io/golang-learn/docs/</loc>
-    <lastmod>2023-10-07T14:26:47+08:00</lastmod>
+    <lastmod>2023-10-07T15:17:42+08:00</lastmod>
   </url><url>
     <loc>http://shipengqi.github.io/golang-learn/docs/commands/env/</loc>
     <lastmod>2023-10-07T14:03:42+08:00</lastmod>
@@ -83,7 +65,7 @@
     <lastmod>2023-10-07T14:03:42+08:00</lastmod>
   </url><url>
     <loc>http://shipengqi.github.io/golang-learn/docs/standards/io/fmt/</loc>
-    <lastmod>2023-10-07T14:03:42+08:00</lastmod>
+    <lastmod>2023-10-07T15:17:42+08:00</lastmod>
   </url><url>
     <loc>http://shipengqi.github.io/golang-learn/docs/commands/get/</loc>
     <lastmod>2023-10-07T14:03:42+08:00</lastmod>
@@ -100,17 +82,14 @@
     <loc>http://shipengqi.github.io/golang-learn/docs/practice/go-race/</loc>
     <lastmod>2023-10-07T14:03:42+08:00</lastmod>
   </url><url>
-    <loc>http://shipengqi.github.io/golang-learn/docs/basic/env_config/</loc>
-    <lastmod>2023-10-07T14:03:42+08:00</lastmod>
+    <loc>http://shipengqi.github.io/golang-learn/</loc>
+    <lastmod>2023-10-07T15:17:42+08:00</lastmod>
   </url><url>
     <loc>http://shipengqi.github.io/golang-learn/docs/practice/go_relative_path/</loc>
     <lastmod>2023-10-07T14:03:42+08:00</lastmod>
   </url><url>
-    <loc>http://shipengqi.github.io/golang-learn/</loc>
-    <lastmod>2023-10-07T14:26:47+08:00</lastmod>
-  </url><url>
-    <loc>http://shipengqi.github.io/golang-learn/docs/basic/build/</loc>
-    <lastmod>2023-10-07T14:03:42+08:00</lastmod>
+    <loc>http://shipengqi.github.io/golang-learn/docs/practice/build/</loc>
+    <lastmod>2023-10-07T15:17:42+08:00</lastmod>
   </url><url>
     <loc>http://shipengqi.github.io/golang-learn/docs/commands/golint/</loc>
     <lastmod>2023-10-07T14:03:42+08:00</lastmod>
@@ -126,6 +105,9 @@
   </url><url>
     <loc>http://shipengqi.github.io/golang-learn/docs/commands/install/</loc>
     <lastmod>2023-10-07T14:03:42+08:00</lastmod>
+  </url><url>
+    <loc>http://shipengqi.github.io/golang-learn/docs/standards/io/</loc>
+    <lastmod>2023-10-07T15:17:42+08:00</lastmod>
   </url><url>
     <loc>http://shipengqi.github.io/golang-learn/docs/standards/io/io/</loc>
     <lastmod>2023-10-07T14:03:42+08:00</lastmod>
@@ -148,8 +130,11 @@
     <loc>http://shipengqi.github.io/golang-learn/docs/commands/mod/</loc>
     <lastmod>2023-10-07T14:03:42+08:00</lastmod>
   </url><url>
-    <loc>http://shipengqi.github.io/golang-learn/docs/standards/os/os/</loc>
-    <lastmod>2023-10-07T14:03:42+08:00</lastmod>
+    <loc>http://shipengqi.github.io/golang-learn/docs/standards/net/</loc>
+    <lastmod>2023-10-07T15:17:42+08:00</lastmod>
+  </url><url>
+    <loc>http://shipengqi.github.io/golang-learn/docs/standards/os/</loc>
+    <lastmod>2023-10-07T15:17:42+08:00</lastmod>
   </url><url>
     <loc>http://shipengqi.github.io/golang-learn/docs/commands/run/</loc>
     <lastmod>2023-10-07T14:03:42+08:00</lastmod>
@@ -174,6 +159,9 @@
     <loc>http://shipengqi.github.io/golang-learn/docs/commands/test/</loc>
     <lastmod>2023-10-07T14:03:42+08:00</lastmod>
   </url><url>
+    <loc>http://shipengqi.github.io/golang-learn/docs/standards/text/</loc>
+    <lastmod>2023-10-07T15:17:42+08:00</lastmod>
+  </url><url>
     <loc>http://shipengqi.github.io/golang-learn/docs/standards/time/</loc>
     <lastmod>2023-10-07T14:03:42+08:00</lastmod>
   </url><url>
@@ -182,6 +170,9 @@
   </url><url>
     <loc>http://shipengqi.github.io/golang-learn/docs/standards/text/unicode/</loc>
     <lastmod>2023-10-07T14:03:42+08:00</lastmod>
+  </url><url>
+    <loc>http://shipengqi.github.io/golang-learn/docs/standards/unsafe/</loc>
+    <lastmod>2023-10-07T15:17:42+08:00</lastmod>
   </url><url>
     <loc>http://shipengqi.github.io/golang-learn/docs/commands/vet/</loc>
     <lastmod>2023-10-07T14:03:42+08:00</lastmod>
@@ -245,6 +236,9 @@
   </url><url>
     <loc>http://shipengqi.github.io/golang-learn/docs/basic/error/</loc>
     <lastmod>2023-10-07T14:03:42+08:00</lastmod>
+  </url><url>
+    <loc>http://shipengqi.github.io/golang-learn/docs/practice/errors/</loc>
+    <lastmod>2023-10-07T15:17:42+08:00</lastmod>
   </url><url>
     <loc>http://shipengqi.github.io/golang-learn/docs/basic/oop/</loc>
     <lastmod>2023-10-07T14:03:42+08:00</lastmod>

@@ -4,19 +4,24 @@
 	<meta name="generator" content="Hugo 0.119.0">
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="">
+<meta name="description" content="Go 环境配置#安装#Windows 下安装，官网 下载安装包，直接安装。 默认情况下 .msi 文件会安装在 c:\Go 目录下。安装完成后默认会将 c:\Go\bin 目录添加到 PATH 环境变量中。 并添加环境变量 GOROOT，值为 Go 安装根目录 C:\Go\。重启命令窗口生效。
+打开 CMD 输入 go 命令，验证是否安装成功。否则检查环境变量 Path 和 GOROOT。
+工作区#GOROOT#环境变量 GOROOT 用来指定 Go 的安装目录，Go 的标准库也在这个位置。目录结构与 GOPATH 类似。
+GOPATH#我们安装好 Go 之后，必须配置一个环境变量 GOPATH，这个 GOPATH 路径是用来指定当前工作目录的。 不能和 Go 的安装目录（GOROOT）一样。
+工作区的目录结构：
+GOPATH/ src/ # 源码目录 bin/ # 存放编译后的可执行程序 pkg/ # 存放编译后的包的目标文件 GOPATH 允许多个目录，当有多个目录时，请注意分隔符，多个目录的时候 Windows 是分号 ;，Linux 系统是冒号 :， 当有多个 GOPATH 时，默认会将 go get 的内容放在第一个目录下。">
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#343a40">
-<meta name="color-scheme" content="light dark"><meta property="og:title" content="Golang Learning" />
+<meta name="color-scheme" content="light dark"><meta property="og:title" content="Go 环境配置" />
 <meta property="og:description" content="" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="http://shipengqi.github.io/golang-learn/" />
-<title>Golang Learning | Golang Learning</title>
+<title>Go 环境配置 | Golang Learning</title>
 <link rel="manifest" href="/golang-learn/manifest.json">
 <link rel="icon" href="/golang-learn/favicon.png" >
 <link rel="stylesheet" href="/golang-learn/book.min.33a48f5432973b8ff9a82679d9e45d67f2c15d4399bd2829269455cfe390b5e8.css" integrity="sha256-M6SPVDKXO4/5qCZ52eRdZ/LBXUOZvSgpJpRVz&#43;OQteg=" crossorigin="anonymous">
   <script defer src="/golang-learn/flexsearch.min.js"></script>
-  <script defer src="/golang-learn/en.search.min.9d19f3cf24b235d59b85d5a7e5dcdc41758b1caac59546ce7f048de6fd1ce8fd.js" integrity="sha256-nRnzzySyNdWbhdWn5dzcQXWLHKrFlUbOfwSN5v0c6P0=" crossorigin="anonymous"></script>
+  <script defer src="/golang-learn/en.search.min.3ac681a53da45dac77797598a45cf2027512a88ff06593f14d801b3f9783344c.js" integrity="sha256-OsaBpT2kXax3eXWYpFzyAnUSqI/wZZPxTYAbP5eDNEw=" crossorigin="anonymous"></script>
 
   <script defer src="/golang-learn/sw.min.e9a55528e030e44ecbe1b5a8da7dd8fb40bd282d02dc4574e81b999a6a21bc84.js" integrity="sha256-6aVVKOAw5E7L4bWo2n3Y&#43;0C9KC0C3EV06BuZmmohvIQ=" crossorigin="anonymous"></script>
 <link rel="alternate" type="application/rss+xml" href="http://shipengqi.github.io/golang-learn/index.xml" title="Golang Learning" />
@@ -94,32 +99,6 @@ https://github.com/alex-shpak/hugo-book
 
           
   <ul>
-    
-      
-        <li>
-          
-  
-  
-
-  
-    <a href="/golang-learn/docs/basic/env_config/" class="">Go 环境配置</a>
-  
-
-        </li>
-      
-    
-      
-        <li>
-          
-  
-  
-
-  
-    <a href="/golang-learn/docs/basic/build/" class="">Golang 条件编译</a>
-  
-
-        </li>
-      
     
       
         <li>
@@ -650,7 +629,7 @@ https://github.com/alex-shpak/hugo-book
   
 
   
-    <span>Data</span>
+    <span>data</span>
   
 
           
@@ -720,7 +699,7 @@ https://github.com/alex-shpak/hugo-book
   
 
   
-    <span>Database</span>
+    <span>database</span>
   
 
           
@@ -751,7 +730,7 @@ https://github.com/alex-shpak/hugo-book
   
 
   
-    <span>Io</span>
+    <span>io</span>
   
 
           
@@ -777,7 +756,7 @@ https://github.com/alex-shpak/hugo-book
   
 
   
-    <a href="/golang-learn/docs/standards/io/fmt/" class="">fmt 包</a>
+    <a href="/golang-learn/docs/standards/io/fmt/" class="">fmt</a>
   
 
         </li>
@@ -821,7 +800,20 @@ https://github.com/alex-shpak/hugo-book
   
 
   
-    <span>Net</span>
+    <a href="/golang-learn/docs/standards/log/" class="">log</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>net</span>
   
 
           
@@ -852,7 +844,7 @@ https://github.com/alex-shpak/hugo-book
   
 
   
-    <span>Os</span>
+    <a href="/golang-learn/docs/standards/os/" class="">os</a>
   
 
           
@@ -871,19 +863,6 @@ https://github.com/alex-shpak/hugo-book
         </li>
       
     
-      
-        <li>
-          
-  
-  
-
-  
-    <a href="/golang-learn/docs/standards/os/os/" class="">os</a>
-  
-
-        </li>
-      
-    
   </ul>
 
         </li>
@@ -896,7 +875,7 @@ https://github.com/alex-shpak/hugo-book
   
 
   
-    <span>Text</span>
+    <span>text</span>
   
 
           
@@ -953,33 +932,20 @@ https://github.com/alex-shpak/hugo-book
   
 
   
-    <a href="/golang-learn/docs/standards/unsafe/" class="">Unsafe</a>
-  
-
-        </li>
-      
-    
-      
-        <li>
-          
-  
-  
-
-  
-    <a href="/golang-learn/docs/standards/log/" class="">log</a>
-  
-
-        </li>
-      
-    
-      
-        <li>
-          
-  
-  
-
-  
     <a href="/golang-learn/docs/standards/time/" class="">time</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/unsafe/" class="">unsafe</a>
   
 
         </li>
@@ -1002,19 +968,6 @@ https://github.com/alex-shpak/hugo-book
 
           
   <ul>
-    
-      
-        <li>
-          
-  
-  
-
-  
-    <a href="/golang-learn/docs/practice/errors/" class="">Errors</a>
-  
-
-        </li>
-      
     
       
         <li>
@@ -1101,7 +1054,33 @@ https://github.com/alex-shpak/hugo-book
   
 
   
+    <a href="/golang-learn/docs/practice/build/" class="">Golang 条件编译</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
     <a href="/golang-learn/docs/practice/json/" class="">Json Unmarshal</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/errors/" class="">错误处理</a>
   
 
         </li>
@@ -1205,7 +1184,7 @@ https://github.com/alex-shpak/hugo-book
     <img src="/golang-learn/svg/menu.svg" class="book-icon" alt="Menu" />
   </label>
 
-  <strong>Golang Learning</strong>
+  <strong>Go 环境配置</strong>
 
   <label for="toc-control">
     
@@ -1219,7 +1198,29 @@ https://github.com/alex-shpak/hugo-book
   <aside class="hidden clearfix">
     
   
-
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#go-环境配置">Go 环境配置</a>
+      <ul>
+        <li><a href="#安装">安装</a></li>
+        <li><a href="#工作区">工作区</a>
+          <ul>
+            <li><a href="#goroot">GOROOT</a></li>
+            <li><a href="#gopath">GOPATH</a></li>
+          </ul>
+        </li>
+        <li><a href="#go-module">Go Module</a>
+          <ul>
+            <li><a href="#module-机制">Module 机制</a></li>
+            <li><a href="#和-dep-的区别">和 dep 的区别</a></li>
+            <li><a href="#准备环境">准备环境</a></li>
+            <li><a href="#迁移到-go-module">迁移到 Go Module</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav>
 
 
 
@@ -1230,7 +1231,124 @@ https://github.com/alex-shpak/hugo-book
 
       
       
-  <article class="markdown"></article>
+  <article class="markdown"><h1 id="go-环境配置">
+  Go 环境配置
+  <a class="anchor" href="#go-%e7%8e%af%e5%a2%83%e9%85%8d%e7%bd%ae">#</a>
+</h1>
+<h2 id="安装">
+  安装
+  <a class="anchor" href="#%e5%ae%89%e8%a3%85">#</a>
+</h2>
+<p>Windows 下安装，官网 <a href="https://golang.org/dl/">下载安装包</a>，直接安装。
+默认情况下 <code>.msi</code> 文件会安装在 <code>c:\Go</code> 目录下。安装完成后默认会将 <code>c:\Go\bin</code> 目录添加到 <code>PATH</code> 环境变量中。
+并添加环境变量 <code>GOROOT</code>，值为 Go 安装根目录 <code>C:\Go\</code>。重启命令窗口生效。</p>
+<p>打开 CMD 输入 <code>go</code> 命令，验证是否安装成功。否则检查环境变量 <code>Path</code> 和 <code>GOROOT</code>。</p>
+<h2 id="工作区">
+  工作区
+  <a class="anchor" href="#%e5%b7%a5%e4%bd%9c%e5%8c%ba">#</a>
+</h2>
+<h3 id="goroot">
+  GOROOT
+  <a class="anchor" href="#goroot">#</a>
+</h3>
+<p>环境变量 <code>GOROOT</code> 用来指定 Go 的安装目录，Go 的标准库也在这个位置。目录结构与 <code>GOPATH</code> 类似。</p>
+<h3 id="gopath">
+  GOPATH
+  <a class="anchor" href="#gopath">#</a>
+</h3>
+<p>我们安装好 Go 之后，<strong>必须配置一个环境变量 <code>GOPATH</code></strong>，这个 <code>GOPATH</code> 路径是用来指定当前工作目录的。
+<strong>不能和 Go 的安装目录（<code>GOROOT</code>）一样</strong>。</p>
+<p>工作区的目录结构：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>GOPATH/
+</span></span><span style="display:flex;"><span>    src/ <span style="color:#75715e"># 源码目录</span>
+</span></span><span style="display:flex;"><span>    bin/ <span style="color:#75715e"># 存放编译后的可执行程序</span>
+</span></span><span style="display:flex;"><span>    pkg/ <span style="color:#75715e"># 存放编译后的包的目标文件</span>
+</span></span></code></pre></div><p><code>GOPATH</code> 允许多个目录，当有多个目录时，请注意分隔符，多个目录的时候 Windows 是分号 <code>;</code>，Linux 系统是冒号 <code>:</code>，
+当有多个 <code>GOPATH</code> 时，默认会将 <code>go get</code> 的内容放在第一个目录下。</p>
+<h2 id="go-module">
+  Go Module
+  <a class="anchor" href="#go-module">#</a>
+</h2>
+<p>golang 1.11 已经支持 Go Module。这是官方提倡的新的包管理，乃至项目管理机制，可以不再需要 <code>GOPATH</code> 的存在。</p>
+<h3 id="module-机制">
+  Module 机制
+  <a class="anchor" href="#module-%e6%9c%ba%e5%88%b6">#</a>
+</h3>
+<p>Go Module 不同于以往基于 <code>GOPATH</code> 和 Vendor 的项目构建，其主要是通过 <code>$GOPATH/pkg/mod</code> 下的缓存包来对项目进行构建。
+Go Module 可以通过 <code>GO111MODULE</code> 来控制是否启用，<code>GO111MODULE</code> 有三种类型:</p>
+<ul>
+<li><code>on</code> 所有的构建，都使用 Module 机制</li>
+<li><code>off</code> 所有的构建，都不使用 Module 机制，而是使用 <code>GOPATH</code> 和 Vendor</li>
+<li><code>auto</code> 在 GOPATH 下的项目，不使用 Module 机制，不在 <code>GOPATH</code> 下的项目使用</li>
+</ul>
+<h3 id="和-dep-的区别">
+  和 dep 的区别
+  <a class="anchor" href="#%e5%92%8c-dep-%e7%9a%84%e5%8c%ba%e5%88%ab">#</a>
+</h3>
+<ul>
+<li>dep 是解析所有的包引用，然后在 <code>$GOPATH/pkg/dep</code> 下进行缓存，再在项目下生成 vendor，然后基于 vendor 来构建项目，
+无法脱离 <code>GOPATH</code>。</li>
+<li>mod 是解析所有的包引用，然后在 <code>$GOPATH/pkg/mod</code> 下进行缓存，直接基于缓存包来构建项目，所以可以脱离 <code>GOPATH</code></li>
+</ul>
+<h3 id="准备环境">
+  准备环境
+  <a class="anchor" href="#%e5%87%86%e5%a4%87%e7%8e%af%e5%a2%83">#</a>
+</h3>
+<ul>
+<li>golang 1.11 的环境需要开启 <code>GO11MODULE</code> ，并且<strong>确保项目目录不在 <code>GOPATH</code> 中</strong>。</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>export GO111MODULE<span style="color:#f92672">=</span>on
+</span></span></code></pre></div><ul>
+<li>golang 1.12 只需要确保实验目录不在 <code>GOPATH</code> 中。</li>
+<li>配置代理 <code>export GOPROXY=https://goproxy.io</code>。（如果拉取包失败，会报  <code>cannot find module for path xxx</code> 的错误）</li>
+</ul>
+<h3 id="迁移到-go-module">
+  迁移到 Go Module
+  <a class="anchor" href="#%e8%bf%81%e7%a7%bb%e5%88%b0-go-module">#</a>
+</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e"># clone 项目, 不要在 `GOPATH` 中, 比如之前的项目的结构是 `GOPATH/src/cdf-mannager`</span>
+</span></span><span style="display:flex;"><span>git clone https://github.com/xxx/cdf-mannager
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 删除 vender</span>
+</span></span><span style="display:flex;"><span>cd cdf-mannager
+</span></span><span style="display:flex;"><span>rm -rf vender
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># init</span>
+</span></span><span style="display:flex;"><span>go mod init cdf-mannager
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 下载依赖 也可以不执行这一步， go run 或 go build 会自动下载</span>
+</span></span><span style="display:flex;"><span>go mod download
+</span></span></code></pre></div><p>Go 会把 <code>Gopkg.lock</code> 或者 <code>glide.lock</code> 中的依赖项写入到 <code>go.mod</code> 文件中。<code>go.mod</code> 文件的内容像下面这样：</p>
+<pre tabindex="0"><code>module cdf-manager
+
+require (
+        github.com/fsnotify/fsnotify v1.4.7
+        github.com/gin-contrib/sse v0.0.0-20170109093832-22d885f9ecc7
+        github.com/gin-gonic/gin v0.0.0-20180814085852-b869fe1415e4
+        github.com/golang/protobuf v0.0.0-20170601230230-5a0f697c9ed9
+        github.com/hashicorp/hcl v1.0.0
+        github.com/inconshreveable/mousetrap v0.0.0-20141017200713-76626ae9c91c
+        github.com/json-iterator/go v0.0.0-20170829155851-36b14963da70
+        github.com/lexkong/log v0.0.0-20180607165131-972f9cd951fc
+        github.com/magiconair/properties v1.8.0
+        github.com/mattn/go-isatty v0.0.0-20170307163044-57fdcb988a5c
+        github.com/mitchellh/mapstructure v1.1.2
+        github.com/pelletier/go-toml v1.2.0
+        github.com/satori/go.uuid v0.0.0-20180103152354-f58768cc1a7a
+        github.com/spf13/afero v1.1.2
+        github.com/spf13/cast v1.3.0
+        github.com/spf13/cobra v0.0.0-20180427134550-ef82de70bb3f
+        github.com/spf13/jwalterweatherman v1.0.0
+        github.com/spf13/pflag v1.0.3
+        github.com/spf13/viper v0.0.0-20181207100336-6d33b5a963d9
+        github.com/ugorji/go v1.1.2-0.20180831062425-e253f1f20942
+        github.com/willf/pad v0.0.0-20160331131008-b3d780601022
+        golang.org/x/sys v0.0.0-20190116161447-11f53e031339
+        golang.org/x/text v0.3.0
+        gopkg.in/go-playground/validator.v8 v8.0.0-20160718134125-5f57d2222ad7
+        gopkg.in/yaml.v2 v2.2.2
+)
+</code></pre></article>
  
       
 
@@ -1239,7 +1357,20 @@ https://github.com/alex-shpak/hugo-book
   <div class="flex flex-wrap justify-between">
 
 
+  <div><a class="flex align-center" href="https://github.com/shipengqi/golang-learn/commit/5508dbfb0453c168c654fb7f5d7b75880389e281" title='Last modified by shipengqi | October 7, 2023' target="_blank" rel="noopener">
+      <img src="/golang-learn/svg/calendar.svg" class="book-icon" alt="Calendar" />
+      <span>October 7, 2023</span>
+    </a>
+  </div>
 
+
+
+  <div>
+    <a class="flex align-center" href="https://github.com/shipengqi/golang-learn/edit/master/content/_index.md" target="_blank" rel="noopener">
+      <img src="/golang-learn/svg/edit.svg" class="book-icon" alt="Edit" />
+      <span>Edit this page</span>
+    </a>
+  </div>
 
 
 </div>
@@ -1255,6 +1386,10 @@ https://github.com/alex-shpak/hugo-book
 
       
   
+  <div class="book-comments">
+
+</div>
+  
  
 
       <label for="menu-control" class="hidden book-menu-overlay"></label>
@@ -1265,7 +1400,29 @@ https://github.com/alex-shpak/hugo-book
       <div class="book-toc-content">
         
   
-
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#go-环境配置">Go 环境配置</a>
+      <ul>
+        <li><a href="#安装">安装</a></li>
+        <li><a href="#工作区">工作区</a>
+          <ul>
+            <li><a href="#goroot">GOROOT</a></li>
+            <li><a href="#gopath">GOPATH</a></li>
+          </ul>
+        </li>
+        <li><a href="#go-module">Go Module</a>
+          <ul>
+            <li><a href="#module-机制">Module 机制</a></li>
+            <li><a href="#和-dep-的区别">和 dep 的区别</a></li>
+            <li><a href="#准备环境">准备环境</a></li>
+            <li><a href="#迁移到-go-module">迁移到 Go Module</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav>
 
 
  

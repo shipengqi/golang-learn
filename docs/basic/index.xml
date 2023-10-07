@@ -7,35 +7,6 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language><atom:link href="http://shipengqi.github.io/golang-learn/docs/basic/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>Go 环境配置</title>
-      <link>http://shipengqi.github.io/golang-learn/docs/basic/env_config/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://shipengqi.github.io/golang-learn/docs/basic/env_config/</guid>
-      <description>Go 环境配置#安装#Windows 下安装，官网 下载安装包，直接安装。 默认情况下 .msi 文件会安装在 c:\Go 目录下。安装完成后默认会将 c:\Go\bin 目录添加到 PATH 环境变量中。 并添加环境变量 GOROOT，值为 Go 安装根目录 C:\Go\。重启命令窗口生效。
-打开 CMD 输入 go 命令，验证是否安装成功。否则检查环境变量 Path 和 GOROOT。
-工作区#GOROOT#环境变量 GOROOT 用来指定 Go 的安装目录，Go 的标准库也在这个位置。目录结构与 GOPATH 类似。
-GOPATH#我们安装好 Go 之后，必须配置一个环境变量 GOPATH，这个 GOPATH 路径是用来指定当前工作目录的。 不能和 Go 的安装目录（GOROOT）一样。
-工作区的目录结构：
-GOPATH/ src/ # 源码目录 bin/ # 存放编译后的可执行程序 pkg/ # 存放编译后的包的目标文件 GOPATH 允许多个目录，当有多个目录时，请注意分隔符，多个目录的时候 Windows 是分号 ;，Linux 系统是冒号 :， 当有多个 GOPATH 时，默认会将 go get 的内容放在第一个目录下。</description>
-    </item>
-    
-    <item>
-      <title>Golang 条件编译</title>
-      <link>http://shipengqi.github.io/golang-learn/docs/basic/build/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://shipengqi.github.io/golang-learn/docs/basic/build/</guid>
-      <description>Golang 支持两种条件编译方式：
-编译标签( build tag) 文件后缀 编译标签#编译标签添加的规则：
-a build tag is evaluated as the OR of space-separated options each option evaluates as the AND of its comma-separated terms each term is an alphanumeric word or, preceded by !, its negation 翻译了就是：
-编译标签由空格分隔的编译选项(options)以&amp;quot;或&amp;quot;的逻辑关系组成 每个编译选项由逗号分隔的条件项以逻辑&amp;quot;与&amp;quot;的关系组成 每个条件项的名字用字母+数字表示，在前面加 ! 表示否定的意思 +build 之后必须有空行，否则会被编译器当做普通注释
-// +build darwin freebsd netbsd openbsd package testpkg 这个将会让这个源文件只能在支持 kqueue 的 BSD 系统里编译
-一个源文件里可以有多行编译标签，多行编译标签之间是逻辑&amp;quot;与&amp;quot;的关系
-// +build linux darwin // +build 386 这个将限制此源文件只能在 linux/386 或者 darwin/386 平台下编译.</description>
-    </item>
-    
-    <item>
       <title>map</title>
       <link>http://shipengqi.github.io/golang-learn/docs/basic/map/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>

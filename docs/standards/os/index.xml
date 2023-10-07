@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Golang Learning</title>
+    <title>os on Golang Learning</title>
     <link>http://shipengqi.github.io/golang-learn/docs/standards/os/</link>
-    <description>Recent content on Golang Learning</description>
+    <description>Recent content in os on Golang Learning</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language><atom:link href="http://shipengqi.github.io/golang-learn/docs/standards/os/index.xml" rel="self" type="application/rss+xml" />
     <item>
@@ -19,19 +19,6 @@ path/filepath 能够处理所有的文件路径，不管是什么系统。注意
 解析路径名字符串#Dir() 和 Base() 函数将一个路径名字符串分解成目录和文件名两部分。（一般情况，这些函数与 Unix 中 dirname 和 basename 命令类似，但如果 路径以 / 结尾，Dir 的行为和 dirname 不太一致。）
 func Dir(path string) string func Base(path string) string Dir 返回路径中除去最后一个路径元素的部分，即该路径最后一个元素所在的目录。在使用 Split 去掉最后一个元素后，会简化路径并去掉末尾的斜杠。 如果路径是空字符串，会返回 .；如果路径由 1 到多个斜杠后跟 0 到多个非斜杠字符组成，会返回 /；其他任何情况下都不会返回以斜杠结尾的路径。
 Base 函数返回路径的最后一个元素。在提取元素前会去掉末尾的斜杠。如果路径是 &amp;ldquo;&amp;quot;，会返回 .；如果路径是只有一个斜杆构成的，会返回 /。</description>
-    </item>
-    
-    <item>
-      <title>os</title>
-      <link>http://shipengqi.github.io/golang-learn/docs/standards/os/os/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://shipengqi.github.io/golang-learn/docs/standards/os/os/</guid>
-      <description>os#os 包提供了平台无关的操作系统功能接口。例如 Linux、macOS、Windows 等系统 os 包提供统一的使用接口。
-例子，打开一个文件并从中读取一些数据：
-file, err := os.Open(&amp;#34;file.go&amp;#34;) // For read access. if err != nil { log.Fatal(err) // `open file.go: no such file or directory` } 文件 I/O#在 Go 中，文件描述符封装在 os.File 结构中，通过 File.Fd() 可以获得底层的文件描述符：fd。
-大多数程序都期望能够使用 3 种标准的文件描述符：0- 标准输入；1- 标准输出；2- 标准错误。os 包提供了 3 个 File 对象，分别 代表这 3 种标准描述符：Stdin、Stdout 和 Stderr，它们对应的文件名分别是：/dev/stdin、/dev/stdout 和 /dev/stderr。 注意，这里说的文件名，并不一定存在，比如 Windows 下就没有。
-OpenFile#func OpenFile(name string, flag int, perm FileMode) (*File, error) OpenFile 既能打开一个已经存在的文件，也能创建并打开一个新文件。</description>
     </item>
     
   </channel>
