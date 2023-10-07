@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="作用域#声明语句的作用域是指源代码中可以有效使用这个名字的范围。
+局部变量 在函数体内或代码块内声明的变量称之为局部变量，它们的作用域只在代码块内，参数和返回值变量也是局部变量。 全局变量 作用域都是全局的（在本包范围内） 在函数体外声明的变量称之为全局变量，全局变量可以在整个包甚至外部包 （被导出后 首字母大写）使用。 全局变量可以在任何函数中使用。 Go 的标识符作用域是基于代码块的。代码块就是包裹在一对大括号内部的声明和语句，并且是可嵌套的。代码块内部声明的名字是无法 被外部块访问的。
+声明语句作用域范围的大小。
+内置的类型、函数和常量，比如 int、len 和 true 是全局作用域 在函数外部（也就是包级语法域）声明的名字可以在同一个包的任何源文件中访问 导入的包，如 import &quot;packages/test&quot;，是对应源文件级的作用域，只能在当前的源文件中访问 在函数内部声明的名字，只能在函数内部访问 一个程序可能包含多个同名的声明，只要它们在不同的词法域就可以。内层的词法域会屏蔽外部的声明。">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#343a40">
+<meta name="color-scheme" content="light dark"><meta property="og:title" content="作用域" />
+<meta property="og:description" content="作用域#声明语句的作用域是指源代码中可以有效使用这个名字的范围。
+局部变量 在函数体内或代码块内声明的变量称之为局部变量，它们的作用域只在代码块内，参数和返回值变量也是局部变量。 全局变量 作用域都是全局的（在本包范围内） 在函数体外声明的变量称之为全局变量，全局变量可以在整个包甚至外部包 （被导出后 首字母大写）使用。 全局变量可以在任何函数中使用。 Go 的标识符作用域是基于代码块的。代码块就是包裹在一对大括号内部的声明和语句，并且是可嵌套的。代码块内部声明的名字是无法 被外部块访问的。
+声明语句作用域范围的大小。
+内置的类型、函数和常量，比如 int、len 和 true 是全局作用域 在函数外部（也就是包级语法域）声明的名字可以在同一个包的任何源文件中访问 导入的包，如 import &quot;packages/test&quot;，是对应源文件级的作用域，只能在当前的源文件中访问 在函数内部声明的名字，只能在函数内部访问 一个程序可能包含多个同名的声明，只要它们在不同的词法域就可以。内层的词法域会屏蔽外部的声明。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://shipengqi.github.io/golang-learn/docs/basic/scope/" /><meta property="article:section" content="docs" />
+
+<meta property="article:modified_time" content="2023-10-07T14:03:42+08:00" />
+<title>作用域 | Golang Learning</title>
+<link rel="manifest" href="/golang-learn/manifest.json">
+<link rel="icon" href="/golang-learn/favicon.png" >
+<link rel="stylesheet" href="/golang-learn/book.min.33a48f5432973b8ff9a82679d9e45d67f2c15d4399bd2829269455cfe390b5e8.css" integrity="sha256-M6SPVDKXO4/5qCZ52eRdZ/LBXUOZvSgpJpRVz&#43;OQteg=" crossorigin="anonymous">
+  <script defer src="/golang-learn/flexsearch.min.js"></script>
+  <script defer src="/golang-learn/en.search.min.9d19f3cf24b235d59b85d5a7e5dcdc41758b1caac59546ce7f048de6fd1ce8fd.js" integrity="sha256-nRnzzySyNdWbhdWn5dzcQXWLHKrFlUbOfwSN5v0c6P0=" crossorigin="anonymous"></script>
+
+  <script defer src="/golang-learn/sw.min.e9a55528e030e44ecbe1b5a8da7dd8fb40bd282d02dc4574e81b999a6a21bc84.js" integrity="sha256-6aVVKOAw5E7L4bWo2n3Y&#43;0C9KC0C3EV06BuZmmohvIQ=" crossorigin="anonymous"></script>
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+  
+</head>
+<body dir="ltr">
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    <aside class="book-menu">
+      <div class="book-menu-content">
+        
+  <nav>
+<h2 class="book-brand">
+  <a class="flex align-center" href="/golang-learn/"><span>Golang Learning</span>
+  </a>
+</h2>
+
+
+<div class="book-search">
+  <input type="text" id="book-search-input" placeholder="Search" aria-label="Search" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+
+
+
+
+
+
+
+  
+<ul>
+  
+  <li>
+    <a href="https://github.com/shipengqi/golang-learn"  target="_blank" rel="noopener">
+        Github
+      </a>
+  </li>
+  
+  <li>
+    <a href="https://shipengqi.github.io/"  target="_blank" rel="noopener">
+        Blog
+      </a>
+  </li>
+  
+</ul>
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>语言基础</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/env_config/" class="">Go 环境配置</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/build/" class="">Golang 条件编译</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/map/" class="">map</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/slice/" class="">slice</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/scope/" class="active">作用域</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/function/" class="">函数</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/package/" class="">包</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/reflect/" class="">反射</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/var/" class="">变量</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/basic_data/" class="">基础据类型</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/constant/" class="">常量</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/json/" class="">序列化</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/pointer/" class="">指针</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/interface/" class="">接口</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/flow/" class="">控制语句</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/array/" class="">数组</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/test/" class="">测试</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/struct/" class="">结构体</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/operator/" class="">运算符</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/error/" class="">错误</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/oop/" class="">面向对象</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>并发编程</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/concurrent/channel/" class="">channel</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/concurrent/goroutine/" class="">goroutine</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/concurrent/sync_lock/" class="">同步和锁</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/concurrent/concurrent/" class="">并发和并行</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>常用命令</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/build/" class="">build</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/doc/" class="">doc</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/env/" class="">env</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/fmt/" class="">fmt</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/get/" class="">get</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/summary/" class="">Go 命令</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/golint/" class="">golint</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/install/" class="">install</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/mod/" class="">mod</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/run/" class="">run</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/test/" class="">test</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/tool/" class="">tool</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/vet/" class="">vet</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>常用标准库</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Data</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/data/big/" class="">big</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/data/container/" class="">container</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/data/math/" class="">math</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/data/sort/" class="">sort</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Database</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/database/sql/" class="">sql</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Io</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/io/bufio/" class="">bufio</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/io/fmt/" class="">fmt 包</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/io/io/" class="">io</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/io/ioutil/" class="">ioutil</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Net</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/net/http/" class="">http</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Os</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/os/filepath/" class="">filepath</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/os/os/" class="">os</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Text</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/text/strconv/" class="">strconv</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/text/strings/" class="">strings</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/text/unicode/" class="">unicode</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/unsafe/" class="">Unsafe</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/log/" class="">log</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/time/" class="">time</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>实践</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/errors/" class="">Errors</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/gin/" class="">Gin</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/ginkgo/" class="">Ginkgo</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/pprof/" class="">Go PProf</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/trace/" class="">Go trace</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/go-race/" class="">Go 数据竞争检测器</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/go_relative_path/" class="">Go 的相对路径</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/json/" class="">Json Unmarshal</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>底层原理</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/advance/scheduler/" class="">Goroutine 调度器</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/advance/mm/" class="">内存分配</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/advance/gc/" class="">垃圾回收</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script>
+
+
+ 
+      </div>
+    </aside>
+
+    <div class="book-page">
+      <header class="book-header">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/golang-learn/svg/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <strong>作用域</strong>
+
+  <label for="toc-control">
+    
+    <img src="/golang-learn/svg/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#作用域">作用域</a></li>
+  </ul>
+</nav>
+
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown"><h1 id="作用域">
+  作用域
+  <a class="anchor" href="#%e4%bd%9c%e7%94%a8%e5%9f%9f">#</a>
+</h1>
+<p>声明语句的作用域是指源代码中可以有效使用这个名字的范围。</p>
+<ul>
+<li>局部变量 在函数体内或代码块内声明的变量称之为局部变量，它们的作用域只在代码块内，参数和返回值变量也是局部变量。</li>
+<li>全局变量 作用域都是全局的（在本包范围内） 在函数体外声明的变量称之为全局变量，<strong>全局变量可以在整个包甚至外部包
+（被导出后 首字母大写）使用</strong>。 全局变量可以在任何函数中使用。</li>
+</ul>
+<p>Go 的标识符作用域是基于代码块的。代码块就是包裹在一对大括号内部的声明和语句，并且是可嵌套的。代码块内部声明的名字是无法
+被外部块访问的。</p>
+<p>声明语句作用域范围的大小。</p>
+<ul>
+<li>内置的类型、函数和常量，比如 <code>int</code>、<code>len</code> 和 <code>true</code> 是全局作用域</li>
+<li>在函数外部（也就是包级语法域）声明的名字可以在同一个包的任何源文件中访问</li>
+<li>导入的包，如 <code>import &quot;packages/test&quot;</code>，是对应源文件级的作用域，只能在当前的源文件中访问</li>
+<li>在函数内部声明的名字，只能在函数内部访问</li>
+</ul>
+<p><strong>一个程序可能包含多个同名的声明，只要它们在不同的词法域就可以。内层的词法域会屏蔽外部的声明。</strong></p>
+</article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+
+  <div><a class="flex align-center" href="https://github.com/shipengqi/golang-learn/commit/44c3ee763ef8b1ef68e8f73c9152c5aa565995fc" title='Last modified by shipengqi | October 7, 2023' target="_blank" rel="noopener">
+      <img src="/golang-learn/svg/calendar.svg" class="book-icon" alt="Calendar" />
+      <span>October 7, 2023</span>
+    </a>
+  </div>
+
+
+
+  <div>
+    <a class="flex align-center" href="https://github.com/shipengqi/golang-learn/edit/master/content/content/docs/basic/scope.md" target="_blank" rel="noopener">
+      <img src="/golang-learn/svg/edit.svg" class="book-icon" alt="Edit" />
+      <span>Edit this page</span>
+    </a>
+  </div>
+
+
+</div>
+
+
+
+  <script>(function(){function e(e){const t=window.getSelection(),n=document.createRange();n.selectNodeContents(e),t.removeAllRanges(),t.addRange(n)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script>
+
+
+ 
+        
+      </footer>
+
+      
+  
+  <div class="book-comments">
+
+</div>
+  
+ 
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+    <aside class="book-toc">
+      <div class="book-toc-content">
+        
+  
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#作用域">作用域</a></li>
+  </ul>
+</nav>
+
+
+ 
+      </div>
+    </aside>
+    
+  </main>
+
+  
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

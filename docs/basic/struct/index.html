@@ -1,0 +1,1604 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="结构体#结构体是由一系列具有相同类型或不同类型的数据构成的数据集合。 结构体定义需要使用 type 和 struct 语句, struct 语句定义一个新的数据类型, type 语句定义了结构体的名称：
+// 定义了结构体类型 type struct_variable_type struct { member definition; member definition; ... member definition; } variable_name := structure_variable_type{value1, value2...valuen} // 或 variable_name := structure_variable_type{ key1: value1, key2: value2..., keyn: valuen} 用点号 . 操作符访问结构体成员, 实例：
+type Books struct { title string author string subject string book_id int } func main() { var Book1 Books /* 声明 Book1 为 Books 类型 */ /* book 1 描述 */ Book1.">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#343a40">
+<meta name="color-scheme" content="light dark"><meta property="og:title" content="结构体" />
+<meta property="og:description" content="结构体#结构体是由一系列具有相同类型或不同类型的数据构成的数据集合。 结构体定义需要使用 type 和 struct 语句, struct 语句定义一个新的数据类型, type 语句定义了结构体的名称：
+// 定义了结构体类型 type struct_variable_type struct { member definition; member definition; ... member definition; } variable_name := structure_variable_type{value1, value2...valuen} // 或 variable_name := structure_variable_type{ key1: value1, key2: value2..., keyn: valuen} 用点号 . 操作符访问结构体成员, 实例：
+type Books struct { title string author string subject string book_id int } func main() { var Book1 Books /* 声明 Book1 为 Books 类型 */ /* book 1 描述 */ Book1." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://shipengqi.github.io/golang-learn/docs/basic/struct/" /><meta property="article:section" content="docs" />
+
+<meta property="article:modified_time" content="2023-10-07T14:03:42+08:00" />
+<title>结构体 | Golang Learning</title>
+<link rel="manifest" href="/golang-learn/manifest.json">
+<link rel="icon" href="/golang-learn/favicon.png" >
+<link rel="stylesheet" href="/golang-learn/book.min.33a48f5432973b8ff9a82679d9e45d67f2c15d4399bd2829269455cfe390b5e8.css" integrity="sha256-M6SPVDKXO4/5qCZ52eRdZ/LBXUOZvSgpJpRVz&#43;OQteg=" crossorigin="anonymous">
+  <script defer src="/golang-learn/flexsearch.min.js"></script>
+  <script defer src="/golang-learn/en.search.min.9d19f3cf24b235d59b85d5a7e5dcdc41758b1caac59546ce7f048de6fd1ce8fd.js" integrity="sha256-nRnzzySyNdWbhdWn5dzcQXWLHKrFlUbOfwSN5v0c6P0=" crossorigin="anonymous"></script>
+
+  <script defer src="/golang-learn/sw.min.e9a55528e030e44ecbe1b5a8da7dd8fb40bd282d02dc4574e81b999a6a21bc84.js" integrity="sha256-6aVVKOAw5E7L4bWo2n3Y&#43;0C9KC0C3EV06BuZmmohvIQ=" crossorigin="anonymous"></script>
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+  
+</head>
+<body dir="ltr">
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    <aside class="book-menu">
+      <div class="book-menu-content">
+        
+  <nav>
+<h2 class="book-brand">
+  <a class="flex align-center" href="/golang-learn/"><span>Golang Learning</span>
+  </a>
+</h2>
+
+
+<div class="book-search">
+  <input type="text" id="book-search-input" placeholder="Search" aria-label="Search" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+
+
+
+
+
+
+
+  
+<ul>
+  
+  <li>
+    <a href="https://github.com/shipengqi/golang-learn"  target="_blank" rel="noopener">
+        Github
+      </a>
+  </li>
+  
+  <li>
+    <a href="https://shipengqi.github.io/"  target="_blank" rel="noopener">
+        Blog
+      </a>
+  </li>
+  
+</ul>
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>语言基础</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/env_config/" class="">Go 环境配置</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/build/" class="">Golang 条件编译</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/map/" class="">map</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/slice/" class="">slice</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/scope/" class="">作用域</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/function/" class="">函数</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/package/" class="">包</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/reflect/" class="">反射</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/var/" class="">变量</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/basic_data/" class="">基础据类型</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/constant/" class="">常量</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/json/" class="">序列化</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/pointer/" class="">指针</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/interface/" class="">接口</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/flow/" class="">控制语句</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/array/" class="">数组</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/test/" class="">测试</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/struct/" class="active">结构体</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/operator/" class="">运算符</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/error/" class="">错误</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/oop/" class="">面向对象</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>并发编程</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/concurrent/channel/" class="">channel</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/concurrent/goroutine/" class="">goroutine</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/concurrent/sync_lock/" class="">同步和锁</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/concurrent/concurrent/" class="">并发和并行</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>常用命令</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/build/" class="">build</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/doc/" class="">doc</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/env/" class="">env</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/fmt/" class="">fmt</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/get/" class="">get</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/summary/" class="">Go 命令</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/golint/" class="">golint</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/install/" class="">install</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/mod/" class="">mod</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/run/" class="">run</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/test/" class="">test</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/tool/" class="">tool</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/vet/" class="">vet</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>常用标准库</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Data</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/data/big/" class="">big</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/data/container/" class="">container</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/data/math/" class="">math</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/data/sort/" class="">sort</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Database</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/database/sql/" class="">sql</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Io</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/io/bufio/" class="">bufio</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/io/fmt/" class="">fmt 包</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/io/io/" class="">io</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/io/ioutil/" class="">ioutil</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Net</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/net/http/" class="">http</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Os</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/os/filepath/" class="">filepath</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/os/os/" class="">os</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Text</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/text/strconv/" class="">strconv</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/text/strings/" class="">strings</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/text/unicode/" class="">unicode</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/unsafe/" class="">Unsafe</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/log/" class="">log</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/time/" class="">time</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>实践</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/errors/" class="">Errors</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/gin/" class="">Gin</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/ginkgo/" class="">Ginkgo</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/pprof/" class="">Go PProf</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/trace/" class="">Go trace</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/go-race/" class="">Go 数据竞争检测器</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/go_relative_path/" class="">Go 的相对路径</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/json/" class="">Json Unmarshal</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>底层原理</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/advance/scheduler/" class="">Goroutine 调度器</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/advance/mm/" class="">内存分配</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/advance/gc/" class="">垃圾回收</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script>
+
+
+ 
+      </div>
+    </aside>
+
+    <div class="book-page">
+      <header class="book-header">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/golang-learn/svg/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <strong>结构体</strong>
+
+  <label for="toc-control">
+    
+    <img src="/golang-learn/svg/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#结构体">结构体</a>
+      <ul>
+        <li><a href="#结构体的零值">结构体的零值</a></li>
+        <li><a href="#结构体字面值">结构体字面值</a></li>
+        <li><a href="#结构体比较">结构体比较</a></li>
+        <li><a href="#结构体嵌入-匿名成员">结构体嵌入 匿名成员</a>
+          <ul>
+            <li><a href="#嵌入接口类型">嵌入接口类型</a></li>
+            <li><a href="#如果被嵌入类型和嵌入类型有同名的方法那么调用哪一个的方法">如果被嵌入类型和嵌入类型有同名的方法，那么调用哪一个的方法</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown"><h1 id="结构体">
+  结构体
+  <a class="anchor" href="#%e7%bb%93%e6%9e%84%e4%bd%93">#</a>
+</h1>
+<p>结构体是由一系列具有相同类型或不同类型的数据构成的数据集合。
+结构体定义需要使用 <code>type</code> 和 <code>struct</code> 语句, <code>struct</code> 语句定义一个新的数据类型, <code>type</code> 语句定义了结构体的名称：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// 定义了结构体类型
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">struct_variable_type</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>   <span style="color:#a6e22e">member</span> <span style="color:#a6e22e">definition</span>;
+</span></span><span style="display:flex;"><span>   <span style="color:#a6e22e">member</span> <span style="color:#a6e22e">definition</span>;
+</span></span><span style="display:flex;"><span>   <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>   <span style="color:#a6e22e">member</span> <span style="color:#a6e22e">definition</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">variable_name</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">structure_variable_type</span>{<span style="color:#a6e22e">value1</span>, <span style="color:#a6e22e">value2</span><span style="color:#f92672">...</span><span style="color:#a6e22e">valuen</span>}
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 或
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">variable_name</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">structure_variable_type</span>{ <span style="color:#a6e22e">key1</span>: <span style="color:#a6e22e">value1</span>, <span style="color:#a6e22e">key2</span>: <span style="color:#a6e22e">value2</span><span style="color:#f92672">...</span>, <span style="color:#a6e22e">keyn</span>: <span style="color:#a6e22e">valuen</span>}
+</span></span></code></pre></div><p>用点号 <code>.</code> 操作符访问结构体成员, 实例：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Books</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span> <span style="color:#a6e22e">title</span> <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span> <span style="color:#a6e22e">author</span> <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span> <span style="color:#a6e22e">subject</span> <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span> <span style="color:#a6e22e">book_id</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span> <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">Book1</span> <span style="color:#a6e22e">Books</span>        <span style="color:#75715e">/* 声明 Book1 为 Books 类型 */</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span> <span style="color:#75715e">/* book 1 描述 */</span>
+</span></span><span style="display:flex;"><span> <span style="color:#a6e22e">Book1</span>.<span style="color:#a6e22e">title</span> = <span style="color:#e6db74">&#34;Go 语言&#34;</span>
+</span></span><span style="display:flex;"><span> <span style="color:#a6e22e">Book1</span>.<span style="color:#a6e22e">author</span> = <span style="color:#e6db74">&#34;www.runoob.com&#34;</span>
+</span></span><span style="display:flex;"><span> <span style="color:#a6e22e">Book1</span>.<span style="color:#a6e22e">subject</span> = <span style="color:#e6db74">&#34;Go 语言教程&#34;</span>
+</span></span><span style="display:flex;"><span> <span style="color:#a6e22e">Book1</span>.<span style="color:#a6e22e">book_id</span> = <span style="color:#ae81ff">6495407</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* 打印 Book1 信息 */</span>
+</span></span><span style="display:flex;"><span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>( <span style="color:#e6db74">&#34;Book 1 title : %s\n&#34;</span>, <span style="color:#a6e22e">Book1</span>.<span style="color:#a6e22e">title</span>)
+</span></span><span style="display:flex;"><span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>( <span style="color:#e6db74">&#34;Book 1 author : %s\n&#34;</span>, <span style="color:#a6e22e">Book1</span>.<span style="color:#a6e22e">author</span>)
+</span></span><span style="display:flex;"><span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>( <span style="color:#e6db74">&#34;Book 1 subject : %s\n&#34;</span>, <span style="color:#a6e22e">Book1</span>.<span style="color:#a6e22e">subject</span>)
+</span></span><span style="display:flex;"><span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>( <span style="color:#e6db74">&#34;Book 1 book_id : %d\n&#34;</span>, <span style="color:#a6e22e">Book1</span>.<span style="color:#a6e22e">book_id</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>.</code> 点操作符也可以和指向结构体的指针一起工作:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">employeeOfTheMonth</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Employee</span> = <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">dilbert</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">employeeOfTheMonth</span>.<span style="color:#a6e22e">Position</span> <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34; (proactive team player)&#34;</span>
+</span></span></code></pre></div><p><strong>一个结构体可能同时包含导出和未导出的成员, 如果结构体成员名字是以大写字母开头的，那么该成员就是导出的。
+未导出的成员, 不允许在外部包修改。</strong></p>
+<p>通常一行对应一个结构体成员，成员的名字在前类型在后，不过如果相邻的成员类型如果相同的话可以被合并到一行:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Employee</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span> <span style="color:#a6e22e">ID</span>            <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span> <span style="color:#a6e22e">Name</span>, <span style="color:#a6e22e">Address</span> <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span> <span style="color:#a6e22e">Salary</span>        <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>一个命名为 S 的结构体类型将不能再包含 S 类型的成员：因为一个聚合的值不能包含它自身。（该限制同样适应于数组。）
+但是S类型的结构体可以包含 <code>*S</code> 指针类型的成员，这可以让我们创建递归的数据结构，比如链表和树结构等：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">tree</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span> <span style="color:#a6e22e">value</span>       <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span> <span style="color:#a6e22e">left</span>, <span style="color:#a6e22e">right</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">tree</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="结构体的零值">
+  结构体的零值
+  <a class="anchor" href="#%e7%bb%93%e6%9e%84%e4%bd%93%e7%9a%84%e9%9b%b6%e5%80%bc">#</a>
+</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Person</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">AgeYears</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">Name</span> <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">Friends</span> []<span style="color:#a6e22e">Person</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">p</span> <span style="color:#a6e22e">Person</span> <span style="color:#75715e">// Person{0, &#34;&#34;, nil}
+</span></span></span></code></pre></div><p>变量 <code>p</code> 只声明但没有赋值，所以 <code>p</code> 的所有字段都有对应的零值。</p>
+<p><strong>注意如果声明结构体指针使用 <code>var p *Person</code> 的方式，那么 <code>p</code> 只是一个 <code>nil</code> 指针，建议使用 <code>p := &amp;Person{}</code> 的方式声明，
+<code>p</code> 的值是 <code>&amp;Person{0, &quot;&quot;, nil}</code>，避免 json unmarshal 出错</strong>。</p>
+<h2 id="结构体字面值">
+  结构体字面值
+  <a class="anchor" href="#%e7%bb%93%e6%9e%84%e4%bd%93%e5%ad%97%e9%9d%a2%e5%80%bc">#</a>
+</h2>
+<p>结构体字面值可以指定每个成员的值:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Point</span> <span style="color:#66d9ef">struct</span>{ <span style="color:#a6e22e">X</span>, <span style="color:#a6e22e">Y</span> <span style="color:#66d9ef">int</span> }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">p</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">Point</span>{<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>}
+</span></span></code></pre></div><h2 id="结构体比较">
+  结构体比较
+  <a class="anchor" href="#%e7%bb%93%e6%9e%84%e4%bd%93%e6%af%94%e8%be%83">#</a>
+</h2>
+<p>两个结构体将可以使用 <code>==</code> 或 <code>!=</code> 运算符进行比较。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Point</span> <span style="color:#66d9ef">struct</span>{ <span style="color:#a6e22e">X</span>, <span style="color:#a6e22e">Y</span> <span style="color:#66d9ef">int</span> }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">p</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">Point</span>{<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>}
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">q</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">Point</span>{<span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">1</span>}
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">p</span>.<span style="color:#a6e22e">X</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">q</span>.<span style="color:#a6e22e">X</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">p</span>.<span style="color:#a6e22e">Y</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">q</span>.<span style="color:#a6e22e">Y</span>) <span style="color:#75715e">// &#34;false&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">p</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">q</span>)                   <span style="color:#75715e">// &#34;false&#34;
+</span></span></span></code></pre></div><h2 id="结构体嵌入-匿名成员">
+  结构体嵌入 匿名成员
+  <a class="anchor" href="#%e7%bb%93%e6%9e%84%e4%bd%93%e5%b5%8c%e5%85%a5-%e5%8c%bf%e5%90%8d%e6%88%90%e5%91%98">#</a>
+</h2>
+<p>Go 语言提供的不同寻常的结构体嵌入机制让一个命名的结构体包含另一个结构体类型的匿名成员，
+这样就可以通过简单的点运算符 <code>x.f</code> 来访问匿名成员链中嵌套的 <code>x.d.e.f</code> 成员。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Point</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">X</span>, <span style="color:#a6e22e">Y</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Circle</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Center</span> <span style="color:#a6e22e">Point</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Radius</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Wheel</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Circle</span> <span style="color:#a6e22e">Circle</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Spokes</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>上面的代码，会使访问每个成员变得繁琐：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">w</span> <span style="color:#a6e22e">Wheel</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">Circle</span>.<span style="color:#a6e22e">Center</span>.<span style="color:#a6e22e">X</span> = <span style="color:#ae81ff">8</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">Circle</span>.<span style="color:#a6e22e">Center</span>.<span style="color:#a6e22e">Y</span> = <span style="color:#ae81ff">8</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">Circle</span>.<span style="color:#a6e22e">Radius</span> = <span style="color:#ae81ff">5</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">Spokes</span> = <span style="color:#ae81ff">20</span>
+</span></span></code></pre></div><p>Go 语言有一个特性可以<strong>只声明一个成员对应的数据类型而定义成员的名字；这类成员就叫匿名成员</strong>。Go 语言规范规定，
+如果一个字段的声明中只有字段的类型名而没有字段的名称，那么它就是一个嵌入字段，也可以被称为匿名字段。
+匿名成员的数据类型必须是命名的类型或指向一个命名的类型的指针。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Point</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">X</span>, <span style="color:#a6e22e">Y</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Circle</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Point</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Radius</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Wheel</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Circle</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Spokes</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">w</span> <span style="color:#a6e22e">Wheel</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">X</span> = <span style="color:#ae81ff">8</span>            <span style="color:#75715e">// equivalent to w.Circle.Point.X = 8
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">Y</span> = <span style="color:#ae81ff">8</span>            <span style="color:#75715e">// equivalent to w.Circle.Point.Y = 8
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">Radius</span> = <span style="color:#ae81ff">5</span>       <span style="color:#75715e">// equivalent to w.Circle.Radius = 5
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">Spokes</span> = <span style="color:#ae81ff">20</span>
+</span></span></code></pre></div><p>上面的代码中，<code>Circle</code> 和 <code>Wheel</code> 各自都有一个匿名成员。我们可以说 <code>Point</code> 类型被嵌入到了 <code>Circle</code> 结构体，
+同时 <code>Circle</code> 类型被嵌入到了 <code>Wheel</code> 结构体。但是<strong>结构体字面值并没有简短表示匿名成员的语法</strong>，所以下面的代码，
+会编译失败：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">w</span> = <span style="color:#a6e22e">Wheel</span>{<span style="color:#ae81ff">8</span>, <span style="color:#ae81ff">8</span>, <span style="color:#ae81ff">5</span>, <span style="color:#ae81ff">20</span>}                       <span style="color:#75715e">// compile error: unknown fields
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">w</span> = <span style="color:#a6e22e">Wheel</span>{<span style="color:#a6e22e">X</span>: <span style="color:#ae81ff">8</span>, <span style="color:#a6e22e">Y</span>: <span style="color:#ae81ff">8</span>, <span style="color:#a6e22e">Radius</span>: <span style="color:#ae81ff">5</span>, <span style="color:#a6e22e">Spokes</span>: <span style="color:#ae81ff">20</span>} <span style="color:#75715e">// compile error: unknown fields
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 正确的语法
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">w</span> = <span style="color:#a6e22e">Wheel</span>{<span style="color:#a6e22e">Circle</span>{<span style="color:#a6e22e">Point</span>{<span style="color:#ae81ff">8</span>, <span style="color:#ae81ff">8</span>}, <span style="color:#ae81ff">5</span>}, <span style="color:#ae81ff">20</span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">w</span> = <span style="color:#a6e22e">Wheel</span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Circle</span>: <span style="color:#a6e22e">Circle</span>{
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">Point</span>:  <span style="color:#a6e22e">Point</span>{<span style="color:#a6e22e">X</span>: <span style="color:#ae81ff">8</span>, <span style="color:#a6e22e">Y</span>: <span style="color:#ae81ff">8</span>},
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">Radius</span>: <span style="color:#ae81ff">5</span>,
+</span></span><span style="display:flex;"><span>    },
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Spokes</span>: <span style="color:#ae81ff">20</span>, <span style="color:#75715e">// NOTE: trailing comma necessary here (and at Radius)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span></code></pre></div><p><strong>不能同时包含两个类型相同的匿名成员，这会导致名字冲突</strong>。</p>
+<h3 id="嵌入接口类型">
+  嵌入接口类型
+  <a class="anchor" href="#%e5%b5%8c%e5%85%a5%e6%8e%a5%e5%8f%a3%e7%b1%bb%e5%9e%8b">#</a>
+</h3>
+<p>Go 语言的结构体还可以嵌入接口类型。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Interface</span> <span style="color:#66d9ef">interface</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Len</span>() <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Less</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">j</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">bool</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Swap</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">j</span> <span style="color:#66d9ef">int</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Array 实现 Interface 接口
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Array</span> []<span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">arr</span> <span style="color:#a6e22e">Array</span>) <span style="color:#a6e22e">Len</span>() <span style="color:#66d9ef">int</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> len(<span style="color:#a6e22e">arr</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">arr</span> <span style="color:#a6e22e">Array</span>) <span style="color:#a6e22e">Less</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">j</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">arr</span>[<span style="color:#a6e22e">i</span>] &lt; <span style="color:#a6e22e">arr</span>[<span style="color:#a6e22e">j</span>]
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">arr</span> <span style="color:#a6e22e">Array</span>) <span style="color:#a6e22e">Swap</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">j</span> <span style="color:#66d9ef">int</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">arr</span>[<span style="color:#a6e22e">i</span>], <span style="color:#a6e22e">arr</span>[<span style="color:#a6e22e">j</span>] = <span style="color:#a6e22e">arr</span>[<span style="color:#a6e22e">j</span>], <span style="color:#a6e22e">arr</span>[<span style="color:#a6e22e">i</span>]
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 匿名接口(anonymous interface)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">reverse</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Interface</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 重写(override)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">r</span> <span style="color:#a6e22e">reverse</span>) <span style="color:#a6e22e">Less</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">j</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Interface</span>.<span style="color:#a6e22e">Less</span>(<span style="color:#a6e22e">j</span>, <span style="color:#a6e22e">i</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 构造 reverse Interface
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Reverse</span>(<span style="color:#a6e22e">data</span> <span style="color:#a6e22e">Interface</span>) <span style="color:#a6e22e">Interface</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">reverse</span>{<span style="color:#a6e22e">data</span>}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">arr</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">Array</span>{<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">3</span>}
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rarr</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">Reverse</span>(<span style="color:#a6e22e">arr</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">arr</span>.<span style="color:#a6e22e">Less</span>(<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">1</span>))
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">rarr</span>.<span style="color:#a6e22e">Less</span>(<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">1</span>))
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>reverse</code> 结构体内嵌了一个名为 <code>Interface</code> 的 <code>interface</code>，并且实现 <code>Less</code> 函数，但是
+却没有实现 <code>Len</code>, <code>Swap</code> 函数。</p>
+<p>为什么这么设计？</p>
+<p>通过这种方法可以让 <strong><code>reverse</code> 实现 <code>Interface</code> 这个接口类型，并且仅实现某个指定的方法，而不需要实现这个接口下的所有方法</strong>。</p>
+<p>对比一下传统的组合匿名结构体实现重写的写法：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Interface</span> <span style="color:#66d9ef">interface</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Len</span>() <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Less</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">j</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">bool</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Swap</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">j</span> <span style="color:#66d9ef">int</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Array</span> []<span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">arr</span> <span style="color:#a6e22e">Array</span>) <span style="color:#a6e22e">Len</span>() <span style="color:#66d9ef">int</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> len(<span style="color:#a6e22e">arr</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">arr</span> <span style="color:#a6e22e">Array</span>) <span style="color:#a6e22e">Less</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">j</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">arr</span>[<span style="color:#a6e22e">i</span>] &lt; <span style="color:#a6e22e">arr</span>[<span style="color:#a6e22e">j</span>]
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">arr</span> <span style="color:#a6e22e">Array</span>) <span style="color:#a6e22e">Swap</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">j</span> <span style="color:#66d9ef">int</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">arr</span>[<span style="color:#a6e22e">i</span>], <span style="color:#a6e22e">arr</span>[<span style="color:#a6e22e">j</span>] = <span style="color:#a6e22e">arr</span>[<span style="color:#a6e22e">j</span>], <span style="color:#a6e22e">arr</span>[<span style="color:#a6e22e">i</span>]
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 匿名struct
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">reverse</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Array</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 重写
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">r</span> <span style="color:#a6e22e">reverse</span>) <span style="color:#a6e22e">Less</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">j</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Array</span>.<span style="color:#a6e22e">Less</span>(<span style="color:#a6e22e">j</span>, <span style="color:#a6e22e">i</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 构造 reverse Interface
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Reverse</span>(<span style="color:#a6e22e">data</span> <span style="color:#a6e22e">Array</span>) <span style="color:#a6e22e">Interface</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">reverse</span>{<span style="color:#a6e22e">data</span>}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">arr</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">Array</span>{<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">3</span>}
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rarr</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">Reverse</span>(<span style="color:#a6e22e">arr</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">arr</span>.<span style="color:#a6e22e">Less</span>(<span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>))
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">rarr</span>.<span style="color:#a6e22e">Less</span>(<span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>))
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>匿名接口的优点，<strong>匿名接口的方式不依赖具体实现，可以对任意实现了该接口的类型进行重写</strong>。</p>
+<h3 id="如果被嵌入类型和嵌入类型有同名的方法那么调用哪一个的方法">
+  如果被嵌入类型和嵌入类型有同名的方法，那么调用哪一个的方法
+  <a class="anchor" href="#%e5%a6%82%e6%9e%9c%e8%a2%ab%e5%b5%8c%e5%85%a5%e7%b1%bb%e5%9e%8b%e5%92%8c%e5%b5%8c%e5%85%a5%e7%b1%bb%e5%9e%8b%e6%9c%89%e5%90%8c%e5%90%8d%e7%9a%84%e6%96%b9%e6%b3%95%e9%82%a3%e4%b9%88%e8%b0%83%e7%94%a8%e5%93%aa%e4%b8%80%e4%b8%aa%e7%9a%84%e6%96%b9%e6%b3%95">#</a>
+</h3>
+<p><strong>只要名称相同，无论这两个方法的签名是否一致，被嵌入类型的方法都会“屏蔽”掉嵌入字段的同名方法</strong>。</p>
+<p>类似的，由于我们同样可以像访问被嵌入类型的字段那样，直接访问嵌入字段的字段，所以<strong>如果这两个结构体类型里存在同名的字段，
+那么嵌入字段中的那个字段一定会被“屏蔽”</strong>。</p>
+<p>正因为嵌入字段的字段和方法都可以“嫁接”到被嵌入类型上，所以即使在两个同名的成员一个是字段，另一个是方法的情况下，这种“屏蔽”现象依然会存在。</p>
+<p><strong>不过，即使被屏蔽了，我们仍然可以通过链式的选择表达式，选择到嵌入字段的字段或方法</strong>。</p>
+<p>嵌入字段本身也有嵌入字段的情况，这种情况下，“屏蔽”现象会以嵌入的层级为依据，嵌入层级越深的字段或方法越可能被“屏蔽”。</p>
+</article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+
+  <div><a class="flex align-center" href="https://github.com/shipengqi/golang-learn/commit/44c3ee763ef8b1ef68e8f73c9152c5aa565995fc" title='Last modified by shipengqi | October 7, 2023' target="_blank" rel="noopener">
+      <img src="/golang-learn/svg/calendar.svg" class="book-icon" alt="Calendar" />
+      <span>October 7, 2023</span>
+    </a>
+  </div>
+
+
+
+  <div>
+    <a class="flex align-center" href="https://github.com/shipengqi/golang-learn/edit/master/content/content/docs/basic/struct.md" target="_blank" rel="noopener">
+      <img src="/golang-learn/svg/edit.svg" class="book-icon" alt="Edit" />
+      <span>Edit this page</span>
+    </a>
+  </div>
+
+
+</div>
+
+
+
+  <script>(function(){function e(e){const t=window.getSelection(),n=document.createRange();n.selectNodeContents(e),t.removeAllRanges(),t.addRange(n)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script>
+
+
+ 
+        
+      </footer>
+
+      
+  
+  <div class="book-comments">
+
+</div>
+  
+ 
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+    <aside class="book-toc">
+      <div class="book-toc-content">
+        
+  
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#结构体">结构体</a>
+      <ul>
+        <li><a href="#结构体的零值">结构体的零值</a></li>
+        <li><a href="#结构体字面值">结构体字面值</a></li>
+        <li><a href="#结构体比较">结构体比较</a></li>
+        <li><a href="#结构体嵌入-匿名成员">结构体嵌入 匿名成员</a>
+          <ul>
+            <li><a href="#嵌入接口类型">嵌入接口类型</a></li>
+            <li><a href="#如果被嵌入类型和嵌入类型有同名的方法那么调用哪一个的方法">如果被嵌入类型和嵌入类型有同名的方法，那么调用哪一个的方法</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+ 
+      </div>
+    </aside>
+    
+  </main>
+
+  
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

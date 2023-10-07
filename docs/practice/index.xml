@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>实践 on Golang Learning</title>
+    <link>http://shipengqi.github.io/golang-learn/docs/practice/</link>
+    <description>Recent content in 实践 on Golang Learning</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language><atom:link href="http://shipengqi.github.io/golang-learn/docs/practice/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title></title>
+      <link>http://shipengqi.github.io/golang-learn/docs/practice/errors/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://shipengqi.github.io/golang-learn/docs/practice/errors/</guid>
+      <description>错误处理#go mod tidy error message: &amp;ldquo;but go 1.16 would select&amp;rdquo;#$ go mod tidy github.com/shipengqi/crtctl/internal/secret-writer imports github.com/shipengqi/kube imports k8s.io/client-go/kubernetes imports k8s.io/client-go/kubernetes/typed/admissionregistration/v1 imports k8s.io/client-go/applyconfigurations/admissionregistration/v1 imports k8s.io/apimachinery/pkg/util/managedfields imports k8s.io/kube-openapi/pkg/util/proto tested by k8s.io/kube-openapi/pkg/util/proto.test imports github.com/onsi/ginkgo imports github.com/onsi/ginkgo/internal/remote imports github.com/nxadm/tail imports github.com/nxadm/tail/winfile loaded from github.com/nxadm/tail@v1.4.4, but go 1.16 would select v1.4.8 To upgrade to the versions selected by go 1.16: go mod tidy -go=1.16 &amp;amp;&amp;amp; go mod tidy -go=1.17 If reproducibility with go 1.</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>http://shipengqi.github.io/golang-learn/docs/practice/gin/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://shipengqi.github.io/golang-learn/docs/practice/gin/</guid>
+      <description>Gin#Gin 打包 Angular (React/Vue) 项目#Gin 作为 Web 框架提供 API 接口非常方便，但是在同一个项目中，既提供 API 接口，又要作为前端网页的静态服务器，就比较麻烦。通常 Angular (React/Vue) 项目需要在 Nginx 或者 Tomcat 转发才可以。有些小项目并不需要前后端分离，如何解决？
+1.16 版本的 embed#Go 的 1.16 版本增加了 embed 的标签，可以利用这个标签将静态资源打包到二进制文件中。
+. ├── config ├── controller ├── model ├── options ├── pkg │ └── response │ └── response.go ├── resources │ ├── dist │ └── html.go ├── html.go ├── resource.go ├── router.go ├── server.go └── store ├── audited.</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>http://shipengqi.github.io/golang-learn/docs/practice/ginkgo/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://shipengqi.github.io/golang-learn/docs/practice/ginkgo/</guid>
+      <description>Ginkgo#</description>
+    </item>
+    
+    <item>
+      <title>Go PProf</title>
+      <link>http://shipengqi.github.io/golang-learn/docs/practice/pprof/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://shipengqi.github.io/golang-learn/docs/practice/pprof/</guid>
+      <description>PProf 是 Go 提供的用于可视化和分析性能分析数据的工具。
+runtime/pprof：采集程序（非 Server）的运行数据进行分析 net/http/pprof：采集 HTTP Server 的运行时数据进行分析 主要可以用于：
+CPU Profiling：CPU 分析，按照一定的频率采集所监听的应用程序 CPU（含寄存器）的使用情况，可确定应用程序在主动消耗 CPU 周期 时花费时间的位置。 Memory Profiling：内存分析，在应用程序进行堆分配时记录堆栈跟踪，用于监视当前和历史内存使用情况，以及检查内存泄漏。 Block Profiling：阻塞分析，记录 goroutine 阻塞等待同步（包括定时器通道）的位置。 Mutex Profiling：互斥锁分析，报告互斥锁的竞争情况。 性能分析#分析 HTTP Server#Web#import ( &amp;#34;log&amp;#34; &amp;#34;net/http&amp;#34; _ &amp;#34;net/http/pprof&amp;#34; ) var datas []string func Add(str string) string { data := []byte(str) sData := string(data) datas = append(datas, sData) return sData } func main() { go func() { for { log.</description>
+    </item>
+    
+    <item>
+      <title>Go trace</title>
+      <link>http://shipengqi.github.io/golang-learn/docs/practice/trace/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://shipengqi.github.io/golang-learn/docs/practice/trace/</guid>
+      <description>Go PProf 很难完成 Goroutine 的分析。这就需要使用 go tool trace 命令。
+go tool pprof 可以跟踪运行缓慢的函数，或者找到大部分 CPU 时间花费在哪里。 go tool trace 更适合于找出程序在一段时间内正在做什么，而不是总体上的开销。
+package main import ( &amp;#34;os&amp;#34; &amp;#34;runtime/trace&amp;#34; ) func main() { f, err := os.Create(&amp;#34;trace.out&amp;#34;) if err != nil { panic(err) } defer f.Close() err = trace.Start(f) if err != nil { panic(err) } defer trace.Stop() ch := make(chan string) go func() { ch &amp;lt;- &amp;#34;hello&amp;#34; }() // read from channel &amp;lt;-ch } 生成跟踪文件：</description>
+    </item>
+    
+    <item>
+      <title>Go 数据竞争检测器</title>
+      <link>http://shipengqi.github.io/golang-learn/docs/practice/go-race/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://shipengqi.github.io/golang-learn/docs/practice/go-race/</guid>
+      <description>数据竞争是并发系统中最常见，同时也最难处理的 Bug 类型之一。数据竞争会在两个 Go 程并发访问同一个变量， 且至少有一个访问为写入时产生。
+这个数据竞争的例子可导致程序崩溃和内存数据损坏（memory corruption）。
+func main() { c := make(chan bool) m := make(map[string]string) go func() { m[&amp;#34;1&amp;#34;] = &amp;#34;a&amp;#34; // 第一个冲突的访问。 c &amp;lt;- true }() m[&amp;#34;2&amp;#34;] = &amp;#34;b&amp;#34; // 第二个冲突的访问。 &amp;lt;-c for k, v := range m { fmt.Println(k, v) } } 数据竞争检测器#Go内建了数据竞争检测器。要使用它，请将 -race 标记添加到 go 命令之后：
+go test -race mypkg // 测试该包 go run -race mysrc.go // 运行其源文件 go build -race mycmd // 构建该命令 go install -race mypkg // 安装该包 选项#GORACE 环境变量可以设置竞争检测的选项：</description>
+    </item>
+    
+    <item>
+      <title>Go 的相对路径</title>
+      <link>http://shipengqi.github.io/golang-learn/docs/practice/go_relative_path/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://shipengqi.github.io/golang-learn/docs/practice/go_relative_path/</guid>
+      <description>在构建 Go 项目时，有没有碰到 go build 编译好的二进制文件（或者 go run main.go），在不同的目录下执行，得到的结果却不一样？
+例如，我的目录结构是下面这样的：
+backend├── app│ ├── cmd│ │ └── cmd.go│ ├── conf│ │ └── conf.yaml│ ├── config│ │ └── config.go│ ├── dao│ │ └── dao.go│ ├── http│ │ └── http.go│ └── main.go├── go.mod├── go.sum└── suiteinstaller suiteinstaller 是构建好的二进制文件，在 backend 目录下运行或者执行 go run ./app/main.go 可以正常运行。但是如果在 app 目录下执行同样的命令则会报错：
+# go run .</description>
+    </item>
+    
+    <item>
+      <title>Json Unmarshal</title>
+      <link>http://shipengqi.github.io/golang-learn/docs/practice/json/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://shipengqi.github.io/golang-learn/docs/practice/json/</guid>
+      <description>Json Unmarshal#Go 官方的 encoding/json 包可以实现 json 互转。如：
+type AuthResponse struct { Auth AuthData `json:&amp;#34;auth&amp;#34;` } type AuthData struct { ClientToken string `json:&amp;#34;client_token&amp;#34;` } var authResponse AuthResponse err = json.Unmarshal(response.Body(), &amp;amp;authResponse) encoding/json 包的 json.Marshal/Unmarshal 是非常慢的，因为是通过大量反射来实现的。
+可以使用第三方库来替代标准库：
+json-iterator/go，完全兼容标准库，性能有很大提升。 ffjson </description>
+    </item>
+    
+  </channel>
+</rss>

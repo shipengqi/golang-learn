@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>并发编程 on Golang Learning</title>
+    <link>http://shipengqi.github.io/golang-learn/docs/concurrent/</link>
+    <description>Recent content in 并发编程 on Golang Learning</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language><atom:link href="http://shipengqi.github.io/golang-learn/docs/concurrent/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>channel</title>
+      <link>http://shipengqi.github.io/golang-learn/docs/concurrent/channel/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://shipengqi.github.io/golang-learn/docs/concurrent/channel/</guid>
+      <description>Don’t communicate by sharing memory; share memory by communicating.（不要通过共享内存来通信，而应该通过通信来共享内存。） 这是作为 Go 语言最重要的编程理念。
+通道类型的值是并发安全的，这也是 Go 语言自带的、唯一一个可以满足并发安全性的类型。
+channel 是 goroutine 之间的通信机制。goroutine 通过 channel 向另一个 goroutine 发送消息 channel 和 goroutine 结合，可以实现用通信代替共享内存的 CSP (Communicating Sequential Process)模型。
+创建 channel：
+ch := make(chan int) ch = make(chan int, 3) // buffered channel with capacity 3 上面的代码中，int 代表这个 channel 要发送的数据的类型。第二个参数代表创建一带缓存的 channel，容量为 3。
+channel 的零值是 nil。关闭一个 nil 的 channel 会导致程序 panic。
+发送和接收两个操作使用 &amp;lt;- 运算符，一个左尖括号紧接着一个减号形象地代表了元素值的传输方向：
+// 发送一个值 ch &amp;lt;- x // 将数据 push 到 channel // 接受一个值 x = &amp;lt;-ch // 取出 channel 的值并复制给变量x &amp;lt;-ch // 接受的值会被丢弃 close#使用 close 函数关闭 channel，channel 关闭后不能再发送数据，但是可以接受已经发送成功的数据， 如果 channel 中没有数据，那么返回一个零值。</description>
+    </item>
+    
+    <item>
+      <title>goroutine</title>
+      <link>http://shipengqi.github.io/golang-learn/docs/concurrent/goroutine/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://shipengqi.github.io/golang-learn/docs/concurrent/goroutine/</guid>
+      <description>goroutine 是 Go 语言最显著的特征，Go 从根上将一切都并发化，用 goroutine 运行一切，包括入口函数 main。 goroutine 用类似协程的方式处理并发单元，并且做的更深度的优化。这就让并发编程变的简单，不需要处理回调，不需要关注 执行绪切换，一个 go 就搞定。
+goroutine#Go 语言在语言层面上支持了并发，简单将 goroutine 归为协程并不合适。Go runtime 会创建多个线程来执行并发任务，而且任务 可以跨线程调度。所以 goroutine 更像是多线程和协程的结合体。
+goroutine 可以简单理解为协程，开销较低 (大概是 4~5KB )，当然会根据相应的数据伸缩。也正因为如此，可同时运行成千 上万个并发任务。goroutine 比 thread 更易用、更高效、更轻便。我们程序运行的 main 函数在一个单独的 goroutine 中运行， 叫做 主 goroutine。在代码中可以使用 go 关键字创建 goroutine。
+go f() main 函数返回时，所有 goroutine 都会被打断，程序退出。除了从 main 函数退出或者直接终止程序之外，没有其它 的编程方法能够让一个 goroutine 来打断另一个的执行，但是之后可以看到一种方式来实现这个目的，通过 goroutine 之间 的通信来让一个 goroutine 请求其它的 goroutine，使被请求 goroutine 自行结束执行。
+什么是主 goroutine，它与我们启用的其他 goroutine 有什么不同#package main import &amp;#34;fmt&amp;#34; func main() { for i := 0; i &amp;lt; 10; i++ { go func() { fmt.</description>
+    </item>
+    
+    <item>
+      <title>同步和锁</title>
+      <link>http://shipengqi.github.io/golang-learn/docs/concurrent/sync_lock/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://shipengqi.github.io/golang-learn/docs/concurrent/sync_lock/</guid>
+      <description>同步和锁#channel 不是用来代替锁的，channel 倾向于解决逻辑层次的并发处理，而锁用来保护局部范围的数据安全。
+共享变量#无论任何时候，只要有两个以上 goroutine 并发访问同一变量，且至少其中的一个是写操作的时候就会发生数据竞争。 避免数据竞争的三种方式：
+不去写变量。读取不可能出现数据竞争。 避免从多个 goroutine 访问变量，尽量把变量限定在了一个单独的 goroutine 中。(不要使用共享数据来通信，使用通信 来共享数据) 互斥锁 同步锁#Go 语言包中的 sync 包提供了两种锁类型：sync.Mutex 和 sync.RWMutex，前者是互斥锁，后者是读写锁。
+互斥锁#使用 channel 实现互斥锁#我们可以使用容量只有 1 的 channel 来保证最多只有一个 goroutine 在同一时刻访问一个共享变量：
+var ( sema = make(chan struct{}, 1) // a binary semaphore guarding balance balance int ) func Deposit(amount int) { sema &amp;lt;- struct{}{} // acquire lock balance = balance + amount &amp;lt;-sema // release lock } func Balance() int { sema &amp;lt;- struct{}{} // acquire lock b := balance &amp;lt;-sema // release lock return b } sync.</description>
+    </item>
+    
+    <item>
+      <title>并发和并行</title>
+      <link>http://shipengqi.github.io/golang-learn/docs/concurrent/concurrent/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://shipengqi.github.io/golang-learn/docs/concurrent/concurrent/</guid>
+      <description>并发和并行的区别：
+并发：逻辑上具备同时处理多个任务的能力 并行：物理上同时处理多个并发任务的能力 并发#一个 cpu 上能同时执行多项任务，在很短时间内，cpu 来回切换任务执行(在某段很短时间内执行程序 a，然后又迅速得切换到程序 b 去执行)， 有时间上的重叠（宏观上是同时的，微观仍是顺序执行）,这样看起来多个任务像是同时执行，这就是并发。
+并行#当系统有多个 CPU 时,每个 CPU 同一时刻都运行任务，互不抢占自己所在的 CPU 资源，同时进行，称为并行。并行是并发设计的 理想模式。
+进程#cpu 在切换程序的时候，如果不保存上一个程序的状态（也就是我们常说的 context &amp;ndash;上下文），直接切换下一个程序，就会丢失上一个 程序的一系列状态，于是引入了进程这个概念，用以划分好程序运行时所需要的资源。因此进程就是一个程序运行时候的所需要的基本资源单 位（也可以说是程序运行的一个实体）。
+线程#cpu 切换多个进程的时候，会花费不少的时间，因为切换进程需要切换到内核态，而每次调度需要内核态都需要读取用户态的数据，进程 一旦多起来，cpu 调度会消耗一大堆资源，因此引入了线程的概念，线程本身几乎不占有资源，他们共享进程里的资源，内核调度起来不 会那么像进程切换那么耗费资源。
+协程#多线程和多进程是并行的基本条件，但是单线程可以利用协程做到并发。协程拥有自己的寄存器上下文和栈。协程在线程上通过主动 切换来实现并发，减少了阻塞时间，还避免了线程切换的开销。但协程运行的并发本质上还是串行的。线程和进程的操作是由程序触发系统 接口，最后的执行者是系统；协程的操作执行者则是用户自身程序。
+https://segmentfault.com/a/1190000003063859</description>
+    </item>
+    
+  </channel>
+</rss>

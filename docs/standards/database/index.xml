@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Golang Learning</title>
+    <link>http://shipengqi.github.io/golang-learn/docs/standards/database/</link>
+    <description>Recent content on Golang Learning</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language><atom:link href="http://shipengqi.github.io/golang-learn/docs/standards/database/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>sql</title>
+      <link>http://shipengqi.github.io/golang-learn/docs/standards/database/sql/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://shipengqi.github.io/golang-learn/docs/standards/database/sql/</guid>
+      <description>sql#database/sql 提供了操作 SQL/SQL-Like 数据库的通用接口，但 Go 标准库并没有提供具体数据库的实现，需要结合第三方的驱动来使用该接口。 例如 mysql 的驱动：github.com/go-sql-driver/mysql。
+类型#database/sql 提供了一些类型：
+sql.DB 类型代表了一个数据库。它并不代表一个到数据库的具体连接，而是一个能操作的数据库对象，具体的连接在内部通过连接池来管理， 对外不暴露。 sql.Rows、sql.Row 和 sql.Result，分别用于获取多个多行结果、一行结果和修改数据库影响的行数（或其返回 last insert id）。 sql.Stmt 代表一个语句，如：DDL、DML 等。 sql.Tx 代表带有特定属性的一个事务。 sql.DB 的使用#sql.DB 是一个数据库句柄，代表一个具有零到多个底层连接的连接池，它可以安全的被多个 goroutine 同时使用。
+sql 包会自动创建和释放连接；它也会维护一个闲置连接的连接池。如果数据库具有单连接状态的概念，该状态只有在事务中被观察时才可信。 一旦调用了 BD.Begin，返回的 Tx 会绑定到单个连接。当调用事务 Tx 的 Commit 或 Rollback 后，该事务使用的连接会归还到 DB 的闲 置连接池中。连接池的大小可以用 SetMaxIdleConns 方法控制。
+由于 DB 并非一个实际的到数据库的连接，而且可以被多个 goroutine 并发使用，因此，程序中只需要拥有一个全局的实例即可：
+db, err := sql.Open(&amp;#34;mysql&amp;#34;, &amp;#34;root:@tcp(localhost:3306)/test?charset=utf8&amp;#34;) if err != nil { panic(err) } defer db.</description>
+    </item>
+    
+  </channel>
+</rss>

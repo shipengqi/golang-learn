@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Golang Learning</title>
+    <link>http://shipengqi.github.io/golang-learn/docs/standards/io/</link>
+    <description>Recent content on Golang Learning</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language><atom:link href="http://shipengqi.github.io/golang-learn/docs/standards/io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>bufio</title>
+      <link>http://shipengqi.github.io/golang-learn/docs/standards/io/bufio/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://shipengqi.github.io/golang-learn/docs/standards/io/bufio/</guid>
+      <description>bufio#bufio 包实现了缓存 IO。提供了数据缓冲功能，能够一定程度减少大块数据读写带来的开销。封装了 io.Reader 和 io.Writer 对象。
+bufio包中的数据类型#bufio包中的数据类型主要有：
+Reader； Scanner； Writer 和 ReadWriter。 bufio.Reader#两个用于初始化 bufio.Reader 的函数：
+NewReader 函数初始化的 Reader 值会拥有一个默认尺寸的缓冲区。这个默认尺寸是 4096 个字节，即：4 KB。 NewReaderSize 函数则将缓冲区尺寸的决定权抛给了使用方。 func NewReader(rd io.Reader) *Reader func NewReaderSize(rd io.Reader, size int) *Reader // 可以配置缓冲区的大小 bufio.Reader 类型值中的缓冲区的作用#缓冲区其实就是一个数据存储中介，它介于底层读取器与读取方法及其调用方之间。所谓的底层读取器是指 io.Reader。
+Reader 值的读取方法一般都会先从其所属值的缓冲区中读取数据。同时，在必要的时候，它们还会预先从底层读取器那里读出一部分数据，并暂 存于缓冲区之中以备后用。
+缓冲区的好处是，可以在大多数的时候降低读取方法的执行时间。
+type Reader struct { buf []byte rd io.Reader r, w int err error lastByte int lastRuneSize int } bufio.</description>
+    </item>
+    
+    <item>
+      <title>fmt 包</title>
+      <link>http://shipengqi.github.io/golang-learn/docs/standards/io/fmt/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://shipengqi.github.io/golang-learn/docs/standards/io/fmt/</guid>
+      <description>fmt 包#fmt 包实现了格式化 I/O 函数，有关格式化输入输出的方法有两大类：Scan 和 Print。
+print.go 文件中定义了如下函数：
+Print#// 普通输出，不带换行符 func Print(a ...interface{}) (n int, err error) func Fprint(w io.Writer, a ...interface{}) (n int, err error) func Sprint(a ...interface{}) string // 输出内容时会加上换行符 func Println(a ...interface{}) (n int, err error) func Fprintln(w io.Writer, a ...interface{}) (n int, err error) func Sprintln(a ...interface{}) string // 按照指定格式化文本输出内容 func Printf(format string, a ...interface{}) (n int, err error) func Fprintf(w io.</description>
+    </item>
+    
+    <item>
+      <title>io</title>
+      <link>http://shipengqi.github.io/golang-learn/docs/standards/io/io/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://shipengqi.github.io/golang-learn/docs/standards/io/io/</guid>
+      <description>io#io 是对输入输出设备的抽象。io 库对这些功能进行了抽象，通过统一的接口对输入输出设备进行操作。 最重要的是两个接口：Reader 和 Writer。
+Reader#Reader 接口：
+type Reader interface { Read(p []byte) (n int, err error) } Read 将 len(p) 个字节读取到 p 中。它返回读取的字节数 n（0 &amp;lt;= n &amp;lt;= len(p)） 以及任何遇到的错误。 即使 Read 返回的 n &amp;lt; len(p)，它也会在调用过程中占用 len(p) 个字节作为暂存空间。若可读取的数据不到 len(p) 个 字节，Read 会返回可用数据，而不是等待更多数据。
+当 Read 在成功读取 n &amp;gt; 0 个字节后遇到一个错误或 EOF (end-of-file)，它会返回读取的字节数。它可能会同时在本次的调 用中返回一个 non-nil 错误,或在下一次的调用中返回这个错误（且 n 为 0）。 一般情况下, Reader 会返回一个 非 0 字节数 n, 若 n = len(p) 个字节从输入源的结尾处由 Read 返回，Read 可能返回 err == EOF 或者 err == nil。并且之后的 Read 都应该返回 (n:0, err:EOF)。</description>
+    </item>
+    
+    <item>
+      <title>ioutil</title>
+      <link>http://shipengqi.github.io/golang-learn/docs/standards/io/ioutil/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://shipengqi.github.io/golang-learn/docs/standards/io/ioutil/</guid>
+      <description>ioutil#ioutil 提供了一些常用、方便的 IO 操作函数。
+NopCloser 函数#有时候我们需要传递一个 io.ReadCloser 的实例，而我们现在有一个 io.Reader 的实例，比如：strings.Reader ，这个时候 NopCloser 就派上用场了。它包装一个 io.Reader，返回一个 io.ReadCloser ，而相应的 Close 方法啥也不做，只是返回 nil。
+比如，在标准库 net/http 包中的 NewRequest，接收一个 io.Reader 的 body，而实际上，Request 的 Body 的类 型是 io.ReadCloser，因此，代码内部进行了判断，如果传递的 io.Reader 也实现了 io.ReadCloser 接口，则转换，否则通 过 ioutil.NopCloser 包装转换一下。相关代码如下：
+rc, ok := body.(io.ReadCloser) if !ok &amp;amp;&amp;amp; body != nil { rc = ioutil.NopCloser(body) } ReadAll 函数#很多时候，我们需要一次性读取 io.Reader 中的数据，考虑到读取所有数据的需求比较多，Go 提供了 ReadAll 这个函数，用来从 io.Reader 中 一次读取所有数据。</description>
+    </item>
+    
+  </channel>
+</rss>

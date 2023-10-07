@@ -1,0 +1,2040 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="同步和锁#channel 不是用来代替锁的，channel 倾向于解决逻辑层次的并发处理，而锁用来保护局部范围的数据安全。
+共享变量#无论任何时候，只要有两个以上 goroutine 并发访问同一变量，且至少其中的一个是写操作的时候就会发生数据竞争。 避免数据竞争的三种方式：
+不去写变量。读取不可能出现数据竞争。 避免从多个 goroutine 访问变量，尽量把变量限定在了一个单独的 goroutine 中。(不要使用共享数据来通信，使用通信 来共享数据) 互斥锁 同步锁#Go 语言包中的 sync 包提供了两种锁类型：sync.Mutex 和 sync.RWMutex，前者是互斥锁，后者是读写锁。
+互斥锁#使用 channel 实现互斥锁#我们可以使用容量只有 1 的 channel 来保证最多只有一个 goroutine 在同一时刻访问一个共享变量：
+var ( sema = make(chan struct{}, 1) // a binary semaphore guarding balance balance int ) func Deposit(amount int) { sema &lt;- struct{}{} // acquire lock balance = balance &#43; amount &lt;-sema // release lock } func Balance() int { sema &lt;- struct{}{} // acquire lock b := balance &lt;-sema // release lock return b } sync.">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#343a40">
+<meta name="color-scheme" content="light dark"><meta property="og:title" content="同步和锁" />
+<meta property="og:description" content="同步和锁#channel 不是用来代替锁的，channel 倾向于解决逻辑层次的并发处理，而锁用来保护局部范围的数据安全。
+共享变量#无论任何时候，只要有两个以上 goroutine 并发访问同一变量，且至少其中的一个是写操作的时候就会发生数据竞争。 避免数据竞争的三种方式：
+不去写变量。读取不可能出现数据竞争。 避免从多个 goroutine 访问变量，尽量把变量限定在了一个单独的 goroutine 中。(不要使用共享数据来通信，使用通信 来共享数据) 互斥锁 同步锁#Go 语言包中的 sync 包提供了两种锁类型：sync.Mutex 和 sync.RWMutex，前者是互斥锁，后者是读写锁。
+互斥锁#使用 channel 实现互斥锁#我们可以使用容量只有 1 的 channel 来保证最多只有一个 goroutine 在同一时刻访问一个共享变量：
+var ( sema = make(chan struct{}, 1) // a binary semaphore guarding balance balance int ) func Deposit(amount int) { sema &lt;- struct{}{} // acquire lock balance = balance &#43; amount &lt;-sema // release lock } func Balance() int { sema &lt;- struct{}{} // acquire lock b := balance &lt;-sema // release lock return b } sync." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://shipengqi.github.io/golang-learn/docs/concurrent/sync_lock/" /><meta property="article:section" content="docs" />
+
+<meta property="article:modified_time" content="2023-10-07T14:03:42+08:00" />
+<title>同步和锁 | Golang Learning</title>
+<link rel="manifest" href="/golang-learn/manifest.json">
+<link rel="icon" href="/golang-learn/favicon.png" >
+<link rel="stylesheet" href="/golang-learn/book.min.33a48f5432973b8ff9a82679d9e45d67f2c15d4399bd2829269455cfe390b5e8.css" integrity="sha256-M6SPVDKXO4/5qCZ52eRdZ/LBXUOZvSgpJpRVz&#43;OQteg=" crossorigin="anonymous">
+  <script defer src="/golang-learn/flexsearch.min.js"></script>
+  <script defer src="/golang-learn/en.search.min.9d19f3cf24b235d59b85d5a7e5dcdc41758b1caac59546ce7f048de6fd1ce8fd.js" integrity="sha256-nRnzzySyNdWbhdWn5dzcQXWLHKrFlUbOfwSN5v0c6P0=" crossorigin="anonymous"></script>
+
+  <script defer src="/golang-learn/sw.min.e9a55528e030e44ecbe1b5a8da7dd8fb40bd282d02dc4574e81b999a6a21bc84.js" integrity="sha256-6aVVKOAw5E7L4bWo2n3Y&#43;0C9KC0C3EV06BuZmmohvIQ=" crossorigin="anonymous"></script>
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+  
+</head>
+<body dir="ltr">
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    <aside class="book-menu">
+      <div class="book-menu-content">
+        
+  <nav>
+<h2 class="book-brand">
+  <a class="flex align-center" href="/golang-learn/"><span>Golang Learning</span>
+  </a>
+</h2>
+
+
+<div class="book-search">
+  <input type="text" id="book-search-input" placeholder="Search" aria-label="Search" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+
+
+
+
+
+
+
+  
+<ul>
+  
+  <li>
+    <a href="https://github.com/shipengqi/golang-learn"  target="_blank" rel="noopener">
+        Github
+      </a>
+  </li>
+  
+  <li>
+    <a href="https://shipengqi.github.io/"  target="_blank" rel="noopener">
+        Blog
+      </a>
+  </li>
+  
+</ul>
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>语言基础</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/env_config/" class="">Go 环境配置</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/build/" class="">Golang 条件编译</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/map/" class="">map</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/slice/" class="">slice</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/scope/" class="">作用域</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/function/" class="">函数</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/package/" class="">包</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/reflect/" class="">反射</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/var/" class="">变量</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/basic_data/" class="">基础据类型</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/constant/" class="">常量</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/json/" class="">序列化</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/pointer/" class="">指针</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/interface/" class="">接口</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/flow/" class="">控制语句</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/array/" class="">数组</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/test/" class="">测试</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/struct/" class="">结构体</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/operator/" class="">运算符</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/error/" class="">错误</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/oop/" class="">面向对象</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>并发编程</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/concurrent/channel/" class="">channel</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/concurrent/goroutine/" class="">goroutine</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/concurrent/sync_lock/" class="active">同步和锁</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/concurrent/concurrent/" class="">并发和并行</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>常用命令</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/build/" class="">build</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/doc/" class="">doc</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/env/" class="">env</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/fmt/" class="">fmt</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/get/" class="">get</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/summary/" class="">Go 命令</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/golint/" class="">golint</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/install/" class="">install</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/mod/" class="">mod</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/run/" class="">run</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/test/" class="">test</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/tool/" class="">tool</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/vet/" class="">vet</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>常用标准库</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Data</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/data/big/" class="">big</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/data/container/" class="">container</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/data/math/" class="">math</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/data/sort/" class="">sort</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Database</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/database/sql/" class="">sql</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Io</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/io/bufio/" class="">bufio</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/io/fmt/" class="">fmt 包</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/io/io/" class="">io</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/io/ioutil/" class="">ioutil</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Net</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/net/http/" class="">http</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Os</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/os/filepath/" class="">filepath</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/os/os/" class="">os</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Text</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/text/strconv/" class="">strconv</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/text/strings/" class="">strings</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/text/unicode/" class="">unicode</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/unsafe/" class="">Unsafe</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/log/" class="">log</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/time/" class="">time</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>实践</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/errors/" class="">Errors</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/gin/" class="">Gin</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/ginkgo/" class="">Ginkgo</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/pprof/" class="">Go PProf</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/trace/" class="">Go trace</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/go-race/" class="">Go 数据竞争检测器</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/go_relative_path/" class="">Go 的相对路径</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/json/" class="">Json Unmarshal</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>底层原理</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/advance/scheduler/" class="">Goroutine 调度器</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/advance/mm/" class="">内存分配</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/advance/gc/" class="">垃圾回收</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script>
+
+
+ 
+      </div>
+    </aside>
+
+    <div class="book-page">
+      <header class="book-header">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/golang-learn/svg/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <strong>同步和锁</strong>
+
+  <label for="toc-control">
+    
+    <img src="/golang-learn/svg/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#同步和锁">同步和锁</a>
+      <ul>
+        <li><a href="#共享变量">共享变量</a></li>
+        <li><a href="#同步锁">同步锁</a>
+          <ul>
+            <li><a href="#互斥锁">互斥锁</a></li>
+            <li><a href="#读写锁-syncrwmutex">读写锁 <code>sync.RWMutex</code></a></li>
+            <li><a href="#注意事项">注意事项</a></li>
+          </ul>
+        </li>
+        <li><a href="#条件变量-synccond">条件变量 sync.Cond</a>
+          <ul>
+            <li><a href="#条件变量怎样与互斥锁配合使用">条件变量怎样与互斥锁配合使用</a></li>
+            <li><a href="#条件变量的-signal-方法和-broadcast-方法有哪些异同">条件变量的 <code>Signal</code> 方法和 <code>Broadcast</code> 方法有哪些异同</a></li>
+          </ul>
+        </li>
+        <li><a href="#原子操作">原子操作</a></li>
+        <li><a href="#比较并交换操作与交换操作相比有什么不同">比较并交换操作与交换操作相比有什么不同</a>
+          <ul>
+            <li><a href="#aba-问题">ABA 问题</a></li>
+          </ul>
+        </li>
+        <li><a href="#syncatomicvalue"><code>sync/atomic.Value</code></a></li>
+        <li><a href="#syncwaitgroup">sync.WaitGroup</a>
+          <ul>
+            <li><a href="#syncwaitgroup-类型值中计数器的值可以小于-0-吗">sync.WaitGroup 类型值中计数器的值可以小于 0 吗</a></li>
+            <li><a href="#使用注意">使用注意</a></li>
+          </ul>
+        </li>
+        <li><a href="#synconce">sync.Once</a>
+          <ul>
+            <li><a href="#do-方法在功能方面的两个特点">Do 方法在功能方面的两个特点</a></li>
+          </ul>
+        </li>
+        <li><a href="#contextcontext-类型">context.Context 类型</a>
+          <ul>
+            <li><a href="#使用-context-包中的程序实体实现一对多的-goroutine-协作流程">使用 <code>context</code> 包中的程序实体，实现一对多的 goroutine 协作流程</a></li>
+            <li><a href="#contextcontext-类型-1">context.Context 类型</a></li>
+            <li><a href="#可撤销的在-context-包中代表着什么撤销一个-context-值又意味着什么">“可撤销的”在 context 包中代表着什么？“撤销”一个 Context 值又意味着什么？</a></li>
+            <li><a href="#撤销信号是如何在上下文树中传播的">撤销信号是如何在上下文树中传播的</a></li>
+            <li><a href="#怎样通过-context-值携带数据">怎样通过 Context 值携带数据</a></li>
+          </ul>
+        </li>
+        <li><a href="#临时对象池-syncpool">临时对象池 sync.Pool</a></li>
+        <li><a href="#syncmap">sync.Map</a>
+          <ul>
+            <li><a href="#并发安全字典如何做到尽量避免使用锁">并发安全字典如何做到尽量避免使用锁</a></li>
+          </ul>
+        </li>
+        <li><a href="#竞争检查器">竞争检查器</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown"><h1 id="同步和锁">
+  同步和锁
+  <a class="anchor" href="#%e5%90%8c%e6%ad%a5%e5%92%8c%e9%94%81">#</a>
+</h1>
+<p>channel 不是用来代替锁的，channel 倾向于解决逻辑层次的并发处理，而锁用来保护局部范围的数据安全。</p>
+<h2 id="共享变量">
+  共享变量
+  <a class="anchor" href="#%e5%85%b1%e4%ba%ab%e5%8f%98%e9%87%8f">#</a>
+</h2>
+<p>无论任何时候，只要有两个以上 goroutine 并发访问同一变量，且至少其中的一个是写操作的时候就会发生数据竞争。
+避免数据竞争的三种方式：</p>
+<ol>
+<li>不去写变量。读取不可能出现数据竞争。</li>
+<li>避免从多个 goroutine 访问变量，尽量把变量限定在了一个单独的 goroutine 中。(<strong>不要使用共享数据来通信，使用通信
+来共享数据</strong>)</li>
+<li>互斥锁</li>
+</ol>
+<h2 id="同步锁">
+  同步锁
+  <a class="anchor" href="#%e5%90%8c%e6%ad%a5%e9%94%81">#</a>
+</h2>
+<p>Go 语言包中的 <code>sync</code> 包提供了两种锁类型：<code>sync.Mutex</code> 和 <code>sync.RWMutex</code>，前者是互斥锁，后者是读写锁。</p>
+<h3 id="互斥锁">
+  互斥锁
+  <a class="anchor" href="#%e4%ba%92%e6%96%a5%e9%94%81">#</a>
+</h3>
+<h4 id="使用-channel-实现互斥锁">
+  使用 channel 实现互斥锁
+  <a class="anchor" href="#%e4%bd%bf%e7%94%a8-channel-%e5%ae%9e%e7%8e%b0%e4%ba%92%e6%96%a5%e9%94%81">#</a>
+</h4>
+<p>我们可以使用容量只有 <code>1</code> 的 <code>channel</code> 来保证最多只有一个 goroutine 在同一时刻访问一个共享变量：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> (
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">sema</span> = make(<span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">struct</span>{}, <span style="color:#ae81ff">1</span>) <span style="color:#75715e">// a binary semaphore guarding balance
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">balance</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Deposit</span>(<span style="color:#a6e22e">amount</span> <span style="color:#66d9ef">int</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">sema</span> <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">struct</span>{}{} <span style="color:#75715e">// acquire lock
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">balance</span> = <span style="color:#a6e22e">balance</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">amount</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">sema</span> <span style="color:#75715e">// release lock
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Balance</span>() <span style="color:#66d9ef">int</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">sema</span> <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">struct</span>{}{} <span style="color:#75715e">// acquire lock
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">b</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">balance</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">sema</span> <span style="color:#75715e">// release lock
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">b</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h4 id="syncmutex">
+  sync.Mutex
+  <a class="anchor" href="#syncmutex">#</a>
+</h4>
+<p><strong>注意，如果 Mutex 作为匿名字段，那么接收器必须是指针。否则会导致锁失效</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">data</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">sync</span>.<span style="color:#a6e22e">Mutex</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">d</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Data</span>) <span style="color:#a6e22e">test</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">d</span>.<span style="color:#a6e22e">Lock</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">d</span>.<span style="color:#a6e22e">Unlock</span>()
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>使用 <code>sync.Mutex</code> 互斥锁：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#f92672">import</span> <span style="color:#e6db74">&#34;sync&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> (
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">mu</span> <span style="color:#a6e22e">sync</span>.<span style="color:#a6e22e">Mutex</span> <span style="color:#75715e">// guards balance
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">balance</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Deposit</span>(<span style="color:#a6e22e">amount</span> <span style="color:#66d9ef">int</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">balance</span> = <span style="color:#a6e22e">balance</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">amount</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Balance</span>() <span style="color:#66d9ef">int</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">b</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">balance</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">b</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>mutex</code> 会保护共享变量，当已经有 goroutine 获得这个锁，再有 goroutine 访问这个加锁的变量就会被阻塞，
+直到持有这个锁的 goroutine <code>unlock</code> 这个锁。</p>
+<p>我们可以<strong>使用 <code>defer</code> 来 <code>unlock</code> 锁，保证在函数返回之后或者发生错误返回时一定会执行 <code>unlock</code></strong>。</p>
+<h3 id="读写锁-syncrwmutex">
+  读写锁 <code>sync.RWMutex</code>
+  <a class="anchor" href="#%e8%af%bb%e5%86%99%e9%94%81-syncrwmutex">#</a>
+</h3>
+<p>如果有多个 goroutine 读取变量，那么是并发安全的，这个时候使用 <code>sync.Mutex</code> 加锁就没有必要。可以使
+用 <code>sync.RWMutex</code> 读写锁（多读单写锁）。</p>
+<p><strong>读写锁是把对共享资源的“读操作”和“写操作”区别对待了。它可以对这两种操作施加不同程度的保护</strong>。</p>
+<p>一个读写锁中实际上包含了两个锁，即：读锁和写锁。<code>sync.RWMutex</code> 类型中的 <code>Lock</code> 方法和 <code>Unlock</code> 方法分别用于对写锁进行
+锁定和解锁，而它的 <code>RLock</code> 方法和 <code>RUnlock</code> 方法则分别用于对读锁进行锁定和解锁。</p>
+<p><strong>对于某个受到读写锁保护的共享资源，多个写操作不能同时进行，写操作和读操作也不能同时进行，但多个读操作却可以同时进行</strong>。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">mu</span> <span style="color:#a6e22e">sync</span>.<span style="color:#a6e22e">RWMutex</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">balance</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Balance</span>() <span style="color:#66d9ef">int</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">RLock</span>() <span style="color:#75715e">// readers lock
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">RUnlock</span>()
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">balance</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><strong><code>RLock</code> 只能在共享变量没有任何写入操作时可用</strong>。</p>
+<p><strong>为什么只读操作也需要加锁</strong>？</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">x</span>, <span style="color:#a6e22e">y</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">go</span> <span style="color:#66d9ef">func</span>() {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">x</span> = <span style="color:#ae81ff">1</span> <span style="color:#75715e">// A1
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Print</span>(<span style="color:#e6db74">&#34;y:&#34;</span>, <span style="color:#a6e22e">y</span>, <span style="color:#e6db74">&#34; &#34;</span>) <span style="color:#75715e">// A2
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}()
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">go</span> <span style="color:#66d9ef">func</span>() {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">y</span> = <span style="color:#ae81ff">1</span>                   <span style="color:#75715e">// B1
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Print</span>(<span style="color:#e6db74">&#34;x:&#34;</span>, <span style="color:#a6e22e">x</span>, <span style="color:#e6db74">&#34; &#34;</span>) <span style="color:#75715e">// B2
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}()
+</span></span></code></pre></div><p>上面的代码打印的结果可能是：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>y:0 x:1
+</span></span><span style="display:flex;"><span>x:0 y:1
+</span></span><span style="display:flex;"><span>x:1 y:1
+</span></span><span style="display:flex;"><span>y:1 x:1
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 还可能是</span>
+</span></span><span style="display:flex;"><span>x:0 y:0
+</span></span><span style="display:flex;"><span>y:0 x:0
+</span></span></code></pre></div><p>为什么会有 <code>x:0 y:0</code> 这种结果，在一个 goroutine 中，语句的执行顺序可以保证，在声明的例子，可以保证
+执行 <code>x = 1</code> 后打印 <code>y:</code>，但是不能保证打印 <code>y:</code> 时，另一个 goroutine 中 <code>y = 1</code> 是否已经执行。</p>
+<p>所以可能的话，将变量限定在 goroutine 内部；如果是多个 goroutine 都需要访问的变量，使用互斥条件来访问。</p>
+<h3 id="注意事项">
+  注意事项
+  <a class="anchor" href="#%e6%b3%a8%e6%84%8f%e4%ba%8b%e9%a1%b9">#</a>
+</h3>
+<ul>
+<li>不要重复锁定互斥锁；<strong>对一个已经被锁定的互斥锁进行锁定，是会立即阻塞当前的 goroutine 的</strong>。这个 goroutine 所执行的流程，
+会一直停滞在调用该互斥锁的 <code>Lock</code> 方法的那行代码上。直到该互斥锁的 <code>Unlock</code>方法被调用，并且这里的锁定操作成功完成，后续的代码
+（也就是临界区中的代码）才会开始执行。这也正是互斥锁能够保护临界区的原因所在。</li>
+<li>不要忘记解锁互斥锁，必要时使用 <code>defer</code> 语句；避免重复锁定。</li>
+<li>不要对尚未锁定或者已解锁的互斥锁解锁；<strong>解锁“读写锁中未被锁定的写锁”，会立即引发 panic</strong>，对于其中的读锁也是如此，并且同
+样是不可恢复的。</li>
+<li><strong>不要在多个函数之间直接传递互斥锁。一旦，你把一个互斥锁同时用在了多个地方，就必然会有更多的 goroutine 争用这把锁</strong>。
+这不但会让你的程序变慢，还会大大增加死锁（<code>deadlock</code>）的可能性。</li>
+</ul>
+<p>所谓的<strong>死锁</strong>，指的就是当前程序中的主 goroutine，以及我们启用的那些 goroutine 都已经被阻塞。这些 goroutine 可以被统
+称为用户级的 goroutine。这就相当于整个程序都已经停滞不前了。</p>
+<p>Go 语言运行时系统是不允许这种情况出现的，只要它发现所有的用户级 goroutine 都处于等待状态，就会自行抛出一个带有如下
+信息的 panic：<code>fatal error: all goroutines are asleep - deadlock!</code></p>
+<p><strong>注意，这种由 Go 语言运行时系统自行抛出的 panic 都属于致命错误，都是无法被恢复的，调用 recover 函数对它们起不到任何作用。
+也就是说，一旦产生死锁，程序必然崩溃</strong>。</p>
+<p><strong>最简单、有效的方式就是让每一个互斥锁都只保护一个临界区或一组相关临界区</strong>。</p>
+<h2 id="条件变量-synccond">
+  条件变量 sync.Cond
+  <a class="anchor" href="#%e6%9d%a1%e4%bb%b6%e5%8f%98%e9%87%8f-synccond">#</a>
+</h2>
+<p>条件变量是基于互斥锁的，它必须有互斥锁的支撑才能发挥作用。条件变量并不是被用来保护临界区和共享资源的，它是用于协调想要访问共享
+资源的那些线程的。<strong>当共享资源的状态发生变化时，它可以被用来通知被互斥锁阻塞的线程</strong>。</p>
+<p>条件变量在这里的最大优势就是在效率方面的提升。当共享资源的状态不满足条件的时候，想操作它的线程再也不用循环往复地做检查了，
+只要等待通知就好了。</p>
+<h3 id="条件变量怎样与互斥锁配合使用">
+  条件变量怎样与互斥锁配合使用
+  <a class="anchor" href="#%e6%9d%a1%e4%bb%b6%e5%8f%98%e9%87%8f%e6%80%8e%e6%a0%b7%e4%b8%8e%e4%ba%92%e6%96%a5%e9%94%81%e9%85%8d%e5%90%88%e4%bd%bf%e7%94%a8">#</a>
+</h3>
+<p>条件变量的初始化离不开互斥锁，并且它的方法有的也是基于互斥锁的。</p>
+<p>Go 语言标准库中的 sync.Cond 一个条件变量，它可以让一系列的 Goroutine 都在满足特定条件时被唤醒。</p>
+<p>条件变量提供的方法有三个：等待通知（wait）、单发通知（signal）和广播通知（broadcast）。我们在利用条件变量等待通知的时候，
+需要在它基于的那个互斥锁保护下进行。而在进行单发通知或广播通知的时候，却是恰恰相反的，也就是说，需要在对应的互斥锁解锁之后
+再做这两种操作。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">mailbox</span> <span style="color:#66d9ef">uint8</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">lock</span> <span style="color:#a6e22e">sync</span>.<span style="color:#a6e22e">RWMutex</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">sendCond</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">sync</span>.<span style="color:#a6e22e">NewCond</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">lock</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">recvCond</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">sync</span>.<span style="color:#a6e22e">NewCond</span>(<span style="color:#a6e22e">lock</span>.<span style="color:#a6e22e">RLocker</span>())
+</span></span></code></pre></div><p><code>lock</code> 是一个类型为 <code>sync.RWMutex</code> 的变量，是一个读写锁。基于这把锁，我还创建了两个代表条件变量的变量，名字分别
+叫 <code>sendCond</code> 和 <code>recvCond</code>。</p>
+<p><strong><code>sync.Cond</code> 类型并不是开箱即用的。只能利用 <code>sync.NewCond</code> 函数创建它的指针值</strong>。</p>
+<p><code>lock</code> 变量的 <code>Lock</code> 方法和 <code>Unlock</code> 方法分别用于对其中写锁的锁定和解锁，它们与 <code>sendCond</code> 变量的含义是对应的。
+被视为对共享资源的写操作。</p>
+<p>初始化 <code>recvCond</code>这 个条件变量，我们需要的是 <code>lock</code> 变量中的读锁，<code>sync.RWMutex</code> 类型的 <code>RLocker</code> 方法可以实现这一需求。
+<code>lock.RLocker()</code>，在其内部会分别调用 <code>lock</code> 变量的 <code>RLock</code> 方法和 <code>RUnlock</code> 方法。</p>
+<p>下面是一个例子：
+<code>mailbox</code> 是一个信箱，如果在放置的时候发现信箱里还有未被取走的情报，那就不再放置，而先返回。另一方面，如果你在获取的时候发现信
+箱里没有情报，那也只能先回去了。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">lock</span>.<span style="color:#a6e22e">Lock</span>()
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> <span style="color:#a6e22e">mailbox</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">sendCond</span>.<span style="color:#a6e22e">Wait</span>()
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">mailbox</span> = <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">lock</span>.<span style="color:#a6e22e">Unlock</span>()
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">recvCond</span>.<span style="color:#a6e22e">Signal</span>()
+</span></span></code></pre></div><p>先调用 <code>lock</code> 变量的 <code>Lock</code> 方法。注意，这个 <code>Lock</code> 方法在这里意味的是：持有信箱上的锁，并且有打开信箱的权利，
+而不是锁上这个锁。</p>
+<p>检查 <code>mailbox</code> 变量的值是否等于 1，也就是说，要看看信箱里是不是还存有情报。如果还有情报，那么我就回家去等通知。</p>
+<p>如果信箱里没有情报，那么我就把新情报放进去，关上信箱、锁上锁，然后离开。用代码表达出来就是 <code>mailbox = 1</code> 和 <code>lock.Unlock()</code>。
+然后发通知，“信箱里已经有新情报了”，我们调用 <code>recvCond</code> 的 <code>Signal</code> 方法就可以实现这一步骤。</p>
+<p>另一方面，你现在是另一个 goroutine，想要适时地从信箱中获取情报，然后通知我。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">lock</span>.<span style="color:#a6e22e">RLock</span>()
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> <span style="color:#a6e22e">mailbox</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">recvCond</span>.<span style="color:#a6e22e">Wait</span>()
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">mailbox</span> = <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">lock</span>.<span style="color:#a6e22e">RUnlock</span>()
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">sendCond</span>.<span style="color:#a6e22e">Signal</span>()
+</span></span></code></pre></div><p>事情在流程上其实基本一致，只不过每一步操作的对象是不同的。</p>
+<p><strong>为什么先要锁定条件变量基于的互斥锁，才能调用它的 Wait 方法？</strong></p>
+<p><code>Wait</code> 方法主要做了四件事。</p>
+<ol>
+<li>把调用它的 goroutine（也就是当前的 goroutine）加入到当前条件变量的通知队列中。</li>
+<li>解锁当前的条件变量基于的那个互斥锁。</li>
+<li>让当前的 goroutine 处于等待状态，等到通知到来时再决定是否唤醒它。此时，这个 goroutine 就会阻塞在调用这
+个 <code>Wait</code> 方法的那行代码上。</li>
+<li>如果通知到来并且决定唤醒这个 goroutine，那么就在唤醒它之后重新锁定当前条件变量基于的互斥锁。自此之后，当前
+的 goroutine 就会继续执行后面的代码了。</li>
+</ol>
+<p>因为条件变量的 <code>Wait</code> 方法在阻塞当前的 goroutine 之前会解锁它基于的互斥锁，所以在调用该 <code>Wait</code> 方法之前我们必须先
+锁定那个互斥锁，否则在调用这个 <code>Wait</code> 方法时，就会引发一个不可恢复的 panic。</p>
+<p>为什么条件变量的 <code>Wait</code> 方法要这么做呢？你可以想象一下，如果 <code>Wait</code> 方法在互斥锁已经锁定的情况下，阻塞了当前的 goroutine，
+那么又由谁来解锁呢？别的 goroutine 吗？</p>
+<p>先不说这违背了互斥锁的重要使用原则，即：成对的锁定和解锁，就算别的 goroutine 可以来解锁，那万一解锁重复了怎么办？
+由此引发的 panic 可是无法恢复的。</p>
+<p>如果当前的 goroutine 无法解锁，别的 goroutine 也都不来解锁，那么又由谁来进入临界区，并改变共享资源的状态呢？只要共享资源
+的状态不变，即使当前的 goroutine 因收到通知而被唤醒，也依然会再次执行这个 <code>Wait</code> 方法，并再次被阻塞。</p>
+<p>所以说，如果条件变量的 <code>Wait</code> 方法不先解锁互斥锁的话，那么就只会造成两种后果：不是当前的程序因 panic 而崩溃，就是相关的
+goroutine 全面阻塞。</p>
+<p><strong>为什么要用 <code>for</code> 语句来包裹调用其 <code>Wait</code> 方法的表达式，用 <code>if</code> 语句不行吗？</strong></p>
+<p><code>if</code> 语句只会对共享资源的状态检查一次，而 <code>for</code> 语句却可以做多次检查，直到这个状态改变为止。</p>
+<p>那为什么要做多次检查呢？</p>
+<p>为了保险起见。如果一个 goroutine 因收到通知而被唤醒，但却发现共享资源的状态，依然不符合它的要求，那么就应该再次调用
+条件变量的 <code>Wait</code> 方法，并继续等待下次通知的到来。</p>
+<p>这种情况是很有可能发生的。</p>
+<h3 id="条件变量的-signal-方法和-broadcast-方法有哪些异同">
+  条件变量的 <code>Signal</code> 方法和 <code>Broadcast</code> 方法有哪些异同
+  <a class="anchor" href="#%e6%9d%a1%e4%bb%b6%e5%8f%98%e9%87%8f%e7%9a%84-signal-%e6%96%b9%e6%b3%95%e5%92%8c-broadcast-%e6%96%b9%e6%b3%95%e6%9c%89%e5%93%aa%e4%ba%9b%e5%bc%82%e5%90%8c">#</a>
+</h3>
+<p>条件变量的 <code>Signal</code> 方法和 <code>Broadcast</code> 方法都是被用来发送通知的，不同的是，前者的通知只会唤醒一个因此而等待的 goroutine，
+而后者的通知却会唤醒所有为此等待的 goroutine。</p>
+<p>条件变量的 <code>Wait</code> 方法总会把当前的 goroutine 添加到通知队列的队尾，而它的 <code>Signal</code> 方法总会从通知队列的队首开始查找可被
+唤醒的 goroutine。所以，因 <code>Signal</code> 方法的通知而被唤醒的 goroutine 一般都是最早等待的那一个。</p>
+<h2 id="原子操作">
+  原子操作
+  <a class="anchor" href="#%e5%8e%9f%e5%ad%90%e6%93%8d%e4%bd%9c">#</a>
+</h2>
+<p>Go 语言的原子操作当然是基于 CPU 和操作系统的，所以它也只针对少数数据类型的值提供了原子操作函数。这些函数都存在于标准库代
+码包 <code>sync/atomic</code> 中。</p>
+<p><code>sync/atomic</code> 包中的函数可以做的原子操作有：加法（add）、比较并交换（compare and swap，简称 CAS）、加载（load）、
+存储（store）和交换（swap）。</p>
+<p>这些函数针对的数据类型并不多。对这些类型中的每一个，<code>sync/atomic</code> 包都会有一套函数给予支持。这些数据类型有：
+<code>int32</code>、<code>int64</code>、<code>uint32</code>、<code>uint64</code>、<code>uintptr</code>，以及 <code>unsafe</code> 包中的 <code>Pointer</code>。不过，针对
+<code>unsafe.Pointer</code> 类型，该包并未提供进行原子加法操作的函数。</p>
+<p><code>sync/atomic</code> 包还提供了一个名为 <code>Value</code> 的类型，它可以被用来存储任意类型的值。</p>
+<p><code>atomic.AddInt32</code> 函数的第一个参数，为什么不是 <code>int32</code> 而是 <code>*int32</code> 呢？
+因为<strong>原子操作函数需要的是被操作值的指针，而不是这个值本身</strong>；被传入函数的参数值都会被复制，像这种基本类型的值一旦被传入函数，
+就已经与函数外的那个值毫无关系了。</p>
+<p>所以，传入值本身没有任何意义。<code>unsafe.Pointer</code> 类型虽然是指针类型，但是那些原子操作函数要操作的是这个指针值，而不是它指向
+的那个值，所以需要的仍然是指向这个指针值的指针。</p>
+<p>只要原子操作函数拿到了被操作值的指针，就可以定位到存储该值的内存地址。只有这样，它们才能够通过底层的指令，准确地操作这个内
+存地址上的数据。</p>
+<h2 id="比较并交换操作与交换操作相比有什么不同">
+  比较并交换操作与交换操作相比有什么不同
+  <a class="anchor" href="#%e6%af%94%e8%be%83%e5%b9%b6%e4%ba%a4%e6%8d%a2%e6%93%8d%e4%bd%9c%e4%b8%8e%e4%ba%a4%e6%8d%a2%e6%93%8d%e4%bd%9c%e7%9b%b8%e6%af%94%e6%9c%89%e4%bb%80%e4%b9%88%e4%b8%8d%e5%90%8c">#</a>
+</h2>
+<p><strong>比较并交换操作即 CAS 操作</strong>，是有条件的交换操作，<strong>只有在条件满足的情况下才会进行值的交换</strong>。</p>
+<p><strong>所谓的交换指的是，把新值赋给变量，并返回变量的旧值</strong>。</p>
+<p>CAS 操作用途要更广泛一些。例如，我们将它与 <code>for</code> 语句联用就可以实现一种简易的自旋锁（spinlock）。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">for</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">atomic</span>.<span style="color:#a6e22e">CompareAndSwapInt32</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">num2</span>, <span style="color:#ae81ff">10</span>, <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;The second number has gone to zero.&#34;</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">break</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Sleep</span>(<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Millisecond</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">500</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>在 <code>for</code> 语句中的 CAS 操作可以不停地检查某个需要满足的条件，一旦条件满足就退出 <code>for</code> 循环。这就相当于，只要条件未被满足，
+当前的流程就会被一直“阻塞”在这里。</p>
+<p>这在效果上与互斥锁有些类似。不过，它们的适用场景是不同的。我们在使用互斥锁的时候，总是假设共享资源的状态会被其他
+的 goroutine 频繁地改变。</p>
+<p>而 <code>for</code> 语句加 CAS 操作的假设往往是：共享资源状态的改变并不频繁，或者，它的状态总会变成期望的那样。这是一种更加乐观，
+或者说更加宽松的做法。</p>
+<p><strong>假设我已经保证了对一个变量的写操作都是原子操作，比如：加或减、存储、交换等等，那我对它进行读操作的时候，还有必要使用原
+子操作吗</strong>？</p>
+<p>很有必要。其中的道理你可以对照一下读写锁。为什么在读写锁保护下的写操作和读操作之间是互斥的？这是为了防止读操作读到没有
+被修改完的值，对吗？</p>
+<p>如果写操作还没有进行完，读操作就来读了，那么就只能读到仅修改了一部分的值。这显然破坏了值的完整性，读出来的值也是完全错误的。</p>
+<p>所以，一旦你决定了要对一个共享资源进行保护，那就要做到完全的保护。不完全的保护基本上与不保护没有什么区别。</p>
+<h3 id="aba-问题">
+  ABA 问题
+  <a class="anchor" href="#aba-%e9%97%ae%e9%a2%98">#</a>
+</h3>
+<p>2.什么是ABA问题？怎么解决？
+答：当一个值从A更新为B，再从B更新为A，普通CAS机制会误判通过检测。解决方案是使用版本号，通过比较值和版本号才判断是否可以替换。</p>
+<p><a href="https://blog.csdn.net/weixin_41832850/article/details/100095677">https://blog.csdn.net/weixin_41832850/article/details/100095677</a></p>
+<p>添加版本号解决 ABA 问题
+真正要做到严谨的CAS机制，我们在 compare 阶段不仅需要比较内存地址V中的值是否和旧的期望值A相同，还需要比较变量的版本号是否一致。</p>
+<h2 id="syncatomicvalue">
+  <code>sync/atomic.Value</code>
+  <a class="anchor" href="#syncatomicvalue">#</a>
+</h2>
+<p>此类型的值相当于一个容器，可以被用来“原子地”存储和加载任意的值。开箱即用。</p>
+<p>它只有两个指针方法—— <code>Store</code> 和 <code>Load</code>。不过，虽然简单，但还是有一些值得注意的地方的。</p>
+<ol>
+<li>一旦 <code>atomic.Value</code> 类型的值（以下简称原子值）被真正使用，它就不应该再被复制了。只要用它来存储值了，就相当于开始真正使用了。
+<code>atomic.Value</code> 类型属于结构体类型，而结构体类型属于值类型。所以，复制该类型的值会产生一个完全分离的新值。这个新值相当于被
+复制的那个值的一个快照。之后，不论后者存储的值怎样改变，都不会影响到前者。</li>
+<li>不能用原子值存储 <code>nil</code>。</li>
+<li>我们向原子值存储的第一个值，决定了它今后能且只能存储哪一个类型的值。</li>
+<li>尽量不要向原子值中存储引用类型的值。因为这很容易造成安全漏洞。</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">box6</span> <span style="color:#a6e22e">atomic</span>.<span style="color:#a6e22e">Value</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">v6</span> <span style="color:#f92672">:=</span> []<span style="color:#66d9ef">int</span>{<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">3</span>}
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">box6</span>.<span style="color:#a6e22e">Store</span>(<span style="color:#a6e22e">v6</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">v6</span>[<span style="color:#ae81ff">1</span>] = <span style="color:#ae81ff">4</span> <span style="color:#75715e">// 注意，此处的操作不是并发安全的！
+</span></span></span></code></pre></div><p>切片类型属于引用类型。所以，我在外面改动这个切片值，就等于修改了 <code>box6</code> 中存储的那个值。这相当于绕过了原子值而进行了非并发
+安全的操作。怎样修补：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">store</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">v</span> []<span style="color:#66d9ef">int</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">replica</span> <span style="color:#f92672">:=</span> make([]<span style="color:#66d9ef">int</span>, len(<span style="color:#a6e22e">v</span>))
+</span></span><span style="display:flex;"><span>    copy(<span style="color:#a6e22e">replica</span>, <span style="color:#a6e22e">v</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">box6</span>.<span style="color:#a6e22e">Store</span>(<span style="color:#a6e22e">replica</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">store</span>(<span style="color:#a6e22e">v6</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">v6</span>[<span style="color:#ae81ff">2</span>] = <span style="color:#ae81ff">5</span> <span style="color:#75715e">// 此处的操作是安全的。
+</span></span></span></code></pre></div><p>先为切片值 <code>v6</code> 创建了一个完全的副本。这个副本涉及的数据已经与原值毫不相干了。然后，我再把这个副本存入 <code>box6</code>。如此一来，
+无论我再对 <code>v6</code> 的值做怎样的修改，都不会破坏 <code>box6</code> 提供的安全保护。</p>
+<h2 id="syncwaitgroup">
+  sync.WaitGroup
+  <a class="anchor" href="#syncwaitgroup">#</a>
+</h2>
+<p>在一些场合下里，我们使用通道的方式看起来都似乎有些蹩脚。比如：声明一个通道，使它的容量与我们手动启用的 goroutine 的数量相同。
+之后利用这个通道，让主 goroutine 等待其他 goroutine 的运行结束。更具体地说就是：让其他的 goroutine 在运行结束之前，
+都向这个通道发送一个元素值，并且，让主 goroutine 在最后从这个通道中接收元素值，接收的次数需要与其他的 goroutine 的数量相同。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">coordinateWithChan</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">sign</span> <span style="color:#f92672">:=</span> make(<span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">struct</span>{}, <span style="color:#ae81ff">2</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">num</span> <span style="color:#f92672">:=</span> int32(<span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;The number: %d [with chan struct{}]\n&#34;</span>, <span style="color:#a6e22e">num</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">max</span> <span style="color:#f92672">:=</span> int32(<span style="color:#ae81ff">10</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">go</span> <span style="color:#a6e22e">addNum</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">num</span>, <span style="color:#ae81ff">1</span>, <span style="color:#a6e22e">max</span>, <span style="color:#66d9ef">func</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">sign</span> <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">struct</span>{}{}
+</span></span><span style="display:flex;"><span>    })
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">go</span> <span style="color:#a6e22e">addNum</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">num</span>, <span style="color:#ae81ff">2</span>, <span style="color:#a6e22e">max</span>, <span style="color:#66d9ef">func</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">sign</span> <span style="color:#f92672">&lt;-</span> <span style="color:#66d9ef">struct</span>{}{}
+</span></span><span style="display:flex;"><span>    })
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">sign</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">sign</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>coordinateWithChan</code> 函数中最后的那两行代码了吗？重复的两个接收表达式 <code>&lt;-sign</code>，很丑陋。
+我们可以选用另外一个同步工具，即：<code>sync</code> 包的 <code>WaitGroup</code> 类型。它比通道更加适合实现这种一对多的 goroutine 协作流程。</p>
+<p><code>sync.WaitGroup</code> 类型（以下简称 <code>WaitGroup</code> 类型）是开箱即用的，也是并发安全的。</p>
+<p><code>WaitGroup</code> 类型拥有三个指针方法：<code>Add</code>、<code>Done</code> 和 <code>Wait</code>。<strong>你可以想象该类型中有一个计数器，它的默认值是 <code>0</code>。我们可
+以通过调用该类型值的 <code>Add</code> 方法来增加，或者减少这个计数器的值</strong>。</p>
+<p><strong>一般情况下，我会用这个方法来记录需要等待的 goroutine 的数量。相对应的，这个类型的 <code>Done</code> 方法，用于对其所属值中计数器
+的值进行减一操作</strong>。我们可以在需要等待的 goroutine 中，通过 <code>defer</code> 语句调用它。</p>
+<p>而<strong>此类型的 <code>Wait</code> 方法的功能是，阻塞当前的 goroutine，直到其所属值中的计数器归零</strong>。</p>
+<p>改造版本：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">coordinateWithWaitGroup</span>() {
+</span></span><span style="display:flex;"><span> <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">wg</span> <span style="color:#a6e22e">sync</span>.<span style="color:#a6e22e">WaitGroup</span>
+</span></span><span style="display:flex;"><span> <span style="color:#a6e22e">wg</span>.<span style="color:#a6e22e">Add</span>(<span style="color:#ae81ff">2</span>)
+</span></span><span style="display:flex;"><span> <span style="color:#a6e22e">num</span> <span style="color:#f92672">:=</span> int32(<span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;The number: %d [with sync.WaitGroup]\n&#34;</span>, <span style="color:#a6e22e">num</span>)
+</span></span><span style="display:flex;"><span> <span style="color:#a6e22e">max</span> <span style="color:#f92672">:=</span> int32(<span style="color:#ae81ff">10</span>)
+</span></span><span style="display:flex;"><span> <span style="color:#66d9ef">go</span> <span style="color:#a6e22e">addNum</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">num</span>, <span style="color:#ae81ff">3</span>, <span style="color:#a6e22e">max</span>, <span style="color:#a6e22e">wg</span>.<span style="color:#a6e22e">Done</span>)
+</span></span><span style="display:flex;"><span> <span style="color:#66d9ef">go</span> <span style="color:#a6e22e">addNum</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">num</span>, <span style="color:#ae81ff">4</span>, <span style="color:#a6e22e">max</span>, <span style="color:#a6e22e">wg</span>.<span style="color:#a6e22e">Done</span>)
+</span></span><span style="display:flex;"><span> <span style="color:#a6e22e">wg</span>.<span style="color:#a6e22e">Wait</span>()
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><strong>尽量不要在 <code>go</code> 函数内部调用 <code>Add</code>，以免 <code>Add</code> 还未执行，<code>Wait</code> 已经退出</strong>：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">wg</span> <span style="color:#a6e22e">sync</span>.<span style="color:#a6e22e">WaitGroup</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">go</span> <span style="color:#66d9ef">func</span>(){
+</span></span><span style="display:flex;"><span> <span style="color:#a6e22e">wg</span>.<span style="color:#a6e22e">Add</span>(<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;test&#34;</span>)
+</span></span><span style="display:flex;"><span>}()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">wg</span>.<span style="color:#a6e22e">Wait</span>()
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;exit.&#34;</span>)
+</span></span></code></pre></div><h3 id="syncwaitgroup-类型值中计数器的值可以小于-0-吗">
+  sync.WaitGroup 类型值中计数器的值可以小于 0 吗
+  <a class="anchor" href="#syncwaitgroup-%e7%b1%bb%e5%9e%8b%e5%80%bc%e4%b8%ad%e8%ae%a1%e6%95%b0%e5%99%a8%e7%9a%84%e5%80%bc%e5%8f%af%e4%bb%a5%e5%b0%8f%e4%ba%8e-0-%e5%90%97">#</a>
+</h3>
+<p>不可以。<strong>小于 0，会引发一个 panic</strong>。</p>
+<p><strong><code>WaitGroup</code> 值是可以被复用的，但需要保证其计数周期的完整性</strong>。这里的计数周期指的是这样一个过程：该值中的计数器值由 0 变为
+了某个正整数，而后又经过一系列的变化，最终由某个正整数又变回了 0。</p>
+<p>如果在一个此类值的 <code>Wait</code> 方法被执行期间，跨越了两个计数周期，那么就会引发一个 panic。</p>
+<h3 id="使用注意">
+  使用注意
+  <a class="anchor" href="#%e4%bd%bf%e7%94%a8%e6%b3%a8%e6%84%8f">#</a>
+</h3>
+<ul>
+<li>不要把增加其计数器值的操作和调用其 <code>Wait</code> 方法的代码，放在不同的 goroutine 中执行。换句话说，要<strong>杜绝对同一个
+<code>WaitGroup</code> 值的两种操作的并发执行</strong>。</li>
+</ul>
+<h2 id="synconce">
+  sync.Once
+  <a class="anchor" href="#synconce">#</a>
+</h2>
+<p>与 <code>sync.WaitGroup</code> 类型一样，<code>sync.Once</code> 类型（以下简称 <code>Once</code> 类型）也属于结构体类型，同样也是开箱即用和并发安全的。
+由于这个类型中包含了一个 <code>sync.Mutex</code> 类型的字段，所以，复制该类型的值也会导致功能的失效。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">loadIconsOnce</span> <span style="color:#a6e22e">sync</span>.<span style="color:#a6e22e">Once</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">icons</span> <span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#a6e22e">image</span>.<span style="color:#a6e22e">Image</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Concurrency-safe.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Icon</span>(<span style="color:#a6e22e">name</span> <span style="color:#66d9ef">string</span>) <span style="color:#a6e22e">image</span>.<span style="color:#a6e22e">Image</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">loadIconsOnce</span>.<span style="color:#a6e22e">Do</span>(<span style="color:#a6e22e">loadIcons</span>)
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">icons</span>[<span style="color:#a6e22e">name</span>]
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>Once</code> 类型的 <code>Do</code> 方法只接受一个参数，这个参数的类型必须是 <code>func()</code>，即：无参数声明和结果声明的函数。该方法的功能并
+不是对每一种参数函数都只执行一次，而是只<strong>执行“首次被调用时传入的”那个函数，并且之后不会再执行任何参数函数</strong>。</p>
+<p>所以，<strong>如果你有多个只需要执行一次的函数，那么就应该为它们中的每一个都分配一个 <code>sync.Once</code> 类型的值</strong>（以下简称 <code>Once</code> 值）。</p>
+<p><code>Once</code> 类型中还有一个名叫 <code>done</code> 的 <code>uint32</code> 类型的字段。<strong>它的作用是记录其所属值的 <code>Do</code> 方法被调用的次数。不过，该字段的值
+只可能是 0 或者 1。一旦 <code>Do</code> 方法的首次调用完成，它的值就会从 0 变为 1</strong>。</p>
+<p><strong>既然 <code>done</code> 字段的值不是 0 就是 1，那为什么还要使用需要四个字节的 <code>uint32</code> 类型呢</strong>？</p>
+<p>原因很简单，因为对它的操作必须是“原子”的。<code>Do</code> 方法在一开始就会通过调用 <code>atomic.LoadUint32</code> 函数来获取该字段的值，并且一旦
+发现该值为 1 就会直接返回。这也初步保证了“<code>Do</code> 方法，只会执行首次被调用时传入的函数”。</p>
+<h3 id="do-方法在功能方面的两个特点">
+  Do 方法在功能方面的两个特点
+  <a class="anchor" href="#do-%e6%96%b9%e6%b3%95%e5%9c%a8%e5%8a%9f%e8%83%bd%e6%96%b9%e9%9d%a2%e7%9a%84%e4%b8%a4%e4%b8%aa%e7%89%b9%e7%82%b9">#</a>
+</h3>
+<ul>
+<li>由于 <code>Do</code> 方法只会在参数函数执行结束之后把 <code>done</code> 字段的值变为 1，因此，如果参数函数的执行需要很长时间或者根本就不会结束
+（比如执行一些守护任务），那么就有可能会导致相关 goroutine 的同时阻塞</li>
+<li><code>Do</code> 方法在参数函数执行结束后，对 <code>done</code> 字段的赋值用的是原子操作，并且，这一操作是被挂在 <code>defer</code> 语句中的。因此，不论参数
+函数的执行会以怎样的方式结束，<code>done</code> 字段的值都会变为 1。</li>
+</ul>
+<h2 id="contextcontext-类型">
+  context.Context 类型
+  <a class="anchor" href="#contextcontext-%e7%b1%bb%e5%9e%8b">#</a>
+</h2>
+<p>使用 <code>WaitGroup</code> 值的时候，我们最好用<strong>先统一 <code>Add</code>，再并发 <code>Done</code>，最后 <code>Wait</code></strong> 的标准模式来构建协作流程。如果在调用
+该值的 <code>Wait</code> 方法的同时，为了增大其计数器的值，而并发地调用该值的 <code>Add</code> 方法，那么就很可能会引发 panic。</p>
+<p>但是<strong>如果，我们不能在一开始就确定执行子任务的 goroutine 的数量，那么使用 <code>WaitGroup</code> 值来协调它们和分发子任务的 goroutine，就是有一定风险的</strong>。一个解决方案是：<strong>分批地启用执行子任务的 goroutine</strong>。</p>
+<p>只要我们在严格遵循上述规则的前提下，分批地启用执行子任务的 goroutine，就肯定不会有问题。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">coordinateWithWaitGroup</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">total</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">12</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">stride</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">3</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">num</span> <span style="color:#66d9ef">int32</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;The number: %d [with sync.WaitGroup]\n&#34;</span>, <span style="color:#a6e22e">num</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">wg</span> <span style="color:#a6e22e">sync</span>.<span style="color:#a6e22e">WaitGroup</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">1</span>; <span style="color:#a6e22e">i</span> <span style="color:#f92672">&lt;=</span> <span style="color:#a6e22e">total</span>; <span style="color:#a6e22e">i</span> = <span style="color:#a6e22e">i</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">stride</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">wg</span>.<span style="color:#a6e22e">Add</span>(<span style="color:#a6e22e">stride</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">j</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">j</span> &lt; <span style="color:#a6e22e">stride</span>; <span style="color:#a6e22e">j</span><span style="color:#f92672">++</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">go</span> <span style="color:#a6e22e">addNum</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">num</span>, <span style="color:#a6e22e">i</span><span style="color:#f92672">+</span><span style="color:#a6e22e">j</span>, <span style="color:#a6e22e">wg</span>.<span style="color:#a6e22e">Done</span>)
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">wg</span>.<span style="color:#a6e22e">Wait</span>()
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;End.&#34;</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="使用-context-包中的程序实体实现一对多的-goroutine-协作流程">
+  使用 <code>context</code> 包中的程序实体，实现一对多的 goroutine 协作流程
+  <a class="anchor" href="#%e4%bd%bf%e7%94%a8-context-%e5%8c%85%e4%b8%ad%e7%9a%84%e7%a8%8b%e5%ba%8f%e5%ae%9e%e4%bd%93%e5%ae%9e%e7%8e%b0%e4%b8%80%e5%af%b9%e5%a4%9a%e7%9a%84-goroutine-%e5%8d%8f%e4%bd%9c%e6%b5%81%e7%a8%8b">#</a>
+</h3>
+<p>用 <code>context</code> 包中的函数和 <code>Context</code> 类型作为实现工具，实现 <code>coordinateWithContext</code> 的函数。这个函数应该具有上
+面 <code>coordinateWithWaitGroup</code> 函数相同的功能。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">coordinateWithContext</span>() {
+</span></span><span style="display:flex;"><span> <span style="color:#a6e22e">total</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">12</span>
+</span></span><span style="display:flex;"><span> <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">num</span> <span style="color:#66d9ef">int32</span>
+</span></span><span style="display:flex;"><span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;The number: %d [with context.Context]\n&#34;</span>, <span style="color:#a6e22e">num</span>)
+</span></span><span style="display:flex;"><span> <span style="color:#a6e22e">cxt</span>, <span style="color:#a6e22e">cancelFunc</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">WithCancel</span>(<span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Background</span>())
+</span></span><span style="display:flex;"><span> <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">1</span>; <span style="color:#a6e22e">i</span> <span style="color:#f92672">&lt;=</span> <span style="color:#a6e22e">total</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">go</span> <span style="color:#a6e22e">addNum</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">num</span>, <span style="color:#a6e22e">i</span>, <span style="color:#66d9ef">func</span>() {
+</span></span><span style="display:flex;"><span>   <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">atomic</span>.<span style="color:#a6e22e">LoadInt32</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">num</span>) <span style="color:#f92672">==</span> int32(<span style="color:#a6e22e">total</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">cancelFunc</span>()
+</span></span><span style="display:flex;"><span>   }
+</span></span><span style="display:flex;"><span>  })
+</span></span><span style="display:flex;"><span> }
+</span></span><span style="display:flex;"><span> <span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">cxt</span>.<span style="color:#a6e22e">Done</span>()
+</span></span><span style="display:flex;"><span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;End.&#34;</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>先后调用了 <code>context.Background</code> 函数和 <code>context.WithCancel</code> 函数，并得到了一个可撤销的 <code>context.Context</code> 类型的值
+（由变量 <code>cxt</code> 代表），以及一个 <code>context.CancelFunc</code>类型的撤销函数（由变量 <code>cancelFunc</code> 代表）。</p>
+<p>注意我给予 <code>addNum</code> 函数的最后一个参数值。它是一个匿名函数，其中只包含了一条 <code>if</code> 语句。这条 <code>if</code> 语句会<strong>原子地</strong>加载
+<code>num</code> 变量的值，并判断它是否等于 <code>total</code> 变量的值。</p>
+<p>如果两个值相等，那么就调用 <code>cancelFunc</code> 函数。其含义是，如果所有的 <code>addNum</code> 函数都执行完毕，那么就立即通知分发子任务
+的 goroutine。</p>
+<p><strong>这里分发子任务的 goroutine，即为执行 <code>coordinateWithContext</code> 函数的 goroutine</strong>。它在执行完 <code>for</code> 语句后，会
+立即调用 <code>cxt</code> 变量的 <code>Done</code> 函数，并试图针对该函数返回的通道，进行接收操作。</p>
+<p>一旦 <code>cancelFunc</code> 函数被调用，针对该通道的接收操作就会马上结束，所以，这样做就可以实现“等待所有的 <code>addNum</code> 函数都执
+行完毕”的功能。</p>
+<h3 id="contextcontext-类型-1">
+  context.Context 类型
+  <a class="anchor" href="#contextcontext-%e7%b1%bb%e5%9e%8b-1">#</a>
+</h3>
+<p><code>Context</code> 类型的值（以下简称 <code>Context</code> 值）是可以繁衍的，这意味着我们可以通过一个 <code>Context</code> 值产生出任意个子值。这些子值
+可以携带其父值的属性和数据，也可以响应通过其父值传达的信号。</p>
+<p>正因为如此，所有的 <code>Context</code> 值共同构成了一颗代表了上下文全貌的树形结构。这棵树的<strong>树根（或者称上下文根节点）是一个已经
+在 <code>context</code> 包中预定义好的 <code>Context</code> 值</strong>，它是<strong>全局唯一</strong>的。通过调用 <code>context.Background</code> 函数，我们就可以获取到
+它（在 <code>coordinateWithContext</code> 函数中就是这么做的）。</p>
+<p>注意一下，这个<strong>上下文根节点仅仅是一个最基本的支点，它不提供任何额外的功能</strong>。也就是说，它既不可以被撤销（<code>cancel</code>），
+也不能携带任何数据。</p>
+<p><code>context</code> 包中还包含了<strong>四个用于繁衍 <code>Context</code> 值的函数，即：<code>WithCancel</code>、<code>WithDeadline</code>、<code>WithTimeout</code> 和 <code>WithValue</code></strong>。</p>
+<p>这些函数的第一个参数的类型都是 <code>context.Context</code>，而名称都为 <code>parent</code>。顾名思义，<strong>这个位置上的参数对应的都是它们将会产生
+的 <code>Context</code> 值的父值</strong>。</p>
+<p><strong><code>WithCancel</code> 函数用于产生一个可撤销的 parent 的子值</strong>。</p>
+<p>在 <code>coordinateWithContext</code> 函数中，通过调用该函数，获得了一个衍生自上下文根节点的 <code>Context</code> 值，和一个用于触发撤销信号的函数。</p>
+<p><code>WithDeadline</code> 函数和 <code>WithTimeout</code> 函数则都可以被用来产生一个会<strong>定时撤销</strong>的 <code>parent</code> 的子值。至于 <code>WithValue</code> 函数，
+我们可以通过调用它，产生一个会携带额外数据的 <code>parent</code> 的子值。</p>
+<h3 id="可撤销的在-context-包中代表着什么撤销一个-context-值又意味着什么">
+  “可撤销的”在 context 包中代表着什么？“撤销”一个 Context 值又意味着什么？
+  <a class="anchor" href="#%e5%8f%af%e6%92%a4%e9%94%80%e7%9a%84%e5%9c%a8-context-%e5%8c%85%e4%b8%ad%e4%bb%a3%e8%a1%a8%e7%9d%80%e4%bb%80%e4%b9%88%e6%92%a4%e9%94%80%e4%b8%80%e4%b8%aa-context-%e5%80%bc%e5%8f%88%e6%84%8f%e5%91%b3%e7%9d%80%e4%bb%80%e4%b9%88">#</a>
+</h3>
+<p>这需要从 <code>Context</code> 类型的声明讲起。这个接口中有两个方法与“撤销”息息相关。<code>Done</code> 方法会返回一个元素类型为 <code>struct{}</code> 的接
+收通道。不过，这个接收通道的用途并不是传递元素值，而是<strong>让调用方去感知“撤销”当前Context值的那个信号</strong>。</p>
+<p>一旦当前的 <code>Context</code> 值被撤销，这里的接收通道就会被立即关闭。我们都知道，对于一个未包含任何元素值的通道来说，它的关闭会
+使任何针对它的接收操作立即结束。</p>
+<p>正因为如此，在 <code>coordinateWithContext</code> 函数中，基于调用表达式 <code>cxt.Done()</code> 的接收操作，才能够起到感知撤销信号的作用。</p>
+<h3 id="撤销信号是如何在上下文树中传播的">
+  撤销信号是如何在上下文树中传播的
+  <a class="anchor" href="#%e6%92%a4%e9%94%80%e4%bf%a1%e5%8f%b7%e6%98%af%e5%a6%82%e4%bd%95%e5%9c%a8%e4%b8%8a%e4%b8%8b%e6%96%87%e6%a0%91%e4%b8%ad%e4%bc%a0%e6%92%ad%e7%9a%84">#</a>
+</h3>
+<p><code>context</code>包的 <code>WithCancel</code> 函数在被调用后会产生两个结果值。第一个结果值就是那个可撤销的 <code>Context</code> 值，而第二个结果值则是
+用于触发撤销信号的函数。</p>
+<p>在撤销函数被调用之后，对应的 <code>Context</code> 值会先关闭它内部的接收通道，也就是它的 <code>Done</code> 方法会返回的那个通道。</p>
+<p>然后，它会向它的所有子值（或者说子节点）传达撤销信号。这些子值会如法炮制，把撤销信号继续传播下去。最后，这个 <code>Context</code> 值会
+断开它与其父值之间的关联。</p>
+<p><strong>通过调用 <code>context.WithValue</code> 函数得到的 <code>Context</code> 值是不可撤销的</strong>。</p>
+<h3 id="怎样通过-context-值携带数据">
+  怎样通过 Context 值携带数据
+  <a class="anchor" href="#%e6%80%8e%e6%a0%b7%e9%80%9a%e8%bf%87-context-%e5%80%bc%e6%90%ba%e5%b8%a6%e6%95%b0%e6%8d%ae">#</a>
+</h3>
+<p><strong><code>WithValue</code> 函数在产生新的 <code>Context</code> 值（以下简称含数据的 <code>Context</code> 值）的时候需要三个参数，即：父值、键和值</strong>。
+“字典对于键的约束”类似，这里<strong>键的类型必须是可判等</strong>的。</p>
+<p>原因很简单，当我们从中获取数据的时候，它需要根据给定的键来查找对应的值。不过，这种 <code>Context</code> 值并不是用字典来存储键和值的，
+后两者只是被简单地存储在前者的相应字段中而已。</p>
+<h2 id="临时对象池-syncpool">
+  临时对象池 sync.Pool
+  <a class="anchor" href="#%e4%b8%b4%e6%97%b6%e5%af%b9%e8%b1%a1%e6%b1%a0-syncpool">#</a>
+</h2>
+<p>Go 语言标准库中最重要的那几个同步工具，这包括:</p>
+<ul>
+<li>互斥锁</li>
+<li>读写锁</li>
+<li>条件变量</li>
+<li>原子操作</li>
+<li><code>sync/atomic.Value</code></li>
+<li><code>sync.Once</code></li>
+<li><code>sync.WaitGroup</code></li>
+<li><code>context.Context</code></li>
+</ul>
+<p>Go 语言标准库中的还有另一个同步工具：<code>sync.Pool</code>。</p>
+<p><code>sync.Pool</code> 类型可以被称为临时对象池，它的值可以被用来存储临时的对象。与 Go 语言的很多同步工具一样，<code>sync.Pool</code> 类型也属
+于结构体类型，它的值在被真正使用之后，就不应该再被复制了。</p>
+<p><strong>临时对象</strong>的意思是：不需要持久使用的某一类值。这类值对于程序来说可有可无，但如果有的话会明显更好。它们的创建和销毁可以在
+任何时候发生，并且完全不会影响到程序的功能。</p>
+<p><strong>我们可以把临时对象池当作针对某种数据的缓存来用</strong>。</p>
+<p><code>sync.Pool</code> 类型只有两个方法——<code>Put</code> 和 <code>Get</code>。前者用于在当前的池中存放临时对象，它接受一个 <code>interface{}</code> 类型的参数；
+而后者则被用于从当前的池中获取临时对象，它会返回一个 <code>interface{}</code> 类型的值。</p>
+<p>更具体地说，<strong>这个类型的 <code>Get</code> 方法可能会从当前的池中删除掉任何一个值，然后把这个值作为结果返回。如果此时当前的池中没有任何值，
+那么这个方法就会使用当前池的 <code>New</code> 字段创建一个新值，并直接将其返回</strong>。</p>
+<p><code>sync.Pool</code> 类型的 <code>New</code> 字段代表着创建临时对象的函数。它的类型是没有参数但有唯一结果的函数类型，即：<code>func() interface{}</code>。
+<strong>初始化这个池的时候最好给定它</strong>。</p>
+<p>这个函数是 <code>Get</code> 方法最后的临时对象获取手段。<code>Get</code> 方法如果到了最后，仍然无法获取到一个值，那么就会调用该函数。该函数的结
+值并不会被存入当前的临时对象池中，而是直接返回给 <code>Get</code> 方法的调用方。</p>
+<p><strong>临时对象池中存储的每一个值都应该是独立的、平等的和可重用的</strong>。<code>sync.Pool</code> 的定位不是做类似连接池的东西，它的用途仅仅是增加
+对象重用的几率，减少 gc 的负担。因为 gc 带来了编程的方便但同时也增加了运行时开销，使用不当甚至会严重影响程序的性能。因此性能
+要求高的场景不能任意产生太多的垃圾。如何解决呢？那就是要重用对象了。</p>
+<p>一个比较好的例子是 <code>fmt</code> 包，<code>fmt</code> 包总是需要使用一些 <code>[]byte</code> 之类的对象，golang 建立了一个临时对象池，存放着这些对象，
+如果需要使用一个 <code>[]byte</code>，就去 <code>Pool</code> 里面拿，如果拿不到就分配一份。这比起不停生成新的 <code>[]byte</code>，用完了再等待 gc 回收
+来要高效得多。</p>
+<p><code>sync.Pool</code> 缓存对象的期限是很诡异的，先看一下 <code>src/pkg/sync/pool.go</code> 里面的一段实现代码：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">init</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">runtime_registerPoolCleanup</span>(<span style="color:#a6e22e">poolCleanup</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>可以看到 <code>pool</code> 包在 <code>init</code> 的时候注册了一个 <code>poolCleanup</code> 函数，它会清除所有的 <code>pool</code> 里面的所有缓存的对象，该函数注册进去
+之后会在每次 gc 之前都会调用，因此 <strong><code>sync.Pool</code> 缓存的期限只是两次gc之间这段时间</strong>。</p>
+<h2 id="syncmap">
+  sync.Map
+  <a class="anchor" href="#syncmap">#</a>
+</h2>
+<p>Go 语言自带的字典类型 <code>map</code> 并不是并发安全的。换句话说，在同一时间段内，让不同 goroutine 中的代码，对同一个字典进行读写操
+作是不安全的。</p>
+<p>Go 语言官方终于在 2017 年发布的 Go 1.9 中正式加入了并发安全的字典类型 <code>sync.Map</code>。</p>
+<p>使用 <code>sync.Map</code> 可以显著地减少锁的争用。<code>sync.Map</code> 本身虽然也用到了锁，但是，它其实在尽可能地避免使用锁。</p>
+<p><strong>使用锁就意味着要把一些并发的操作强制串行化。这往往会降低程序的性能，尤其是在计算机拥有多个 CPU 核心的情况下</strong>。</p>
+<p>由于<strong>并发安全字典内部使用的存储介质正是原生字典，又因为它使用的原生字典键类型也是可以包罗万象的 <code>interface{}</code>，所以，
+我们绝对不能带着任何实际类型为函数类型、字典类型或切片类型的键值去操作并发安全字典</strong>。</p>
+<p>因为<strong>这些键值的实际类型只有在程序运行期间才能够确定，所以 Go 语言编译器是无法在编译期对它们进行检查的，不正确的键值实际类
+型肯定会引发 panic</strong>。</p>
+<p><strong>因此，我们在这里首先要做的一件事就是：一定不要违反上述规则。我们应该在每次操作并发安全字典的时候，都去显式地检查键值的实际
+类型。无论是存、取还是删，都应该如此</strong>。</p>
+<blockquote>
+<p><strong>更好的做法是，把针对同一个并发安全字典的这几种操作都集中起来，然后统一地编写检查代码。除此之外，把并发安全字典封装在一
+个结构体类型中，往往是一个很好的选择</strong>。如果你实在拿不准，那么可以先通过调用 <code>reflect.TypeOf</code> 函数得到一个键值对应的反射类
+型值（即：<code>reflect.Type</code> 类型的值），然后再调用这个值的 <code>Comparable</code> 方法，得到确切的判断结果。</p>
+</blockquote>
+<h3 id="并发安全字典如何做到尽量避免使用锁">
+  并发安全字典如何做到尽量避免使用锁
+  <a class="anchor" href="#%e5%b9%b6%e5%8f%91%e5%ae%89%e5%85%a8%e5%ad%97%e5%85%b8%e5%a6%82%e4%bd%95%e5%81%9a%e5%88%b0%e5%b0%bd%e9%87%8f%e9%81%bf%e5%85%8d%e4%bd%bf%e7%94%a8%e9%94%81">#</a>
+</h3>
+<p><code>sync.Map</code> 类型在内部使用了<strong>大量的原子操作来存取键和值，并使用了两个原生的 map 作为存储介质</strong>。</p>
+<p>其中一个原生 map 被存在了 <code>sync.Map</code> 的 <code>read</code> 字段中，该字段是 <code>sync/atomic.Value</code> 类型的。简称它为<strong>只读字典</strong>。</p>
+<p><strong>只读字典虽然不会增减其中的键，但却允许变更其中的键所对应的值</strong>。所以，它并不是传统意义上的快照，它的只读特性只是对于其中键
+的集合而言的。</p>
+<p>由 <code>read</code> 字段的类型可知，<code>sync.Map</code> 在替换只读字典的时候根本用不着锁。另外，这个只读字典在存储键值对的时候，还在值之上
+封装了一层。</p>
+<p>它先把值转换为了 <code>unsafe.Pointer</code> 类型的值，然后再把后者封装，并储存在其中的原生字典中。如此一来，在变更某个键所对应的值
+的时候，就也可以使用原子操作了。</p>
+<p><code>sync.Map</code> 中的另一个原生字典由它的 <code>dirty</code> 字段代表。它存储键值对的方式与 <code>read</code> 字段中的原生字典一致，它的键类型
+也是 <code>interface{}</code>，并且同样是把值先做转换和封装后再进行储存的。称为<strong>脏字典</strong>。</p>
+<blockquote>
+<p>脏字典和只读字典如果都存有同一个键值对，那么这里的两个键指的肯定是同一个基本值，对于两个值来说也是如此。正如前文所述，
+这两个字典在存储键和值的时候都只会存入它们的某个指针，而不是基本值。</p>
+</blockquote>
+<p><code>sync.Map</code> 在查找指定的键所对应的值的时候，总会先去只读字典中寻找，并不需要锁定互斥锁。只有当确定<strong>只读字典中没有，但脏
+字典中可能会有这个键</strong>的时候，它才会在锁的保护下去访问脏字典。</p>
+<p>相对应的，<code>sync.Map</code> 在存储键值对的时候，只要只读字典中已存有这个键，并且该键值对未被标记为“已删除”，就会把新值存到里面并
+直接返回，这种情况下也不需要用到锁。</p>
+<p>否则，它才会在锁的保护下把键值对存储到脏字典中。这个时候，该键值对的“已删除”标记会被抹去。</p>
+<p>只有当一个键值对应该被删除，但却仍然存在于只读字典中的时候，才会被用标记为“已删除”的方式进行逻辑删除，而不会直接被物理删除。
+这种情况会在重建脏字典以后的一段时间内出现。不过，过不了多久，它们就会被真正删除掉。在查找和遍历键值对的时候，已被逻
+辑删除的键值对永远会被无视。</p>
+<p>最后，<code>sync.Map</code> 会把该键值对中指向值的那个指针置为 <code>nil</code> ，这是另一种逻辑删除的方式。</p>
+<p>除此之外，还有一个细节需要注意，只读字典和脏字典之间是会互相转换的。在脏字典中查找键值对次数足够多的时候，<code>sync.Map</code> 会把
+脏字典直接作为只读字典，保存在它的 <code>read</code> 字段中，然后把代表脏字典的 <code>dirty</code> 字段的值置为 <code>nil</code>。</p>
+<p>在这之后，一旦再有新的键值对存入，它就会依据只读字典去重建脏字典。这个时候，它会把只读字典中已被逻辑删除的键值对过滤掉。
+理所当然，这些转换操作肯定都需要在锁的保护下进行。</p>
+<p><strong><code>sync.Map</code> 的只读字典和脏字典中的键值对集合并不是实时同步的，它们在某些时间段内可能会有不同</strong>。</p>
+<p>可以看出，在读操作有很多但写操作却很少的情况下，并发安全字典的性能往往会更好。在几个写操作当中，新增键值对的操作对并发安
+全字典的性能影响是最大的，其次是删除操作，最后才是修改操作。</p>
+<p>如果被操作的键值对已经存在于 <code>sync.Map</code> 的只读字典中，并且没有被逻辑删除，那么修改它并不会使用到锁，对其性能的影响就会很小。</p>
+<h2 id="竞争检查器">
+  竞争检查器
+  <a class="anchor" href="#%e7%ab%9e%e4%ba%89%e6%a3%80%e6%9f%a5%e5%99%a8">#</a>
+</h2>
+<p>在 <code>go build</code>，<code>go run</code> 或者 <code>go test</code> 命令后面加上 <code>-race</code>，就会使编译器创建一个你的应用的“修改”版。</p>
+<p>会记录下每一个读或者写共享变量的 goroutine 的身份信息。记录下所有的同步事件，比如 <code>go</code> 语句，<code>channel</code> 操作，
+以及对 <code>(*sync.Mutex).Lock</code>，<code>(*sync.WaitGroup).Wait</code> 等等的调用。</p>
+<p>由于需要额外的记录，因此构建时加了竞争检测的程序跑起来会慢一些，且需要更大的内存，即使是这样，这些代价对于很多生产环境的
+工作来说还是可以接受的。</p>
+</article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+
+  <div><a class="flex align-center" href="https://github.com/shipengqi/golang-learn/commit/44c3ee763ef8b1ef68e8f73c9152c5aa565995fc" title='Last modified by shipengqi | October 7, 2023' target="_blank" rel="noopener">
+      <img src="/golang-learn/svg/calendar.svg" class="book-icon" alt="Calendar" />
+      <span>October 7, 2023</span>
+    </a>
+  </div>
+
+
+
+  <div>
+    <a class="flex align-center" href="https://github.com/shipengqi/golang-learn/edit/master/content/content/docs/concurrent/sync_lock.md" target="_blank" rel="noopener">
+      <img src="/golang-learn/svg/edit.svg" class="book-icon" alt="Edit" />
+      <span>Edit this page</span>
+    </a>
+  </div>
+
+
+</div>
+
+
+
+  <script>(function(){function e(e){const t=window.getSelection(),n=document.createRange();n.selectNodeContents(e),t.removeAllRanges(),t.addRange(n)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script>
+
+
+ 
+        
+      </footer>
+
+      
+  
+  <div class="book-comments">
+
+</div>
+  
+ 
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+    <aside class="book-toc">
+      <div class="book-toc-content">
+        
+  
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#同步和锁">同步和锁</a>
+      <ul>
+        <li><a href="#共享变量">共享变量</a></li>
+        <li><a href="#同步锁">同步锁</a>
+          <ul>
+            <li><a href="#互斥锁">互斥锁</a></li>
+            <li><a href="#读写锁-syncrwmutex">读写锁 <code>sync.RWMutex</code></a></li>
+            <li><a href="#注意事项">注意事项</a></li>
+          </ul>
+        </li>
+        <li><a href="#条件变量-synccond">条件变量 sync.Cond</a>
+          <ul>
+            <li><a href="#条件变量怎样与互斥锁配合使用">条件变量怎样与互斥锁配合使用</a></li>
+            <li><a href="#条件变量的-signal-方法和-broadcast-方法有哪些异同">条件变量的 <code>Signal</code> 方法和 <code>Broadcast</code> 方法有哪些异同</a></li>
+          </ul>
+        </li>
+        <li><a href="#原子操作">原子操作</a></li>
+        <li><a href="#比较并交换操作与交换操作相比有什么不同">比较并交换操作与交换操作相比有什么不同</a>
+          <ul>
+            <li><a href="#aba-问题">ABA 问题</a></li>
+          </ul>
+        </li>
+        <li><a href="#syncatomicvalue"><code>sync/atomic.Value</code></a></li>
+        <li><a href="#syncwaitgroup">sync.WaitGroup</a>
+          <ul>
+            <li><a href="#syncwaitgroup-类型值中计数器的值可以小于-0-吗">sync.WaitGroup 类型值中计数器的值可以小于 0 吗</a></li>
+            <li><a href="#使用注意">使用注意</a></li>
+          </ul>
+        </li>
+        <li><a href="#synconce">sync.Once</a>
+          <ul>
+            <li><a href="#do-方法在功能方面的两个特点">Do 方法在功能方面的两个特点</a></li>
+          </ul>
+        </li>
+        <li><a href="#contextcontext-类型">context.Context 类型</a>
+          <ul>
+            <li><a href="#使用-context-包中的程序实体实现一对多的-goroutine-协作流程">使用 <code>context</code> 包中的程序实体，实现一对多的 goroutine 协作流程</a></li>
+            <li><a href="#contextcontext-类型-1">context.Context 类型</a></li>
+            <li><a href="#可撤销的在-context-包中代表着什么撤销一个-context-值又意味着什么">“可撤销的”在 context 包中代表着什么？“撤销”一个 Context 值又意味着什么？</a></li>
+            <li><a href="#撤销信号是如何在上下文树中传播的">撤销信号是如何在上下文树中传播的</a></li>
+            <li><a href="#怎样通过-context-值携带数据">怎样通过 Context 值携带数据</a></li>
+          </ul>
+        </li>
+        <li><a href="#临时对象池-syncpool">临时对象池 sync.Pool</a></li>
+        <li><a href="#syncmap">sync.Map</a>
+          <ul>
+            <li><a href="#并发安全字典如何做到尽量避免使用锁">并发安全字典如何做到尽量避免使用锁</a></li>
+          </ul>
+        </li>
+        <li><a href="#竞争检查器">竞争检查器</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+ 
+      </div>
+    </aside>
+    
+  </main>
+
+  
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

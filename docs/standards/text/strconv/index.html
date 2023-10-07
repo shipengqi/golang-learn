@@ -1,0 +1,1466 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="strconv#strconv 包包含了一系列字符串与相关的类型转换的函数。
+转换错误处理#strconv 中的错误处理。
+由于将字符串转为其他数据类型可能会出错，strconv 包定义了两个 error 类型的变量：ErrRange 和 ErrSyntax。其中，ErrRange 表示 值超过了类型能表示的最大范围，比如将 &ldquo;128&rdquo; 转为 int8 就会返回这个错误；ErrSyntax 表示语法错误，比如将 &quot;&quot; 转为 int 类型会返 回这个错误。
+然而，在返回错误的时候，通过构造一个 NumError 类型的 error 对象返回。NumError 结构的定义如下：
+// A NumError records a failed conversion. type NumError struct { Func string // the failing function (ParseBool, ParseInt, ParseUint, ParseFloat) Num string // the input Err error // the reason the conversion failed (ErrRange, ErrSyntax) } 该结构记录了转换过程中发生的错误信息。该结构不仅包含了一个 error 类型的成员，记录具体的错误信息，包的实现中，定义了两个便捷函数， 用于构造 NumError 对象：">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#343a40">
+<meta name="color-scheme" content="light dark"><meta property="og:title" content="strconv" />
+<meta property="og:description" content="strconv#strconv 包包含了一系列字符串与相关的类型转换的函数。
+转换错误处理#strconv 中的错误处理。
+由于将字符串转为其他数据类型可能会出错，strconv 包定义了两个 error 类型的变量：ErrRange 和 ErrSyntax。其中，ErrRange 表示 值超过了类型能表示的最大范围，比如将 &ldquo;128&rdquo; 转为 int8 就会返回这个错误；ErrSyntax 表示语法错误，比如将 &quot;&quot; 转为 int 类型会返 回这个错误。
+然而，在返回错误的时候，通过构造一个 NumError 类型的 error 对象返回。NumError 结构的定义如下：
+// A NumError records a failed conversion. type NumError struct { Func string // the failing function (ParseBool, ParseInt, ParseUint, ParseFloat) Num string // the input Err error // the reason the conversion failed (ErrRange, ErrSyntax) } 该结构记录了转换过程中发生的错误信息。该结构不仅包含了一个 error 类型的成员，记录具体的错误信息，包的实现中，定义了两个便捷函数， 用于构造 NumError 对象：" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://shipengqi.github.io/golang-learn/docs/standards/text/strconv/" /><meta property="article:section" content="docs" />
+
+<meta property="article:modified_time" content="2023-10-07T14:03:42+08:00" />
+<title>strconv | Golang Learning</title>
+<link rel="manifest" href="/golang-learn/manifest.json">
+<link rel="icon" href="/golang-learn/favicon.png" >
+<link rel="stylesheet" href="/golang-learn/book.min.33a48f5432973b8ff9a82679d9e45d67f2c15d4399bd2829269455cfe390b5e8.css" integrity="sha256-M6SPVDKXO4/5qCZ52eRdZ/LBXUOZvSgpJpRVz&#43;OQteg=" crossorigin="anonymous">
+  <script defer src="/golang-learn/flexsearch.min.js"></script>
+  <script defer src="/golang-learn/en.search.min.9d19f3cf24b235d59b85d5a7e5dcdc41758b1caac59546ce7f048de6fd1ce8fd.js" integrity="sha256-nRnzzySyNdWbhdWn5dzcQXWLHKrFlUbOfwSN5v0c6P0=" crossorigin="anonymous"></script>
+
+  <script defer src="/golang-learn/sw.min.e9a55528e030e44ecbe1b5a8da7dd8fb40bd282d02dc4574e81b999a6a21bc84.js" integrity="sha256-6aVVKOAw5E7L4bWo2n3Y&#43;0C9KC0C3EV06BuZmmohvIQ=" crossorigin="anonymous"></script>
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+  
+</head>
+<body dir="ltr">
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    <aside class="book-menu">
+      <div class="book-menu-content">
+        
+  <nav>
+<h2 class="book-brand">
+  <a class="flex align-center" href="/golang-learn/"><span>Golang Learning</span>
+  </a>
+</h2>
+
+
+<div class="book-search">
+  <input type="text" id="book-search-input" placeholder="Search" aria-label="Search" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+
+
+
+
+
+
+
+  
+<ul>
+  
+  <li>
+    <a href="https://github.com/shipengqi/golang-learn"  target="_blank" rel="noopener">
+        Github
+      </a>
+  </li>
+  
+  <li>
+    <a href="https://shipengqi.github.io/"  target="_blank" rel="noopener">
+        Blog
+      </a>
+  </li>
+  
+</ul>
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>语言基础</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/env_config/" class="">Go 环境配置</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/build/" class="">Golang 条件编译</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/map/" class="">map</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/slice/" class="">slice</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/scope/" class="">作用域</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/function/" class="">函数</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/package/" class="">包</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/reflect/" class="">反射</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/var/" class="">变量</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/basic_data/" class="">基础据类型</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/constant/" class="">常量</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/json/" class="">序列化</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/pointer/" class="">指针</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/interface/" class="">接口</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/flow/" class="">控制语句</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/array/" class="">数组</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/test/" class="">测试</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/struct/" class="">结构体</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/operator/" class="">运算符</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/error/" class="">错误</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/oop/" class="">面向对象</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>并发编程</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/concurrent/channel/" class="">channel</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/concurrent/goroutine/" class="">goroutine</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/concurrent/sync_lock/" class="">同步和锁</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/concurrent/concurrent/" class="">并发和并行</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>常用命令</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/build/" class="">build</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/doc/" class="">doc</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/env/" class="">env</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/fmt/" class="">fmt</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/get/" class="">get</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/summary/" class="">Go 命令</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/golint/" class="">golint</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/install/" class="">install</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/mod/" class="">mod</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/run/" class="">run</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/test/" class="">test</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/tool/" class="">tool</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/vet/" class="">vet</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>常用标准库</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Data</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/data/big/" class="">big</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/data/container/" class="">container</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/data/math/" class="">math</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/data/sort/" class="">sort</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Database</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/database/sql/" class="">sql</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Io</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/io/bufio/" class="">bufio</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/io/fmt/" class="">fmt 包</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/io/io/" class="">io</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/io/ioutil/" class="">ioutil</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Net</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/net/http/" class="">http</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Os</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/os/filepath/" class="">filepath</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/os/os/" class="">os</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Text</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/text/strconv/" class="active">strconv</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/text/strings/" class="">strings</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/text/unicode/" class="">unicode</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/unsafe/" class="">Unsafe</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/log/" class="">log</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/time/" class="">time</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>实践</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/errors/" class="">Errors</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/gin/" class="">Gin</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/ginkgo/" class="">Ginkgo</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/pprof/" class="">Go PProf</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/trace/" class="">Go trace</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/go-race/" class="">Go 数据竞争检测器</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/go_relative_path/" class="">Go 的相对路径</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/json/" class="">Json Unmarshal</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>底层原理</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/advance/scheduler/" class="">Goroutine 调度器</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/advance/mm/" class="">内存分配</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/advance/gc/" class="">垃圾回收</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script>
+
+
+ 
+      </div>
+    </aside>
+
+    <div class="book-page">
+      <header class="book-header">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/golang-learn/svg/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <strong>strconv</strong>
+
+  <label for="toc-control">
+    
+    <img src="/golang-learn/svg/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#strconv">strconv</a>
+      <ul>
+        <li><a href="#转换错误处理">转换错误处理</a></li>
+        <li><a href="#字符串转为整型">字符串转为整型</a>
+          <ul>
+            <li><a href="#parseint">ParseInt</a></li>
+          </ul>
+        </li>
+        <li><a href="#整型转为字符串">整型转为字符串</a></li>
+        <li><a href="#字符串和布尔值之间的转换">字符串和布尔值之间的转换</a></li>
+        <li><a href="#字符串和浮点数之间的转换">字符串和浮点数之间的转换</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown"><h1 id="strconv">
+  strconv
+  <a class="anchor" href="#strconv">#</a>
+</h1>
+<p><code>strconv</code> 包包含了一系列字符串与相关的类型转换的函数。</p>
+<h2 id="转换错误处理">
+  转换错误处理
+  <a class="anchor" href="#%e8%bd%ac%e6%8d%a2%e9%94%99%e8%af%af%e5%a4%84%e7%90%86">#</a>
+</h2>
+<p><code>strconv</code> 中的错误处理。</p>
+<p>由于将字符串转为其他数据类型可能会出错，<em>strconv</em> 包定义了两个 <em>error</em> 类型的变量：<em>ErrRange</em> 和 <em>ErrSyntax</em>。其中，<em>ErrRange</em> 表示
+值超过了类型能表示的最大范围，比如将 &ldquo;128&rdquo; 转为 <code>int8</code> 就会返回这个错误；<em>ErrSyntax</em> 表示语法错误，比如将 <code>&quot;&quot;</code> 转为 <code>int</code> 类型会返
+回这个错误。</p>
+<p>然而，在返回错误的时候，通过构造一个 <em>NumError</em> 类型的 <em>error</em> 对象返回。<em>NumError</em> 结构的定义如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// A NumError records a failed conversion.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">NumError</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Func</span> <span style="color:#66d9ef">string</span> <span style="color:#75715e">// the failing function (ParseBool, ParseInt, ParseUint, ParseFloat)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">Num</span>  <span style="color:#66d9ef">string</span> <span style="color:#75715e">// the input
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">Err</span>  <span style="color:#66d9ef">error</span>  <span style="color:#75715e">// the reason the conversion failed (ErrRange, ErrSyntax)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span></code></pre></div><p>该结构记录了转换过程中发生的错误信息。该结构不仅包含了一个 <em>error</em> 类型的成员，记录具体的错误信息，包的实现中，定义了两个便捷函数，
+用于构造 <em>NumError</em> 对象：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">syntaxError</span>(<span style="color:#a6e22e">fn</span>, <span style="color:#a6e22e">str</span> <span style="color:#66d9ef">string</span>) <span style="color:#f92672">*</span><span style="color:#a6e22e">NumError</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">NumError</span>{<span style="color:#a6e22e">fn</span>, <span style="color:#a6e22e">str</span>, <span style="color:#a6e22e">ErrSyntax</span>}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">rangeError</span>(<span style="color:#a6e22e">fn</span>, <span style="color:#a6e22e">str</span> <span style="color:#66d9ef">string</span>) <span style="color:#f92672">*</span><span style="color:#a6e22e">NumError</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">NumError</span>{<span style="color:#a6e22e">fn</span>, <span style="color:#a6e22e">str</span>, <span style="color:#a6e22e">ErrRange</span>}
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="字符串转为整型">
+  字符串转为整型
+  <a class="anchor" href="#%e5%ad%97%e7%ac%a6%e4%b8%b2%e8%bd%ac%e4%b8%ba%e6%95%b4%e5%9e%8b">#</a>
+</h2>
+<p>包括三个函数：<code>ParseInt</code>、<code>ParseUint</code> 和 <code>Atoi</code>，函数原型如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// 转为有符号整型
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">ParseInt</span>(<span style="color:#a6e22e">s</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">base</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">bitSize</span> <span style="color:#66d9ef">int</span>) (<span style="color:#a6e22e">i</span> <span style="color:#66d9ef">int64</span>, <span style="color:#a6e22e">err</span> <span style="color:#66d9ef">error</span>)
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 转为无符号整型
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">ParseUint</span>(<span style="color:#a6e22e">s</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">base</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">bitSize</span> <span style="color:#66d9ef">int</span>) (<span style="color:#a6e22e">n</span> <span style="color:#66d9ef">uint64</span>, <span style="color:#a6e22e">err</span> <span style="color:#66d9ef">error</span>)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Atoi</span>(<span style="color:#a6e22e">s</span> <span style="color:#66d9ef">string</span>) (<span style="color:#a6e22e">i</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">err</span> <span style="color:#66d9ef">error</span>)
+</span></span></code></pre></div><p><strong><code>Atoi</code> 内部通过调用 <code>ParseInt(s, 10, 0)</code> 来实现的</strong>。</p>
+<h3 id="parseint">
+  ParseInt
+  <a class="anchor" href="#parseint">#</a>
+</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">ParseInt</span>(<span style="color:#a6e22e">s</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">base</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">bitSize</span> <span style="color:#66d9ef">int</span>) (<span style="color:#a6e22e">i</span> <span style="color:#66d9ef">int64</span>, <span style="color:#a6e22e">err</span> <span style="color:#66d9ef">error</span>)
+</span></span></code></pre></div><p>参数：</p>
+<ul>
+<li><code>base</code> 进制，取值为 <code>2~36</code>，如果 <code>base</code> 的值为 0，则会根据字符串的前缀来确定 <code>base</code> 的值：
+&ldquo;0x&rdquo; 表示 16 进制； &ldquo;0&rdquo; 表示 8 进制；否则就是 10 进制。</li>
+<li><code>bitSize</code> 表示的是整数取值范围，或者说整数的具体类型。取值 0、8、16、32 和 64 分别代表 <code>int</code>、<code>int8</code>、<code>int16</code>、<code>int32</code>
+和 <code>int64</code>。</li>
+</ul>
+<p>Go 中，<code>int/uint</code> 类型，不同系统能表示的范围是不一样的，目前的实现是，32 位系统占 4 个字节；64 位系统占 8 个字节。
+当 <code>bitSize==0</code> 时，应该表示 32 位还是 64 位呢？<code>strconv.IntSize</code> 变量用于获取程序运行的操作系统平台下 int 类型所占的位数。</p>
+<p>下面的代码 n 和 err 的值分别是什么？</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">n</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">strconv</span>.<span style="color:#a6e22e">ParseInt</span>(<span style="color:#e6db74">&#34;128&#34;</span>, <span style="color:#ae81ff">10</span>, <span style="color:#ae81ff">8</span>)
+</span></span></code></pre></div><p>在 <code>ParseInt/ParseUint</code> 的实现中，如果字符串表示的整数超过了 <code>bitSize</code> 参数能够表示的范围，则会返回 <code>ErrRange</code>，同时会
+返回 <code>bitSize</code> 能够表示的最大或最小值。</p>
+<p><code>int8</code> 占 8 位，最高位代表符号位 （1-负号；0-正号）。所以这里 n 是 127。</p>
+<p>另外，<code>ParseInt</code> 返回的是 <code>int64</code>，这是为了能够容纳所有的整型，在实际使用中，可以根据传递的 <code>bitSize</code>，然后将结果转为实
+际需要的类型。</p>
+<h2 id="整型转为字符串">
+  整型转为字符串
+  <a class="anchor" href="#%e6%95%b4%e5%9e%8b%e8%bd%ac%e4%b8%ba%e5%ad%97%e7%ac%a6%e4%b8%b2">#</a>
+</h2>
+<p>遇到需要将字符串和整型连接起来，在 Go 语言中，你需要将整型转为字符串类型，然后才能进行连接。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// 无符号整型转字符串
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">FormatUint</span>(<span style="color:#a6e22e">i</span> <span style="color:#66d9ef">uint64</span>, <span style="color:#a6e22e">base</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">string</span>	
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 有符号整型转字符串
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">FormatInt</span>(<span style="color:#a6e22e">i</span> <span style="color:#66d9ef">int64</span>, <span style="color:#a6e22e">base</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">string</span>	
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Itoa</span>(<span style="color:#a6e22e">i</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">string</span>
+</span></span></code></pre></div><p><strong><code>Itoa</code> 内部直接调用 <em>FormatInt(i, 10)</em> 实现的</strong>。</p>
+<p>除了使用上述方法将整数转为字符串外，经常见到有人使用 <em>fmt</em> 包来做这件事。如：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;%d&#34;</span>, <span style="color:#ae81ff">127</span>)
+</span></span></code></pre></div><p>那么，这两种方式我们该怎么选择呢？我们主要来考察一下性能。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">startTime</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>()
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; <span style="color:#ae81ff">10000</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;%d&#34;</span>, <span style="color:#a6e22e">i</span>)
+</span></span><span style="display:flex;"><span>}   
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>().<span style="color:#a6e22e">Sub</span>(<span style="color:#a6e22e">startTime</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">startTime</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>()
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; <span style="color:#ae81ff">10000</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">strconv</span>.<span style="color:#a6e22e">Itoa</span>(<span style="color:#a6e22e">i</span>)
+</span></span><span style="display:flex;"><span>}   
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>().<span style="color:#a6e22e">Sub</span>(<span style="color:#a6e22e">startTime</span>))
+</span></span></code></pre></div><p><code>Sprintf</code> 的时间是 3.549761ms，而 <code>Itoa</code> 的时间是 848.208us，相差 4 倍多。</p>
+<p><code>Sprintf</code> 性能差些可以预见，因为它接收的是 <code>interface</code>，需要进行反射等操作。建议使用 <code>strconv</code> 包中的方法进行转换。</p>
+<h2 id="字符串和布尔值之间的转换">
+  字符串和布尔值之间的转换
+  <a class="anchor" href="#%e5%ad%97%e7%ac%a6%e4%b8%b2%e5%92%8c%e5%b8%83%e5%b0%94%e5%80%bc%e4%b9%8b%e9%97%b4%e7%9a%84%e8%bd%ac%e6%8d%a2">#</a>
+</h2>
+<p>Go 中字符串和布尔值之间的转换比较简单，主要有三个函数：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// 接受 1, t, T, TRUE, true, True, 0, f, F, FALSE, false, False 等字符串；
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 其他形式的字符串会返回错误
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 返回转换后的布尔值
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">ParseBool</span>(<span style="color:#a6e22e">str</span> <span style="color:#66d9ef">string</span>) (<span style="color:#a6e22e">value</span> <span style="color:#66d9ef">bool</span>, <span style="color:#a6e22e">err</span> <span style="color:#66d9ef">error</span>)
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 直接返回 &#34;true&#34; 或 &#34;false&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">FormatBool</span>(<span style="color:#a6e22e">b</span> <span style="color:#66d9ef">bool</span>) <span style="color:#66d9ef">string</span>
+</span></span></code></pre></div><h2 id="字符串和浮点数之间的转换">
+  字符串和浮点数之间的转换
+  <a class="anchor" href="#%e5%ad%97%e7%ac%a6%e4%b8%b2%e5%92%8c%e6%b5%ae%e7%82%b9%e6%95%b0%e4%b9%8b%e9%97%b4%e7%9a%84%e8%bd%ac%e6%8d%a2">#</a>
+</h2>
+<p>类似的，包含三个函数：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// 无论 bitSize 取值如何，函数返回值类型都是 float64。
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">ParseFloat</span>(<span style="color:#a6e22e">s</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">bitSize</span> <span style="color:#66d9ef">int</span>) (<span style="color:#a6e22e">f</span> <span style="color:#66d9ef">float64</span>, <span style="color:#a6e22e">err</span> <span style="color:#66d9ef">error</span>)
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 第一个参数是输入浮点数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 第二个是浮点数的显示格式（可以是 b, e, E, f, g, G）
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">FormatFloat</span>(<span style="color:#a6e22e">f</span> <span style="color:#66d9ef">float64</span>, <span style="color:#a6e22e">fmt</span> <span style="color:#66d9ef">byte</span>, <span style="color:#a6e22e">prec</span>, <span style="color:#a6e22e">bitSize</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">string</span>
+</span></span></code></pre></div><p><code>prec</code> 表示有效数字（对 <code>fmt='b'</code> 无效），对于 &rsquo;e&rsquo;, &lsquo;E&rsquo; 和 &lsquo;f&rsquo;，有效数字用于小数点之后的位数；
+对于 &lsquo;g&rsquo; 和 &lsquo;G&rsquo;，则是所有的有效数字。例如：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">strconv</span>.<span style="color:#a6e22e">FormatFloat</span>(<span style="color:#ae81ff">1223.13252</span>, <span style="color:#e6db74">&#39;e&#39;</span>, <span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">32</span>)	<span style="color:#75715e">// 结果：1.223e+03
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">strconv</span>.<span style="color:#a6e22e">FormatFloat</span>(<span style="color:#ae81ff">1223.13252</span>, <span style="color:#e6db74">&#39;g&#39;</span>, <span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">32</span>)	<span style="color:#75715e">// 结果：1.22e+03
+</span></span></span></code></pre></div><p>由于浮点数有精度的问题，精度不一样，<code>ParseFloat</code> 和 <code>FormatFloat</code> 可能达不到互逆的效果。如：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">s</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">strconv</span>.<span style="color:#a6e22e">FormatFloat</span>(<span style="color:#ae81ff">1234.5678</span>, <span style="color:#e6db74">&#39;g&#39;</span>, <span style="color:#ae81ff">6</span>, <span style="color:#ae81ff">64</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">strconv</span>.<span style="color:#a6e22e">ParseFloat</span>(<span style="color:#a6e22e">s</span>, <span style="color:#ae81ff">64</span>)
+</span></span></code></pre></div><p>另外，<code>fmt='b'</code> 时，得到的字符串是无法通过 <code>ParseFloat</code> 还原的。</p>
+<p>同样的，基于性能的考虑，应该使用 <code>FormatFloat</code> 而不是 <code>fmt.Sprintf</code>。</p>
+</article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+
+  <div><a class="flex align-center" href="https://github.com/shipengqi/golang-learn/commit/44c3ee763ef8b1ef68e8f73c9152c5aa565995fc" title='Last modified by shipengqi | October 7, 2023' target="_blank" rel="noopener">
+      <img src="/golang-learn/svg/calendar.svg" class="book-icon" alt="Calendar" />
+      <span>October 7, 2023</span>
+    </a>
+  </div>
+
+
+
+  <div>
+    <a class="flex align-center" href="https://github.com/shipengqi/golang-learn/edit/master/content/content/docs/standards/text/strconv.md" target="_blank" rel="noopener">
+      <img src="/golang-learn/svg/edit.svg" class="book-icon" alt="Edit" />
+      <span>Edit this page</span>
+    </a>
+  </div>
+
+
+</div>
+
+
+
+  <script>(function(){function e(e){const t=window.getSelection(),n=document.createRange();n.selectNodeContents(e),t.removeAllRanges(),t.addRange(n)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script>
+
+
+ 
+        
+      </footer>
+
+      
+  
+  <div class="book-comments">
+
+</div>
+  
+ 
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+    <aside class="book-toc">
+      <div class="book-toc-content">
+        
+  
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#strconv">strconv</a>
+      <ul>
+        <li><a href="#转换错误处理">转换错误处理</a></li>
+        <li><a href="#字符串转为整型">字符串转为整型</a>
+          <ul>
+            <li><a href="#parseint">ParseInt</a></li>
+          </ul>
+        </li>
+        <li><a href="#整型转为字符串">整型转为字符串</a></li>
+        <li><a href="#字符串和布尔值之间的转换">字符串和布尔值之间的转换</a></li>
+        <li><a href="#字符串和浮点数之间的转换">字符串和浮点数之间的转换</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+ 
+      </div>
+    </aside>
+    
+  </main>
+
+  
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

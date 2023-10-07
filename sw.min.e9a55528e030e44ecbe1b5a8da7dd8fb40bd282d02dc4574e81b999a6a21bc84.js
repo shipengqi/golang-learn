@@ -1,0 +1,1 @@
+navigator.serviceWorker&&navigator.serviceWorker.register("/golang-learn/sw.js",{scope:"/"})

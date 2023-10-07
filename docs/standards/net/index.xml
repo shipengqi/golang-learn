@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Golang Learning</title>
+    <link>http://shipengqi.github.io/golang-learn/docs/standards/net/</link>
+    <description>Recent content on Golang Learning</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language><atom:link href="http://shipengqi.github.io/golang-learn/docs/standards/net/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>http</title>
+      <link>http://shipengqi.github.io/golang-learn/docs/standards/net/http/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>http://shipengqi.github.io/golang-learn/docs/standards/net/http/</guid>
+      <description>http#net/http 可以用来处理 HTTP 协议，包括 HTTP 服务器和 HTTP 客户端，主要组成：
+Request，HTTP 请求对象 Response，HTTP 响应对象 Client，HTTP 客户端 Server，HTTP 服务端 创建一个 server ：
+package main import ( &amp;#34;fmt&amp;#34; &amp;#34;net/http&amp;#34; ) func MyHandler(w http.ResponseWriter, r *http.Request) { _, _ = fmt.Fprintf(w, &amp;#34;hello&amp;#34;) } func main() { http.HandleFunc(&amp;#34;/&amp;#34;, MyHandler) _ = http.ListenAndServe(&amp;#34;:8080&amp;#34;, nil) } 发送请求：
+resp, err := http.Get(&amp;#34;http://example.com/&amp;#34;) // GET resp, err := http.Post(&amp;#34;http://example.com/&amp;#34;) // POST resp, err := http.PostForm(&amp;#34;http://example.com/&amp;#34;, url.Values{&amp;#34;foo&amp;#34;: &amp;#34;bar&amp;#34;}) // 提交表单 Request#Request 对象是对 http 请求报文的抽象。包括起始行, Headers, Body 等。</description>
+    </item>
+    
+  </channel>
+</rss>

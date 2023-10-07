@@ -1,0 +1,1758 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="os#os 包提供了平台无关的操作系统功能接口。例如 Linux、macOS、Windows 等系统 os 包提供统一的使用接口。
+例子，打开一个文件并从中读取一些数据：
+file, err := os.Open(&#34;file.go&#34;) // For read access. if err != nil { log.Fatal(err) // `open file.go: no such file or directory` } 文件 I/O#在 Go 中，文件描述符封装在 os.File 结构中，通过 File.Fd() 可以获得底层的文件描述符：fd。
+大多数程序都期望能够使用 3 种标准的文件描述符：0- 标准输入；1- 标准输出；2- 标准错误。os 包提供了 3 个 File 对象，分别 代表这 3 种标准描述符：Stdin、Stdout 和 Stderr，它们对应的文件名分别是：/dev/stdin、/dev/stdout 和 /dev/stderr。 注意，这里说的文件名，并不一定存在，比如 Windows 下就没有。
+OpenFile#func OpenFile(name string, flag int, perm FileMode) (*File, error) OpenFile 既能打开一个已经存在的文件，也能创建并打开一个新文件。">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#343a40">
+<meta name="color-scheme" content="light dark"><meta property="og:title" content="os" />
+<meta property="og:description" content="os#os 包提供了平台无关的操作系统功能接口。例如 Linux、macOS、Windows 等系统 os 包提供统一的使用接口。
+例子，打开一个文件并从中读取一些数据：
+file, err := os.Open(&#34;file.go&#34;) // For read access. if err != nil { log.Fatal(err) // `open file.go: no such file or directory` } 文件 I/O#在 Go 中，文件描述符封装在 os.File 结构中，通过 File.Fd() 可以获得底层的文件描述符：fd。
+大多数程序都期望能够使用 3 种标准的文件描述符：0- 标准输入；1- 标准输出；2- 标准错误。os 包提供了 3 个 File 对象，分别 代表这 3 种标准描述符：Stdin、Stdout 和 Stderr，它们对应的文件名分别是：/dev/stdin、/dev/stdout 和 /dev/stderr。 注意，这里说的文件名，并不一定存在，比如 Windows 下就没有。
+OpenFile#func OpenFile(name string, flag int, perm FileMode) (*File, error) OpenFile 既能打开一个已经存在的文件，也能创建并打开一个新文件。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://shipengqi.github.io/golang-learn/docs/standards/os/os/" /><meta property="article:section" content="docs" />
+
+<meta property="article:modified_time" content="2023-10-07T14:03:42+08:00" />
+<title>os | Golang Learning</title>
+<link rel="manifest" href="/golang-learn/manifest.json">
+<link rel="icon" href="/golang-learn/favicon.png" >
+<link rel="stylesheet" href="/golang-learn/book.min.33a48f5432973b8ff9a82679d9e45d67f2c15d4399bd2829269455cfe390b5e8.css" integrity="sha256-M6SPVDKXO4/5qCZ52eRdZ/LBXUOZvSgpJpRVz&#43;OQteg=" crossorigin="anonymous">
+  <script defer src="/golang-learn/flexsearch.min.js"></script>
+  <script defer src="/golang-learn/en.search.min.9d19f3cf24b235d59b85d5a7e5dcdc41758b1caac59546ce7f048de6fd1ce8fd.js" integrity="sha256-nRnzzySyNdWbhdWn5dzcQXWLHKrFlUbOfwSN5v0c6P0=" crossorigin="anonymous"></script>
+
+  <script defer src="/golang-learn/sw.min.e9a55528e030e44ecbe1b5a8da7dd8fb40bd282d02dc4574e81b999a6a21bc84.js" integrity="sha256-6aVVKOAw5E7L4bWo2n3Y&#43;0C9KC0C3EV06BuZmmohvIQ=" crossorigin="anonymous"></script>
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+  
+</head>
+<body dir="ltr">
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    <aside class="book-menu">
+      <div class="book-menu-content">
+        
+  <nav>
+<h2 class="book-brand">
+  <a class="flex align-center" href="/golang-learn/"><span>Golang Learning</span>
+  </a>
+</h2>
+
+
+<div class="book-search">
+  <input type="text" id="book-search-input" placeholder="Search" aria-label="Search" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+
+
+
+
+
+
+
+  
+<ul>
+  
+  <li>
+    <a href="https://github.com/shipengqi/golang-learn"  target="_blank" rel="noopener">
+        Github
+      </a>
+  </li>
+  
+  <li>
+    <a href="https://shipengqi.github.io/"  target="_blank" rel="noopener">
+        Blog
+      </a>
+  </li>
+  
+</ul>
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>语言基础</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/env_config/" class="">Go 环境配置</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/build/" class="">Golang 条件编译</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/map/" class="">map</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/slice/" class="">slice</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/scope/" class="">作用域</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/function/" class="">函数</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/package/" class="">包</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/reflect/" class="">反射</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/var/" class="">变量</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/basic_data/" class="">基础据类型</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/constant/" class="">常量</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/json/" class="">序列化</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/pointer/" class="">指针</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/interface/" class="">接口</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/flow/" class="">控制语句</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/array/" class="">数组</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/test/" class="">测试</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/struct/" class="">结构体</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/operator/" class="">运算符</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/error/" class="">错误</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/oop/" class="">面向对象</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>并发编程</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/concurrent/channel/" class="">channel</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/concurrent/goroutine/" class="">goroutine</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/concurrent/sync_lock/" class="">同步和锁</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/concurrent/concurrent/" class="">并发和并行</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>常用命令</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/build/" class="">build</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/doc/" class="">doc</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/env/" class="">env</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/fmt/" class="">fmt</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/get/" class="">get</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/summary/" class="">Go 命令</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/golint/" class="">golint</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/install/" class="">install</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/mod/" class="">mod</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/run/" class="">run</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/test/" class="">test</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/tool/" class="">tool</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/vet/" class="">vet</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>常用标准库</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Data</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/data/big/" class="">big</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/data/container/" class="">container</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/data/math/" class="">math</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/data/sort/" class="">sort</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Database</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/database/sql/" class="">sql</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Io</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/io/bufio/" class="">bufio</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/io/fmt/" class="">fmt 包</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/io/io/" class="">io</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/io/ioutil/" class="">ioutil</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Net</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/net/http/" class="">http</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Os</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/os/filepath/" class="">filepath</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/os/os/" class="active">os</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Text</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/text/strconv/" class="">strconv</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/text/strings/" class="">strings</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/text/unicode/" class="">unicode</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/unsafe/" class="">Unsafe</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/log/" class="">log</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/time/" class="">time</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>实践</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/errors/" class="">Errors</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/gin/" class="">Gin</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/ginkgo/" class="">Ginkgo</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/pprof/" class="">Go PProf</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/trace/" class="">Go trace</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/go-race/" class="">Go 数据竞争检测器</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/go_relative_path/" class="">Go 的相对路径</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/json/" class="">Json Unmarshal</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>底层原理</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/advance/scheduler/" class="">Goroutine 调度器</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/advance/mm/" class="">内存分配</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/advance/gc/" class="">垃圾回收</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script>
+
+
+ 
+      </div>
+    </aside>
+
+    <div class="book-page">
+      <header class="book-header">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/golang-learn/svg/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <strong>os</strong>
+
+  <label for="toc-control">
+    
+    <img src="/golang-learn/svg/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#os">os</a>
+      <ul>
+        <li><a href="#文件-io">文件 I/O</a>
+          <ul>
+            <li><a href="#openfile">OpenFile</a></li>
+            <li><a href="#read">Read</a></li>
+            <li><a href="#write">Write</a></li>
+            <li><a href="#close">Close</a></li>
+            <li><a href="#seek">Seek</a></li>
+          </ul>
+        </li>
+        <li><a href="#截断文件">截断文件</a></li>
+        <li><a href="#文件属性">文件属性</a>
+          <ul>
+            <li><a href="#改变文件时间戳">改变文件时间戳</a></li>
+            <li><a href="#文件属主">文件属主</a></li>
+            <li><a href="#文件权限">文件权限</a></li>
+          </ul>
+        </li>
+        <li><a href="#目录与链接">目录与链接</a>
+          <ul>
+            <li><a href="#创建和移除硬链接">创建和移除（硬）链接</a></li>
+            <li><a href="#更改文件名">更改文件名</a></li>
+            <li><a href="#使用符号链接">使用符号链接</a></li>
+            <li><a href="#创建和移除目录">创建和移除目录</a></li>
+            <li><a href="#读目录">读目录</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown"><h1 id="os">
+  os
+  <a class="anchor" href="#os">#</a>
+</h1>
+<p><code>os</code> 包提供了平台无关的操作系统功能接口。例如 Linux、macOS、Windows 等系统 <code>os</code> 包提供统一的使用接口。</p>
+<p>例子，打开一个文件并从中读取一些数据：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">file</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Open</span>(<span style="color:#e6db74">&#34;file.go&#34;</span>) <span style="color:#75715e">// For read access.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatal</span>(<span style="color:#a6e22e">err</span>) <span style="color:#75715e">// `open file.go: no such file or directory`
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span></code></pre></div><h2 id="文件-io">
+  文件 I/O
+  <a class="anchor" href="#%e6%96%87%e4%bb%b6-io">#</a>
+</h2>
+<p>在 Go 中，文件描述符封装在 <code>os.File</code> 结构中，通过 <code>File.Fd()</code> 可以获得底层的文件描述符：<code>fd</code>。</p>
+<p>大多数程序都期望能够使用 3 种标准的文件描述符：0- 标准输入；1- 标准输出；2- 标准错误。<code>os</code> 包提供了 3 个 <code>File</code> 对象，分别
+代表这 3 种标准描述符：<code>Stdin</code>、<code>Stdout</code> 和 <code>Stderr</code>，它们对应的文件名分别是：<code>/dev/stdin</code>、<code>/dev/stdout</code> 和 <code>/dev/stderr</code>。
+注意，这里说的文件名，并不一定存在，比如 Windows 下就没有。</p>
+<h3 id="openfile">
+  OpenFile
+  <a class="anchor" href="#openfile">#</a>
+</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">OpenFile</span>(<span style="color:#a6e22e">name</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">flag</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">perm</span> <span style="color:#a6e22e">FileMode</span>) (<span style="color:#f92672">*</span><span style="color:#a6e22e">File</span>, <span style="color:#66d9ef">error</span>)
+</span></span></code></pre></div><p><code>OpenFile</code> 既能打开一个已经存在的文件，也能创建并打开一个新文件。</p>
+<p><code>OpenFile</code> 是一个更一般性的文件打开函数，大多数调用者都应用 <code>Open</code> 或 <code>Create</code> 代替本函数。它会使用指定的选项（如 <code>O_RDONLY</code> 等）、
+指定的模式（如 <code>0666</code> 等）打开指定名称的文件。如果操作成功，返回的文件对象可用于 I/O。如果出错，错误底层类型是 <code>*PathError</code>。</p>
+<p>要打开的文件由参数 <code>name</code> 指定，它可以是绝对路径或相对路径（相对于进程当前工作目录），也可以是一个符号链接（会对其进行解引用）。</p>
+<p>位掩码参数 <code>flag</code> 用于指定文件的访问模式，可用的值在 <code>os</code> 中定义为常量（以下值并非所有操作系统都可用）：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> (
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">O_RDONLY</span> <span style="color:#66d9ef">int</span> = <span style="color:#a6e22e">syscall</span>.<span style="color:#a6e22e">O_RDONLY</span> <span style="color:#75715e">// 只读模式打开文件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">O_WRONLY</span> <span style="color:#66d9ef">int</span> = <span style="color:#a6e22e">syscall</span>.<span style="color:#a6e22e">O_WRONLY</span> <span style="color:#75715e">// 只写模式打开文件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">O_RDWR</span>   <span style="color:#66d9ef">int</span> = <span style="color:#a6e22e">syscall</span>.<span style="color:#a6e22e">O_RDWR</span>   <span style="color:#75715e">// 读写模式打开文件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">O_APPEND</span> <span style="color:#66d9ef">int</span> = <span style="color:#a6e22e">syscall</span>.<span style="color:#a6e22e">O_APPEND</span> <span style="color:#75715e">// 写操作时将数据附加到文件尾部
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">O_CREATE</span> <span style="color:#66d9ef">int</span> = <span style="color:#a6e22e">syscall</span>.<span style="color:#a6e22e">O_CREAT</span>  <span style="color:#75715e">// 如果不存在将创建一个新文件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">O_EXCL</span>   <span style="color:#66d9ef">int</span> = <span style="color:#a6e22e">syscall</span>.<span style="color:#a6e22e">O_EXCL</span>   <span style="color:#75715e">// 和 O_CREATE 配合使用，文件必须不存在
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">O_SYNC</span>   <span style="color:#66d9ef">int</span> = <span style="color:#a6e22e">syscall</span>.<span style="color:#a6e22e">O_SYNC</span>   <span style="color:#75715e">// 打开文件用于同步 I/O
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">O_TRUNC</span>  <span style="color:#66d9ef">int</span> = <span style="color:#a6e22e">syscall</span>.<span style="color:#a6e22e">O_TRUNC</span>  <span style="color:#75715e">// 如果可能，打开时清空文件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>)
+</span></span></code></pre></div><p>其中，<code>O_RDONLY</code>、<code>O_WRONLY</code>、<code>O_RDWR</code> 只指定一个，剩下的通过 <code>|</code> 操作符来指定。该函数内部会给 <code>flags</code> 加上 <code>syscall.O_CLOEXEC</code>，
+在 <code>fork</code> 子进程时会关闭通过 <code>OpenFile</code> 打开的文件，即子进程不会重用该文件描述符。</p>
+<p>位掩码参数 <code>perm</code> 指定了文件的模式和权限位，类型是 <code>os.FileMode</code>，文件模式位常量定义在 <code>os</code> 中：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> (
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 单字符是被 String 方法用于格式化的属性缩写。
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">ModeDir</span>        <span style="color:#a6e22e">FileMode</span> = <span style="color:#ae81ff">1</span> <span style="color:#f92672">&lt;&lt;</span> (<span style="color:#ae81ff">32</span> <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">-</span> <span style="color:#66d9ef">iota</span>) <span style="color:#75715e">// d: 目录
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">ModeAppend</span>                                     <span style="color:#75715e">// a: 只能写入，且只能写入到末尾
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">ModeExclusive</span>                                  <span style="color:#75715e">// l: 用于执行
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">ModeTemporary</span>                                  <span style="color:#75715e">// T: 临时文件（非备份文件）
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">ModeSymlink</span>                                    <span style="color:#75715e">// L: 符号链接（不是快捷方式文件）
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">ModeDevice</span>                                     <span style="color:#75715e">// D: 设备
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">ModeNamedPipe</span>                                  <span style="color:#75715e">// p: 命名管道（FIFO）
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">ModeSocket</span>                                     <span style="color:#75715e">// S: Unix 域 socket
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">ModeSetuid</span>                                     <span style="color:#75715e">// u: 表示文件具有其创建者用户 id 权限
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">ModeSetgid</span>                                     <span style="color:#75715e">// g: 表示文件具有其创建者组 id 的权限
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">ModeCharDevice</span>                                 <span style="color:#75715e">// c: 字符设备，需已设置 ModeDevice
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">ModeSticky</span>                                     <span style="color:#75715e">// t: 只有 root/ 创建者能删除 / 移动文件
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 覆盖所有类型位（用于通过 &amp; 获取类型位），对普通文件，所有这些位都不应被设置
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">ModeType</span> = <span style="color:#a6e22e">ModeDir</span> | <span style="color:#a6e22e">ModeSymlink</span> | <span style="color:#a6e22e">ModeNamedPipe</span> | <span style="color:#a6e22e">ModeSocket</span> | <span style="color:#a6e22e">ModeDevice</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">ModePerm</span> <span style="color:#a6e22e">FileMode</span> = <span style="color:#ae81ff">0777</span> <span style="color:#75715e">// 覆盖所有 Unix 权限位（用于通过 &amp; 获取类型位）
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>)
+</span></span></code></pre></div><p>以上常量在所有操作系统都有相同的含义（可用时），因此文件的信息可以在不同的操作系统之间安全的移植。不是所有的位都能用于所有的系统，
+唯一共有的是用于表示目录的 <code>ModeDir</code> 位。</p>
+<p>以上这些被定义的位是 <code>FileMode</code> 最重要的位。另外 9 个位（权限位）为标准 Unix <code>rwxrwxrwx</code> 权限（所有人都可读、写、运行）。</p>
+<p><code>FileMode</code> 还定义了几个方法，用于判断文件类型的 <code>IsDir()</code> 和 <code>IsRegular()</code>，用于获取权限的 <code>Perm()</code>。</p>
+<p>返回的 <code>error</code>，具体实现是 <code>*os.PathError</code>，它会记录具体操作、文件路径和错误原因。</p>
+<p>另外，在 <code>OpenFile</code> 内部会调用 <code>NewFile</code>，来得到 <code>File</code> 对象。</p>
+<p><strong>使用方法</strong></p>
+<p>打开一个文件，一般通过 <code>Open</code> 或 <code>Create</code>，这两个函数的实现。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Open</span>(<span style="color:#a6e22e">name</span> <span style="color:#66d9ef">string</span>) (<span style="color:#f92672">*</span><span style="color:#a6e22e">File</span>, <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">OpenFile</span>(<span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">O_RDONLY</span>, <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Create</span>(<span style="color:#a6e22e">name</span> <span style="color:#66d9ef">string</span>) (<span style="color:#f92672">*</span><span style="color:#a6e22e">File</span>, <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">OpenFile</span>(<span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">O_RDWR</span>|<span style="color:#a6e22e">O_CREATE</span>|<span style="color:#a6e22e">O_TRUNC</span>, <span style="color:#ae81ff">0666</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="read">
+  Read
+  <a class="anchor" href="#read">#</a>
+</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">f</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">File</span>) <span style="color:#a6e22e">Read</span>(<span style="color:#a6e22e">b</span> []<span style="color:#66d9ef">byte</span>) (<span style="color:#a6e22e">n</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">err</span> <span style="color:#66d9ef">error</span>)
+</span></span></code></pre></div><p><code>Read</code> 方法从 <code>f</code> 中读取最多 <code>len(b)</code> 字节数据并写入 <code>b</code>。它返回读取的字节数和可能遇到的任何错误。文件终止标志是读取 0 个字节且返回
+值 <code>err</code> 为 <code>io.EOF</code>。</p>
+<p>对比下 <code>ReadAt</code> 方法：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">f</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">File</span>) <span style="color:#a6e22e">ReadAt</span>(<span style="color:#a6e22e">b</span> []<span style="color:#66d9ef">byte</span>, <span style="color:#a6e22e">off</span> <span style="color:#66d9ef">int64</span>) (<span style="color:#a6e22e">n</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">err</span> <span style="color:#66d9ef">error</span>)
+</span></span></code></pre></div><p><code>ReadAt</code> 从指定的位置（相对于文件开始位置）读取长度为 <code>len(b)</code> 个字节数据并写入 <code>b</code>。它返回读取的字节数和可能遇到的任何错误。
+当 <code>n&lt;len(b)</code> 时，本方法总是会返回错误；如果是因为到达文件结尾，返回值 <code>err</code> 会是 <code>io.EOF</code>。它对应的系统调用是 <code>pread</code>。</p>
+<p><strong><code>Read</code> 和 <code>ReadAt</code> 的区别</strong>：前者从文件当前偏移量处读，且会改变文件当前的偏移量；而后者从 <code>off</code> 指定的位置开始读，且<strong>不会改变</strong>文件
+当前偏移量。</p>
+<h3 id="write">
+  Write
+  <a class="anchor" href="#write">#</a>
+</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">f</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">File</span>) <span style="color:#a6e22e">Write</span>(<span style="color:#a6e22e">b</span> []<span style="color:#66d9ef">byte</span>) (<span style="color:#a6e22e">n</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">err</span> <span style="color:#66d9ef">error</span>)
+</span></span></code></pre></div><p><code>Write</code> 向文件中写入 <code>len(b)</code> 字节数据。它返回写入的字节数和可能遇到的任何错误。如果返回值 <code>n != len(b)</code>，本方法会返回一个 <strong>非 nil</strong>
+的错误。</p>
+<p><code>Write</code> 与 <code>WriteAt</code> 的区别同 <code>Read</code> 与 <code>ReadAt</code> 的区别一样。为了方便，还提供了 <code>WriteString</code> 方法，它实际是对 <code>Write</code> 的封装。</p>
+<p>注意：<code>Write</code> 调用成功并不能保证数据已经写入磁盘，因为内核会缓存磁盘的 I/O 操作。如果希望立刻将数据写入磁盘（一般场景不建议这么做，因为会
+影响性能），有两种办法：</p>
+<ol>
+<li>打开文件时指定 <code>os.O_SYNC</code>；</li>
+<li>调用 <code>File.Sync()</code> 方法。</li>
+</ol>
+<p>说明：<code>File.Sync()</code> 底层调用的是 <code>fsync</code> 系统调用，这会将数据和元数据都刷到磁盘；如果只想刷数据到磁盘（比如，文件大小没变，只是变了文件
+数据），需要自己封装，调用 <code>fdatasync</code> 系统调用。（<code>syscall.Fdatasync</code>）</p>
+<h3 id="close">
+  Close
+  <a class="anchor" href="#close">#</a>
+</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">f</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">File</span>) <span style="color:#a6e22e">Close</span>() <span style="color:#66d9ef">error</span>
+</span></span></code></pre></div><p><code>close()</code> 系统调用关闭一个打开的文件描述符，并将其释放回调用进程，供该进程继续使用。当进程终止时，将自动关闭其已打开的所有文件描述符。</p>
+<p><code>os.File.Close()</code> 是对 <code>close()</code> 的封装。文件描述符是资源，Go 的 gc 是针对内存的，并不会自动回收资源，如果不关闭文件描述符，
+长期运行的服务可能会把文件描述符耗尽。</p>
+<p>所以，通常的写法如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">file</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Open</span>(<span style="color:#e6db74">&#34;/tmp/studygolang.txt&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 错误处理，一般会阻止程序往下执行
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">file</span>.<span style="color:#a6e22e">Close</span>()
+</span></span></code></pre></div><p><strong>关于返回值 <code>error</code></strong></p>
+<p>以下两种情况会导致 <code>Close</code> 返回错误：</p>
+<ol>
+<li>关闭一个未打开的文件；</li>
+<li>两次关闭同一个文件；</li>
+</ol>
+<p>通常，不会去检查 <code>Close</code> 的错误。</p>
+<h3 id="seek">
+  Seek
+  <a class="anchor" href="#seek">#</a>
+</h3>
+<p>对于每个打开的文件，系统内核会记录其文件偏移量，有时也将文件偏移量称为读写偏移量或指针。文件偏移量是指执行下一个 <code>Read</code> 或 <code>Write</code> 操作
+的文件真实位置，会以相对于文件头部起始点的文件当前位置来表示。文件第一个字节的偏移量为 0。</p>
+<p>文件打开时，会将文件偏移量设置为指向文件开始，以后每次 <code>Read</code> 或 <code>Write</code> 调用将自动对其进行调整，以指向已读或已写数据后的下一个字节。因
+此，连续的 <code>Read</code> 和 <code>Write</code> 调用将按顺序递进，对文件进行操作。</p>
+<p><code>Seek</code> 可以调整文件偏移量：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">f</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">File</span>) <span style="color:#a6e22e">Seek</span>(<span style="color:#a6e22e">offset</span> <span style="color:#66d9ef">int64</span>, <span style="color:#a6e22e">whence</span> <span style="color:#66d9ef">int</span>) (<span style="color:#a6e22e">ret</span> <span style="color:#66d9ef">int64</span>, <span style="color:#a6e22e">err</span> <span style="color:#66d9ef">error</span>)
+</span></span></code></pre></div><p><code>Seek</code> 设置下一次读/写的位置。<code>offset</code> 为相对偏移量，而 <code>whence</code> 决定相对位置：0 为相对文件开头，1 为相对当前位置，2 为相对文件结尾。它
+返回新的偏移量（相对开头）和可能的错误。</p>
+<p>注意：<code>Seek</code> 只是调整内核中与文件描述符相关的文件偏移量记录，并没有访问任何物理设备。</p>
+<p>一些 <code>Seek</code> 的使用例子（file 为打开的文件对象），注释说明了将文件偏移量移动到的具体位置：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">file</span>.<span style="color:#a6e22e">Seek</span>(<span style="color:#ae81ff">0</span>, <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">SEEK_SET</span>)	<span style="color:#75715e">// 文件开始处
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">file</span>.<span style="color:#a6e22e">Seek</span>(<span style="color:#ae81ff">0</span>, <span style="color:#a6e22e">SEEK_END</span>)		<span style="color:#75715e">// 文件结尾处的下一个字节
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">file</span>.<span style="color:#a6e22e">Seek</span>(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, <span style="color:#a6e22e">SEEK_END</span>)		<span style="color:#75715e">// 文件最后一个字节
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">file</span>.<span style="color:#a6e22e">Seek</span>(<span style="color:#f92672">-</span><span style="color:#ae81ff">10</span>, <span style="color:#a6e22e">SEEK_CUR</span>) 	<span style="color:#75715e">// 当前位置前 10 个字节
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">file</span>.<span style="color:#a6e22e">Seek</span>(<span style="color:#ae81ff">1000</span>, <span style="color:#a6e22e">SEEK_END</span>)	<span style="color:#75715e">// 文件结尾处的下 1001 个字节
+</span></span></span></code></pre></div><p>最后一个例子在文件中会产生“空洞”。</p>
+<p><code>Seek</code> 对应系统调用 <code>lseek</code>。该系统调用并不适用于所有类型，不允许将 <code>lseek </code> 应用于管道、FIFO、socket 或 终端。</p>
+<h2 id="截断文件">
+  截断文件
+  <a class="anchor" href="#%e6%88%aa%e6%96%ad%e6%96%87%e4%bb%b6">#</a>
+</h2>
+<p><code>trucate</code> 和 <code>ftruncate</code> 系统调用将文件大小设置为 <code>size</code> 参数指定的值；Go 语言中相应的包装函数是 <code>os.Truncate</code> 和
+<code>os.File.Truncate</code>。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Truncate</span>(<span style="color:#a6e22e">name</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">size</span> <span style="color:#66d9ef">int64</span>) <span style="color:#66d9ef">error</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">f</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">File</span>) <span style="color:#a6e22e">Truncate</span>(<span style="color:#a6e22e">size</span> <span style="color:#66d9ef">int64</span>) <span style="color:#66d9ef">error</span>
+</span></span></code></pre></div><p>如果文件当前长度大于参数 <code>size</code>，调用将丢弃超出部分，若小于参数 <code>size</code>，调用将在文件尾部添加一系列空字节或是一个文件空洞。</p>
+<p>它们之间的区别在于如何指定操作文件：</p>
+<ol>
+<li><code>Truncate</code> 以路径名称字符串来指定文件，并要求可访问该文件（即对组成路径名的各目录拥有可执行 (x) 权限），且对文件拥有写权限。
+若文件名为符号链接，那么调用将对其进行解引用。</li>
+<li>很明显，调用 <code>File.Truncate</code> 前，需要先以可写方式打开操作文件，该方法不会修改文件偏移量。</li>
+</ol>
+<h2 id="文件属性">
+  文件属性
+  <a class="anchor" href="#%e6%96%87%e4%bb%b6%e5%b1%9e%e6%80%a7">#</a>
+</h2>
+<p>文件属性，也即文件元数据。在 Go 中，文件属性具体信息通过 <code>os.FileInfo</code> 接口获取。函数 <code>Stat</code>、<code>Lstat</code> 和 <code>File.Stat</code> 可以得到该接口
+的实例。这三个函数对应三个系统调用：<code>stat</code>、<code>lstat</code> 和 <code>fstat</code>。</p>
+<p>这三个函数的区别：</p>
+<ol>
+<li><code>stat</code> 会返回所命名文件的相关信息。</li>
+<li><code>lstat</code> 与 <code>stat</code> 类似，区别在于如果文件是符号链接，那么所返回的信息针对的是符号链接自身（而非符号链接所指向的文件）。</li>
+<li><code>fstat</code> 则会返回由某个打开文件描述符（Go 中则是当前打开文件 File）所指代文件的相关信息。</li>
+</ol>
+<p><code>Stat</code> 和 <code>Lstat</code> 无需对其所操作的文件本身拥有任何权限，但针对指定 <code>name </code>的父目录要有执行（搜索）权限。而只要 <code>File</code> 对象 <code>ok</code>，
+<code>File.Stat</code> 总是成功。</p>
+<p><code>FileInfo</code> 接口如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">FileInfo</span> <span style="color:#66d9ef">interface</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Name</span>() <span style="color:#66d9ef">string</span>       <span style="color:#75715e">// 文件的名字（不含扩展名）
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">Size</span>() <span style="color:#66d9ef">int64</span>        <span style="color:#75715e">// 普通文件返回值表示其大小；其他文件的返回值含义各系统不同
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">Mode</span>() <span style="color:#a6e22e">FileMode</span>     <span style="color:#75715e">// 文件的模式位
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">ModTime</span>() <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Time</span> <span style="color:#75715e">// 文件的修改时间
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">IsDir</span>() <span style="color:#66d9ef">bool</span>        <span style="color:#75715e">// 等价于 Mode().IsDir()
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">Sys</span>() <span style="color:#66d9ef">interface</span>{}   <span style="color:#75715e">// 底层数据来源（可以返回 nil）
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span></code></pre></div><p><code>Sys()</code> 底层数据的 C 语言 结构 <code>statbuf</code> 格式如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">stat</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">dev_t</span>	<span style="color:#a6e22e">st_dev</span>;	<span style="color:#75715e">// 设备 ID
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">ino_t</span>	<span style="color:#a6e22e">st_ino</span>;	<span style="color:#75715e">// 文件 i 节点号
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">mode_t</span>	<span style="color:#a6e22e">st_mode</span>;	<span style="color:#75715e">// 位掩码，文件类型和文件权限
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">nlink_t</span>	<span style="color:#a6e22e">st_nlink</span>;	<span style="color:#75715e">// 硬链接数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">uid_t</span>	<span style="color:#a6e22e">st_uid</span>;	<span style="color:#75715e">// 文件属主，用户 ID
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">gid_t</span>	<span style="color:#a6e22e">st_gid</span>;	<span style="color:#75715e">// 文件属组，组 ID
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">dev_t</span>	<span style="color:#a6e22e">st_rdev</span>;	<span style="color:#75715e">// 如果针对设备 i 节点，则此字段包含主、辅 ID
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">off_t</span>	<span style="color:#a6e22e">st_size</span>;	<span style="color:#75715e">// 常规文件，则是文件字节数；符号链接，则是链接所指路径名的长度，字节为单位；对于共享内存对象，则是对象大小
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">blksize_t</span>	<span style="color:#a6e22e">st_blsize</span>;	<span style="color:#75715e">// 分配给文件的总块数，块大小为 512 字节
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">blkcnt_t</span>	<span style="color:#a6e22e">st_blocks</span>;	<span style="color:#75715e">// 实际分配给文件的磁盘块数量
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">time_t</span>	<span style="color:#a6e22e">st_atime</span>;		<span style="color:#75715e">// 对文件上次访问时间
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">time_t</span>	<span style="color:#a6e22e">st_mtime</span>;		<span style="color:#75715e">// 对文件上次修改时间
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">time_t</span>	<span style="color:#a6e22e">st_ctime</span>;		<span style="color:#75715e">// 文件状态发生改变的上次时间
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span></code></pre></div><p>Go 中 <code>syscal.Stat_t</code> 与该结构对应。</p>
+<p>如果我们要获取 <code>FileInfo</code> 接口没法直接返回的信息，比如想获取文件的上次访问时间，示例如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">fileInfo</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Stat</span>(<span style="color:#e6db74">&#34;test.log&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatal</span>(<span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">sys</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">fileInfo</span>.<span style="color:#a6e22e">Sys</span>()
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">stat</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">sys</span>.(<span style="color:#f92672">*</span><span style="color:#a6e22e">syscall</span>.<span style="color:#a6e22e">Stat_t</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Unix</span>(<span style="color:#a6e22e">stat</span>.<span style="color:#a6e22e">Atimespec</span>.<span style="color:#a6e22e">Unix</span>()))
+</span></span></code></pre></div><h3 id="改变文件时间戳">
+  改变文件时间戳
+  <a class="anchor" href="#%e6%94%b9%e5%8f%98%e6%96%87%e4%bb%b6%e6%97%b6%e9%97%b4%e6%88%b3">#</a>
+</h3>
+<p>可以显式改变文件的访问时间和修改时间。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Chtimes</span>(<span style="color:#a6e22e">name</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">atime</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Time</span>, <span style="color:#a6e22e">mtime</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Time</span>) <span style="color:#66d9ef">error</span>
+</span></span></code></pre></div><p><code>Chtimes</code> 修改 <code>name</code> 指定的文件对象的访问时间和修改时间，类似 Unix 的 <code>utime()</code> 或 <code>utimes()</code> 函数。底层的文件系统可能会截断/舍入
+时间单位到更低的精确度。如果出错，会返回 <code>*PathError</code> 类型的错误。在 Unix 中，底层实现会调用 <code>utimenstat()</code>，它提供纳秒级别的精度。</p>
+<h3 id="文件属主">
+  文件属主
+  <a class="anchor" href="#%e6%96%87%e4%bb%b6%e5%b1%9e%e4%b8%bb">#</a>
+</h3>
+<p>每个文件都有一个与之关联的用户 ID（UID）和组 ID（GID），籍此可以判定文件的属主和属组。系统调用 <code>chown</code>、<code>lchown</code> 和 <code>fchown</code> 可用来
+改变文件的属主和属组，Go 中对应的函数或方法：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Chown</span>(<span style="color:#a6e22e">name</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">uid</span>, <span style="color:#a6e22e">gid</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">error</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Lchown</span>(<span style="color:#a6e22e">name</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">uid</span>, <span style="color:#a6e22e">gid</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">error</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">f</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">File</span>) <span style="color:#a6e22e">Chown</span>(<span style="color:#a6e22e">uid</span>, <span style="color:#a6e22e">gid</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">error</span>
+</span></span></code></pre></div><p>它们的区别和上文提到的 <code>Stat</code> 相关函数类似。</p>
+<h3 id="文件权限">
+  文件权限
+  <a class="anchor" href="#%e6%96%87%e4%bb%b6%e6%9d%83%e9%99%90">#</a>
+</h3>
+<p>这里介绍是应用于文件和目录的权限方案，尽管此处讨论的权限主要是针对普通文件和目录，但其规则可适用于所有文件类型，包括设备文件、FIFO 以
+及 Unix 域套接字等。</p>
+<h4 id="相关函数或方法">
+  相关函数或方法
+  <a class="anchor" href="#%e7%9b%b8%e5%85%b3%e5%87%bd%e6%95%b0%e6%88%96%e6%96%b9%e6%b3%95">#</a>
+</h4>
+<p>在文件相关操作报错时，可以通过 <code>os.IsPermission</code> 检查是否是权限的问题。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">IsPermission</span>(<span style="color:#a6e22e">err</span> <span style="color:#66d9ef">error</span>) <span style="color:#66d9ef">bool</span>
+</span></span></code></pre></div><p>返回一个布尔值说明该错误是否表示因权限不足要求被拒绝。<code>ErrPermission</code> 和一些系统调用错误会使它返回真。</p>
+<p>另外，<code>syscall.Access</code> 可以获取文件的权限。这对应系统调用 <code>access</code>。</p>
+<h4 id="sticky-位">
+  Sticky 位
+  <a class="anchor" href="#sticky-%e4%bd%8d">#</a>
+</h4>
+<p>除了 9 位用来表明属主、属组和其他用户的权限外，文件权限掩码还另设有 3 个附加位，分别是
+<code>set-user-ID</code>(bit 04000)、<code>set-group-ID</code>(bit 02000) 和 <code>sticky</code>(bit 01000) 位。</p>
+<p>Sticky 位一般用于目录，起限制删除位的作用，表明仅当非特权进程具有对目录的写权限，且为文件或目录的属主时，才能对目录下的文件进行删除和重命名操
+作。根据这个机制来创建为多个用户共享的一个目录，各个用户可在其下创建或删除属于自己的文件，但不能删除隶属于其他用户的文件。<code>/tmp</code> 目录就设
+置了 sticky 位，正是出于这个原因。</p>
+<p><code>chmod</code> 命令或系统调用可以设置文件的 sticky 位。若对某文件设置了 sticky 位，则 <code>ls -l</code> 显示文件时，会在其他用户执行权限字段上看到字
+母 t（有执行权限时） 或 T（无执行权限时）。</p>
+<p><code>os.Chmod</code> 和 <code>os.File.Chmod</code> 可以修改文件权限（包括 sticky 位），分别对应系统调用 <code>chmod</code> 和 <code>fchmod</code>。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">file</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Create</span>(<span style="color:#e6db74">&#34;studygolang.txt&#34;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatal</span>(<span style="color:#e6db74">&#34;error:&#34;</span>, <span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">file</span>.<span style="color:#a6e22e">Close</span>()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">fileMode</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">getFileMode</span>(<span style="color:#a6e22e">file</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;file mode:&#34;</span>, <span style="color:#a6e22e">fileMode</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">file</span>.<span style="color:#a6e22e">Chmod</span>(<span style="color:#a6e22e">fileMode</span> | <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">ModeSticky</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;change after, file mode:&#34;</span>, <span style="color:#a6e22e">getFileMode</span>(<span style="color:#a6e22e">file</span>))
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">getFileMode</span>(<span style="color:#a6e22e">file</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">File</span>) <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">FileMode</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">fileInfo</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">file</span>.<span style="color:#a6e22e">Stat</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatal</span>(<span style="color:#e6db74">&#34;file stat error:&#34;</span>, <span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">fileInfo</span>.<span style="color:#a6e22e">Mode</span>()
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Output:
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 2016/06/18 15:59:06 file mode: -rw-rw-r--
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 2016/06/18 15:59:06 change after, file mode: trw-rw-r--
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// ls -l 看到的 studygolang.tx 是：-rw-rw-r-T
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 当然这里是给文件设置了 sticky 位，对权限不起作用。系统会忽略它。
+</span></span></span></code></pre></div><h2 id="目录与链接">
+  目录与链接
+  <a class="anchor" href="#%e7%9b%ae%e5%bd%95%e4%b8%8e%e9%93%be%e6%8e%a5">#</a>
+</h2>
+<p>在 Unix 文件系统中，目录的存储方式类似于普通文件。目录和普通文件的区别有二：</p>
+<ul>
+<li>在其 <code>i-node</code> 条目中，会将目录标记为一种不同的文件类型。</li>
+<li>目录是经特殊组织而成的文件。本质上说就是一个表格，包含文件名和 <code>i-node</code> 标号。</li>
+</ul>
+<h3 id="创建和移除硬链接">
+  创建和移除（硬）链接
+  <a class="anchor" href="#%e5%88%9b%e5%bb%ba%e5%92%8c%e7%a7%bb%e9%99%a4%e7%a1%ac%e9%93%be%e6%8e%a5">#</a>
+</h3>
+<p>硬链接是针对文件而言的，目录不允许创建硬链接。</p>
+<p><code>link</code> 和 <code>unlink</code> 系统调用用于创建和移除（硬）链接。Go 中 <code>os.Link</code> 对应 <code>link</code> 系统调用；但 <code>os.Remove</code> 的实现会先执行 <code>unlink</code>
+系统调用，如果要移除的是目录，则 <code>unlink</code> 会失败，这时 <code>Remove</code> 会再调用 <code>rmdir</code> 系统调用。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Link</span>(<span style="color:#a6e22e">oldname</span>, <span style="color:#a6e22e">newname</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">error</span>
+</span></span></code></pre></div><p><code>Link</code> 创建一个名为 <code>newname</code> 指向 <code>oldname</code> 的硬链接。如果出错，会返回 <code>*LinkError</code> 类型的错误。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Remove</span>(<span style="color:#a6e22e">name</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">error</span>
+</span></span></code></pre></div><p><code>Remove</code> 删除 <code>name</code> 指定的文件或目录。如果出错，会返回 <code>*PathError</code> 类型的错误。如果目录不为空，<code>Remove</code> 会返回失败。</p>
+<h3 id="更改文件名">
+  更改文件名
+  <a class="anchor" href="#%e6%9b%b4%e6%94%b9%e6%96%87%e4%bb%b6%e5%90%8d">#</a>
+</h3>
+<p>系统调用 <code>rename</code> 既可以重命名文件，又可以将文件移至同一个文件系统中的另一个目录。该系统调用既可以用于文件，也可以用于目录。相关细节，
+请查阅相关资料。</p>
+<p>Go 中的 <code>os.Rename</code> 是对应的封装函数。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Rename</span>(<span style="color:#a6e22e">oldpath</span>, <span style="color:#a6e22e">newpath</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">error</span>
+</span></span></code></pre></div><p><code>Rename</code> 修改一个文件的名字或移动一个文件。如果 <code>newpath</code> 已经存在，则替换它。注意，可能会有一些个操作系统特定的限制。</p>
+<h3 id="使用符号链接">
+  使用符号链接
+  <a class="anchor" href="#%e4%bd%bf%e7%94%a8%e7%ac%a6%e5%8f%b7%e9%93%be%e6%8e%a5">#</a>
+</h3>
+<p><code>symlink</code> 系统调用用于为指定路径名创建一个新的符号链接（想要移除符号链接，使用 <code>unlink</code>）。Go 中的 <code>os.Symlink</code> 是对应的封装函数。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Symlink</span>(<span style="color:#a6e22e">oldname</span>, <span style="color:#a6e22e">newname</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">error</span>
+</span></span></code></pre></div><p><code>Symlink</code> 创建一个名为 <code>newname</code> 指向 <code>oldname</code> 的符号链接。如果出错，会返回 <code>*LinkError</code> 类型的错误。</p>
+<p>由 <code>oldname</code> 所命名的文件或目录在调用时无需存在。因为即便当时存在，也无法阻止后来将其删除。这时，<code>newname</code> 成为“悬空链接”，其他系统
+调用试图对其进行解引用操作都将错误（通常错误号是 <code>ENOENT</code>）。</p>
+<p>有时候，我们希望通过符号链接，能获取其所指向的路径名。系统调用 <code>readlink</code> 能做到，Go 的封装函数是 <code>os.Readlink</code>：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Readlink</span>(<span style="color:#a6e22e">name</span> <span style="color:#66d9ef">string</span>) (<span style="color:#66d9ef">string</span>, <span style="color:#66d9ef">error</span>)
+</span></span></code></pre></div><p><code>Readlink</code> 获取 <code>name</code> 指定的符号链接指向的文件的路径。如果出错，会返回 <code>*PathError</code> 类型的错误。我们看看 <code>Readlink</code> 的实现。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Readlink</span>(<span style="color:#a6e22e">name</span> <span style="color:#66d9ef">string</span>) (<span style="color:#66d9ef">string</span>, <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">len</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">128</span>; ; <span style="color:#a6e22e">len</span> <span style="color:#f92672">*=</span> <span style="color:#ae81ff">2</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">b</span> <span style="color:#f92672">:=</span> make([]<span style="color:#66d9ef">byte</span>, <span style="color:#a6e22e">len</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">n</span>, <span style="color:#a6e22e">e</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">fixCount</span>(<span style="color:#a6e22e">syscall</span>.<span style="color:#a6e22e">Readlink</span>(<span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">b</span>))
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">e</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;&#34;</span>, <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">PathError</span>{<span style="color:#e6db74">&#34;readlink&#34;</span>, <span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">e</span>}
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">n</span> &lt; <span style="color:#a6e22e">len</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">return</span> string(<span style="color:#a6e22e">b</span>[<span style="color:#ae81ff">0</span>:<span style="color:#a6e22e">n</span>]), <span style="color:#66d9ef">nil</span>
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>这里之所以用循环，是因为我们没法知道文件的路径到底多长，如果 <code>b</code> 长度不够，文件名会被截断，而 <code>readlink</code> 系统调用无非分辨所返回的字
+符串到底是经过截断处理，还是恰巧将 <code>b</code> 填满。这里采用的验证方法是分配一个更大的（两倍）<code>b</code> 并再次调用 <code>readlink</code>。</p>
+<h3 id="创建和移除目录">
+  创建和移除目录
+  <a class="anchor" href="#%e5%88%9b%e5%bb%ba%e5%92%8c%e7%a7%bb%e9%99%a4%e7%9b%ae%e5%bd%95">#</a>
+</h3>
+<p><code>mkdir</code> 系统调用创建一个新目录，Go 中的 <code>os.Mkdir</code> 是对应的封装函数。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Mkdir</span>(<span style="color:#a6e22e">name</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">perm</span> <span style="color:#a6e22e">FileMode</span>) <span style="color:#66d9ef">error</span>
+</span></span></code></pre></div><p><code>Mkdir</code> 使用指定的权限和名称创建一个目录。如果出错，会返回 <code>*PathError</code> 类型的错误。</p>
+<p><code>name</code> 参数指定了新目录的路径名，可以是相对路径，也可以是绝对路径。如果已经存在，则调用失败并返回 <code>os.ErrExist</code> 错误。</p>
+<p><code>perm</code> 参数指定了新目录的权限。对该位掩码值的指定方式和 <code>os.OpenFile</code> 相同，也可以直接赋予八进制数值。注意，<code>perm</code> 值还将于进程掩码相
+与（&amp;）。如果 <code>perm</code> 中设置了 sticky 位，那么将对新目录设置该权限。</p>
+<p>因为 <code>Mkdir</code> 所创建的只是路径名中的最后一部分，如果父目录不存在，创建会失败。<code>os.MkdirAll</code> 用于递归创建所有不存在的目录。</p>
+<p>建议读者阅读下 <code>os.MkdirAll</code> 的源码，了解其实现方式、技巧。</p>
+<p><code>rmdir</code> 系统调用移除一个指定的目录，目录可以是绝对路径或相对路径。在讲解 <code>unlink</code> 时，已经介绍了 Go 中的 <code>os.Remove</code>。注意，这里要求
+目录必须为空。为了方便使用，Go 中封装了一个 <code>os.RemoveAll</code> 函数：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">RemoveAll</span>(<span style="color:#a6e22e">path</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">error</span>
+</span></span></code></pre></div><p><code>RemoveAll</code> 删除 <code>path</code> 指定的文件，或目录及它包含的任何下级对象。它会尝试删除所有东西，除非遇到错误并返回。如果 <code>path</code> 指定的对象不
+存在，<code>RemoveAll</code> 会返回 <code>nil</code> 而不返回错误。</p>
+<p><code>RemoveAll</code> 的内部实现逻辑如下：</p>
+<ol>
+<li>调用 <code>Remove</code> 尝试进行删除，如果成功或返回 <code>path</code> 不存在，则直接返回 nil；</li>
+<li>调用 <code>Lstat</code> 获取 <code>path</code> 信息，以便判断是否是目录。注意，这里使用 <code>Lstat</code>，表示不对符号链接解引用；</li>
+<li>调用 <code>Open</code> 打开目录，递归读取目录中内容，执行删除操作。</li>
+</ol>
+<h3 id="读目录">
+  读目录
+  <a class="anchor" href="#%e8%af%bb%e7%9b%ae%e5%bd%95">#</a>
+</h3>
+<p><code>POSIX</code> 与 <code>SUS</code> 定义了读取目录相关的 C 语言标准，各个操作系统提供的系统调用却不尽相同。Go 没有基于 C 语言，而是自己通过系统调用实现
+了读目录功能。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">f</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">File</span>) <span style="color:#a6e22e">Readdirnames</span>(<span style="color:#a6e22e">n</span> <span style="color:#66d9ef">int</span>) (<span style="color:#a6e22e">names</span> []<span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">err</span> <span style="color:#66d9ef">error</span>)
+</span></span></code></pre></div><p><code>Readdirnames</code> 读取目录 <code>f</code> 的内容，返回一个最多有 <code>n</code> 个成员的 <code>[]string</code>，切片成员为目录中文件对象的名字，采用目录顺序。对本函数的下一
+次调用会返回上一次调用未读取的内容的信息。</p>
+<p>如果 <code>n&gt;0</code>，<code>Readdirnames</code> 函数会返回一个最多 <code>n</code> 个成员的切片。这时，如果 <code>Readdirnames</code> 返回一个空切片，它会返回一个非 <code>nil</code> 的错
+误说明原因。如果到达了目录 <code>f</code> 的结尾，返回值 <code>err</code> 会是 <code>io.EOF</code>。</p>
+<p>如果 <code>n&lt;=0</code>，<code>Readdirnames</code> 函数返回目录中剩余所有文件对象的名字构成的切片。此时，如果 <code>Readdirnames</code> 调用成功（读取所有内容直到结尾），
+它会返回该切片和 <code>nil</code> 的错误值。如果在到达结尾前遇到错误，会返回之前成功读取的名字构成的切片和该错误。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">f</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">File</span>) <span style="color:#a6e22e">Readdir</span>(<span style="color:#a6e22e">n</span> <span style="color:#66d9ef">int</span>) (<span style="color:#a6e22e">fi</span> []<span style="color:#a6e22e">FileInfo</span>, <span style="color:#a6e22e">err</span> <span style="color:#66d9ef">error</span>)
+</span></span></code></pre></div><p><code>Readdir</code> 内部会调用 <code>Readdirnames</code>，将得到的 <code>names</code> 构造路径，通过 <code>Lstat</code> 构造出 <code>[]FileInfo</code>。</p>
+<p><code>ioutil.ReadDir</code> 也可以实现类似的功能。</p>
+</article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+
+  <div><a class="flex align-center" href="https://github.com/shipengqi/golang-learn/commit/44c3ee763ef8b1ef68e8f73c9152c5aa565995fc" title='Last modified by shipengqi | October 7, 2023' target="_blank" rel="noopener">
+      <img src="/golang-learn/svg/calendar.svg" class="book-icon" alt="Calendar" />
+      <span>October 7, 2023</span>
+    </a>
+  </div>
+
+
+
+  <div>
+    <a class="flex align-center" href="https://github.com/shipengqi/golang-learn/edit/master/content/content/docs/standards/os/os.md" target="_blank" rel="noopener">
+      <img src="/golang-learn/svg/edit.svg" class="book-icon" alt="Edit" />
+      <span>Edit this page</span>
+    </a>
+  </div>
+
+
+</div>
+
+
+
+  <script>(function(){function e(e){const t=window.getSelection(),n=document.createRange();n.selectNodeContents(e),t.removeAllRanges(),t.addRange(n)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script>
+
+
+ 
+        
+      </footer>
+
+      
+  
+  <div class="book-comments">
+
+</div>
+  
+ 
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+    <aside class="book-toc">
+      <div class="book-toc-content">
+        
+  
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#os">os</a>
+      <ul>
+        <li><a href="#文件-io">文件 I/O</a>
+          <ul>
+            <li><a href="#openfile">OpenFile</a></li>
+            <li><a href="#read">Read</a></li>
+            <li><a href="#write">Write</a></li>
+            <li><a href="#close">Close</a></li>
+            <li><a href="#seek">Seek</a></li>
+          </ul>
+        </li>
+        <li><a href="#截断文件">截断文件</a></li>
+        <li><a href="#文件属性">文件属性</a>
+          <ul>
+            <li><a href="#改变文件时间戳">改变文件时间戳</a></li>
+            <li><a href="#文件属主">文件属主</a></li>
+            <li><a href="#文件权限">文件权限</a></li>
+          </ul>
+        </li>
+        <li><a href="#目录与链接">目录与链接</a>
+          <ul>
+            <li><a href="#创建和移除硬链接">创建和移除（硬）链接</a></li>
+            <li><a href="#更改文件名">更改文件名</a></li>
+            <li><a href="#使用符号链接">使用符号链接</a></li>
+            <li><a href="#创建和移除目录">创建和移除目录</a></li>
+            <li><a href="#读目录">读目录</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+ 
+      </div>
+    </aside>
+    
+  </main>
+
+  
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

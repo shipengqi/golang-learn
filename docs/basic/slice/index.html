@@ -1,0 +1,1503 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="slice 的语法和数组很像，由于数组长度是固定的，所以使用 slice 相比数组会更灵活，slice 是动态的。
+切片（slice） 是对底层数组一个连续片段的引用，所以切片是一个引用类型。
+定义切片，和定义数组的区别就是不需要指定 SIZE：
+var 变量名 []类型 一个 slice 由三个部分构成：指针、长度和容量。长度不能超过容量。 一个切片在未初始化之前默认为 nil，长度为 0。
+初始化切片：
+// 直接初始化切片，[] 表示是切片类型，{1,2,3} 初始化值依次是 1,2,3.其 cap=len=3 s :=[]int {1,2,3} // 初始化切片 s,是数组 arr 的引用 s := arr[:] // 将 arr 中从下标 startIndex 到 endIndex-1 下的元素创建为一个新的切片 s := arr[startIndex:endIndex] // 缺省 endIndex 时将表示一直到 arr 的最后一个元素 s := arr[startIndex:] // 缺省 startIndex 时将表示从 arr 的第一个元素开始 s := arr[:endIndex] // 使用 make 函数来创建切片 // len 是数组的长度并且也是切片的初始长度 // capacity 为可选参数, 指定容量 s := make([]int, len, capacity) len() 和 cap()#len获取切片长度。 cap计算切片的最大容量 append() 和 copy()#append 向切片追加新元素 copy 拷贝切片 append 的使用#使用 append 函数时要注意，append 总是从 slice 的尾部开始追加数据。比如下面的代码：">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#343a40">
+<meta name="color-scheme" content="light dark"><meta property="og:title" content="slice" />
+<meta property="og:description" content="slice 的语法和数组很像，由于数组长度是固定的，所以使用 slice 相比数组会更灵活，slice 是动态的。
+切片（slice） 是对底层数组一个连续片段的引用，所以切片是一个引用类型。
+定义切片，和定义数组的区别就是不需要指定 SIZE：
+var 变量名 []类型 一个 slice 由三个部分构成：指针、长度和容量。长度不能超过容量。 一个切片在未初始化之前默认为 nil，长度为 0。
+初始化切片：
+// 直接初始化切片，[] 表示是切片类型，{1,2,3} 初始化值依次是 1,2,3.其 cap=len=3 s :=[]int {1,2,3} // 初始化切片 s,是数组 arr 的引用 s := arr[:] // 将 arr 中从下标 startIndex 到 endIndex-1 下的元素创建为一个新的切片 s := arr[startIndex:endIndex] // 缺省 endIndex 时将表示一直到 arr 的最后一个元素 s := arr[startIndex:] // 缺省 startIndex 时将表示从 arr 的第一个元素开始 s := arr[:endIndex] // 使用 make 函数来创建切片 // len 是数组的长度并且也是切片的初始长度 // capacity 为可选参数, 指定容量 s := make([]int, len, capacity) len() 和 cap()#len获取切片长度。 cap计算切片的最大容量 append() 和 copy()#append 向切片追加新元素 copy 拷贝切片 append 的使用#使用 append 函数时要注意，append 总是从 slice 的尾部开始追加数据。比如下面的代码：" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://shipengqi.github.io/golang-learn/docs/basic/slice/" /><meta property="article:section" content="docs" />
+
+<meta property="article:modified_time" content="2023-10-07T14:03:42+08:00" />
+<title>slice | Golang Learning</title>
+<link rel="manifest" href="/golang-learn/manifest.json">
+<link rel="icon" href="/golang-learn/favicon.png" >
+<link rel="stylesheet" href="/golang-learn/book.min.33a48f5432973b8ff9a82679d9e45d67f2c15d4399bd2829269455cfe390b5e8.css" integrity="sha256-M6SPVDKXO4/5qCZ52eRdZ/LBXUOZvSgpJpRVz&#43;OQteg=" crossorigin="anonymous">
+  <script defer src="/golang-learn/flexsearch.min.js"></script>
+  <script defer src="/golang-learn/en.search.min.9d19f3cf24b235d59b85d5a7e5dcdc41758b1caac59546ce7f048de6fd1ce8fd.js" integrity="sha256-nRnzzySyNdWbhdWn5dzcQXWLHKrFlUbOfwSN5v0c6P0=" crossorigin="anonymous"></script>
+
+  <script defer src="/golang-learn/sw.min.e9a55528e030e44ecbe1b5a8da7dd8fb40bd282d02dc4574e81b999a6a21bc84.js" integrity="sha256-6aVVKOAw5E7L4bWo2n3Y&#43;0C9KC0C3EV06BuZmmohvIQ=" crossorigin="anonymous"></script>
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+  
+</head>
+<body dir="ltr">
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    <aside class="book-menu">
+      <div class="book-menu-content">
+        
+  <nav>
+<h2 class="book-brand">
+  <a class="flex align-center" href="/golang-learn/"><span>Golang Learning</span>
+  </a>
+</h2>
+
+
+<div class="book-search">
+  <input type="text" id="book-search-input" placeholder="Search" aria-label="Search" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+
+
+
+
+
+
+
+  
+<ul>
+  
+  <li>
+    <a href="https://github.com/shipengqi/golang-learn"  target="_blank" rel="noopener">
+        Github
+      </a>
+  </li>
+  
+  <li>
+    <a href="https://shipengqi.github.io/"  target="_blank" rel="noopener">
+        Blog
+      </a>
+  </li>
+  
+</ul>
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>语言基础</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/env_config/" class="">Go 环境配置</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/build/" class="">Golang 条件编译</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/map/" class="">map</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/slice/" class="active">slice</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/scope/" class="">作用域</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/function/" class="">函数</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/package/" class="">包</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/reflect/" class="">反射</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/var/" class="">变量</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/basic_data/" class="">基础据类型</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/constant/" class="">常量</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/json/" class="">序列化</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/pointer/" class="">指针</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/interface/" class="">接口</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/flow/" class="">控制语句</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/array/" class="">数组</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/test/" class="">测试</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/struct/" class="">结构体</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/operator/" class="">运算符</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/error/" class="">错误</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/oop/" class="">面向对象</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>并发编程</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/concurrent/channel/" class="">channel</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/concurrent/goroutine/" class="">goroutine</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/concurrent/sync_lock/" class="">同步和锁</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/concurrent/concurrent/" class="">并发和并行</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>常用命令</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/build/" class="">build</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/doc/" class="">doc</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/env/" class="">env</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/fmt/" class="">fmt</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/get/" class="">get</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/summary/" class="">Go 命令</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/golint/" class="">golint</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/install/" class="">install</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/mod/" class="">mod</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/run/" class="">run</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/test/" class="">test</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/tool/" class="">tool</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/vet/" class="">vet</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>常用标准库</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Data</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/data/big/" class="">big</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/data/container/" class="">container</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/data/math/" class="">math</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/data/sort/" class="">sort</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Database</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/database/sql/" class="">sql</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Io</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/io/bufio/" class="">bufio</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/io/fmt/" class="">fmt 包</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/io/io/" class="">io</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/io/ioutil/" class="">ioutil</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Net</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/net/http/" class="">http</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Os</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/os/filepath/" class="">filepath</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/os/os/" class="">os</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Text</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/text/strconv/" class="">strconv</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/text/strings/" class="">strings</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/text/unicode/" class="">unicode</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/unsafe/" class="">Unsafe</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/log/" class="">log</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/time/" class="">time</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>实践</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/errors/" class="">Errors</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/gin/" class="">Gin</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/ginkgo/" class="">Ginkgo</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/pprof/" class="">Go PProf</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/trace/" class="">Go trace</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/go-race/" class="">Go 数据竞争检测器</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/go_relative_path/" class="">Go 的相对路径</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/json/" class="">Json Unmarshal</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>底层原理</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/advance/scheduler/" class="">Goroutine 调度器</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/advance/mm/" class="">内存分配</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/advance/gc/" class="">垃圾回收</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script>
+
+
+ 
+      </div>
+    </aside>
+
+    <div class="book-page">
+      <header class="book-header">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/golang-learn/svg/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <strong>slice</strong>
+
+  <label for="toc-control">
+    
+    <img src="/golang-learn/svg/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  
+<nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#len-和-cap">len() 和 cap()</a></li>
+        <li><a href="#append-和-copy">append() 和 copy()</a>
+          <ul>
+            <li><a href="#append-的使用">append 的使用</a></li>
+          </ul>
+        </li>
+        <li><a href="#切片操作">切片操作</a>
+          <ul>
+            <li><a href="#截取切片">截取切片</a></li>
+            <li><a href="#切片初始化要注意的事情">切片初始化要注意的事情</a></li>
+          </ul>
+        </li>
+        <li><a href="#长度和容量">长度和容量</a></li>
+        <li><a href="#数据结构">数据结构</a></li>
+        <li><a href="#初始化">初始化</a></li>
+        <li><a href="#怎样估算切片容量的增长">怎样估算切片容量的增长</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown"><p><code>slice</code> 的语法和数组很像，由于数组长度是固定的，所以使用 <code>slice</code> 相比数组会更灵活，<code>slice</code> 是动态的。</p>
+<p><strong>切片（slice） 是对底层数组一个连续片段的引用，所以切片是一个引用类型</strong>。</p>
+<p><strong>定义切片，和定义数组的区别就是不需要指定 <code>SIZE</code></strong>：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">变量名</span> []<span style="color:#a6e22e">类型</span>
+</span></span></code></pre></div><p>一个 <code>slice</code> 由三个部分构成：指针、长度和容量。长度不能超过容量。
+一个切片在未初始化之前默认为 <code>nil</code>，长度为 <code>0</code>。</p>
+<p>初始化切片：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// 直接初始化切片，[] 表示是切片类型，{1,2,3} 初始化值依次是 1,2,3.其 cap=len=3
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">s</span> <span style="color:#f92672">:=</span>[]<span style="color:#66d9ef">int</span> {<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">2</span>,<span style="color:#ae81ff">3</span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 初始化切片 s,是数组 arr 的引用
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">s</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">arr</span>[:]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 将 arr 中从下标 startIndex 到 endIndex-1 下的元素创建为一个新的切片
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">s</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">arr</span>[<span style="color:#a6e22e">startIndex</span>:<span style="color:#a6e22e">endIndex</span>]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 缺省 endIndex 时将表示一直到 arr 的最后一个元素
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">s</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">arr</span>[<span style="color:#a6e22e">startIndex</span>:]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 缺省 startIndex 时将表示从 arr 的第一个元素开始
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">s</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">arr</span>[:<span style="color:#a6e22e">endIndex</span>]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 使用 make 函数来创建切片
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// len 是数组的长度并且也是切片的初始长度
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// capacity 为可选参数, 指定容量
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">s</span> <span style="color:#f92672">:=</span> make([]<span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">len</span>, <span style="color:#a6e22e">capacity</span>)
+</span></span></code></pre></div><h2 id="len-和-cap">
+  len() 和 cap()
+  <a class="anchor" href="#len-%e5%92%8c-cap">#</a>
+</h2>
+<ul>
+<li><code>len</code>获取切片长度。</li>
+<li><code>cap</code>计算切片的最大容量</li>
+</ul>
+<h2 id="append-和-copy">
+  append() 和 copy()
+  <a class="anchor" href="#append-%e5%92%8c-copy">#</a>
+</h2>
+<ul>
+<li><code>append</code> 向切片追加新元素</li>
+<li><code>copy</code> 拷贝切片</li>
+</ul>
+<h3 id="append-的使用">
+  append 的使用
+  <a class="anchor" href="#append-%e7%9a%84%e4%bd%bf%e7%94%a8">#</a>
+</h3>
+<p>使用 <code>append</code> 函数时要注意，<code>append</code> 总是从 <code>slice</code> 的尾部开始追加数据。比如下面的代码：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">urls</span> <span style="color:#f92672">:=</span> make([]<span style="color:#66d9ef">string</span>, <span style="color:#ae81ff">3</span>)
+</span></span><span style="display:flex;"><span>append(<span style="color:#a6e22e">urls</span>, <span style="color:#e6db74">&#34;hello&#34;</span>)
+</span></span><span style="display:flex;"><span>len(<span style="color:#a6e22e">urls</span>) <span style="color:#75715e">// 4
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">urls2</span> <span style="color:#f92672">:=</span> make([]<span style="color:#66d9ef">string</span>, <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>append(<span style="color:#a6e22e">urls</span>, <span style="color:#e6db74">&#34;hello&#34;</span>)
+</span></span><span style="display:flex;"><span>len(<span style="color:#a6e22e">urls</span>) <span style="color:#75715e">// 1
+</span></span></span></code></pre></div><h2 id="切片操作">
+  切片操作
+  <a class="anchor" href="#%e5%88%87%e7%89%87%e6%93%8d%e4%bd%9c">#</a>
+</h2>
+<h3 id="截取切片">
+  截取切片
+  <a class="anchor" href="#%e6%88%aa%e5%8f%96%e5%88%87%e7%89%87">#</a>
+</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">/* 创建切片 */</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">numbers</span> <span style="color:#f92672">:=</span> []<span style="color:#66d9ef">int</span>{<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">2</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">4</span>,<span style="color:#ae81ff">5</span>,<span style="color:#ae81ff">6</span>,<span style="color:#ae81ff">7</span>,<span style="color:#ae81ff">8</span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* 打印子切片从索引 1 (包含) 到索引 4(不包含)*/</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;numbers[1:4] ==&#34;</span>, <span style="color:#a6e22e">numbers</span>[<span style="color:#ae81ff">1</span>:<span style="color:#ae81ff">4</span>]) <span style="color:#75715e">// numbers[1:4] == [1 2 3]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* 默认下限为 0*/</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;numbers[:3] ==&#34;</span>, <span style="color:#a6e22e">numbers</span>[:<span style="color:#ae81ff">3</span>]) <span style="color:#75715e">// numbers[:3] == [0 1 2]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* 默认上限为 len(s)*/</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;numbers[4:] ==&#34;</span>, <span style="color:#a6e22e">numbers</span>[<span style="color:#ae81ff">4</span>:]) <span style="color:#75715e">// numbers[4:] == [4 5 6 7 8]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">numbers1</span> <span style="color:#f92672">:=</span> make([]<span style="color:#66d9ef">int</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">5</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* 打印子切片从索引  0 (包含) 到索引 2 (不包含) */</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">number2</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">numbers</span>[:<span style="color:#ae81ff">2</span>]
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;len=%d cap=%d slice=%v\n&#34;</span>,len(<span style="color:#a6e22e">number2</span>),cap(<span style="color:#a6e22e">number2</span>),<span style="color:#a6e22e">number2</span>) <span style="color:#75715e">// len=2 cap=9 slice=[0 1]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">/* 打印子切片从索引 2 (包含) 到索引 5 (不包含) */</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">number3</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">numbers</span>[<span style="color:#ae81ff">2</span>:<span style="color:#ae81ff">5</span>]
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;len=%d cap=%d slice=%v\n&#34;</span>,len(<span style="color:#a6e22e">number3</span>),cap(<span style="color:#a6e22e">number3</span>),<span style="color:#a6e22e">number3</span>) <span style="color:#75715e">// len=3 cap=7 slice=[2 3 4]
+</span></span></span></code></pre></div><h3 id="切片初始化要注意的事情">
+  切片初始化要注意的事情
+  <a class="anchor" href="#%e5%88%87%e7%89%87%e5%88%9d%e5%a7%8b%e5%8c%96%e8%a6%81%e6%b3%a8%e6%84%8f%e7%9a%84%e4%ba%8b%e6%83%85">#</a>
+</h3>
+<p>初始化切片可以使用两种方式：</p>
+<ol>
+<li>比如 <code>s := []string{}</code>，这种方式初始化的切片长度为 0，不能直接使用下标赋值（<code>s[0] = &quot;hello&quot;</code>），会报错 <code>index out of range</code>。</li>
+<li>使用 <code>make</code> 初始化切片，要注意使用 <code>append</code> 函数时，是从末尾开始添加数据，注意 <code>slice</code> 的 <code>len</code> 参数。</li>
+</ol>
+<h2 id="长度和容量">
+  长度和容量
+  <a class="anchor" href="#%e9%95%bf%e5%ba%a6%e5%92%8c%e5%ae%b9%e9%87%8f">#</a>
+</h2>
+<p><code>Slice</code> 有两个比较混淆的概念，就是长度和容量。这个长度跟数组的长度是一个概念，即在内存中进行了初始化实际存在的元素的个数。</p>
+<p>何谓容量？</p>
+<p>如果通过 <code>make</code> 函数创建 <code>Slice</code> 的时候指定了容量参数，那内存管理器会根据指定的容量的值先划分一块内存空间，然后才在其中存放有数组元素，多余部分处于空闲状态，在 <code>Slice</code> 上追加元素的时候，首先会放到这块空闲的内存中，如果添加的参数个数超过了容量值，内存管理器会重新划分一块容量值为原容量值 <code>*2</code> 大小的内存空间，依次类推。这个机制的好处在能够提升运算性能，因为内存的重新划分会降低性能。</p>
+<h2 id="数据结构">
+  数据结构
+  <a class="anchor" href="#%e6%95%b0%e6%8d%ae%e7%bb%93%e6%9e%84">#</a>
+</h2>
+<p>切片可以由如下的 <code>reflect.SliceHeader</code> 结构体表示，其中:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">SliceHeader</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">Data</span> <span style="color:#66d9ef">uintptr</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">Len</span>  <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">Cap</span>  <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><ul>
+<li>Data 是指向数组的指针;</li>
+<li>Len 是当前切片的长度；</li>
+<li>Cap 是当前切片的容量，即 Data 数组的大小：</li>
+</ul>
+<p>Data 是一片连续的内存空间，这片内存空间可以用于存储切片中的全部元素，数组中的元素只是逻辑上的概念，底层存储其实都是连续的，所以我们可以将切片理解成一片连续的内存空间加上长度与容量的标识。</p>
+<h2 id="初始化">
+  初始化
+  <a class="anchor" href="#%e5%88%9d%e5%a7%8b%e5%8c%96">#</a>
+</h2>
+<p>三种初始化切片的方式：</p>
+<p>通过下标的方式获得数组或者切片的一部分；
+使用字面量初始化新的切片；
+使用关键字 make 创建切片：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">arr</span>[<span style="color:#ae81ff">0</span>:<span style="color:#ae81ff">3</span>] <span style="color:#a6e22e">or</span> <span style="color:#a6e22e">slice</span>[<span style="color:#ae81ff">0</span>:<span style="color:#ae81ff">3</span>]
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">slice</span> <span style="color:#f92672">:=</span> []<span style="color:#66d9ef">int</span>{<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">3</span>}
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">slice</span> <span style="color:#f92672">:=</span> make([]<span style="color:#66d9ef">int</span>, <span style="color:#ae81ff">10</span>)
+</span></span></code></pre></div><h2 id="怎样估算切片容量的增长">
+  怎样估算切片容量的增长
+  <a class="anchor" href="#%e6%80%8e%e6%a0%b7%e4%bc%b0%e7%ae%97%e5%88%87%e7%89%87%e5%ae%b9%e9%87%8f%e7%9a%84%e5%a2%9e%e9%95%bf">#</a>
+</h2>
+<p>一旦<strong>一个切片无法容纳更多的元素，Go 语言就会想办法扩容。但它并不会改变原来的切片，而是会生成一个容量更大的切片，然后将把原有的元素和新元素一并拷贝到新切片中</strong>。一般的情况下，你<strong>可以简单地认为新切片的容量（以下简称新容量）将会是原切片容量（以下简称原容量）的 2 倍</strong>。</p>
+<p>但是，当原切片的长度（以下简称原长度）大于或等于 1024 时，Go 语言将会以原容量的 1.25 倍作为新容量的基准（以下新容量基准）。新容量基准会被调整（不断地与 1.25 相乘），直到结果不小于原长度与要追加的元素数量之和（以下简称新长度）。最终，新容量往往会、比新长度大一些，当然，相等也是可能的。</p>
+<p>一个切片的底层数组永远不会被替换。为什么？虽然在扩容的时候 Go 语言一定会生成新的底层数组，但是它也同时生成了新的切片。它是把新的切片作为了新底层数组的窗口，而没有对原切片及其底层数组做任何改动。</p>
+<p><strong>在无需扩容时，<code>append</code> 函数返回的是指向“原底层数组”的新切片，而在需要扩容时，<code>append</code> 函数返回的是指向“新底层数组”的新切片</strong>。</p>
+<p>在分配内存空间之前需要先确定新的切片容量，运行时根据切片的当前容量选择不同的策略进行扩容：</p>
+<ul>
+<li>如果期望容量大于当前容量的两倍就会使用期望容量；</li>
+<li>如果当前切片的长度小于 1024 就会将容量翻倍；</li>
+<li>如果当前切片的长度大于 1024 就会每次增加 25% 的容量，直到新容量大于期望容量；</li>
+</ul>
+</article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+
+  <div><a class="flex align-center" href="https://github.com/shipengqi/golang-learn/commit/44c3ee763ef8b1ef68e8f73c9152c5aa565995fc" title='Last modified by shipengqi | October 7, 2023' target="_blank" rel="noopener">
+      <img src="/golang-learn/svg/calendar.svg" class="book-icon" alt="Calendar" />
+      <span>October 7, 2023</span>
+    </a>
+  </div>
+
+
+
+  <div>
+    <a class="flex align-center" href="https://github.com/shipengqi/golang-learn/edit/master/content/content/docs/basic/slice.md" target="_blank" rel="noopener">
+      <img src="/golang-learn/svg/edit.svg" class="book-icon" alt="Edit" />
+      <span>Edit this page</span>
+    </a>
+  </div>
+
+
+</div>
+
+
+
+  <script>(function(){function e(e){const t=window.getSelection(),n=document.createRange();n.selectNodeContents(e),t.removeAllRanges(),t.addRange(n)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script>
+
+
+ 
+        
+      </footer>
+
+      
+  
+  <div class="book-comments">
+
+</div>
+  
+ 
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+    <aside class="book-toc">
+      <div class="book-toc-content">
+        
+  
+<nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#len-和-cap">len() 和 cap()</a></li>
+        <li><a href="#append-和-copy">append() 和 copy()</a>
+          <ul>
+            <li><a href="#append-的使用">append 的使用</a></li>
+          </ul>
+        </li>
+        <li><a href="#切片操作">切片操作</a>
+          <ul>
+            <li><a href="#截取切片">截取切片</a></li>
+            <li><a href="#切片初始化要注意的事情">切片初始化要注意的事情</a></li>
+          </ul>
+        </li>
+        <li><a href="#长度和容量">长度和容量</a></li>
+        <li><a href="#数据结构">数据结构</a></li>
+        <li><a href="#初始化">初始化</a></li>
+        <li><a href="#怎样估算切片容量的增长">怎样估算切片容量的增长</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+ 
+      </div>
+    </aside>
+    
+  </main>
+
+  
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,1647 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="sort#sort 包中实现了几种基本的排序算法：插入排序、归并排序、堆排序和快速排序。但是这四种排序方法是不公开的，只用于 sort 包 内部使用。所以在对数据集合排序时不必考虑应当选择哪一种排序方法，只要实现了 sort.Interface 定义的三个方法就可以对数据集合进 行排序。sort 包会根据实际数据自动选择高效的排序算法。
+type Interface interface { // Len 为集合内元素的总数 Len() int // 如果 index 为 i 的元素小于 index 为 j 的元素，则返回 true，否则 false Less(i, j int) bool // Swap 交换索引为 i 和 j 的元素 Swap(i, j int) } 为了方便对常用数据类型的操作，sort 包原生支持 []int、[]float64 和 []string 三种内建数据类型切片的排序操作。 即不必实现 sort.Interface 接口的三个方法。
+数据集合排序#对数据集合（包括自定义数据类型的集合）排序需要实现 sort.Interface 接口的三个方法：
+数据集合实现了这三个方法后，即可调用该包的 Sort() 方法进行排序。 Sort() 方法定义如下：
+func Sort(data Interface) Sort() 方法惟一的参数就是待排序的数据集合。">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#343a40">
+<meta name="color-scheme" content="light dark"><meta property="og:title" content="sort" />
+<meta property="og:description" content="sort#sort 包中实现了几种基本的排序算法：插入排序、归并排序、堆排序和快速排序。但是这四种排序方法是不公开的，只用于 sort 包 内部使用。所以在对数据集合排序时不必考虑应当选择哪一种排序方法，只要实现了 sort.Interface 定义的三个方法就可以对数据集合进 行排序。sort 包会根据实际数据自动选择高效的排序算法。
+type Interface interface { // Len 为集合内元素的总数 Len() int // 如果 index 为 i 的元素小于 index 为 j 的元素，则返回 true，否则 false Less(i, j int) bool // Swap 交换索引为 i 和 j 的元素 Swap(i, j int) } 为了方便对常用数据类型的操作，sort 包原生支持 []int、[]float64 和 []string 三种内建数据类型切片的排序操作。 即不必实现 sort.Interface 接口的三个方法。
+数据集合排序#对数据集合（包括自定义数据类型的集合）排序需要实现 sort.Interface 接口的三个方法：
+数据集合实现了这三个方法后，即可调用该包的 Sort() 方法进行排序。 Sort() 方法定义如下：
+func Sort(data Interface) Sort() 方法惟一的参数就是待排序的数据集合。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://shipengqi.github.io/golang-learn/docs/standards/data/sort/" /><meta property="article:section" content="docs" />
+
+<meta property="article:modified_time" content="2023-10-07T14:03:42+08:00" />
+<title>sort | Golang Learning</title>
+<link rel="manifest" href="/golang-learn/manifest.json">
+<link rel="icon" href="/golang-learn/favicon.png" >
+<link rel="stylesheet" href="/golang-learn/book.min.33a48f5432973b8ff9a82679d9e45d67f2c15d4399bd2829269455cfe390b5e8.css" integrity="sha256-M6SPVDKXO4/5qCZ52eRdZ/LBXUOZvSgpJpRVz&#43;OQteg=" crossorigin="anonymous">
+  <script defer src="/golang-learn/flexsearch.min.js"></script>
+  <script defer src="/golang-learn/en.search.min.9d19f3cf24b235d59b85d5a7e5dcdc41758b1caac59546ce7f048de6fd1ce8fd.js" integrity="sha256-nRnzzySyNdWbhdWn5dzcQXWLHKrFlUbOfwSN5v0c6P0=" crossorigin="anonymous"></script>
+
+  <script defer src="/golang-learn/sw.min.e9a55528e030e44ecbe1b5a8da7dd8fb40bd282d02dc4574e81b999a6a21bc84.js" integrity="sha256-6aVVKOAw5E7L4bWo2n3Y&#43;0C9KC0C3EV06BuZmmohvIQ=" crossorigin="anonymous"></script>
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+  
+</head>
+<body dir="ltr">
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    <aside class="book-menu">
+      <div class="book-menu-content">
+        
+  <nav>
+<h2 class="book-brand">
+  <a class="flex align-center" href="/golang-learn/"><span>Golang Learning</span>
+  </a>
+</h2>
+
+
+<div class="book-search">
+  <input type="text" id="book-search-input" placeholder="Search" aria-label="Search" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+
+
+
+
+
+
+
+  
+<ul>
+  
+  <li>
+    <a href="https://github.com/shipengqi/golang-learn"  target="_blank" rel="noopener">
+        Github
+      </a>
+  </li>
+  
+  <li>
+    <a href="https://shipengqi.github.io/"  target="_blank" rel="noopener">
+        Blog
+      </a>
+  </li>
+  
+</ul>
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>语言基础</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/env_config/" class="">Go 环境配置</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/build/" class="">Golang 条件编译</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/map/" class="">map</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/slice/" class="">slice</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/scope/" class="">作用域</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/function/" class="">函数</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/package/" class="">包</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/reflect/" class="">反射</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/var/" class="">变量</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/basic_data/" class="">基础据类型</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/constant/" class="">常量</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/json/" class="">序列化</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/pointer/" class="">指针</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/interface/" class="">接口</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/flow/" class="">控制语句</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/array/" class="">数组</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/test/" class="">测试</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/struct/" class="">结构体</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/operator/" class="">运算符</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/error/" class="">错误</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/basic/oop/" class="">面向对象</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>并发编程</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/concurrent/channel/" class="">channel</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/concurrent/goroutine/" class="">goroutine</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/concurrent/sync_lock/" class="">同步和锁</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/concurrent/concurrent/" class="">并发和并行</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>常用命令</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/build/" class="">build</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/doc/" class="">doc</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/env/" class="">env</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/fmt/" class="">fmt</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/get/" class="">get</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/summary/" class="">Go 命令</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/golint/" class="">golint</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/install/" class="">install</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/mod/" class="">mod</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/run/" class="">run</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/test/" class="">test</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/tool/" class="">tool</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/commands/vet/" class="">vet</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>常用标准库</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Data</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/data/big/" class="">big</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/data/container/" class="">container</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/data/math/" class="">math</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/data/sort/" class="active">sort</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Database</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/database/sql/" class="">sql</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Io</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/io/bufio/" class="">bufio</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/io/fmt/" class="">fmt 包</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/io/io/" class="">io</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/io/ioutil/" class="">ioutil</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Net</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/net/http/" class="">http</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Os</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/os/filepath/" class="">filepath</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/os/os/" class="">os</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Text</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/text/strconv/" class="">strconv</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/text/strings/" class="">strings</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/text/unicode/" class="">unicode</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/unsafe/" class="">Unsafe</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/log/" class="">log</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/standards/time/" class="">time</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>实践</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/errors/" class="">Errors</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/gin/" class="">Gin</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/ginkgo/" class="">Ginkgo</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/pprof/" class="">Go PProf</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/trace/" class="">Go trace</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/go-race/" class="">Go 数据竞争检测器</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/go_relative_path/" class="">Go 的相对路径</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/practice/json/" class="">Json Unmarshal</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>底层原理</span>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/advance/scheduler/" class="">Goroutine 调度器</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/advance/mm/" class="">内存分配</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/golang-learn/docs/advance/gc/" class="">垃圾回收</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script>
+
+
+ 
+      </div>
+    </aside>
+
+    <div class="book-page">
+      <header class="book-header">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/golang-learn/svg/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <strong>sort</strong>
+
+  <label for="toc-control">
+    
+    <img src="/golang-learn/svg/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#sort">sort</a>
+      <ul>
+        <li><a href="#数据集合排序">数据集合排序</a></li>
+        <li><a href="#reverse">Reverse</a></li>
+        <li><a href="#search">Search</a></li>
+        <li><a href="#已经支持的内部数据类型排序">已经支持的内部数据类型排序</a>
+          <ul>
+            <li><a href="#intslice-类型和-int">IntSlice 类型和 []int</a></li>
+            <li><a href="#float64slice-类型及-float64">Float64Slice 类型及 []float64</a></li>
+            <li><a href="#stringslice-类型及-string">StringSlice 类型及 []string</a></li>
+          </ul>
+        </li>
+        <li><a href="#interface-排序与查找">[]interface 排序与查找</a>
+          <ul>
+            <li><a href="#sortslice">sort.Slice</a></li>
+            <li><a href="#sortsearch">sort.Search</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown"><h1 id="sort">
+  sort
+  <a class="anchor" href="#sort">#</a>
+</h1>
+<p><code>sort</code> 包中实现了几种基本的排序算法：插入排序、归并排序、堆排序和快速排序。但是这四种排序方法是不公开的，只用于 <code>sort</code> 包
+内部使用。所以在对数据集合排序时不必考虑应当选择哪一种排序方法，只要实现了 <code>sort.Interface</code> 定义的三个方法就可以对数据集合进
+行排序。<code>sort</code> 包会根据实际数据自动选择高效的排序算法。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Interface</span> <span style="color:#66d9ef">interface</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Len 为集合内元素的总数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Len</span>() <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 如果 index 为 i 的元素小于 index 为 j 的元素，则返回 true，否则 false
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Less</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">j</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">bool</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Swap 交换索引为 i 和 j 的元素
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Swap</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">j</span> <span style="color:#66d9ef">int</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>为了方便对常用数据类型的操作，<code>sort</code> 包原生支持 <code>[]int</code>、<code>[]float64</code> 和 <code>[]string</code> 三种内建数据类型切片的排序操作。
+即不必实现 <code>sort.Interface</code> 接口的三个方法。</p>
+<h2 id="数据集合排序">
+  数据集合排序
+  <a class="anchor" href="#%e6%95%b0%e6%8d%ae%e9%9b%86%e5%90%88%e6%8e%92%e5%ba%8f">#</a>
+</h2>
+<p>对数据集合（包括自定义数据类型的集合）排序需要实现 <code>sort.Interface</code> 接口的三个方法：</p>
+<p>数据集合实现了这三个方法后，即可调用该包的 <code>Sort()</code> 方法进行排序。
+<code>Sort()</code> 方法定义如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Sort</span>(<span style="color:#a6e22e">data</span> <span style="color:#a6e22e">Interface</span>)
+</span></span></code></pre></div><p><code>Sort()</code> 方法惟一的参数就是待排序的数据集合。</p>
+<p>该包还提供了一个方法可以判断数据集合是否已经排好顺序，该方法的内部实现依赖于我们自己实现的 <code>Len()</code> 和 <code>Less()</code> 方法：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">IsSorted</span>(<span style="color:#a6e22e">data</span> <span style="color:#a6e22e">Interface</span>) <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">n</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">data</span>.<span style="color:#a6e22e">Len</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">n</span> <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>; <span style="color:#a6e22e">i</span> &gt; <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">--</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">data</span>.<span style="color:#a6e22e">Less</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">i</span><span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>) {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">true</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>使用 <code>sort</code> 包对学生成绩排序的示例：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;fmt&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;sort&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 学生成绩结构体
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">StuScore</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">name</span>  <span style="color:#66d9ef">string</span>    <span style="color:#75715e">// 姓名
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">score</span> <span style="color:#66d9ef">int</span>   <span style="color:#75715e">// 成绩
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">StuScores</span> []<span style="color:#a6e22e">StuScore</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#a6e22e">StuScores</span>) <span style="color:#a6e22e">Len</span>() <span style="color:#66d9ef">int</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> len(<span style="color:#a6e22e">s</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#a6e22e">StuScores</span>) <span style="color:#a6e22e">Less</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">j</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">s</span>[<span style="color:#a6e22e">i</span>].<span style="color:#a6e22e">score</span> &lt; <span style="color:#a6e22e">s</span>[<span style="color:#a6e22e">j</span>].<span style="color:#a6e22e">score</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#a6e22e">StuScores</span>) <span style="color:#a6e22e">Swap</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">j</span> <span style="color:#66d9ef">int</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">s</span>[<span style="color:#a6e22e">i</span>], <span style="color:#a6e22e">s</span>[<span style="color:#a6e22e">j</span>] = <span style="color:#a6e22e">s</span>[<span style="color:#a6e22e">j</span>], <span style="color:#a6e22e">s</span>[<span style="color:#a6e22e">i</span>]
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">students</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">StuScores</span>{
+</span></span><span style="display:flex;"><span>        {<span style="color:#e6db74">&#34;alan&#34;</span>, <span style="color:#ae81ff">95</span>},
+</span></span><span style="display:flex;"><span>        {<span style="color:#e6db74">&#34;hikerell&#34;</span>, <span style="color:#ae81ff">91</span>},
+</span></span><span style="display:flex;"><span>        {<span style="color:#e6db74">&#34;acmfly&#34;</span>, <span style="color:#ae81ff">96</span>},
+</span></span><span style="display:flex;"><span>        {<span style="color:#e6db74">&#34;leao&#34;</span>, <span style="color:#ae81ff">90</span>},
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 打印未排序的 students 数据
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;Default:\n\t&#34;</span>, <span style="color:#a6e22e">students</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// StuScores 已经实现了 sort.Interface 接口 , 所以可以调用 Sort 函数进行排序
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">sort</span>.<span style="color:#a6e22e">Sort</span>(<span style="color:#a6e22e">students</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 判断是否已经排好顺序
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;IS Sorted?\n\t&#34;</span>, <span style="color:#a6e22e">sort</span>.<span style="color:#a6e22e">IsSorted</span>(<span style="color:#a6e22e">students</span>))
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 打印排序后的 students 数据
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;Sorted:\n\t&#34;</span>,<span style="color:#a6e22e">students</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>输出：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>Default:
+</span></span><span style="display:flex;"><span>     <span style="color:#f92672">[{</span>alan 95<span style="color:#f92672">}</span> <span style="color:#f92672">{</span>hikerell 91<span style="color:#f92672">}</span> <span style="color:#f92672">{</span>acmfly 96<span style="color:#f92672">}</span> <span style="color:#f92672">{</span>leao 90<span style="color:#f92672">}]</span>
+</span></span><span style="display:flex;"><span>IS Sorted?
+</span></span><span style="display:flex;"><span>     true
+</span></span><span style="display:flex;"><span>Sorted:
+</span></span><span style="display:flex;"><span>     <span style="color:#f92672">[{</span>leao 90<span style="color:#f92672">}</span> <span style="color:#f92672">{</span>hikerell 91<span style="color:#f92672">}</span> <span style="color:#f92672">{</span>alan 95<span style="color:#f92672">}</span> <span style="color:#f92672">{</span>acmfly 96<span style="color:#f92672">}]</span>
+</span></span></code></pre></div><h2 id="reverse">
+  Reverse
+  <a class="anchor" href="#reverse">#</a>
+</h2>
+<p>上面的代码实现的是升序排序，如果要实现降序排序修改 <code>Less()</code> 函数：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// 将小于号修改为大于号
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#a6e22e">StuScores</span>) <span style="color:#a6e22e">Less</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">j</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">s</span>[<span style="color:#a6e22e">i</span>].<span style="color:#a6e22e">score</span> &gt; <span style="color:#a6e22e">s</span>[<span style="color:#a6e22e">j</span>].<span style="color:#a6e22e">score</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>此外，<code>sort</code>包提供了 <code>Reverse()</code> 方法，可以允许将数据按 <code>Less()</code> 定义的排序方式逆序排序，而不必修改 <code>Less()</code> 代码。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Reverse</span>(<span style="color:#a6e22e">data</span> <span style="color:#a6e22e">Interface</span>) <span style="color:#a6e22e">Interface</span>
+</span></span></code></pre></div><p><code>Reverse()</code> 返回的一个 <code>sort.Interface</code> 接口类型，整个 <code>Reverse()</code> 的内部实现比较有趣：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// 定义了一个 reverse 结构类型，嵌入 Interface 接口
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">reverse</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Interface</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// reverse 结构类型的 Less() 方法拥有嵌入的 Less() 方法相反的行为
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">r</span> <span style="color:#a6e22e">reverse</span>) <span style="color:#a6e22e">Less</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">j</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Interface</span>.<span style="color:#a6e22e">Less</span>(<span style="color:#a6e22e">j</span>, <span style="color:#a6e22e">i</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 返回新的实现 Interface 接口的数据类型
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Reverse</span>(<span style="color:#a6e22e">data</span> <span style="color:#a6e22e">Interface</span>) <span style="color:#a6e22e">Interface</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">reverse</span>{<span style="color:#a6e22e">data</span>}
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>了解内部原理后，可以在学生成绩排序示例中使用 <code>Reverse()</code> 来实现成绩升序排序：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">sort</span>.<span style="color:#a6e22e">Sort</span>(<span style="color:#a6e22e">sort</span>.<span style="color:#a6e22e">Reverse</span>(<span style="color:#a6e22e">students</span>))
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">students</span>)
+</span></span></code></pre></div><h2 id="search">
+  Search
+  <a class="anchor" href="#search">#</a>
+</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Search</span>(<span style="color:#a6e22e">n</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">f</span> <span style="color:#66d9ef">func</span>(<span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">bool</span>) <span style="color:#66d9ef">int</span>
+</span></span></code></pre></div><p><code>Search()</code> 函数一个常用的使用方式是搜索元素 x 是否在已经升序排好的切片 s 中：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">x</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">11</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">s</span> <span style="color:#f92672">:=</span> []<span style="color:#66d9ef">int</span>{<span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">6</span>, <span style="color:#ae81ff">8</span>, <span style="color:#ae81ff">11</span>, <span style="color:#ae81ff">45</span>} <span style="color:#75715e">// 已经升序排序的集合
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">pos</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">sort</span>.<span style="color:#a6e22e">Search</span>(len(<span style="color:#a6e22e">s</span>), <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">i</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">bool</span> { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">s</span>[<span style="color:#a6e22e">i</span>] <span style="color:#f92672">&gt;=</span> <span style="color:#a6e22e">x</span> })
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">pos</span> &lt; len(<span style="color:#a6e22e">s</span>) <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">s</span>[<span style="color:#a6e22e">pos</span>] <span style="color:#f92672">==</span> <span style="color:#a6e22e">x</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">x</span>, <span style="color:#e6db74">&#34; 在 s 中的位置为：&#34;</span>, <span style="color:#a6e22e">pos</span>)
+</span></span><span style="display:flex;"><span>} <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;s 不包含元素 &#34;</span>, <span style="color:#a6e22e">x</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>官方文档给出的小程序：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">GuessingGame</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">s</span> <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;Pick an integer from 0 to 100.\n&#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">answer</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">sort</span>.<span style="color:#a6e22e">Search</span>(<span style="color:#ae81ff">100</span>, <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">i</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;Is your number &lt;= %d? &#34;</span>, <span style="color:#a6e22e">i</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Scanf</span>(<span style="color:#e6db74">&#34;%s&#34;</span>, <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">s</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">s</span> <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#34;&#34;</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">s</span>[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;y&#39;</span>
+</span></span><span style="display:flex;"><span>	})
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;Your number is %d.\n&#34;</span>, <span style="color:#a6e22e">answer</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="已经支持的内部数据类型排序">
+  已经支持的内部数据类型排序
+  <a class="anchor" href="#%e5%b7%b2%e7%bb%8f%e6%94%af%e6%8c%81%e7%9a%84%e5%86%85%e9%83%a8%e6%95%b0%e6%8d%ae%e7%b1%bb%e5%9e%8b%e6%8e%92%e5%ba%8f">#</a>
+</h2>
+<p><code>sort</code>包原生支持 <code>[]int</code>、<code>[]float64</code> 和 <code>[]string</code> 三种内建数据类型切片的排序操作。</p>
+<h3 id="intslice-类型和-int">
+  IntSlice 类型和 []int
+  <a class="anchor" href="#intslice-%e7%b1%bb%e5%9e%8b%e5%92%8c-int">#</a>
+</h3>
+<p><code>[]int</code> 切片排序内部实现及使用方法与 <code>[]float64</code> 和 <code>[]string</code> 类似。</p>
+<p><code>sort</code>包定义了一个 <code>IntSlice</code> 类型，并且实现了 <code>sort.Interface</code> 接口：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span>    <span style="color:#66d9ef">type</span> <span style="color:#a6e22e">IntSlice</span> []<span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">p</span> <span style="color:#a6e22e">IntSlice</span>) <span style="color:#a6e22e">Len</span>() <span style="color:#66d9ef">int</span>           { <span style="color:#66d9ef">return</span> len(<span style="color:#a6e22e">p</span>) }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">p</span> <span style="color:#a6e22e">IntSlice</span>) <span style="color:#a6e22e">Less</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">j</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">bool</span> { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">p</span>[<span style="color:#a6e22e">i</span>] &lt; <span style="color:#a6e22e">p</span>[<span style="color:#a6e22e">j</span>] }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">p</span> <span style="color:#a6e22e">IntSlice</span>) <span style="color:#a6e22e">Swap</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">j</span> <span style="color:#66d9ef">int</span>)      { <span style="color:#a6e22e">p</span>[<span style="color:#a6e22e">i</span>], <span style="color:#a6e22e">p</span>[<span style="color:#a6e22e">j</span>] = <span style="color:#a6e22e">p</span>[<span style="color:#a6e22e">j</span>], <span style="color:#a6e22e">p</span>[<span style="color:#a6e22e">i</span>] }
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// IntSlice 类型定义了 Sort() 方法，包装了 sort.Sort() 函数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">p</span> <span style="color:#a6e22e">IntSlice</span>) <span style="color:#a6e22e">Sort</span>() { <span style="color:#a6e22e">Sort</span>(<span style="color:#a6e22e">p</span>) }
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// IntSlice 类型定义了 Search() 方法，包装了 SearchInts() 函数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">p</span> <span style="color:#a6e22e">IntSlice</span>) <span style="color:#a6e22e">Search</span>(<span style="color:#a6e22e">x</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">int</span> { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">SearchInts</span>(<span style="color:#a6e22e">p</span>, <span style="color:#a6e22e">x</span>) }
+</span></span></code></pre></div><p>并且提供的 <code>sort.Ints()</code> 方法使用了该 <code>IntSlice</code> 类型：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span>    <span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Ints</span>(<span style="color:#a6e22e">a</span> []<span style="color:#66d9ef">int</span>) { <span style="color:#a6e22e">Sort</span>(<span style="color:#a6e22e">IntSlice</span>(<span style="color:#a6e22e">a</span>)) }
+</span></span></code></pre></div><p>所以，对 <code>[]int</code> 切片排序更常使用 <code>sort.Ints()</code>，而不是直接使用 <code>IntSlice</code> 类型：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">s</span> <span style="color:#f92672">:=</span> []<span style="color:#66d9ef">int</span>{<span style="color:#ae81ff">5</span>, <span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">6</span>, <span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">4</span>} <span style="color:#75715e">// 未排序的切片数据
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">sort</span>.<span style="color:#a6e22e">Ints</span>(<span style="color:#a6e22e">s</span>)
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">s</span>) <span style="color:#75715e">// 将会输出[1 2 3 4 5 6]
+</span></span></span></code></pre></div><p>如果要使用降序排序，显然要用前面提到的 Reverse() 方法：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">s</span> <span style="color:#f92672">:=</span> []<span style="color:#66d9ef">int</span>{<span style="color:#ae81ff">5</span>, <span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">6</span>, <span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">4</span>} <span style="color:#75715e">// 未排序的切片数据
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">sort</span>.<span style="color:#a6e22e">Sort</span>(<span style="color:#a6e22e">sort</span>.<span style="color:#a6e22e">Reverse</span>(<span style="color:#a6e22e">sort</span>.<span style="color:#a6e22e">IntSlice</span>(<span style="color:#a6e22e">s</span>)))
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">s</span>) <span style="color:#75715e">// 将会输出[6 5 4 3 2 1]
+</span></span></span></code></pre></div><p>如果要查找整数 <code>x</code> 在切片 <code>a</code> 中的位置，相对于前面提到的 <code>Search()</code> 方法，<code>sort</code> 包提供了 <code>SearchInts()</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">SearchInts</span>(<span style="color:#a6e22e">a</span> []<span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">x</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">int</span>
+</span></span></code></pre></div><p>注意，<code>SearchInts()</code> 的使用条件为：<strong>切片 <code>a</code> 已经升序排序</strong>
+以下是一个错误使用的例子：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">s</span> <span style="color:#f92672">:=</span> []<span style="color:#66d9ef">int</span>{<span style="color:#ae81ff">5</span>, <span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">6</span>, <span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">4</span>} <span style="color:#75715e">// 未排序的切片数据
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">sort</span>.<span style="color:#a6e22e">SearchInts</span>(<span style="color:#a6e22e">s</span>, <span style="color:#ae81ff">2</span>)) <span style="color:#75715e">// 将会输出 0 而不是 1
+</span></span></span></code></pre></div><h3 id="float64slice-类型及-float64">
+  Float64Slice 类型及 []float64
+  <a class="anchor" href="#float64slice-%e7%b1%bb%e5%9e%8b%e5%8f%8a-float64">#</a>
+</h3>
+<p>实现与 Ints 类似：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Float64Slice</span> []<span style="color:#66d9ef">float64</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">p</span> <span style="color:#a6e22e">Float64Slice</span>) <span style="color:#a6e22e">Len</span>() <span style="color:#66d9ef">int</span>           { <span style="color:#66d9ef">return</span> len(<span style="color:#a6e22e">p</span>) }
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">p</span> <span style="color:#a6e22e">Float64Slice</span>) <span style="color:#a6e22e">Less</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">j</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">bool</span> { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">p</span>[<span style="color:#a6e22e">i</span>] &lt; <span style="color:#a6e22e">p</span>[<span style="color:#a6e22e">j</span>] <span style="color:#f92672">||</span> <span style="color:#a6e22e">isNaN</span>(<span style="color:#a6e22e">p</span>[<span style="color:#a6e22e">i</span>]) <span style="color:#f92672">&amp;&amp;</span> !<span style="color:#a6e22e">isNaN</span>(<span style="color:#a6e22e">p</span>[<span style="color:#a6e22e">j</span>]) }
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">p</span> <span style="color:#a6e22e">Float64Slice</span>) <span style="color:#a6e22e">Swap</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">j</span> <span style="color:#66d9ef">int</span>)      { <span style="color:#a6e22e">p</span>[<span style="color:#a6e22e">i</span>], <span style="color:#a6e22e">p</span>[<span style="color:#a6e22e">j</span>] = <span style="color:#a6e22e">p</span>[<span style="color:#a6e22e">j</span>], <span style="color:#a6e22e">p</span>[<span style="color:#a6e22e">i</span>] }
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">p</span> <span style="color:#a6e22e">Float64Slice</span>) <span style="color:#a6e22e">Sort</span>() { <span style="color:#a6e22e">Sort</span>(<span style="color:#a6e22e">p</span>) }
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">p</span> <span style="color:#a6e22e">Float64Slice</span>) <span style="color:#a6e22e">Search</span>(<span style="color:#a6e22e">x</span> <span style="color:#66d9ef">float64</span>) <span style="color:#66d9ef">int</span> { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">SearchFloat64s</span>(<span style="color:#a6e22e">p</span>, <span style="color:#a6e22e">x</span>) }
+</span></span></code></pre></div><p>与 <code>Sort()</code>、<code>IsSorted()</code>、<code>Search()</code> 相对应的三个方法：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Float64s</span>(<span style="color:#a6e22e">a</span> []<span style="color:#66d9ef">float64</span>)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Float64sAreSorted</span>(<span style="color:#a6e22e">a</span> []<span style="color:#66d9ef">float64</span>) <span style="color:#66d9ef">bool</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">SearchFloat64s</span>(<span style="color:#a6e22e">a</span> []<span style="color:#66d9ef">float64</span>, <span style="color:#a6e22e">x</span> <span style="color:#66d9ef">float64</span>) <span style="color:#66d9ef">int</span>
+</span></span></code></pre></div><p>在上面 <code>Float64Slice</code> 类型定义的 <code>Less</code> 方法中，有一个内部函数 <code>isNaN()</code>。
+<code>isNaN()</code> 与 <code>math</code> 包中 <code>IsNaN()</code> 实现完全相同，<code>sort</code> 包之所以不使用 <code>math.IsNaN()</code>，完全是基于包依赖性的考虑，
+<code>sort</code> 包的实现不依赖与其他任何包。</p>
+<h3 id="stringslice-类型及-string">
+  StringSlice 类型及 []string
+  <a class="anchor" href="#stringslice-%e7%b1%bb%e5%9e%8b%e5%8f%8a-string">#</a>
+</h3>
+<p>两个 <code>string</code> 对象之间的大小比较是基于“字典序”的。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">StringSlice</span> []<span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">p</span> <span style="color:#a6e22e">StringSlice</span>) <span style="color:#a6e22e">Len</span>() <span style="color:#66d9ef">int</span>           { <span style="color:#66d9ef">return</span> len(<span style="color:#a6e22e">p</span>) }
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">p</span> <span style="color:#a6e22e">StringSlice</span>) <span style="color:#a6e22e">Less</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">j</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">bool</span> { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">p</span>[<span style="color:#a6e22e">i</span>] &lt; <span style="color:#a6e22e">p</span>[<span style="color:#a6e22e">j</span>] }
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">p</span> <span style="color:#a6e22e">StringSlice</span>) <span style="color:#a6e22e">Swap</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">j</span> <span style="color:#66d9ef">int</span>)      { <span style="color:#a6e22e">p</span>[<span style="color:#a6e22e">i</span>], <span style="color:#a6e22e">p</span>[<span style="color:#a6e22e">j</span>] = <span style="color:#a6e22e">p</span>[<span style="color:#a6e22e">j</span>], <span style="color:#a6e22e">p</span>[<span style="color:#a6e22e">i</span>] }
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">p</span> <span style="color:#a6e22e">StringSlice</span>) <span style="color:#a6e22e">Sort</span>() { <span style="color:#a6e22e">Sort</span>(<span style="color:#a6e22e">p</span>) }
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">p</span> <span style="color:#a6e22e">StringSlice</span>) <span style="color:#a6e22e">Search</span>(<span style="color:#a6e22e">x</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">int</span> { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">SearchStrings</span>(<span style="color:#a6e22e">p</span>, <span style="color:#a6e22e">x</span>) }
+</span></span></code></pre></div><h2 id="interface-排序与查找">
+  []interface 排序与查找
+  <a class="anchor" href="#interface-%e6%8e%92%e5%ba%8f%e4%b8%8e%e6%9f%a5%e6%89%be">#</a>
+</h2>
+<p>只要实现了 <code>sort.Interface</code> 接口，即可通过 <code>sort</code> 包内的函数完成排序，查找等操作。但是这种用法对于其它数据类型的 <code>slice</code>
+不友好，可能我们需要为大量的 <code>struct</code> 定义一个单独的 <code>[]struct</code> 类型，再为其实现 <code>sort.Interface</code> 接口，例如：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Person</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Name</span> <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Age</span>  <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Persons</span> []<span style="color:#a6e22e">Person</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">p</span> <span style="color:#a6e22e">Persons</span>) <span style="color:#a6e22e">Len</span>() <span style="color:#66d9ef">int</span> {
+</span></span><span style="display:flex;"><span>    panic(<span style="color:#e6db74">&#34;implement me&#34;</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">p</span> <span style="color:#a6e22e">Persons</span>) <span style="color:#a6e22e">Less</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">j</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span>    panic(<span style="color:#e6db74">&#34;implement me&#34;</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">p</span> <span style="color:#a6e22e">Persons</span>) <span style="color:#a6e22e">Swap</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">j</span> <span style="color:#66d9ef">int</span>) {
+</span></span><span style="display:flex;"><span>    panic(<span style="color:#e6db74">&#34;implement me&#34;</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>sort</code> 包提供了以下函数：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Slice</span>(<span style="color:#a6e22e">slice</span> <span style="color:#66d9ef">interface</span>{}, <span style="color:#a6e22e">less</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">j</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">bool</span>)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">SliceStable</span>(<span style="color:#a6e22e">slice</span> <span style="color:#66d9ef">interface</span>{}, <span style="color:#a6e22e">less</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">j</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">bool</span>)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">SliceIsSorted</span>(<span style="color:#a6e22e">slice</span> <span style="color:#66d9ef">interface</span>{}, <span style="color:#a6e22e">less</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">j</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">bool</span>) <span style="color:#66d9ef">bool</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Search</span>(<span style="color:#a6e22e">n</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">f</span> <span style="color:#66d9ef">func</span>(<span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">bool</span>) <span style="color:#66d9ef">int</span>
+</span></span></code></pre></div><p>排序相关的三个函数都接收 <code>[]interface</code>，并且需要传入一个比较函数，用于为程序比较两个变量的大小，因为
+函数签名和作用域的原因，这个函数只能是 <code>匿名函数</code>。</p>
+<h3 id="sortslice">
+  sort.Slice
+  <a class="anchor" href="#sortslice">#</a>
+</h3>
+<p>利用 <code>sort.Slice</code> 函数，而不用提供一个特定的 <code>sort.Interface</code> 的实现，而是 <code>Less(i，j int)</code> 作为一个比较回调函数，可以简单
+地传递给 <code>sort.Slice</code> 进行排序。<strong>不建议使用，因为在 <code>sort.Slice</code> 中使用了 <code>reflect</code></strong>。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">people</span> <span style="color:#f92672">:=</span> []<span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Name</span> <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Age</span>  <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>}{
+</span></span><span style="display:flex;"><span>    {<span style="color:#e6db74">&#34;Gopher&#34;</span>, <span style="color:#ae81ff">7</span>},
+</span></span><span style="display:flex;"><span>    {<span style="color:#e6db74">&#34;Alice&#34;</span>, <span style="color:#ae81ff">55</span>},
+</span></span><span style="display:flex;"><span>    {<span style="color:#e6db74">&#34;Vera&#34;</span>, <span style="color:#ae81ff">24</span>},
+</span></span><span style="display:flex;"><span>    {<span style="color:#e6db74">&#34;Bob&#34;</span>, <span style="color:#ae81ff">75</span>},
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">sort</span>.<span style="color:#a6e22e">Slice</span>(<span style="color:#a6e22e">people</span>, <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">j</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">bool</span> { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">people</span>[<span style="color:#a6e22e">i</span>].<span style="color:#a6e22e">Age</span> &lt; <span style="color:#a6e22e">people</span>[<span style="color:#a6e22e">j</span>].<span style="color:#a6e22e">Age</span> }) <span style="color:#75715e">// 按年龄升序排序
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;Sort by age:&#34;</span>, <span style="color:#a6e22e">people</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Output:
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// Sort by age: [{Gopher 7} {Vera 24} {Alice 55} {Bob 75}]
+</span></span></span></code></pre></div><h3 id="sortsearch">
+  sort.Search
+  <a class="anchor" href="#sortsearch">#</a>
+</h3>
+<p>该函数判断 <code>[]interface</code> 是否存在指定元素，举个栗子：</p>
+<ul>
+<li>升序 slice</li>
+</ul>
+<blockquote>
+<p>sort 包为 <code>[]int</code>,<code>[]float64</code>,<code>[]string</code> 提供的 Search 函数其实也是调用的该函数，因为该函数是使用的二分查找法，所以要
+求 slice 为升序排序状态。并且判断条件必须为 <code>&gt;=</code>，这也是官方库提供的三个查找相关函数的的写法。</p>
+</blockquote>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">a</span> <span style="color:#f92672">:=</span> []<span style="color:#66d9ef">int</span>{<span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">4</span>, <span style="color:#ae81ff">200</span>, <span style="color:#ae81ff">100</span>, <span style="color:#ae81ff">21</span>, <span style="color:#ae81ff">234</span>, <span style="color:#ae81ff">56</span>}
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">x</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">21</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">sort</span>.<span style="color:#a6e22e">Slice</span>(<span style="color:#a6e22e">a</span>, <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">j</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">bool</span> { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">a</span>[<span style="color:#a6e22e">i</span>] &lt; <span style="color:#a6e22e">a</span>[<span style="color:#a6e22e">j</span>] })   <span style="color:#75715e">// 升序排序
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">index</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">sort</span>.<span style="color:#a6e22e">Search</span>(len(<span style="color:#a6e22e">a</span>), <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">i</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">bool</span> { <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">a</span>[<span style="color:#a6e22e">i</span>] <span style="color:#f92672">&gt;=</span> <span style="color:#a6e22e">x</span> }) <span style="color:#75715e">// 查找元素
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">index</span> &lt; len(<span style="color:#a6e22e">a</span>) <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">a</span>[<span style="color:#a6e22e">index</span>] <span style="color:#f92672">==</span> <span style="color:#a6e22e">x</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;found %d at index %d in %v\n&#34;</span>, <span style="color:#a6e22e">x</span>, <span style="color:#a6e22e">index</span>, <span style="color:#a6e22e">a</span>)
+</span></span><span style="display:flex;"><span>} <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%d not found in %v,index:%d\n&#34;</span>, <span style="color:#a6e22e">x</span>, <span style="color:#a6e22e">a</span>, <span style="color:#a6e22e">index</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Output:
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// found 21 at index 3 in [2 3 4 21 56 100 200 234]
+</span></span></span></code></pre></div></article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+
+  <div><a class="flex align-center" href="https://github.com/shipengqi/golang-learn/commit/44c3ee763ef8b1ef68e8f73c9152c5aa565995fc" title='Last modified by shipengqi | October 7, 2023' target="_blank" rel="noopener">
+      <img src="/golang-learn/svg/calendar.svg" class="book-icon" alt="Calendar" />
+      <span>October 7, 2023</span>
+    </a>
+  </div>
+
+
+
+  <div>
+    <a class="flex align-center" href="https://github.com/shipengqi/golang-learn/edit/master/content/content/docs/standards/data/sort.md" target="_blank" rel="noopener">
+      <img src="/golang-learn/svg/edit.svg" class="book-icon" alt="Edit" />
+      <span>Edit this page</span>
+    </a>
+  </div>
+
+
+</div>
+
+
+
+  <script>(function(){function e(e){const t=window.getSelection(),n=document.createRange();n.selectNodeContents(e),t.removeAllRanges(),t.addRange(n)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script>
+
+
+ 
+        
+      </footer>
+
+      
+  
+  <div class="book-comments">
+
+</div>
+  
+ 
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+    <aside class="book-toc">
+      <div class="book-toc-content">
+        
+  
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#sort">sort</a>
+      <ul>
+        <li><a href="#数据集合排序">数据集合排序</a></li>
+        <li><a href="#reverse">Reverse</a></li>
+        <li><a href="#search">Search</a></li>
+        <li><a href="#已经支持的内部数据类型排序">已经支持的内部数据类型排序</a>
+          <ul>
+            <li><a href="#intslice-类型和-int">IntSlice 类型和 []int</a></li>
+            <li><a href="#float64slice-类型及-float64">Float64Slice 类型及 []float64</a></li>
+            <li><a href="#stringslice-类型及-string">StringSlice 类型及 []string</a></li>
+          </ul>
+        </li>
+        <li><a href="#interface-排序与查找">[]interface 排序与查找</a>
+          <ul>
+            <li><a href="#sortslice">sort.Slice</a></li>
+            <li><a href="#sortsearch">sort.Search</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+ 
+      </div>
+    </aside>
+    
+  </main>
+
+  
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
