@@ -1,6 +1,9 @@
 ---
-title: map
+title: Map
+weight: 4
 ---
+
+# Map
 
 `map` 是一个无序的 `key/value` 对的集合。**`map` 是引用类型**。这意味着它拥有对底层数据结构的引用，
 就像指针一样。它底层的数据结构是 `hash table` 或 `hash map`。

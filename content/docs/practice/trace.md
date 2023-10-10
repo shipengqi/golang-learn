@@ -1,6 +1,9 @@
 ---
-title: Go trace
+title: Go Trace
+weight: 6
 ---
+
+# Go Trace
 
 Go PProf 很难完成 Goroutine 的分析。这就需要使用 `go tool trace` 命令。
 

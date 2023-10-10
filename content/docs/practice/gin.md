@@ -1,12 +1,14 @@
-# Gin
+---
+title: Gin 静态服务器
+weight: 8
+---
 
-## Gin 打包 Angular (React/Vue) 项目
+# Gin 如何实现前端网页的静态服务器
 
 Gin 作为 Web 框架提供 API 接口非常方便，但是在同一个项目中，既提供 API 接口，又要作为前端网页的静态服务器，就比较麻烦。通常 Angular (React/Vue) 
 项目需要在 Nginx 或者 Tomcat 转发才可以。有些小项目并不需要前后端分离，如何解决？
 
-
-### 1.16 版本的 embed
+## 1.16 版本的 embed
 
 Go 的 1.16 版本增加了 `embed` 的标签，可以利用这个标签将静态资源打包到二进制文件中。
 

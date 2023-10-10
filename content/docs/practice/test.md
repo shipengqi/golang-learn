@@ -1,6 +1,9 @@
 ---
-title: 测试
+title: Go 测试
+weight: 4
 ---
+
+# Go 测试
 
 `go test` 命令测试代码，包目录内，所有以 `_test.go` 为后缀名的源文件在执行 `go build` 时不会被构建成包的一部分，
 它们是 `go test` 测试的一部分。

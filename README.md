@@ -21,5 +21,5 @@ deploy:
 
 ## Menu
 
-By default, the hugo-book theme will render pages from the `content/docs` section as a menu in a tree structure.
+By default, the [hugo-book](https://github.com/alex-shpak/hugo-book) theme will render pages from the `content/docs` section as a menu in a tree structure.
 You can set `title` and `weight` in the front matter of pages to adjust the order and titles in the menu.

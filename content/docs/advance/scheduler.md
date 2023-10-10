@@ -1,7 +1,8 @@
 ---
-title: Goroutine 调度器
+title: 调度器
+weight: 3
 ---
-# Goroutine 调度器
+# 调度器
 
 ```go
 type g struct {

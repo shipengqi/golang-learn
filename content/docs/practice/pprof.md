@@ -1,7 +1,9 @@
 ---
-title: Go PProf
+title: Go 性能分析
+weight: 5
 ---
 
+# Go 性能分析
 
 PProf 是 Go 提供的用于可视化和分析性能分析数据的工具。
 

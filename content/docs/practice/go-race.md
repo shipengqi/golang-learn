@@ -1,26 +1,33 @@
 ---
 title: Go 数据竞争检测器
+weight: 2
 ---
 
+# Go 数据竞争检测器
 
 数据竞争是并发系统中最常见，同时也最难处理的 Bug 类型之一。数据竞争会在两个 Go 程并发访问同一个变量， 且至少有一个访问为写入时产生。
 
 这个数据竞争的例子可导致程序崩溃和内存数据损坏（memory corruption）。
 
 ```go
+package main
+
+import "fmt"
+
 func main() {
- c := make(chan bool)
- m := make(map[string]string)
- go func() {
-  m["1"] = "a"  // 第一个冲突的访问。
-  c <- true
- }()
- m["2"] = "b"          // 第二个冲突的访问。
- <-c
- for k, v := range m {
-  fmt.Println(k, v)
- }
+	c := make(chan bool)
+	m := make(map[string]string)
+	go func() {
+        m["1"] = "a"  // 第一个冲突的访问
+		c <- true
+    }
+    m["2"] = "b" // 第二个冲突的访问
+	<-c
+    for k, v := range m {
+        fmt.Println(k, v)
+    }
 }
+
 ```
 
 ## 数据竞争检测器
@@ -36,7 +43,7 @@ go install -race mypkg // 安装该包
 
 ### 选项
 
-GORACE 环境变量可以设置竞争检测的选项：
+`GORACE` 环境变量可以设置竞争检测的选项：
 
 ```bash
 GORACE="option1=val1 option2=val2"
@@ -44,18 +51,19 @@ GORACE="option1=val1 option2=val2"
 
 选项：
 
-- `log_path`（默认为 `stderr`）：竞争检测器会将其报告写入名为 `log_path.pid` 的文件中。特殊的名字 stdout 和 stderr 会将报告分别写入到标准输出和标准错误中。
+- `log_path`（默认为 `stderr`）：竞争检测器会将其报告写入名为 `log_path.pid` 的文件中。特殊的名字 `stdout` 和 `stderr` 会将报告分别写入到标准输出和标准错误中。
 - `exitcode`（默认为 66）：当检测到竞争后使用的退出状态。
 - `strip_path_prefix`（默认为 ""）：从所有报告文件的路径中去除此前缀， 让报告更加简洁。
 - `history_size`（默认为 1）：每个 Go 程的内存访问历史为 `32K * 2**history_size` 个元素。增加该值可避免在报告中避免 "failed to restore the stack"（栈恢复失败）的提示，但代价是会增加内存的使用。
 - `halt_on_error`（默认为 0）：控制程序在报告第一次数据竞争后是否退出。
+
 例如：
 
 ```bash
 GORACE="log_path=/tmp/race/report strip_path_prefix=/my/go/sources/" go test -race
 ```
 
-###
+### 编译标签
 
 可以通过编译标签来排除某些竞争检测器下的代码/测试：
 
@@ -82,21 +90,28 @@ func TestBaz(t *testing.T)  {
 
 ## 使用
 
-竞争检测器只会寻找在运行时发生的竞争，因此它不能在未执行的代码路径中寻找竞争。若你的测试并未完全覆盖，你可以在实际的工作负载下运行通过 -race 编译的二进制程序，以此寻找更多的竞争。
+竞争检测器只会寻找在运行时发生的竞争，因此它不能在未执行的代码路径中寻找竞争。若你的测试并未完全覆盖，你可以在实际的工作负载下运行通过 `-race` 编译的二进制程序，以此寻找更多的竞争。
 
 ### 典型的数据竞争
 
 ```go
+package main
+
+import (
+	"fmt"
+	"sync"
+)
+
 func main() {
- var wg sync.WaitGroup
- wg.Add(5)
- for i := 0; i < 5; i++ {
-  go func() {
-   fmt.Println(i)  // 你要找的不是“i”。
-   wg.Done()
-  }()
- }
- wg.Wait()
+	var wg sync.WaitGroup
+	wg.Add(5)
+	for i := 0; i < 5; i++ {
+		go func() {
+			fmt.Println(i)  // 你要找的不是 i。
+			wg.Done()
+		}()
+	}
+	wg.Wait()
 }
 ```
 

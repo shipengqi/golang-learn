@@ -1,60 +1,15 @@
 ---
-title: 数组
+title: Array
+weight: 2
 ---
 
-数组是一个由固定长度的指定类型元素组成的序列。数组的长度在编译阶段确定。数组在初始化之后大小就无法改变，**存储元素类型相同、但是大小不同的数组类型在 Go 语言看来也是完全不同的，只有两个条件都相同才是同一类型**。
+# Array
 
-声明数组：
+数组是一个由固定长度，并且相同类型的元素组成的数据结构。计算机会为数组分配一块连续的内存来保存其中的元素，我们可以利用数组中元素的索引快速访问特定元素。
 
-```go
-var 变量名 [SIZE]类型
-```
+**存储元素类型相同、但是大小不同的数组类型在 Go 语言看来也是完全不同的，只有两个条件都相同才是同一类型**。
 
-内置函数 `len` 获取数组长度。通过下标访问元素：
-
-```go
-var a [3]int             // array of 3 integers
-fmt.Println(a[0])        // print the first element
-fmt.Println(a[len(a)-1]) // print the last element, a[2]
-```
-
-默认情况下，数组的每个元素都被初始化为元素类型对应的零值。
-初始化数组：
-
-```go
-var q [3]int = [3]int{1, 2, 3}
-var r [3]int = [3]int{1, 2}
-fmt.Println(r[2]) // "0"
-
-var balance = []float32{1000.0, 2.0, 3.4, 7.0, 50.0}
-mt.Println(len(balance)) // 5
-var balance2 = []float32
-fmt.Println(len(balance2)) // type []float32 is not an expression
-
-q := [...]int{1, 2, 3}
-fmt.Printf("%T\n", q) // "[3]int"
-```
-
-初始化数组中 `{}` 中的元素个数不能大于 `[]` 中的数字。如果 `[]` 设置了 `SIZE`，Go 语言会根据元素的个数来设置数组的大小。上面代码中的 **`...` 省略号，表示数组的长度是根据初始化值的个数来计算**。
-
-**声明数组 `SIZE` 是必须的，如果没有，那就是切片了**。
-
-## 二维数组
-
-```go
-var a = [3][4]int{  
- {0, 1, 2, 3} ,   /*  第一行索引为 0 */
- {4, 5, 6, 7} ,   /*  第二行索引为 1 */
- {8, 9, 10, 11},   /* 第三行索引为 2 */
-}
-fmt.Printf("a[%d][%d] = %d\n", 2, 3, a[2][3] )
-```
-
-`==` 和 `!=` 比较运算符来比较两个数组，只有当两个数组的所有元素都是相等的时候数组才是相等的。
-
-## 数组传入函数
-
-当调用函数时，函数的形参会被赋值，**所以函数参数变量接收的是一个复制的副本，并不是原始调用的变量**。但是这种机制，**如果碰到传递一个大数组时，效率较低。这个时候可以显示的传入一个数组指针**（其他语言其实是隐式的指针传递）。
+Go 是值传递，所以函数参数变量接收的是一个值的副本。这种机制，**在传递一个大数组时，效率较低。这个时候可以显示的传入一个数组指针**（其他语言其实是隐式的指针传递）。
 
 ```go
 func test(ptr *[32]byte) {
@@ -66,10 +21,37 @@ func test(ptr *[32]byte) {
 
 ```go
 arr1 := [3]int{1, 2, 3}
-arr2 := [...]int{1, 2, 3}
+arr2 := [...]int{1, 2, 3} // `...` 省略号，表示数组的长度是根据初始化值的个数来计算
 ```
 
-编译器会在负责初始化字面量的 `cmd/compile/internal/gc.anylit` 函数中做两种不同的优化：
+数组的长度在编译阶段确定，初始化之后大小就无法改变。
+
+```go
+// NewArray returns a new fixed-length array Type.
+func NewArray(elem *Type, bound int64) *Type {
+	if bound < 0 {
+		base.Fatalf("NewArray: invalid bound %v", bound)
+	}
+	t := newType(TARRAY)
+	t.extra = &Array{Elem: elem, Bound: bound}
+	if elem.HasShape() {
+		t.SetHasShape(true)
+	}
+	return t
+}
+```
+
+编译期间由 [cmd/compile/internal/types.NewArray](https://github.com/golang/go/blob/2744155d369ca838be57d1eba90c3c6bfc4a3b30/src/cmd/compile/internal/types/type.go#L542) 生成数组类型。
+
+参数 `elem *Type` 数组类型和 `bound int64` 数组的大小构成了 `Array` 类型。当前**数组是否应该在堆栈中初始化在编译期就确定了**。
+
+对于一个由字面量组成的数组，根据数组元素数量的不同，编译器会在负责初始化字面量的 [cmd/compile/internal/walk.anylit](https://github.com/golang/go/blob/2744155d369ca838be57d1eba90c3c6bfc4a3b30/src/cmd/compile/internal/walk/complit.go#L527) 函数中做两种不同的优化：
 
 - 当元素数量小于或者等于 4 个时，会直接将数组中的元素放置在栈上；
 - 当元素数量大于 4 个时，会将数组中的元素放置到静态区并在运行时取出；
+
+当元素数量小于或者等于 4 个时，[cmd/compile/internal/walk.fixedlit](https://github.com/golang/go/blob/2744155d369ca838be57d1eba90c3c6bfc4a3b30/src/cmd/compile/internal/walk/complit.go#L192) 会负责在函数编译之前将 `[3]{1, 2, 3}` 转换成更加原始的语句：
+
+```go
+
+```
