@@ -1,6 +1,6 @@
 ---
 title: Gin 静态服务器
-weight: 8
+weight: 9
 ---
 
 # Gin 如何实现前端网页的静态服务器

@@ -1,8 +1,9 @@
 ---
-title: mod
+title: Go Modules
+weight: 8
 ---
 
-# mod
+# Go Modules
 
 Golang 在 1.11 推出了 Go Module。这是官方提倡的新的包管理，乃至项目管理机制，解决了 `GOPATH` 的问题，相当于弃用了 `GOPATH`。
 
@@ -393,3 +394,7 @@ npm 的 `package-lock.json` 会记录所有库的准确版本，来源以及校�
 准确地说，`go.sum` 是一个构建状态跟踪文件。
 
 所以应该把 **`go.sum` 和 `go.mod` 一同添加进版本控制工具的跟踪列表，同时需要随着你的模块一起发布**。
+
+## Todo
+
+`go get` 和 `go install` 的区别

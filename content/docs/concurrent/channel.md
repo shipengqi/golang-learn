@@ -1,6 +1,9 @@
 ---
-title: channel
+title: Channel
+weight: 3
 ---
+
+# Channel
 
 ```
 Don’t communicate by sharing memory; share memory by communicating.

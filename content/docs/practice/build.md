@@ -111,3 +111,72 @@ GOOS=windows GOARCH=amd64 go build main.go
 环境变量 `GOOS` 设置平台, `GOARCH` 设置架构。
 
 ## 编译选项
+
+```sh
+go build [-o output] [-i] [build flags] [packages]
+```
+
+- `-a` 强制重新编译所有包
+- `-n` 把需要执行的编译命令打印出来，但是不执行，这样就可以很容易的知道底层是如何运行的
+- `-p n` 指定可以并行可运行的编译数目，默认是 CPU 的数目
+- `-o` 指定输出的可执行文件的文件名，可以带路径，例如 `go build -o a/b/c`
+- `-i` 安装相应的包，编译并且 `go install`
+- `-race` 开启编译的时候自动检测数据竞争的情况，目前只支持 64 位的机器
+- `-v` 打印出来我们正在编译的包名
+- `-work` 打印出来编译时候的临时文件夹名称，并且如果已经存在的话就不要删除
+- `-x` 打印出来执行的命令，其实就是和-n的结果类似，只是这个会执行
+- `-ccflags 'arg list'` 传递参数给 5c, 6c, 8c 调用
+- `-compiler name` 指定相应的编译器，gccgo 还是 gc
+- `-gccgoflags 'arg list'` 传递参数给 gccgo 编译连接调用
+- `-gcflags 'arg list'` 编译器参数
+- `-installsuffix suffix` 为了和默认的安装包区别开来，采用这个前缀来重新安装那些依赖的包，`-race`的时候默认已经是 `-installsuffix race`,大家可以通过 `-n` 命令来验证
+- `-ldflags 'arg list'` 链接器参数
+- `-tags 'tag list'` 设置在编译的时候可以适配的那些tag，详细的tag限制参考里面的 Build Constraints
+
+### gcflags
+
+`-gcflags` 参数的格式是
+
+```bash
+-gcflags="pattern=arg list"
+```
+
+#### pattern
+
+pattern 是选择包的模式，它可以有以下几种定义:
+
+- `main`: 表示 `main` 函数所在的顶级包路径
+- `all`: 表示 `GOPATH` 中的所有包。如果是 `go modules` 模式，则表示主模块和它所有的依赖，包括 `test` 文件的依赖
+- `std`: 表示 Go 标准库中的所有包
+- `...`: `...` 是一个通配符，可以匹配任意字符串(包括空字符串)。
+    - `net/...` 表示 net 模块和它的所有子模块
+    - `./...` 表示当前主模块和所有子模块
+    - 如果 pattern 中包含了 `/` 和 `...`，那么就不会匹配 `vendor` 目录
+      例如: `./...` 不会匹配 `./vendor` 目录。可以使用 `./vendor/...` 匹配 `vendor` 目录和它的子模块
+
+`go help packages` 查看模式说明。
+
+#### arg list
+
+空格分隔，如果编译选项中含有空格，可以使用引号包起来。
+
+- `-N`: 禁止编译器优化
+- `-l`: 关闭内联 (`inline`)
+- `-c`: `int` 编译过程中的并发数，默认是 `1`
+- `-B` 禁用越界检查
+- `-u` 禁用 unsafe
+- `-S` 输出汇编代码
+- `-m` 输出优化信息
+
+### ldflags
+
+- `-s` 禁用符号表
+- `-w` 禁用 DRAWF 调试信息
+- `-X` 设置字符串全局变量值 `-X ver="0.99"`
+- `-H` 设置可执行文件格式 `-H windowsgui`
+
+`-w` 和 `-s` 通常一起使用，用来减少可执行文件的体积。但删除了调试信息后，可执行文件将无法使用 gdb/dlv 调试：
+
+```bash
+go build -ldflags="-w -s" ./abc.go
+```

@@ -1,9 +1,9 @@
 ---
-title: 常见错误
-weight: 9
+title: Go 常见错误
+weight: 10
 ---
 
-# 常见错误
+# Go 常见错误
 
 ## go mod tidy error message: "but go 1.16 would select"
 

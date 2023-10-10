@@ -1,12 +1,15 @@
 ---
-title: goroutine
+title: Goroutine
+weight: 2
 ---
+
+# Goroutine
 
 goroutine 是 Go 语言最显著的特征，**Go 从根上将一切都并发化，用 goroutine 运行一切，包括入口函数 `main`。**
 goroutine 用类似协程的方式处理并发单元，并且做的更深度的优化。这就让并发编程变的简单，不需要处理回调，不需要关注
 执行绪切换，一个 `go` 就搞定。
 
-## goroutine
+
 
 Go 语言在语言层面上支持了并发，简单将 goroutine 归为协程并不合适。Go runtime 会创建多个线程来执行并发任务，而且任务
 可以跨线程调度。所以 goroutine 更像是多线程和协程的结合体。
