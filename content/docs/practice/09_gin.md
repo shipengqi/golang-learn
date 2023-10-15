@@ -8,7 +8,7 @@ weight: 9
 Gin 作为 Web 框架提供 API 接口非常方便，但是在同一个项目中，既提供 API 接口，又要作为前端网页的静态服务器，就比较麻烦。通常 Angular (React/Vue) 
 项目需要在 Nginx 或者 Tomcat 转发才可以。有些小项目并不需要前后端分离，如何解决？
 
-## 1.16 版本的 embed
+## 利用 embed 标签
 
 Go 的 1.16 版本增加了 `embed` 的标签，可以利用这个标签将静态资源打包到二进制文件中。
 
@@ -169,7 +169,7 @@ func installController(g *gin.Engine) {
 
 `assets` 目录下会有 icon，image，json 等静态资源。
 
-> 注意 index.html 中 `link rel="icon" type="image/x-icon" href="assets/favicon.ico"`，`href` 的路径是 `assets/favicon.ico`，
+> 注意 `index.html` 中 `link rel="icon" type="image/x-icon" href="assets/favicon.ico"`，`href` 的路径是 `assets/favicon.ico`，
 > `deploy-url` 并不会给 `href="assets/favicon.ico"` 添加 static 前缀。所以如果是 `href="favicon.ico"`，编译后会找不到该文件。
 
 ```bash

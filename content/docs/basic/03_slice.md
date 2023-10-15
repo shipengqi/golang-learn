@@ -1,9 +1,9 @@
 ---
-title: Slice
+title: 切片
 weight: 3
 ---
 
-# Slice
+# 切片
 
 `slice` 的语法和数组很像，由于数组长度是固定的，所以使用 `slice` 相比数组会更灵活，`slice` 是动态的。
 

@@ -1,50 +1,9 @@
 ---
-title: 错误
+title: panic
+weight: 13
 ---
-# 错误
 
-## error 类型
-`error` 类型是内置的接口类型。`error` 类型可能是 `nil` 或者 `non-nil`，`nil` 表示成功。
-
-### 错误处理
-当函数调用返回错误时，最常用的处理方式是**传播错误**，如。
-```go
-resp, err := http.Get(url)
-if err != nil{ // 将这个HTTP错误返回给调用者
-    return nil, err
-}
-
-
-doc, err := html.Parse(resp.Body)
-resp.Body.Close()
-if err != nil {
-	// fmt.Errorf函数使用fmt.Sprintf格式化错误信息并返回
-	// 使用该函数前缀添加额外的上下文信息到原始错误信息。
-  return nil, fmt.Errorf("parsing %s as HTML: %v", url,err)
-}
-```
-由于错误信息经常是以链式组合在一起的，所以错误信息中应避免大写和换行符。
-
-编写错误信息时，我们要确保错误信息对问题细节的描述是详尽的。尤其是要注意错误信息表达的一致性，即相同的函数或同包内
-的同一组函数返回的错误在构成和处理方式上是相似的。
-
-根据不同的场景，我们可能要对错误做些特殊处理，比如错误重试机制，或者打印错误日志，或者直接忽略错误。
-
-### 文件结尾错误
-`io` 包在任何由文件结束引起的读取失败都返回同一个错误 `io.EOF`：
-```go
-in := bufio.NewReader(os.Stdin)
-for {
-    r, _, err := in.ReadRune()
-    if err == io.EOF {
-        break // finished reading
-    }
-    if err != nil {
-        return fmt.Errorf("read failed:%v", err)
-    }
-    // ...use r…
-}
-```
+# panic
 
 ## Panic 异常
 Go 运行时错误会引起 `painc` 异常。

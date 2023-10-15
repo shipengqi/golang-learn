@@ -1,6 +1,6 @@
 ---
 title: Go 性能分析
-weight: 5
+weight: 4
 ---
 
 # Go 性能分析

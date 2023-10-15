@@ -1,6 +1,6 @@
 ---
 title: Channel
-weight: 3
+weight: 9
 ---
 
 # Channel

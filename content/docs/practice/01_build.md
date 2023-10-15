@@ -94,7 +94,7 @@ mypkg_windows_amd64.go // only builds on windows 64bit platforms
 
 ### +build
 
-`// +build` 功能和 `//go:build` 一样。只不过 `//go:build` 是在 go 1.17 才引入的。与其他现有 Go 指令和编译指示的一致性，例如 `//go:generate`。
+`// +build` 功能和 `//go:build` 一样。只不过 `//go:build` 是在 go 1.17 才引入的。与其他现有 Go 指令保持一致，例如 `//go:generate`。
 
 ## 交叉编译
 

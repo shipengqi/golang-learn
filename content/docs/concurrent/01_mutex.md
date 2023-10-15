@@ -1,29 +1,15 @@
 ---
-title: 同步和锁
+title: 互斥锁
 weight: 1
 ---
 
-# 同步和锁
+# 互斥锁
 
-channel 不是用来代替锁的，channel 倾向于解决逻辑层次的并发处理，而锁用来保护局部范围的数据安全。
+Go 的标准库 `sync` 提供了两种锁类型：`sync.Mutex` 和 `sync.RWMutex`，前者是互斥锁（也叫做排他锁），后者是读写锁。
 
-## 共享变量
+互斥锁是并发控制的一个基本手段，是为了避免竞争而建立的一种并发控制机制。
 
-无论任何时候，只要有两个以上 goroutine 并发访问同一变量，且至少其中的一个是写操作的时候就会发生数据竞争。
-避免数据竞争的三种方式：
-
-1. 不去写变量。读取不可能出现数据竞争。
-2. 避免从多个 goroutine 访问变量，尽量把变量限定在了一个单独的 goroutine 中。(**不要使用共享数据来通信，使用通信
-来共享数据**)
-3. 互斥锁
-
-## 同步锁
-
-Go 语言包中的 `sync` 包提供了两种锁类型：`sync.Mutex` 和 `sync.RWMutex`，前者是互斥锁，后者是读写锁。
-
-### 互斥锁
-
-#### 使用 channel 实现互斥锁
+### 使用 channel 实现互斥锁
 
 我们可以使用容量只有 `1` 的 `channel` 来保证最多只有一个 goroutine 在同一时刻访问一个共享变量：
 
@@ -47,22 +33,20 @@ func Balance() int {
 }
 ```
 
-#### sync.Mutex
+### sync.Mutex
 
-**注意，如果 Mutex 作为匿名字段，那么接收器必须是指针。否则会导致锁失效**
+Go 定义的锁接口只有两个方法：
 
 ```go
-type data struct {
-    sync.Mutex
-}
-
-func (d *Data) test() {
-    d.Lock()
-    defer d.Unlock()
+type Locker interface {
+    Lock() // 请求锁
+    Unlock() // 释放锁
 }
 ```
 
-使用 `sync.Mutex` 互斥锁：
+`Mutex` 和 `RWMutex` 都实现了 `Locker` 接口
+
+**如果 `Mutex` 作为匿名字段，那么接收器必须是指针。否则会导致锁失效**。
 
 ```go
 import "sync"
@@ -74,100 +58,65 @@ var (
 
 func Deposit(amount int) {
   mu.Lock()
+  defer mu.Unlock()
   balance = balance + amount
-  mu.Unlock()
 }
 
 func Balance() int {
   mu.Lock()
+  defer mu.Unlock()
   b := balance
-  mu.Unlock()
   return b
 }
 ```
 
-`mutex` 会保护共享变量，当已经有 goroutine 获得这个锁，再有 goroutine 访问这个加锁的变量就会被阻塞，
-直到持有这个锁的 goroutine `unlock` 这个锁。
+当已经有 goroutine 调用 `Lock` 方法获得了这个锁，再有 goroutine 请求这个锁就会阻塞在 `Lock` 方法的调用上，
+直到持有这个锁的 goroutine 调用 `UnLock` 释放这个锁。
 
-我们可以**使用 `defer` 来 `unlock` 锁，保证在函数返回之后或者发生错误返回时一定会执行 `unlock`**。
+**使用 `defer` 来 `UnLock` 锁，确保在函数返回之后或者发生错误返回时一定会执行 `UnLock`**。
 
-### 读写锁 `sync.RWMutex`
-
-如果有多个 goroutine 读取变量，那么是并发安全的，这个时候使用 `sync.Mutex` 加锁就没有必要。可以使
-用 `sync.RWMutex` 读写锁（多读单写锁）。
-
-**读写锁是把对共享资源的“读操作”和“写操作”区别对待了。它可以对这两种操作施加不同程度的保护**。
-
-一个读写锁中实际上包含了两个锁，即：读锁和写锁。`sync.RWMutex` 类型中的 `Lock` 方法和 `Unlock` 方法分别用于对写锁进行
-锁定和解锁，而它的 `RLock` 方法和 `RUnlock` 方法则分别用于对读锁进行锁定和解锁。
-
-**对于某个受到读写锁保护的共享资源，多个写操作不能同时进行，写操作和读操作也不能同时进行，但多个读操作却可以同时进行**。
+#### 为什么一定要加锁？
 
 ```go
-var mu sync.RWMutex
-var balance int
-func Balance() int {
-  mu.RLock() // readers lock
-  defer mu.RUnlock()
-  return balance
+import (
+    "fmt"
+    "sync"
+)
+    
+func main() {
+    var count = 0
+    // 使用 WaitGroup 等待 10 个 goroutine 完成
+    var wg sync.WaitGroup
+    wg.Add(10)
+    for i := 0; i < 10; i++ {
+        go func() {
+            defer wg.Done()
+            // 对变量 count 执行 10 次加 1
+            for j := 0; j < 1000; j++ {
+                count++
+            }
+        }()
+    }
+    // 等待 10 个 goroutine 完成
+    wg.Wait()
+    fmt.Println(count)
 }
 ```
 
-**`RLock` 只能在共享变量没有任何写入操作时可用**。
+上面的例子中期望的最后计数的结果是 `10 * 1000 = 10000`。但是每次运行都可能得到不同的结果，基本上不会得到的一万的结果。
 
-**为什么只读操作也需要加锁**？
+这是因为，`count++` 不是一个原子操作，它至少包含 3 个步骤
 
-```go
-var x, y int
-go func() {
-  x = 1 // A1
-  fmt.Print("y:", y, " ") // A2
-}()
-go func() {
-  y = 1                   // B1
-  fmt.Print("x:", x, " ") // B2
-}()
-```
+1. 读取变量 count 的当前值，
+2. 对这个值加 1，
+3. 把结果保存到 count 中。
 
-上面的代码打印的结果可能是：
+因为不是原子操作，就会有数据竞争的问题。例如，两个 goroutine 同时读取到 count 的值为 8888，接着各自按照自己的逻辑加 1，值变成了 8889，把这个结果再写回到 count 变量。
+此时总数只增加了 1，但是应该是增加 2 才对。这是并发访问共享数据的常见问题。
 
-```bash
-y:0 x:1
-x:0 y:1
-x:1 y:1
-y:1 x:1
+数据竞争的问题可以再编译时通过 race detector 工具发现计数器程序的问题以及修复方法。
 
-# 还可能是
-x:0 y:0
-y:0 x:0
-```
 
-为什么会有 `x:0 y:0` 这种结果，在一个 goroutine 中，语句的执行顺序可以保证，在声明的例子，可以保证
-执行 `x = 1` 后打印 `y:`，但是不能保证打印 `y:` 时，另一个 goroutine 中 `y = 1` 是否已经执行。
-
-所以可能的话，将变量限定在 goroutine 内部；如果是多个 goroutine 都需要访问的变量，使用互斥条件来访问。
-
-### 注意事项
-
-- 不要重复锁定互斥锁；**对一个已经被锁定的互斥锁进行锁定，是会立即阻塞当前的 goroutine 的**。这个 goroutine 所执行的流程，
-会一直停滞在调用该互斥锁的 `Lock` 方法的那行代码上。直到该互斥锁的 `Unlock`方法被调用，并且这里的锁定操作成功完成，后续的代码
-（也就是临界区中的代码）才会开始执行。这也正是互斥锁能够保护临界区的原因所在。
-- 不要忘记解锁互斥锁，必要时使用 `defer` 语句；避免重复锁定。
-- 不要对尚未锁定或者已解锁的互斥锁解锁；**解锁“读写锁中未被锁定的写锁”，会立即引发 panic**，对于其中的读锁也是如此，并且同
-样是不可恢复的。
-- **不要在多个函数之间直接传递互斥锁。一旦，你把一个互斥锁同时用在了多个地方，就必然会有更多的 goroutine 争用这把锁**。
-这不但会让你的程序变慢，还会大大增加死锁（`deadlock`）的可能性。
-
-所谓的**死锁**，指的就是当前程序中的主 goroutine，以及我们启用的那些 goroutine 都已经被阻塞。这些 goroutine 可以被统
-称为用户级的 goroutine。这就相当于整个程序都已经停滞不前了。
-
-Go 语言运行时系统是不允许这种情况出现的，只要它发现所有的用户级 goroutine 都处于等待状态，就会自行抛出一个带有如下
-信息的 panic：`fatal error: all goroutines are asleep - deadlock!`
-
-**注意，这种由 Go 语言运行时系统自行抛出的 panic 都属于致命错误，都是无法被恢复的，调用 recover 函数对它们起不到任何作用。
-也就是说，一旦产生死锁，程序必然崩溃**。
-
-**最简单、有效的方式就是让每一个互斥锁都只保护一个临界区或一组相关临界区**。
 
 ## 条件变量 sync.Cond
 
