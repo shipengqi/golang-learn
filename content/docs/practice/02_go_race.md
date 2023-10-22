@@ -20,14 +20,39 @@ func main() {
 	go func() {
         m["1"] = "a"  // 第一个冲突的访问
 		c <- true
-    }
+    }()
     m["2"] = "b" // 第二个冲突的访问
 	<-c
     for k, v := range m {
         fmt.Println(k, v)
     }
 }
+```
 
+运行 `go run -race ./main.go` 或者 `go build -race ./main.go` 编译后再运行会抛出类似的错误：
+
+```
+==================
+WARNING: DATA RACE
+Write at 0x00c00010a090 by goroutine 7:
+  runtime.mapassign_faststr()
+      /usr/local/go/src/runtime/map_faststr.go:203 +0x0
+  main.main.func1()
+      /root/workspace/main.go:9 +0x4a
+
+Previous write at 0x00c00010a090 by main goroutine:
+  runtime.mapassign_faststr()
+      /usr/local/go/src/runtime/map_faststr.go:203 +0x0
+  main.main()
+      /root/workspace/main.go:12 +0x108
+
+Goroutine 7 (running) created at:
+  main.main()
+      /root/workspace/main.go:8 +0xeb
+==================
+2 b
+1 a
+Found 1 data race(s)
 ```
 
 ## 数据竞争检测器
@@ -68,7 +93,7 @@ GORACE="log_path=/tmp/race/report strip_path_prefix=/my/go/sources/" go test -ra
 可以通过编译标签来排除某些竞争检测器下的代码/测试：
 
 ```go
-// +build !race
+//go:build !race
 
 package foo
 

@@ -5,6 +5,30 @@ weight: 9
 
 # Channel
 
+### 使用 channel 实现互斥锁
+
+我们可以使用容量只有 `1` 的 `channel` 来保证最多只有一个 goroutine 在同一时刻访问一个共享变量：
+
+```go
+var (
+  sema = make(chan struct{}, 1) // a binary semaphore guarding balance
+  balance int
+)
+
+func Deposit(amount int) {
+  sema <- struct{}{} // acquire lock
+  balance = balance + amount
+  <-sema // release lock
+}
+
+func Balance() int {
+  sema <- struct{}{} // acquire lock
+  b := balance
+  <-sema // release lock
+  return b
+}
+```
+
 ```
 Don’t communicate by sharing memory; share memory by communicating.
 （不要通过共享内存来通信，而应该通过通信来共享内存。）

@@ -9,32 +9,6 @@ Go 的标准库 `sync` 提供了两种锁类型：`sync.Mutex` 和 `sync.RWMutex
 
 互斥锁是并发控制的一个基本手段，是为了避免竞争而建立的一种并发控制机制。
 
-### 使用 channel 实现互斥锁
-
-我们可以使用容量只有 `1` 的 `channel` 来保证最多只有一个 goroutine 在同一时刻访问一个共享变量：
-
-```go
-var (
-  sema = make(chan struct{}, 1) // a binary semaphore guarding balance
-  balance int
-)
-
-func Deposit(amount int) {
-  sema <- struct{}{} // acquire lock
-  balance = balance + amount
-  <-sema // release lock
-}
-
-func Balance() int {
-  sema <- struct{}{} // acquire lock
-  b := balance
-  <-sema // release lock
-  return b
-}
-```
-
-### sync.Mutex
-
 Go 定义的锁接口只有两个方法：
 
 ```go
@@ -45,8 +19,6 @@ type Locker interface {
 ```
 
 `Mutex` 和 `RWMutex` 都实现了 `Locker` 接口
-
-**如果 `Mutex` 作为匿名字段，那么接收器必须是指针。否则会导致锁失效**。
 
 ```go
 import "sync"
@@ -115,7 +87,6 @@ func main() {
 此时总数只增加了 1，但是应该是增加 2 才对。这是并发访问共享数据的常见问题。
 
 数据竞争的问题可以再编译时通过 race detector 工具发现计数器程序的问题以及修复方法。
-
 
 
 ## 条件变量 sync.Cond
