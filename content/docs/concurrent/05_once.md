@@ -18,7 +18,10 @@ func main() {
         })
     }
 }
+```
 
+运行：
+```
 $ go run main.go
 only once
 ```
