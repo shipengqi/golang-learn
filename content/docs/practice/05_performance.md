@@ -260,8 +260,160 @@ hello world!
 
 有些场景下，使用常量不仅可以减少程序的体积，性能也会有很大的提升。
 
+`usevar.go`：
+
+```go
+func Max(num1, num2 int) int {
+   if num1 > num2 {
+      return num1
+   }
+   return num2
+}
+
+var a, b = 10, 20
+
+func main() {
+   if Max(a, b) == a {
+      fmt.Println(a)
+   }
+}
+```
+
+`useconst.go`：
+
+```go
+func Max(num1, num2 int) int {
+	if num1 > num2 {
+		return num1
+	}
+	return num2
+}
+
+const a, b = 10, 20
+
+func main() {
+	if Max(a, b) == a {
+		fmt.Println(a)
+	}
+}
+```
+
+上面两个文件编译后的文件大小：
+
+```
+$ ls -lh
+-rwxr-xr-x 1 pshi2 1049089 1.9M Oct 24 13:45 usevar.exe
+-rwxr-xr-x 1 pshi2 1049089 1.5M Oct 24 13:44 useconst.exe
+```
+
+只是使用了常量代替变量，两个文件的大小就相差 0.3 M，为什么？
+
+使用 `-gcflags=-m` 参数可以查看编译器做了哪些优化：
+
+```
+$ go build -gcflags=-m ./useconst.go
+# command-line-arguments
+./main.go:5:6: can inline Max
+./main.go:15:8: inlining call to Max
+./main.go:16:14: inlining call to fmt.Println
+./main.go:16:14: ... argument does not escape
+./main.go:16:15: a escapes to heap
+```
+
+`Max` 函数被内联了，内联后的代码是这样的：
+
+```go
+func main() {
+	var result int
+	if a > b {
+		result = a
+	} else {
+		result = b
+    }
+	if result == a {
+		fmt.Println(a)
+	}
+}
+```
+
+由于 a 和 b 均为常量，在编译阶段会直接计算：
+
+```go
+func main() {
+	var result int
+	if 10 > 20 {
+		result = 10
+	} else {
+		result = 20
+    }
+	if result == 10 {
+		fmt.Println(a)
+	}
+}
+```
+
+`10 > 20` 永远为假，那么分支消除，`result` 永远等于 20：
+
+```go
+func main() {
+	if 20 == 10 {
+		fmt.Println(a)
+	}
+}
+```
+
+`20 == 10` 也永远为假，再次消除分支：
+
+```go
+func main() {}
+```
+
+但是对于变量 a 和 b，编译器并不知道运行过程中 a、b 会不会发生改变，因此不能够进行死码消除，这部分代码被编译到最终的二进制程序中。因此编译后的二进制程序体积大了 0.3 M。
+
+因此，**在声明全局变量时，如果能够确定为常量，尽量使用 `const` 而非 `var`**。这样很多运算在编译器即可执行。死码消除后，既减小了二进制的体积，又可以提高运行时的效率。
+
+### 可推断的局部变量
+
+Go 编译器只对函数的局部变量做了优化，当可以推断出函数的局部变量的值时，死码消除仍然会生效，例如：
+
+```go
+func main() {
+	var a, b = 10, 20
+	if max(a, b) == a {
+		fmt.Println(a)
+	}
+}
+```
+
+上面的代码与 `useconst.go` 的编译结果是一样的，因为编译器可以推断出 a、b 变量的值。
+
+如果增加了并发操作：
+
+```go
+func main() {
+	var a, b = 10, 20
+	go func() {
+		b, a = a, b
+	}()
+	if max(a, b) == a {
+		fmt.Println(a)
+	}
+}
+```
+
+上面的代码，a、b 的值不能有效推断，死码消除失效。
+
+包级别的变量推断难度是非常大的。函数内部的局部变量的修改只会发生在该函数中。但是如果是包级别的变量，对该变量的修改可能出现在：
+
+- 包初始化函数 `init()` 中，`init()` 函数可能有多个，且可能位于不同的 `.go` 源文件。
+- 包内的其他函数。
+- 如果是 public 变量（首字母大写），其他包引用时可修改。
+
+因此，Go 编译器只对局部变量作了优化。
 
 ## 利用 sync.Pool 减少堆分配
+
+[sync.Pool 使用](https://github.com/shipengqi/golang-learn/blob/master/content/docs/concurrent/06_pool.md)。
 
 ## 字符串与字节转换优化，减少内存分配
 
