@@ -413,6 +413,8 @@ func main() {
 
 ## 利用 sync.Pool 减少堆分配
 
+[sync.Pool 使用](https://github.com/shipengqi/golang-learn/blob/master/content/docs/concurrent/06_pool.md)。
+
 ## 字符串与字节转换优化，减少内存分配
 
 ## 垃圾回收优化

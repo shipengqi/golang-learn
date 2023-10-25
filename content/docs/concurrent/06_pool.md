@@ -62,12 +62,44 @@ Go 1.13 之前的 `sync.Pool` 的问题：
    - 缓存元素都被回收后，会导致 Get 命中率下降，Get 方法不得不新创建很多对象。
 2. 底层使用了 `Mutex`，并发请求竞争锁激烈的时候，会导致性能的下降。
 
-1.13 进行了优化，移除了 `Mutex`，`sync.Pool` 重要的两个字段是 `local` 和 `victim`，都是要用来存储空闲的元素。
+Go 1.13 进行了优化，移除了 `Mutex`，增加了 `victim` 缓存。
 
-每次垃圾回收的时候，Pool 会把 `victim` 中的对象移除，然后把 `local` 的数据给 `victim`，这样的话，`local` 就会被清空，而 `victim` 中的元素还有机会被重新使用。
-`victim` 中的元素如果被 `Get` 取走，那么这个元素复活了。但是，如果 `Get` 的并发不是很大，元素没有被 `Get` 取走，那么就会被移除掉。
+Pool 的结构体：
 
-垃圾回收时 `sync.Pool` 的处理逻辑：
+```go
+type Pool struct {
+	// Pool 不希望被复制，noCopy 是 go 1.7 开始引入的一个静态检查机制
+	// 使用 go vet 工具可以检测到用户代码是否复制了 Pool
+	noCopy noCopy
+
+    // 每个 P 的本地队列，实际类型为 [P]poolLocal
+	local     unsafe.Pointer // local fixed-size per-P pool, actual type is [P]poolLocal
+	// [P]poolLocal的大小
+	localSize uintptr        // size of the local array
+
+	victim     unsafe.Pointer // local from previous cycle
+	victimSize uintptr        // size of victims array
+
+	// 自定义的对象创建回调函数，当 pool 中无可用对象时会调用此函数
+	New func() interface{}
+}
+```
+
+重要的两个字段是 `local` 和 `victim`，都是要用来存储空闲的元素。
+
+`local` 字段存储指向 `[P]poolLocal` 数组（严格来说，它是一个切片）的指针。访问时，P 的 id 对应 `[P]poolLocal` 下标索引。通过这样的设计，多个 goroutine 使用
+同一个 Pool 时，减少了竞争，提升了性能。
+
+在 `src/sync/pool.go` 文件的 `init` 函数里，注册了 GC 发生时，如何清理 Pool 的函数：
+
+```go
+func init() {
+	runtime_registerPoolCleanup(poolCleanup)
+}
+```
+
+GC 时 `sync.Pool` 的处理逻辑：
+
 ```go
 func poolCleanup() {
     // 丢弃当前 victim, STW 所以不用加锁
@@ -88,6 +120,10 @@ func poolCleanup() {
 }
 ```
 
+`poolCleanup` 会在 STW 阶段被调用。主要是将 `local` 和 `victim` 作交换，这样也就不致于让 GC 把所有的 Pool 都清空了。
+
+> 如果 `sync.Pool` 的获取、释放速度稳定，那么就不会有新的池对象进行分配。如果获取的速度下降了，那么对象可能会在两个 GC 周期内被释放，而不是 Go 1.13 以前的一个 GC 周期。
+
 调用 `Get` 时，会先从 `victim` 中获取，如果没有找到，则就会从 `local` 中获取，如果 `local` 中也没有，就会执行 `New` 创建新的元素。
 
 ### 内存泄露
@@ -103,11 +139,30 @@ func poolCleanup() {
 // but it retains the underlying storage for use by future writes.
 // Reset is the same as Truncate(0).
 func (b *Buffer) Reset() {
-	// 使用下标初始化切片，不会拷贝原数组或者原切片中的数据
-	// 它只会创建一个 指向原数组的 切片结构体，所以修改新切片的数据也会修改原切片。
+	// 基于已有 slice 创建新 slice 对象，不会拷贝原数组或者原切片中的数据，新 slice 和老 slice 共用底层数组
+	// 它只会创建一个 指向原数组的 切片结构体，新老 slice 对底层数组的更改都会影响到彼此。
 	b.buf = b.buf[:0]
 	b.off = 0
 	b.lastRead = opInvalid
+}
+
+
+// 切片结构体
+// runtime/slice.go
+type slice struct {
+    array unsafe.Pointer // 元素指针，指向底层数组
+    len   int // 长度 
+    cap   int // 容量
+}
+```
+
+切片结构体：
+```go
+// runtime/slice.go
+type slice struct {
+    array unsafe.Pointer // 元素指针，指向底层数组
+    len   int // 长度 
+    cap   int // 容量
 }
 ```
 
