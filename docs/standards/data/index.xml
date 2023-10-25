@@ -1,61 +1,0 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-  <channel>
-    <title>data on Golang Learning</title>
-    <link>http://shipengqi.github.io/golang-learn/docs/standards/data/</link>
-    <description>Recent content in data on Golang Learning</description>
-    <generator>Hugo -- gohugo.io</generator>
-    <language>en</language><atom:link href="http://shipengqi.github.io/golang-learn/docs/standards/data/index.xml" rel="self" type="application/rss+xml" />
-    <item>
-      <title>big</title>
-      <link>http://shipengqi.github.io/golang-learn/docs/standards/data/big/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://shipengqi.github.io/golang-learn/docs/standards/data/big/</guid>
-      <description>big#big 是 Go 语言提供的进行大数操作的标准库，实现了任意精度算术（大数）。
-Go 语言中的 float64 类型进行浮点运算，返回结果将精确到 15 位，足以满足大多数的任务。但是当对超出 int64 或者 uint64 类型这样的大 数进行计算时，如果对精度没有要求，float32 或者 float64 可以胜任，但如果对精度有严格要求的时候，则不能使用浮点数，在内存中它们只能 被近似的表示。
-对于整数的高精度计算 Go 语言中提供了 big 包，被包含在 math 包下：有用来表示大整数的 big.Int 和表示大有理数的 big.Rat 类型 （可以表示为 2/5 或 3.1416 这样的分数，而不是无理数或 π）。这些类型可以实现任意位类型的数字，只要内存足够大。缺点是更大的内存 和处理开销使它们使用起来要比内置的数字类型慢很多。
-大的整型数字是通过 big.NewInt(n) 来构造的，其中 n 为 int64 类型整数。而大有理数是通过 big.NewRat(n, d) 方法构造。n（分子） 和 d（分母）都是 int64 型整数。因为 Go 语言不支持运算符重载，所以所有大数字类型都有像是 Add() 和 Mul() 这样的方法。它们作用 于作为 receiver 的整数和有理数，大多数情况下它们修改 receiver 并以 receiver 作为返回结果。因为没有必要创建 big.Int 类型的临 时变量来存放中间结果，所以运算可以被链式地调用，并节省内存。</description>
-    </item>
-    
-    <item>
-      <title>container</title>
-      <link>http://shipengqi.github.io/golang-learn/docs/standards/data/container/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://shipengqi.github.io/golang-learn/docs/standards/data/container/</guid>
-      <description>container#container 该包实现了三个复杂的数据结构：链表，环，堆。也就是说使用这三个数据结构的时候不需要再从头开始写算法了。
-链表#链表就是一个有 prev 和 next 指针的数组了。 container 包中有两个公开的结构—— List 和 Element，List 实现了一个双向链表（简称链表）， 而 Element 则代表了链表中元素的结构。
-type Element struct { next, prev *Element // 上一个元素和下一个元素 list *List // 元素所在链表 Value interface{} // 元素 } type List struct { root Element // 链表的根元素 len int // 链表的长度 } List的四种方法:
-MoveBefore 方法和 MoveAfter 方法，它们分别用于把给定的元素移动到另一个元素的前面和后面。 MoveToFront 方法和 MoveToBack 方法，分别用于把给定的元素移动到链表的最前端和最后端。 // moves element &amp;#34;e&amp;#34; to its new position before &amp;#34;mark&amp;#34;.</description>
-    </item>
-    
-    <item>
-      <title>math</title>
-      <link>http://shipengqi.github.io/golang-learn/docs/standards/data/math/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://shipengqi.github.io/golang-learn/docs/standards/data/math/</guid>
-      <description>math#math 包实现的就是数学函数计算。
-三角函数#正弦函数，反正弦函数，双曲正弦，反双曲正弦
-- func Sin(x float64) float64- func Asin(x float64) float64- func Sinh(x float64) float64- func Asinh(x float64) float64 一次性返回 sin,cos
-func Sincos(x float64) (sin, cos float64) 余弦函数，反余弦函数，双曲余弦，反双曲余弦
-- func Cos(x float64) float64- func Acos(x float64) float64- func Cosh(x float64) float64- func Acosh(x float64) float64 正切函数，反正切函数，双曲正切，反双曲正切
-- func Tan(x float64) float64- func Atan(x float64) float64 和 func Atan2(y, x float64) float64- func Tanh(x float64) float64- func Atanh(x float64) float64 幂次函数#- func Cbrt(x float64) float64 // 立方根函数- func Pow(x, y float64) float64 // x 的幂函数- func Pow10(e int) float64 // 10 根的幂函数- func Sqrt(x float64) float64 // 平方根- func Log(x float64) float64 // 对数函数- func Log10(x float64) float64 // 10 为底的对数函数- func Log2(x float64) float64 // 2 为底的对数函数- func Log1p(x float64) float64 // log(1 + x)- func Logb(x float64) float64 // 相当于 log2(x) 的绝对值- func Ilogb(x float64) int // 相当于 log2(x) 的绝对值的整数部分- func Exp(x float64) float64 // 指数函数- func Exp2(x float64) float64 // 2 为底的指数函数- func Expm1(x float64) float64 // Exp(x) - 1 特殊函数#- func Inf(sign int) float64 // 正无穷- func IsInf(f float64, sign int) bool // 是否正无穷- func NaN() float64 // 无穷值- func IsNaN(f float64) (is bool) // 是否是无穷值- func Hypot(p, q float64) float64 // 计算直角三角形的斜边长 类型转化函数#- func Float32bits(f float32) uint32 // float32 和 unit32 的转换- func Float32frombits(b uint32) float32 // uint32 和 float32 的转换- func Float64bits(f float64) uint64 // float64 和 uint64 的转换- func Float64frombits(b uint64) float64 // uint64 和 float64 的转换 其他函数#- func Abs(x float64) float64 // 绝对值函数- func Ceil(x float64) float64 // 向上取整- func Floor(x float64) float64 // 向下取整- func Mod(x, y float64) float64 // 取模- func Modf(f float64) (int float64, frac float64) // 分解 f，以得到 f 的整数和小数部分- func Frexp(f float64) (frac float64, exp int) // 分解 f，得到 f 的位数和指数- func Max(x, y float64) float64 // 取大值- func Min(x, y float64) float64 // 取小值- func Dim(x, y float64) float64 // 复数的维数- func J0(x float64) float64 // 0 阶贝塞尔函数- func J1(x float64) float64 // 1 阶贝塞尔函数- func Jn(n int, x float64) float64 // n 阶贝塞尔函数- func Y0(x float64) float64 // 第二类贝塞尔函数 0 阶- func Y1(x float64) float64 // 第二类贝塞尔函数 1 阶- func Yn(n int, x float64) float64 // 第二类贝塞尔函数 n 阶- func Erf(x float64) float64 // 误差函数- func Erfc(x float64) float64 // 余补误差函数- func Copysign(x, y float64) float64 // 以 y 的符号返回 x 值- func Signbit(x float64) bool // 获取 x 的符号- func Gamma(x float64) float64 // 伽玛函数- func Lgamma(x float64) (lgamma float64, sign int) // 伽玛函数的自然对数- func Ldexp(frac float64, exp int) float64 // value 乘以 2 的 exp 次幂- func Nextafter(x, y float64) (r float64) // 返回参数 x 在参数 y 方向上可以表示的最接近的数值，若 x 等于 y，则返回 x- func Nextafter32(x, y float32) (r float32) // 返回参数 x 在参数 y 方向上可以表示的最接近的数值，若 x 等于 y，则返回 x- func Remainder(x, y float64) float64 // 取余运算- func Trunc(x float64) float64 // 截取函数 </description>
-    </item>
-    
-    <item>
-      <title>sort</title>
-      <link>http://shipengqi.github.io/golang-learn/docs/standards/data/sort/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://shipengqi.github.io/golang-learn/docs/standards/data/sort/</guid>
-      <description>sort#sort 包中实现了几种基本的排序算法：插入排序、归并排序、堆排序和快速排序。但是这四种排序方法是不公开的，只用于 sort 包 内部使用。所以在对数据集合排序时不必考虑应当选择哪一种排序方法，只要实现了 sort.Interface 定义的三个方法就可以对数据集合进 行排序。sort 包会根据实际数据自动选择高效的排序算法。
-type Interface interface { // Len 为集合内元素的总数 Len() int // 如果 index 为 i 的元素小于 index 为 j 的元素，则返回 true，否则 false Less(i, j int) bool // Swap 交换索引为 i 和 j 的元素 Swap(i, j int) } 为了方便对常用数据类型的操作，sort 包原生支持 []int、[]float64 和 []string 三种内建数据类型切片的排序操作。 即不必实现 sort.Interface 接口的三个方法。
-数据集合排序#对数据集合（包括自定义数据类型的集合）排序需要实现 sort.Interface 接口的三个方法：
-数据集合实现了这三个方法后，即可调用该包的 Sort() 方法进行排序。 Sort() 方法定义如下：
-func Sort(data Interface) Sort() 方法惟一的参数就是待排序的数据集合。</description>
-    </item>
-    
-  </channel>
-</rss>

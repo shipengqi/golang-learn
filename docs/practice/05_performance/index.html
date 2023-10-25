@@ -1,0 +1,222 @@
+<!doctype html><html lang=en dir=ltr><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="Go 性能优化 # JSON 优化 # Go 官方的 encoding/json 是通过反射来实现的。性能相对有些慢。 可以使用第三方库来替代标准库：
+json-iterator/go，完全兼容标准库，性能有很大提升。 go-json，完全兼容标准库，性能强于 json-iterator/go。 sonic，字节开发的的 JSON 序列化/反序列化库，速度快，但是对硬件有一些要求。 实际开发中可以根据编译标签来选择 JSON 库，参考 component-base/json。
+使用空结构体 # 在 Go 中空结构体 struct{} 不占据内存空间：
+package main import ( &#34;fmt&#34; &#34;unsafe&#34; ) func main() { fmt.Println(unsafe.Sizeof(struct{}{})) // 0 } 空结构体不占据内存空间，因此被广泛作为各种场景下的占位符使用，可以节省资源。
+集合 Set # 要实现一个 Set，通常会使用 map 来实现，比如 map[string]bool。 但是对于集合来说， 只需要 map 的键，而不需要值。将值设置为 bool 类型，就会多占据 1 个字节。这个时候就可以使用空结构体 map[string]struct{}。
+channel 通知 # 有时候使用 channel 不需要发送任何的数据，只用来通知 goroutine 执行任务，或结束等。这个时候就可以使用空结构体。
+内存对齐 # 为什么需要内存对齐？ # CPU 访问内存时，并不是逐个字节访问，而是以字长（word size）为单位访问。比如："><meta name=theme-color media="(prefers-color-scheme: light)" content="#ffffff"><meta name=theme-color media="(prefers-color-scheme: dark)" content="#343a40"><meta name=color-scheme content="light dark"><meta property="og:title" content="Go 性能优化"><meta property="og:description" content="Go 性能优化 # JSON 优化 # Go 官方的 encoding/json 是通过反射来实现的。性能相对有些慢。 可以使用第三方库来替代标准库：
+json-iterator/go，完全兼容标准库，性能有很大提升。 go-json，完全兼容标准库，性能强于 json-iterator/go。 sonic，字节开发的的 JSON 序列化/反序列化库，速度快，但是对硬件有一些要求。 实际开发中可以根据编译标签来选择 JSON 库，参考 component-base/json。
+使用空结构体 # 在 Go 中空结构体 struct{} 不占据内存空间：
+package main import ( &#34;fmt&#34; &#34;unsafe&#34; ) func main() { fmt.Println(unsafe.Sizeof(struct{}{})) // 0 } 空结构体不占据内存空间，因此被广泛作为各种场景下的占位符使用，可以节省资源。
+集合 Set # 要实现一个 Set，通常会使用 map 来实现，比如 map[string]bool。 但是对于集合来说， 只需要 map 的键，而不需要值。将值设置为 bool 类型，就会多占据 1 个字节。这个时候就可以使用空结构体 map[string]struct{}。
+channel 通知 # 有时候使用 channel 不需要发送任何的数据，只用来通知 goroutine 执行任务，或结束等。这个时候就可以使用空结构体。
+内存对齐 # 为什么需要内存对齐？ # CPU 访问内存时，并不是逐个字节访问，而是以字长（word size）为单位访问。比如："><meta property="og:type" content="article"><meta property="og:url" content="http://shipengqi.github.io/golang-learn/docs/practice/05_performance/"><meta property="article:section" content="docs"><meta property="article:modified_time" content="2023-10-25T15:27:01+08:00"><title>Go 性能优化 | Golang Learning</title><link rel=manifest href=/golang-learn/manifest.json><link rel=icon href=/golang-learn/favicon.png><link rel=stylesheet href=/golang-learn/book.min.33a48f5432973b8ff9a82679d9e45d67f2c15d4399bd2829269455cfe390b5e8.css integrity="sha256-M6SPVDKXO4/5qCZ52eRdZ/LBXUOZvSgpJpRVz+OQteg=" crossorigin=anonymous><script defer src=/golang-learn/flexsearch.min.js></script>
+<script defer src=/golang-learn/en.search.min.0b9408b6e377d156241c62b7a8572384a62c3b29ca8ba1702cade0f681cf195b.js integrity="sha256-C5QItuN30VYkHGK3qFcjhKYsOynKi6FwLK3g9oHPGVs=" crossorigin=anonymous></script>
+<script defer src=/golang-learn/sw.min.e9a55528e030e44ecbe1b5a8da7dd8fb40bd282d02dc4574e81b999a6a21bc84.js integrity="sha256-6aVVKOAw5E7L4bWo2n3Y+0C9KC0C3EV06BuZmmohvIQ=" crossorigin=anonymous></script></head><body dir=ltr><input type=checkbox class="hidden toggle" id=menu-control>
+<input type=checkbox class="hidden toggle" id=toc-control><main class="container flex"><aside class=book-menu><div class=book-menu-content><nav><h2 class=book-brand><a class="flex align-center" href=/golang-learn/><span>Golang Learning</span></a></h2><div class=book-search><input type=text id=book-search-input placeholder=Search aria-label=Search maxlength=64 data-hotkeys=s/><div class="book-search-spinner hidden"></div><ul id=book-search-results></ul></div><ul><li><a href=https://github.com/shipengqi/golang-learn target=_blank rel=noopener>Github</a></li><li><a href=https://shipengqi.github.io/ target=_blank rel=noopener>Blog</a></li></ul><ul><li><span>语言基础</span><ul><li><a href=/golang-learn/docs/basic/01_basic_type/>基础据类型</a></li><li><a href=/golang-learn/docs/basic/02_array/>数组</a></li><li><a href=/golang-learn/docs/basic/03_slice/>切片</a></li><li><a href=/golang-learn/docs/basic/04_map/>map</a></li><li><a href=/golang-learn/docs/basic/05_function/>函数</a></li><li><a href=/golang-learn/docs/basic/06_interface/>接口</a></li><li><a href=/golang-learn/docs/basic/07_reflect/>反射</a></li><li><a href=/golang-learn/docs/basic/08_generic/>泛型</a></li><li><a href=/golang-learn/docs/basic/09_pointer/>指针</a></li><li><a href=/golang-learn/docs/basic/10_range/>range</a></li><li><a href=/golang-learn/docs/basic/11_select/>select</a></li><li><a href=/golang-learn/docs/basic/12_defer/>defer</a></li><li><a href=/golang-learn/docs/basic/13_panic/>panic</a></li><li><a href=/golang-learn/docs/basic/14_make_new/>make 和 new</a></li><li><a href=/golang-learn/docs/basic/15_oop/>面向对象</a></li></ul></li><li><a href=/golang-learn/docs/concurrent/>并发编程</a><ul><li><a href=/golang-learn/docs/concurrent/01_mutex/>互斥锁</a></li><li><a href=/golang-learn/docs/concurrent/02_rwmutex/>读写锁</a></li><li><a href=/golang-learn/docs/concurrent/03_waitgroup/>WaitGroup</a></li><li><a href=/golang-learn/docs/concurrent/04_cond/>条件变量</a></li><li><a href=/golang-learn/docs/concurrent/05_once/>Once</a></li><li><a href=/golang-learn/docs/concurrent/06_pool/>Pool</a></li><li><a href=/golang-learn/docs/concurrent/07_context/>Context</a></li><li><a href=/golang-learn/docs/concurrent/08_atomic/>原子操作</a></li><li><a href=/golang-learn/docs/concurrent/09_channel/>Channel</a></li></ul></li><li><span>实践</span><ul><li><a href=/golang-learn/docs/practice/01_build/>Go 编译</a></li><li><a href=/golang-learn/docs/practice/02_go_race/>Go 数据竞争检测器</a></li><li><a href=/golang-learn/docs/practice/03_test/>Go 测试</a></li><li><a href=/golang-learn/docs/practice/04_pprof/>Go 性能分析</a></li><li><a href=/golang-learn/docs/practice/05_performance/ class=active>Go 性能优化</a></li><li><a href=/golang-learn/docs/practice/06_trace/>Go Trace</a></li><li><a href=/golang-learn/docs/practice/07_coredump/>Go CoreDump 调试</a></li><li><a href=/golang-learn/docs/practice/08_mod/>Go Modules</a></li><li><a href=/golang-learn/docs/practice/09_gin/>Gin 静态服务器</a></li><li><a href=/golang-learn/docs/practice/10_remote_dev/>Go 远程开发调试</a></li><li><a href=/golang-learn/docs/practice/11_errors/>Go 常见错误</a></li></ul></li><li><span>底层原理</span><ul><li><a href=/golang-learn/docs/advance/mm/>内存管理</a></li><li><a href=/golang-learn/docs/advance/gc/>垃圾回收</a></li><li><a href=/golang-learn/docs/advance/scheduler/>调度器</a></li></ul></li></ul></nav><script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script></div></aside><div class=book-page><header class=book-header><div class="flex align-center justify-between"><label for=menu-control><img src=/golang-learn/svg/menu.svg class=book-icon alt=Menu></label>
+<strong>Go 性能优化</strong>
+<label for=toc-control><img src=/golang-learn/svg/toc.svg class=book-icon alt="Table of Contents"></label></div><aside class="hidden clearfix"><nav id=TableOfContents><ul><li><a href=#go-性能优化>Go 性能优化</a><ul><li><a href=#json-优化>JSON 优化</a></li><li><a href=#使用空结构体>使用空结构体</a><ul><li><a href=#集合-set>集合 Set</a></li><li><a href=#channel-通知>channel 通知</a></li></ul></li><li><a href=#内存对齐>内存对齐</a><ul><li><a href=#为什么需要内存对齐>为什么需要内存对齐？</a></li><li><a href=#对齐系数>对齐系数</a></li><li><a href=#对齐规则>对齐规则</a></li><li><a href=#go-结构体内存对齐>Go 结构体内存对齐</a></li><li><a href=#空-struct-的对齐>空 <code>struct{}</code> 的对齐</a></li></ul></li><li><a href=#逃逸分析>逃逸分析</a><ul><li><a href=#传值还是传指针>传值还是传指针？</a></li></ul></li><li><a href=#死码消除>死码消除</a><ul><li><a href=#使用常量提升性能>使用常量提升性能</a></li><li><a href=#可推断的局部变量>可推断的局部变量</a></li></ul></li><li><a href=#利用-syncpool-减少堆分配>利用 sync.Pool 减少堆分配</a></li><li><a href=#控制-goroutine-的并发数量>控制 goroutine 的并发数量</a></li><li><a href=#字符串与字节转换优化减少内存分配>字符串与字节转换优化，减少内存分配</a></li><li><a href=#垃圾回收优化>垃圾回收优化</a></li><li><a href=#设置-gomaxprocs>设置 GOMAXPROCS</a></li></ul></li></ul></nav></aside></header><article class=markdown><h1 id=go-性能优化>Go 性能优化
+<a class=anchor href=#go-%e6%80%a7%e8%83%bd%e4%bc%98%e5%8c%96>#</a></h1><h2 id=json-优化>JSON 优化
+<a class=anchor href=#json-%e4%bc%98%e5%8c%96>#</a></h2><p>Go 官方的 <code>encoding/json</code> 是通过反射来实现的。性能相对有些慢。 可以使用第三方库来替代标准库：</p><ul><li><a href=https://github.com/json-iterator/go>json-iterator/go</a>，完全兼容标准库，性能有很大提升。</li><li><a href=https://github.com/goccy/go-json>go-json</a>，完全兼容标准库，性能强于 <code>json-iterator/go</code>。</li><li><a href=https://github.com/bytedance/sonic>sonic</a>，字节开发的的 JSON 序列化/反序列化库，速度快，但是对硬件有一些要求。</li></ul><p>实际开发中可以根据编译标签来选择 <code>JSON</code> 库，参考 <a href=https://github.com/shipengqi/component-base/tree/main/json>component-base/json</a>。</p><h2 id=使用空结构体>使用空结构体
+<a class=anchor href=#%e4%bd%bf%e7%94%a8%e7%a9%ba%e7%bb%93%e6%9e%84%e4%bd%93>#</a></h2><p>在 Go 中空结构体 <code>struct{}</code> 不占据内存空间：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#f92672>package</span> <span style=color:#a6e22e>main</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> (
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;fmt&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;unsafe&#34;</span>
+</span></span><span style=display:flex><span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>main</span>() {
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Println</span>(<span style=color:#a6e22e>unsafe</span>.<span style=color:#a6e22e>Sizeof</span>(<span style=color:#66d9ef>struct</span>{}{})) <span style=color:#75715e>// 0
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>}
+</span></span></code></pre></div><p>空结构体不占据内存空间，因此被广泛作为各种场景下的占位符使用，可以节省资源。</p><h3 id=集合-set>集合 Set
+<a class=anchor href=#%e9%9b%86%e5%90%88-set>#</a></h3><p>要实现一个 <code>Set</code>，通常会使用 <code>map</code> 来实现，比如 <code>map[string]bool</code>。 但是对于集合来说， 只需要 <code>map</code> 的键，而不需要值。将值设置为 <code>bool</code>
+类型，就会多占据 1 个字节。这个时候就可以使用空结构体 <code>map[string]struct{}</code>。</p><h3 id=channel-通知>channel 通知
+<a class=anchor href=#channel-%e9%80%9a%e7%9f%a5>#</a></h3><p>有时候使用 <code>channel</code> 不需要发送任何的数据，只用来通知 goroutine 执行任务，或结束等。这个时候就可以使用空结构体。</p><h2 id=内存对齐>内存对齐
+<a class=anchor href=#%e5%86%85%e5%ad%98%e5%af%b9%e9%bd%90>#</a></h2><h3 id=为什么需要内存对齐>为什么需要内存对齐？
+<a class=anchor href=#%e4%b8%ba%e4%bb%80%e4%b9%88%e9%9c%80%e8%a6%81%e5%86%85%e5%ad%98%e5%af%b9%e9%bd%90>#</a></h3><p>CPU 访问内存时，并不是逐个字节访问，而是以<strong>字长</strong>（word size）为单位访问。比如：</p><ul><li>64 位系统 1 个字长等于 8 个字节</li><li>32 位系统 1 个字长等于 4 个字节</li></ul><p>因此 CPU 在读取内存时是一块一块进行读取的。这么设计的目的，是减少 CPU 访问内存的次数，加大 CPU 访问内存的吞吐量。比如同样读取 8 个字节的数据，一
+次读取 4 个字节那么只需要读取 2 次。</p><p>进行内存对齐，就是为了减少 CPU 访问内存的次数。</p><p><img src=https://raw.githubusercontent.com/shipengqi/illustrations/0a6f953f0387c30638ae8b0e03dda230194d10ab/go/mem-align.png alt=mem-align></p><p>上图中，假如 CPU 字长为 4 个字节。变量 a 和 b 的大小为 3 个字节，没有内存对齐之前，CPU 读取 b 时，需要访问两次内存：</p><ol><li>第一次读取 0-3 字节，移除不需要的 0-2 字节，拿到 b 的第一个字节，</li><li>第二次读取 4-7 字节，读取到 b 的后面两个字节，并移除不需要的 6，7 字节。</li><li>合并 4 个字节的数据</li><li>放入寄存器</li></ol><p>内存对齐后，a 和 b 都占据了 4 个字节空间，CPU 读取 b 就只需要访问一次内存，读取到 4-7 字节。</p><h3 id=对齐系数>对齐系数
+<a class=anchor href=#%e5%af%b9%e9%bd%90%e7%b3%bb%e6%95%b0>#</a></h3><p>不同平台上的编译器都有自己默认的 “对齐系数”，常用的平台的系数如下：</p><ul><li>64 位系统：8</li><li>32 位系统：4</li></ul><p><code>unsafe</code> 标准库提供了 <code>Alignof</code> 方法，可以返回一个类型的对齐系数。例如：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>main</span>() {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Printf</span>(<span style=color:#e6db74>&#34;bool align: %d\n&#34;</span>, <span style=color:#a6e22e>unsafe</span>.<span style=color:#a6e22e>Alignof</span>(bool(<span style=color:#66d9ef>true</span>))) <span style=color:#75715e>// bool align: 1
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>    <span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Printf</span>(<span style=color:#e6db74>&#34;int8 align: %d\n&#34;</span>, <span style=color:#a6e22e>unsafe</span>.<span style=color:#a6e22e>Alignof</span>(int8(<span style=color:#ae81ff>0</span>))) <span style=color:#75715e>// int8 align: 1
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>    <span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Printf</span>(<span style=color:#e6db74>&#34;int16 align: %d\n&#34;</span>, <span style=color:#a6e22e>unsafe</span>.<span style=color:#a6e22e>Alignof</span>(int16(<span style=color:#ae81ff>0</span>))) <span style=color:#75715e>// int16 align: 2
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>    <span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Printf</span>(<span style=color:#e6db74>&#34;int32 align: %d\n&#34;</span>, <span style=color:#a6e22e>unsafe</span>.<span style=color:#a6e22e>Alignof</span>(int32(<span style=color:#ae81ff>0</span>))) <span style=color:#75715e>// int32 align: 4
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>    <span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Printf</span>(<span style=color:#e6db74>&#34;int64 align: %d\n&#34;</span>, <span style=color:#a6e22e>unsafe</span>.<span style=color:#a6e22e>Alignof</span>(int64(<span style=color:#ae81ff>0</span>))) <span style=color:#75715e>// int64 align: 8
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>    <span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Printf</span>(<span style=color:#e6db74>&#34;byte align: %d\n&#34;</span>, <span style=color:#a6e22e>unsafe</span>.<span style=color:#a6e22e>Alignof</span>(byte(<span style=color:#ae81ff>0</span>))) <span style=color:#75715e>// byte align: 1
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>    <span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Printf</span>(<span style=color:#e6db74>&#34;string align: %d\n&#34;</span>, <span style=color:#a6e22e>unsafe</span>.<span style=color:#a6e22e>Alignof</span>(<span style=color:#e6db74>&#34;EDDYCJY&#34;</span>)) <span style=color:#75715e>// string align: 8
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>    <span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Printf</span>(<span style=color:#e6db74>&#34;map align: %d\n&#34;</span>, <span style=color:#a6e22e>unsafe</span>.<span style=color:#a6e22e>Alignof</span>(<span style=color:#66d9ef>map</span>[<span style=color:#66d9ef>string</span>]<span style=color:#66d9ef>string</span>{})) <span style=color:#75715e>// map align: 8
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>}
+</span></span></code></pre></div><h3 id=对齐规则>对齐规则
+<a class=anchor href=#%e5%af%b9%e9%bd%90%e8%a7%84%e5%88%99>#</a></h3><ol><li>对于任意类型的变量 <code>x</code>，<code>unsafe.Alignof(x)</code> 至少为 1。</li><li>对于 <code>struct</code> 结构体类型的变量 <code>x</code>，计算 <code>x</code> 每一个字段 <code>f</code> 的 <code>unsafe.Alignof(x.f)</code>，<code>unsafe.Alignof(x)</code> 等于其中的最大值。</li><li>对于 <code>array</code> 数组类型的变量 <code>x</code>，<code>unsafe.Alignof(x)</code> 等于构成数组的元素类型的对齐倍数。</li></ol><h3 id=go-结构体内存对齐>Go 结构体内存对齐
+<a class=anchor href=#go-%e7%bb%93%e6%9e%84%e4%bd%93%e5%86%85%e5%ad%98%e5%af%b9%e9%bd%90>#</a></h3><p><code>struct</code> 中的字段的顺序会对 <code>struct</code> 的大小产生影响吗？</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Part1</span> <span style=color:#66d9ef>struct</span> {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>a</span> <span style=color:#66d9ef>int8</span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>c</span> <span style=color:#66d9ef>int32</span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>b</span> <span style=color:#66d9ef>int16</span>
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Part2</span> <span style=color:#66d9ef>struct</span> {
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>a</span> <span style=color:#66d9ef>int8</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>c</span> <span style=color:#66d9ef>int32</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>b</span> <span style=color:#66d9ef>int16</span>
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>main</span>()  {
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>part1</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>Part1</span>{}
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Printf</span>(<span style=color:#e6db74>&#34;part1 size: %d, align: %d\n&#34;</span>, <span style=color:#a6e22e>unsafe</span>.<span style=color:#a6e22e>Sizeof</span>(<span style=color:#a6e22e>part1</span>), <span style=color:#a6e22e>unsafe</span>.<span style=color:#a6e22e>Alignof</span>(<span style=color:#a6e22e>part1</span>))
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>part2</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>Part2</span>{}
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Printf</span>(<span style=color:#e6db74>&#34;part2 size: %d, align: %d\n&#34;</span>, <span style=color:#a6e22e>unsafe</span>.<span style=color:#a6e22e>Sizeof</span>(<span style=color:#a6e22e>part2</span>), <span style=color:#a6e22e>unsafe</span>.<span style=color:#a6e22e>Alignof</span>(<span style=color:#a6e22e>part2</span>))
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>输出：</p><pre tabindex=0><code>// Output:
+// part1 size: 8, align: 4
+// part2 size: 12, align: 4
+</code></pre><p><code>Part1</code> 只是对成员变量的字段顺序进行了调整，就减少了结构体占用大小。</p><p><img src=https://raw.githubusercontent.com/shipengqi/illustrations/ca9f00e7c3f54f02935d6615da69123d09ee8c7c/go/struct-mem-align.png alt=mem-align></p><p><code>part1</code>：</p><ul><li>a 从第 0 个位置开始占据 1 字节。</li><li>b 对齐系数为 2，因此，必须空出 1 个字节，偏移量才是 2 的倍数，从第 2 个位置开始占据 2 字节。</li><li>c 对齐系数为 4，此时，内存已经是对齐的，从第 4 个位置开始占据 4 字节即可。</li></ul><p><code>part2</code>：</p><ul><li>a 从第 0 个位置开始占据 1 字节。</li><li>c 对齐系数为 4，因此，必须空出 3 个字节，偏移量才是 4 的倍数，从第 4 个位置开始占据 4 字节。</li><li>b 对齐系数为 2，从第 8 个位置开始占据 2 字节。</li></ul><h3 id=空-struct-的对齐>空 <code>struct{}</code> 的对齐
+<a class=anchor href=#%e7%a9%ba-struct-%e7%9a%84%e5%af%b9%e9%bd%90>#</a></h3><p>空 <code>struct{}</code> 大小为 0，作为其他 struct 的字段时，一般不需要内存对齐。但是当 <code>struct{}</code> 作为结构体最后一个字段时，需要内存对齐。
+因为如果有指针指向该字段, 返回的地址将在结构体之外，如果此指针一直存活不释放对应的内存，就会有内存泄露的问题（该内存不因结构体释放而释放）。</p><p>因此，当 <code>struct{}</code> 作为其他 <code>struct</code> 最后一个字段时，需要填充额外的内存保证安全。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Part1</span> <span style=color:#66d9ef>struct</span> {
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>c</span> <span style=color:#66d9ef>int32</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>a</span> <span style=color:#66d9ef>struct</span>{}
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Part2</span> <span style=color:#66d9ef>struct</span> {
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>a</span> <span style=color:#66d9ef>struct</span>{}
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>c</span> <span style=color:#66d9ef>int32</span>
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>main</span>() {
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Println</span>(<span style=color:#a6e22e>unsafe</span>.<span style=color:#a6e22e>Sizeof</span>(<span style=color:#a6e22e>Part1</span>{})) <span style=color:#75715e>// 8
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Println</span>(<span style=color:#a6e22e>unsafe</span>.<span style=color:#a6e22e>Sizeof</span>(<span style=color:#a6e22e>Part2</span>{})) <span style=color:#75715e>// 4
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>}
+</span></span></code></pre></div><p>可以看到 <code>Part1{</code>} 额外填充了 4 字节的空间。</p><h2 id=逃逸分析>逃逸分析
+<a class=anchor href=#%e9%80%83%e9%80%b8%e5%88%86%e6%9e%90>#</a></h2><p>编译器决定内存分配位置的方式，就称之为<strong>逃逸分析</strong>(escape analysis)。逃逸分析由编译器完成，作用于编译阶段。</p><p>变量逃逸是指编译器将一个变量从栈上分配到对上的情况。</p><p>在 Go 中，栈是跟函数绑定的，函数结束时栈被回收。如果一个变量分配在栈中，则函数执行结束可自动将内存回收。如果分配在堆中，则函数执行结束可交给 GC（垃圾回收）处理。</p><p>变量逃逸常见的情况：</p><ol><li>指针逃逸：返回指针，当一个函数返回一个局部变量的指针时，编译器就不得不吧该变量分配到堆上，以便函数返回后还可以访问它。</li><li>发送指针或带有指针的值到 channel 中，编译时，是没有办法知道哪个 goroutine 会在 channel 上接收数据。所以编译器没法知道变量什么时候才会被释放。该值就会被分配到堆上。</li><li>在一个切片上存储指针或带指针的值。例如 <code>[]*string</code> 。这会导致切片的内容逃逸。尽管其后面的数组可能是在栈上分配的，但其引用的值一定是在堆上。</li><li>切片的底层数组被重新分配了，因为 append 时可能会超出其容量。切片初始化的地方在编译时是可以知道的，它最开始会在栈上分配。如果切片背后的存储要基于运行时的数据进行扩充，就会在堆上分配。</li><li>在 <code>interface</code> 类型上调用方法都是<strong>动态调度</strong>的，方法的实现只能在运行时才知道。比如 <code>io.Reader</code> 类型的变量 <code>r</code>，调用 <code>r.Read(b)</code> 会使 <code>r</code> 的值和切片 <code>b</code> 的底层数组都逃逸掉，在堆上分配。</li><li>数据类型不确定，如调用 <code>fmt.Sprintf</code>，<code>json.Marshal</code> 等接受变量为 <code>...interface{}</code> 的函数，会导致传入的变量逃逸到堆上。</li><li>闭包引用：如果一个局部变量被一个闭包函数引用，那么编译器也可能把它分配到堆上，确保闭包可以继续访问它。<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>isaclosure</span>() <span style=color:#66d9ef>func</span>() {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>v</span> <span style=color:#f92672>:=</span> <span style=color:#ae81ff>1</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>func</span>() {
+</span></span><span style=display:flex><span>        println(<span style=color:#a6e22e>v</span>)
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div></li><li>栈空间不足</li></ol><p>变量逃逸就意味着增加了堆中的对象个数，影响 GC 耗时，影响性能。所以编写代码时，避免返回指针，限制闭包的作用范围等来要尽量避免逃逸。</p><p>可以使用编译器的 <code>gcflags="-m"</code> 来查看变量逃逸的情况：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#f92672>package</span> <span style=color:#a6e22e>main</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> <span style=color:#e6db74>&#34;fmt&#34;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>A</span> <span style=color:#66d9ef>struct</span> {
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>s</span> <span style=color:#66d9ef>string</span>
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// 在方法内返回局部变量的指针
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>foo</span>(<span style=color:#a6e22e>s</span> <span style=color:#66d9ef>string</span>) <span style=color:#f92672>*</span><span style=color:#a6e22e>A</span> {
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>a</span> <span style=color:#f92672>:=</span> new(<span style=color:#a6e22e>A</span>)
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>a</span>.<span style=color:#a6e22e>s</span> = <span style=color:#a6e22e>s</span>
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>a</span> <span style=color:#75715e>// a 会逃逸到堆上
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>main</span>() {
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>a</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>foo</span>(<span style=color:#e6db74>&#34;hello&#34;</span>)
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>b</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>a</span>.<span style=color:#a6e22e>s</span> <span style=color:#f92672>+</span> <span style=color:#e6db74>&#34; world&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>c</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>b</span> <span style=color:#f92672>+</span> <span style=color:#e6db74>&#34;!&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Println</span>(<span style=color:#a6e22e>c</span>) <span style=color:#75715e>// c 数据类型不确定，所以 escapes to heap
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>}
+</span></span></code></pre></div><p>运行 <code>go run -gcflags=-m ./main.go</code> 会得到下面类似的输出：</p><pre tabindex=0><code># command-line-arguments
+./main.go:10:6: can inline foo
+./main.go:17:10: inlining call to foo
+./main.go:20:13: inlining call to fmt.Println
+./main.go:10:10: leaking param: s
+./main.go:11:10: new(A) escapes to heap
+./main.go:17:10: new(A) does not escape
+./main.go:18:11: a.s + &#34; world&#34; does not escape
+./main.go:19:9: b + &#34;!&#34; escapes to heap
+./main.go:20:13: c escapes to heap
+./main.go:20:13: []interface {} literal does not escape
+&lt;autogenerated&gt;:1: .this does not escape
+&lt;autogenerated&gt;:1: .this does not escape
+hello world!
+</code></pre><h3 id=传值还是传指针>传值还是传指针？
+<a class=anchor href=#%e4%bc%a0%e5%80%bc%e8%bf%98%e6%98%af%e4%bc%a0%e6%8c%87%e9%92%88>#</a></h3><p>传值会拷贝整个对象，而传指针只会拷贝指针地址，指向的对象是同一个。传指针可以减少值的拷贝，但是会导致内存分配逃逸到堆中，增加垃圾回收(GC)的负担。在对
+象频繁创建和删除的场景下，传递指针导致的 GC 开销可能会严重影响性能。</p><p>一般情况下，对于需要修改原对象值，或占用内存比较大的结构体，选择传指针。对于只读的占用内存较小的结构体，直接传值能够获得更好的性能。</p><h2 id=死码消除>死码消除
+<a class=anchor href=#%e6%ad%bb%e7%a0%81%e6%b6%88%e9%99%a4>#</a></h2><p>死码消除(dead code elimination, DCE)是一种编译器优化技术，用处是在编译阶段去掉对程序运行结果没有任何影响的代码。</p><p>死码消除可以减小程序体积，程序运行过程中避免执行无用的指令，缩短运行时间。</p><h3 id=使用常量提升性能>使用常量提升性能
+<a class=anchor href=#%e4%bd%bf%e7%94%a8%e5%b8%b8%e9%87%8f%e6%8f%90%e5%8d%87%e6%80%a7%e8%83%bd>#</a></h3><p>有些场景下，使用常量不仅可以减少程序的体积，性能也会有很大的提升。</p><p><code>usevar.go</code>：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>Max</span>(<span style=color:#a6e22e>num1</span>, <span style=color:#a6e22e>num2</span> <span style=color:#66d9ef>int</span>) <span style=color:#66d9ef>int</span> {
+</span></span><span style=display:flex><span>   <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>num1</span> &gt; <span style=color:#a6e22e>num2</span> {
+</span></span><span style=display:flex><span>      <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>num1</span>
+</span></span><span style=display:flex><span>   }
+</span></span><span style=display:flex><span>   <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>num2</span>
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>var</span> <span style=color:#a6e22e>a</span>, <span style=color:#a6e22e>b</span> = <span style=color:#ae81ff>10</span>, <span style=color:#ae81ff>20</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>main</span>() {
+</span></span><span style=display:flex><span>   <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>Max</span>(<span style=color:#a6e22e>a</span>, <span style=color:#a6e22e>b</span>) <span style=color:#f92672>==</span> <span style=color:#a6e22e>a</span> {
+</span></span><span style=display:flex><span>      <span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Println</span>(<span style=color:#a6e22e>a</span>)
+</span></span><span style=display:flex><span>   }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p><code>useconst.go</code>：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>Max</span>(<span style=color:#a6e22e>num1</span>, <span style=color:#a6e22e>num2</span> <span style=color:#66d9ef>int</span>) <span style=color:#66d9ef>int</span> {
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>num1</span> &gt; <span style=color:#a6e22e>num2</span> {
+</span></span><span style=display:flex><span>		<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>num1</span>
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>num2</span>
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>const</span> <span style=color:#a6e22e>a</span>, <span style=color:#a6e22e>b</span> = <span style=color:#ae81ff>10</span>, <span style=color:#ae81ff>20</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>main</span>() {
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>Max</span>(<span style=color:#a6e22e>a</span>, <span style=color:#a6e22e>b</span>) <span style=color:#f92672>==</span> <span style=color:#a6e22e>a</span> {
+</span></span><span style=display:flex><span>		<span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Println</span>(<span style=color:#a6e22e>a</span>)
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>上面两个文件编译后的文件大小：</p><pre tabindex=0><code>$ ls -lh
+-rwxr-xr-x 1 pshi2 1049089 1.9M Oct 24 13:45 usevar.exe
+-rwxr-xr-x 1 pshi2 1049089 1.5M Oct 24 13:44 useconst.exe
+</code></pre><p>只是使用了常量代替变量，两个文件的大小就相差 0.3 M，为什么？</p><p>使用 <code>-gcflags=-m</code> 参数可以查看编译器做了哪些优化：</p><pre tabindex=0><code>$ go build -gcflags=-m ./useconst.go
+# command-line-arguments
+./main.go:5:6: can inline Max
+./main.go:15:8: inlining call to Max
+./main.go:16:14: inlining call to fmt.Println
+./main.go:16:14: ... argument does not escape
+./main.go:16:15: a escapes to heap
+</code></pre><p><code>Max</code> 函数被内联了，内联后的代码是这样的：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>main</span>() {
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>var</span> <span style=color:#a6e22e>result</span> <span style=color:#66d9ef>int</span>
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>a</span> &gt; <span style=color:#a6e22e>b</span> {
+</span></span><span style=display:flex><span>		<span style=color:#a6e22e>result</span> = <span style=color:#a6e22e>a</span>
+</span></span><span style=display:flex><span>	} <span style=color:#66d9ef>else</span> {
+</span></span><span style=display:flex><span>		<span style=color:#a6e22e>result</span> = <span style=color:#a6e22e>b</span>
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>result</span> <span style=color:#f92672>==</span> <span style=color:#a6e22e>a</span> {
+</span></span><span style=display:flex><span>		<span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Println</span>(<span style=color:#a6e22e>a</span>)
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>由于 a 和 b 均为常量，在编译阶段会直接计算：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>main</span>() {
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>var</span> <span style=color:#a6e22e>result</span> <span style=color:#66d9ef>int</span>
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> <span style=color:#ae81ff>10</span> &gt; <span style=color:#ae81ff>20</span> {
+</span></span><span style=display:flex><span>		<span style=color:#a6e22e>result</span> = <span style=color:#ae81ff>10</span>
+</span></span><span style=display:flex><span>	} <span style=color:#66d9ef>else</span> {
+</span></span><span style=display:flex><span>		<span style=color:#a6e22e>result</span> = <span style=color:#ae81ff>20</span>
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>result</span> <span style=color:#f92672>==</span> <span style=color:#ae81ff>10</span> {
+</span></span><span style=display:flex><span>		<span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Println</span>(<span style=color:#a6e22e>a</span>)
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p><code>10 > 20</code> 永远为假，那么分支消除，<code>result</code> 永远等于 20：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>main</span>() {
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> <span style=color:#ae81ff>20</span> <span style=color:#f92672>==</span> <span style=color:#ae81ff>10</span> {
+</span></span><span style=display:flex><span>		<span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Println</span>(<span style=color:#a6e22e>a</span>)
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p><code>20 == 10</code> 也永远为假，再次消除分支：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>main</span>() {}
+</span></span></code></pre></div><p>但是对于变量 a 和 b，编译器并不知道运行过程中 a、b 会不会发生改变，因此不能够进行死码消除，这部分代码被编译到最终的二进制程序中。因此编译后的二进制程序体积大了 0.3 M。</p><p>因此，<strong>在声明全局变量时，如果能够确定为常量，尽量使用 <code>const</code> 而非 <code>var</code></strong>。这样很多运算在编译器即可执行。死码消除后，既减小了二进制的体积，又可以提高运行时的效率。</p><h3 id=可推断的局部变量>可推断的局部变量
+<a class=anchor href=#%e5%8f%af%e6%8e%a8%e6%96%ad%e7%9a%84%e5%b1%80%e9%83%a8%e5%8f%98%e9%87%8f>#</a></h3><p>Go 编译器只对函数的局部变量做了优化，当可以推断出函数的局部变量的值时，死码消除仍然会生效，例如：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>main</span>() {
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>var</span> <span style=color:#a6e22e>a</span>, <span style=color:#a6e22e>b</span> = <span style=color:#ae81ff>10</span>, <span style=color:#ae81ff>20</span>
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> max(<span style=color:#a6e22e>a</span>, <span style=color:#a6e22e>b</span>) <span style=color:#f92672>==</span> <span style=color:#a6e22e>a</span> {
+</span></span><span style=display:flex><span>		<span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Println</span>(<span style=color:#a6e22e>a</span>)
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>上面的代码与 <code>useconst.go</code> 的编译结果是一样的，因为编译器可以推断出 a、b 变量的值。</p><p>如果增加了并发操作：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>main</span>() {
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>var</span> <span style=color:#a6e22e>a</span>, <span style=color:#a6e22e>b</span> = <span style=color:#ae81ff>10</span>, <span style=color:#ae81ff>20</span>
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>go</span> <span style=color:#66d9ef>func</span>() {
+</span></span><span style=display:flex><span>		<span style=color:#a6e22e>b</span>, <span style=color:#a6e22e>a</span> = <span style=color:#a6e22e>a</span>, <span style=color:#a6e22e>b</span>
+</span></span><span style=display:flex><span>	}()
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> max(<span style=color:#a6e22e>a</span>, <span style=color:#a6e22e>b</span>) <span style=color:#f92672>==</span> <span style=color:#a6e22e>a</span> {
+</span></span><span style=display:flex><span>		<span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Println</span>(<span style=color:#a6e22e>a</span>)
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>上面的代码，a、b 的值不能有效推断，死码消除失效。</p><p>包级别的变量推断难度是非常大的。函数内部的局部变量的修改只会发生在该函数中。但是如果是包级别的变量，对该变量的修改可能出现在：</p><ul><li>包初始化函数 <code>init()</code> 中，<code>init()</code> 函数可能有多个，且可能位于不同的 <code>.go</code> 源文件。</li><li>包内的其他函数。</li><li>如果是 public 变量（首字母大写），其他包引用时可修改。</li></ul><p>因此，Go 编译器只对局部变量作了优化。</p><h2 id=利用-syncpool-减少堆分配>利用 sync.Pool 减少堆分配
+<a class=anchor href=#%e5%88%a9%e7%94%a8-syncpool-%e5%87%8f%e5%b0%91%e5%a0%86%e5%88%86%e9%85%8d>#</a></h2><p><a href=https://github.com/shipengqi/golang-learn/blob/master/content/docs/concurrent/06_pool.md>sync.Pool 使用</a>。</p><h2 id=控制-goroutine-的并发数量>控制 goroutine 的并发数量
+<a class=anchor href=#%e6%8e%a7%e5%88%b6-goroutine-%e7%9a%84%e5%b9%b6%e5%8f%91%e6%95%b0%e9%87%8f>#</a></h2><h2 id=字符串与字节转换优化减少内存分配>字符串与字节转换优化，减少内存分配
+<a class=anchor href=#%e5%ad%97%e7%ac%a6%e4%b8%b2%e4%b8%8e%e5%ad%97%e8%8a%82%e8%bd%ac%e6%8d%a2%e4%bc%98%e5%8c%96%e5%87%8f%e5%b0%91%e5%86%85%e5%ad%98%e5%88%86%e9%85%8d>#</a></h2><h2 id=垃圾回收优化>垃圾回收优化
+<a class=anchor href=#%e5%9e%83%e5%9c%be%e5%9b%9e%e6%94%b6%e4%bc%98%e5%8c%96>#</a></h2><h2 id=设置-gomaxprocs>设置 GOMAXPROCS
+<a class=anchor href=#%e8%ae%be%e7%bd%ae-gomaxprocs>#</a></h2></article><footer class=book-footer><div class="flex flex-wrap justify-between"><div><a class="flex align-center" href=https://github.com/shipengqi/golang-learn/commit/0f9c52a55b185ecce1874c419c53474688f094e3 title='Last modified by PengQi Shi | October 25, 2023' target=_blank rel=noopener><img src=/golang-learn/svg/calendar.svg class=book-icon alt=Calendar>
+<span>October 25, 2023</span></a></div><div><a class="flex align-center" href=https://github.com/shipengqi/golang-learn/edit/master/content/docs/practice/05_performance.md target=_blank rel=noopener><img src=/golang-learn/svg/edit.svg class=book-icon alt=Edit>
+<span>Edit this page</span></a></div></div><script>(function(){function e(e){const t=window.getSelection(),n=document.createRange();n.selectNodeContents(e),t.removeAllRanges(),t.addRange(n)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script></footer><div class=book-comments></div><label for=menu-control class="hidden book-menu-overlay"></label></div><aside class=book-toc><div class=book-toc-content><nav id=TableOfContents><ul><li><a href=#go-性能优化>Go 性能优化</a><ul><li><a href=#json-优化>JSON 优化</a></li><li><a href=#使用空结构体>使用空结构体</a><ul><li><a href=#集合-set>集合 Set</a></li><li><a href=#channel-通知>channel 通知</a></li></ul></li><li><a href=#内存对齐>内存对齐</a><ul><li><a href=#为什么需要内存对齐>为什么需要内存对齐？</a></li><li><a href=#对齐系数>对齐系数</a></li><li><a href=#对齐规则>对齐规则</a></li><li><a href=#go-结构体内存对齐>Go 结构体内存对齐</a></li><li><a href=#空-struct-的对齐>空 <code>struct{}</code> 的对齐</a></li></ul></li><li><a href=#逃逸分析>逃逸分析</a><ul><li><a href=#传值还是传指针>传值还是传指针？</a></li></ul></li><li><a href=#死码消除>死码消除</a><ul><li><a href=#使用常量提升性能>使用常量提升性能</a></li><li><a href=#可推断的局部变量>可推断的局部变量</a></li></ul></li><li><a href=#利用-syncpool-减少堆分配>利用 sync.Pool 减少堆分配</a></li><li><a href=#控制-goroutine-的并发数量>控制 goroutine 的并发数量</a></li><li><a href=#字符串与字节转换优化减少内存分配>字符串与字节转换优化，减少内存分配</a></li><li><a href=#垃圾回收优化>垃圾回收优化</a></li><li><a href=#设置-gomaxprocs>设置 GOMAXPROCS</a></li></ul></li></ul></nav></div></aside></main></body></html>

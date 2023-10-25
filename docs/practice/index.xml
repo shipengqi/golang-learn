@@ -1,112 +1,33 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-  <channel>
-    <title>实践 on Golang Learning</title>
-    <link>http://shipengqi.github.io/golang-learn/docs/practice/</link>
-    <description>Recent content in 实践 on Golang Learning</description>
-    <generator>Hugo -- gohugo.io</generator>
-    <language>en</language><atom:link href="http://shipengqi.github.io/golang-learn/docs/practice/index.xml" rel="self" type="application/rss+xml" />
-    <item>
-      <title></title>
-      <link>http://shipengqi.github.io/golang-learn/docs/practice/gin/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://shipengqi.github.io/golang-learn/docs/practice/gin/</guid>
-      <description>Gin#Gin 打包 Angular (React/Vue) 项目#Gin 作为 Web 框架提供 API 接口非常方便，但是在同一个项目中，既提供 API 接口，又要作为前端网页的静态服务器，就比较麻烦。通常 Angular (React/Vue) 项目需要在 Nginx 或者 Tomcat 转发才可以。有些小项目并不需要前后端分离，如何解决？
-1.16 版本的 embed#Go 的 1.16 版本增加了 embed 的标签，可以利用这个标签将静态资源打包到二进制文件中。
-. ├── config ├── controller ├── model ├── options ├── pkg │ └── response │ └── response.go ├── resources │ ├── dist │ └── html.go ├── html.go ├── resource.go ├── router.go ├── server.go └── store ├── audited.</description>
-    </item>
-    
-    <item>
-      <title></title>
-      <link>http://shipengqi.github.io/golang-learn/docs/practice/ginkgo/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://shipengqi.github.io/golang-learn/docs/practice/ginkgo/</guid>
-      <description>Ginkgo#</description>
-    </item>
-    
-    <item>
-      <title>Go PProf</title>
-      <link>http://shipengqi.github.io/golang-learn/docs/practice/pprof/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://shipengqi.github.io/golang-learn/docs/practice/pprof/</guid>
-      <description>PProf 是 Go 提供的用于可视化和分析性能分析数据的工具。
-runtime/pprof：采集程序（非 Server）的运行数据进行分析 net/http/pprof：采集 HTTP Server 的运行时数据进行分析 主要可以用于：
-CPU Profiling：CPU 分析，按照一定的频率采集所监听的应用程序 CPU（含寄存器）的使用情况，可确定应用程序在主动消耗 CPU 周期 时花费时间的位置。 Memory Profiling：内存分析，在应用程序进行堆分配时记录堆栈跟踪，用于监视当前和历史内存使用情况，以及检查内存泄漏。 Block Profiling：阻塞分析，记录 goroutine 阻塞等待同步（包括定时器通道）的位置。 Mutex Profiling：互斥锁分析，报告互斥锁的竞争情况。 性能分析#分析 HTTP Server#Web#import ( &amp;#34;log&amp;#34; &amp;#34;net/http&amp;#34; _ &amp;#34;net/http/pprof&amp;#34; ) var datas []string func Add(str string) string { data := []byte(str) sData := string(data) datas = append(datas, sData) return sData } func main() { go func() { for { log.</description>
-    </item>
-    
-    <item>
-      <title>Go trace</title>
-      <link>http://shipengqi.github.io/golang-learn/docs/practice/trace/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://shipengqi.github.io/golang-learn/docs/practice/trace/</guid>
-      <description>Go PProf 很难完成 Goroutine 的分析。这就需要使用 go tool trace 命令。
-go tool pprof 可以跟踪运行缓慢的函数，或者找到大部分 CPU 时间花费在哪里。 go tool trace 更适合于找出程序在一段时间内正在做什么，而不是总体上的开销。
-package main import ( &amp;#34;os&amp;#34; &amp;#34;runtime/trace&amp;#34; ) func main() { f, err := os.Create(&amp;#34;trace.out&amp;#34;) if err != nil { panic(err) } defer f.Close() err = trace.Start(f) if err != nil { panic(err) } defer trace.Stop() ch := make(chan string) go func() { ch &amp;lt;- &amp;#34;hello&amp;#34; }() // read from channel &amp;lt;-ch } 生成跟踪文件：</description>
-    </item>
-    
-    <item>
-      <title>Go 数据竞争检测器</title>
-      <link>http://shipengqi.github.io/golang-learn/docs/practice/go-race/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://shipengqi.github.io/golang-learn/docs/practice/go-race/</guid>
-      <description>数据竞争是并发系统中最常见，同时也最难处理的 Bug 类型之一。数据竞争会在两个 Go 程并发访问同一个变量， 且至少有一个访问为写入时产生。
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>实践 on Golang Learning</title><link>http://shipengqi.github.io/golang-learn/docs/practice/</link><description>Recent content in 实践 on Golang Learning</description><generator>Hugo -- gohugo.io</generator><language>en</language><atom:link href="http://shipengqi.github.io/golang-learn/docs/practice/index.xml" rel="self" type="application/rss+xml"/><item><title>Go 编译</title><link>http://shipengqi.github.io/golang-learn/docs/practice/01_build/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>http://shipengqi.github.io/golang-learn/docs/practice/01_build/</guid><description>Go 编译 # 条件编译 # Go 支持两种条件编译方式：
+编译标签（build tag） 文件后缀 编译标签 # 编译标签的规则：
+空格表示：AND 逗号表示：OR ! 表示：NOT 换行表示：AND 每个条件项的名字用 &amp;ldquo;字母+数字&amp;rdquo; 表示。主要支持以下几种条件：
+操作系统，例如：windows、linux 等，对应 runtime.GOOS 的值。 计算机架构，例如：amd64、386，对应 runtime.GOARCH 的值。 编译器，例如：gccgo、gc，是否开启 CGO,cgo。 Go 版本，例如：go1.19、go1.20 等。 自定义的标签，例如：编译时通过指定 -tags 传入的值。 //go:build ignore，编译时自动忽略该文件 go:build 之后必须有空行，否则会被编译器当做普通注释。
+//go:build linux,386 darwin,!cgo package testpkg 运算表达式为：(linux &amp;amp;&amp;amp; 386) || (darwin &amp;amp;&amp;amp; !cgo)。
+自定义 tag 只需要在 go build 指令后用 -tags 指定编译条件即可
+go build -tags mytag1 mytag2 对于 -tags，多个标签既可以用逗号分隔，也可以用空格分隔，但它们都表示&amp;quot;与&amp;quot;的关系。早期 go 版本用空格分隔，后来改成了用逗号分隔，但空格依然可以识别。</description></item><item><title>Go 数据竞争检测器</title><link>http://shipengqi.github.io/golang-learn/docs/practice/02_go_race/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>http://shipengqi.github.io/golang-learn/docs/practice/02_go_race/</guid><description>Go 数据竞争检测器 # 数据竞争是并发系统中最常见，同时也最难处理的 Bug 类型之一。数据竞争会在两个 Go 程并发访问同一个变量， 且至少有一个访问为写入时产生。
 这个数据竞争的例子可导致程序崩溃和内存数据损坏（memory corruption）。
-func main() { c := make(chan bool) m := make(map[string]string) go func() { m[&amp;#34;1&amp;#34;] = &amp;#34;a&amp;#34; // 第一个冲突的访问。 c &amp;lt;- true }() m[&amp;#34;2&amp;#34;] = &amp;#34;b&amp;#34; // 第二个冲突的访问。 &amp;lt;-c for k, v := range m { fmt.Println(k, v) } } 数据竞争检测器#Go内建了数据竞争检测器。要使用它，请将 -race 标记添加到 go 命令之后：
-go test -race mypkg // 测试该包 go run -race mysrc.go // 运行其源文件 go build -race mycmd // 构建该命令 go install -race mypkg // 安装该包 选项#GORACE 环境变量可以设置竞争检测的选项：</description>
-    </item>
-    
-    <item>
-      <title>Go 的相对路径</title>
-      <link>http://shipengqi.github.io/golang-learn/docs/practice/go_relative_path/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://shipengqi.github.io/golang-learn/docs/practice/go_relative_path/</guid>
-      <description>在构建 Go 项目时，有没有碰到 go build 编译好的二进制文件（或者 go run main.go），在不同的目录下执行，得到的结果却不一样？
-例如，我的目录结构是下面这样的：
-backend├── app│ ├── cmd│ │ └── cmd.go│ ├── conf│ │ └── conf.yaml│ ├── config│ │ └── config.go│ ├── dao│ │ └── dao.go│ ├── http│ │ └── http.go│ └── main.go├── go.mod├── go.sum└── suiteinstaller suiteinstaller 是构建好的二进制文件，在 backend 目录下运行或者执行 go run ./app/main.go 可以正常运行。但是如果在 app 目录下执行同样的命令则会报错：
-# go run .</description>
-    </item>
-    
-    <item>
-      <title>Golang 条件编译</title>
-      <link>http://shipengqi.github.io/golang-learn/docs/practice/build/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://shipengqi.github.io/golang-learn/docs/practice/build/</guid>
-      <description>Golang 支持两种条件编译方式：
-编译标签( build tag) 文件后缀 编译标签#编译标签添加的规则：
-a build tag is evaluated as the OR of space-separated options each option evaluates as the AND of its comma-separated terms each term is an alphanumeric word or, preceded by !, its negation 翻译了就是：
-编译标签由空格分隔的编译选项(options)以&amp;quot;或&amp;quot;的逻辑关系组成 每个编译选项由逗号分隔的条件项以逻辑&amp;quot;与&amp;quot;的关系组成 每个条件项的名字用字母+数字表示，在前面加 ! 表示否定的意思 +build 之后必须有空行，否则会被编译器当做普通注释
-// +build darwin freebsd netbsd openbsd package testpkg 这个将会让这个源文件只能在支持 kqueue 的 BSD 系统里编译
-一个源文件里可以有多行编译标签，多行编译标签之间是逻辑&amp;quot;与&amp;quot;的关系
-// +build linux darwin // +build 386 这个将限制此源文件只能在 linux/386 或者 darwin/386 平台下编译.</description>
-    </item>
-    
-    <item>
-      <title>Json Unmarshal</title>
-      <link>http://shipengqi.github.io/golang-learn/docs/practice/json/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://shipengqi.github.io/golang-learn/docs/practice/json/</guid>
-      <description>Json Unmarshal#Go 官方的 encoding/json 包可以实现 json 互转。如：
-type AuthResponse struct { Auth AuthData `json:&amp;#34;auth&amp;#34;` } type AuthData struct { ClientToken string `json:&amp;#34;client_token&amp;#34;` } var authResponse AuthResponse err = json.Unmarshal(response.Body(), &amp;amp;authResponse) encoding/json 包的 json.Marshal/Unmarshal 是非常慢的，因为是通过大量反射来实现的。
-可以使用第三方库来替代标准库：
-json-iterator/go，完全兼容标准库，性能有很大提升。 ffjson </description>
-    </item>
-    
-    <item>
-      <title>错误处理</title>
-      <link>http://shipengqi.github.io/golang-learn/docs/practice/errors/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://shipengqi.github.io/golang-learn/docs/practice/errors/</guid>
-      <description>错误处理#go mod tidy error message: &amp;ldquo;but go 1.16 would select&amp;rdquo;#$ go mod tidy github.com/shipengqi/crtctl/internal/secret-writer imports github.com/shipengqi/kube imports k8s.io/client-go/kubernetes imports k8s.io/client-go/kubernetes/typed/admissionregistration/v1 imports k8s.io/client-go/applyconfigurations/admissionregistration/v1 imports k8s.io/apimachinery/pkg/util/managedfields imports k8s.io/kube-openapi/pkg/util/proto tested by k8s.io/kube-openapi/pkg/util/proto.test imports github.com/onsi/ginkgo imports github.com/onsi/ginkgo/internal/remote imports github.com/nxadm/tail imports github.com/nxadm/tail/winfile loaded from github.com/nxadm/tail@v1.4.4, but go 1.16 would select v1.4.8 To upgrade to the versions selected by go 1.16: go mod tidy -go=1.16 &amp;amp;&amp;amp; go mod tidy -go=1.17 If reproducibility with go 1.</description>
-    </item>
-    
-  </channel>
-</rss>
+package main import &amp;#34;fmt&amp;#34; func main() { c := make(chan bool) m := make(map[string]string) go func() { m[&amp;#34;1&amp;#34;] = &amp;#34;a&amp;#34; // 第一个冲突的访问 c &amp;lt;- true }() m[&amp;#34;2&amp;#34;] = &amp;#34;b&amp;#34; // 第二个冲突的访问 &amp;lt;-c for k, v := range m { fmt.Println(k, v) } } 运行 go run -race ./main.go 或者 go build -race ./main.go 编译后再运行会抛出类似的错误：
+================== WARNING: DATA RACE Write at 0x00c00010a090 by goroutine 7: runtime.</description></item><item><title>Go 测试</title><link>http://shipengqi.github.io/golang-learn/docs/practice/03_test/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>http://shipengqi.github.io/golang-learn/docs/practice/03_test/</guid><description>Go 测试 # go test 命令测试代码，包目录内，所有以 _test.go 为后缀名的源文件在执行 go build 时不会被构建成包的一部分， 它们是 go test 测试的一部分。
+在 *_test.go 文件中，有三种类型的函数：
+测试函数，测试程序的一些逻辑行为是否正确。go test 命令会调用这些测试函数并报告测试结果是 PASS 或 FAIL。 基准测试函数，衡量一些函数的性能。go test 命令会多次运行基准函数以计算一个平均的执行时间。 示例函数，提供一个由编译器保证正确性的示例文档。 go test 会生成一个临时 main 包调用测试函数。 参数
+-v，打印每个测试函数的名字和运行时间。 -run，指定一个正则表达式，只有匹配到的测试函数名才会被 go test 运行，如 go test -v -run=&amp;quot;French|Canal&amp;quot;。 -cover，测试覆盖率。 -bench，运行基准测试。例如 go test -bench=.（如果在 Windows Powershell 环境下使用 go test -bench=&amp;quot;.&amp;quot;） -c，生成用于运行测试的可执行文件，但不执行它。这个可执行文件会被命名为 pkg.test，其中的 pkg 即为被测试代码包的 导入路径的最后一个元素的名称。 -i，安装/重新安装运行测试所需的依赖包，但不编译和运行测试代码。 -o，指定用于运行测试的可执行文件的名称。追加该标记不会影响测试代码的运行，除非同时追加了标记 -c 或 -i。 测试函数 # 测试函数必须导入 testing 包，并以 Test 为函数名前缀，后缀名必须以大写字母开头，并且参数列表中只应有一个 *testing.</description></item><item><title>Go 性能分析</title><link>http://shipengqi.github.io/golang-learn/docs/practice/04_pprof/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>http://shipengqi.github.io/golang-learn/docs/practice/04_pprof/</guid><description>Go 性能分析 # PProf 是 Go 提供的用于可视化和分析性能分析数据的工具。
+runtime/pprof：采集程序（非 Server）的运行数据进行分析 net/http/pprof：采集 HTTP Server 的运行时数据进行分析 主要可以用于：
+CPU Profiling：CPU 分析，按照一定的频率采集所监听的应用程序 CPU（含寄存器）的使用情况，可确定应用程序在主动消耗 CPU 周期 时花费时间的位置。 Memory Profiling：内存分析，在应用程序进行堆分配时记录堆栈跟踪，用于监视当前和历史内存使用情况，以及检查内存泄漏。 Block Profiling：阻塞分析，记录 goroutine 阻塞等待同步（包括定时器通道）的位置。 Mutex Profiling：互斥锁分析，报告互斥锁的竞争情况。 性能分析 # 分析 HTTP Server # Web # import ( &amp;#34;log&amp;#34; &amp;#34;net/http&amp;#34; _ &amp;#34;net/http/pprof&amp;#34; ) var datas []string func Add(str string) string { data := []byte(str) sData := string(data) datas = append(datas, sData) return sData } func main() { go func() { for { log.</description></item><item><title>Go 性能优化</title><link>http://shipengqi.github.io/golang-learn/docs/practice/05_performance/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>http://shipengqi.github.io/golang-learn/docs/practice/05_performance/</guid><description>Go 性能优化 # JSON 优化 # Go 官方的 encoding/json 是通过反射来实现的。性能相对有些慢。 可以使用第三方库来替代标准库：
+json-iterator/go，完全兼容标准库，性能有很大提升。 go-json，完全兼容标准库，性能强于 json-iterator/go。 sonic，字节开发的的 JSON 序列化/反序列化库，速度快，但是对硬件有一些要求。 实际开发中可以根据编译标签来选择 JSON 库，参考 component-base/json。
+使用空结构体 # 在 Go 中空结构体 struct{} 不占据内存空间：
+package main import ( &amp;#34;fmt&amp;#34; &amp;#34;unsafe&amp;#34; ) func main() { fmt.Println(unsafe.Sizeof(struct{}{})) // 0 } 空结构体不占据内存空间，因此被广泛作为各种场景下的占位符使用，可以节省资源。
+集合 Set # 要实现一个 Set，通常会使用 map 来实现，比如 map[string]bool。 但是对于集合来说， 只需要 map 的键，而不需要值。将值设置为 bool 类型，就会多占据 1 个字节。这个时候就可以使用空结构体 map[string]struct{}。
+channel 通知 # 有时候使用 channel 不需要发送任何的数据，只用来通知 goroutine 执行任务，或结束等。这个时候就可以使用空结构体。
+内存对齐 # 为什么需要内存对齐？ # CPU 访问内存时，并不是逐个字节访问，而是以字长（word size）为单位访问。比如：</description></item><item><title>Go Trace</title><link>http://shipengqi.github.io/golang-learn/docs/practice/06_trace/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>http://shipengqi.github.io/golang-learn/docs/practice/06_trace/</guid><description>Go Trace # Go PProf 很难完成 Goroutine 的分析。这就需要使用 go tool trace 命令。
+go tool pprof 可以跟踪运行缓慢的函数，或者找到大部分 CPU 时间花费在哪里。 go tool trace 更适合于找出程序在一段时间内正在做什么，而不是总体上的开销。
+package main import ( &amp;#34;os&amp;#34; &amp;#34;runtime/trace&amp;#34; ) func main() { f, err := os.Create(&amp;#34;trace.out&amp;#34;) if err != nil { panic(err) } defer f.Close() err = trace.Start(f) if err != nil { panic(err) } defer trace.Stop() ch := make(chan string) go func() { ch &amp;lt;- &amp;#34;hello&amp;#34; }() // read from channel &amp;lt;-ch } 生成跟踪文件：</description></item><item><title>Go CoreDump 调试</title><link>http://shipengqi.github.io/golang-learn/docs/practice/07_coredump/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>http://shipengqi.github.io/golang-learn/docs/practice/07_coredump/</guid><description>Go CoreDump 调试 # Go 也可以开启类似 C++ CoreDump 功能，CoreDump 是异常退出程序的内存快照。程序崩溃时，可以帮助定位 crash 发生的原因。
+如何生成 CoreDump 文件 # GOTRACEBACK 可以控制程序崩溃时输出的详细程度。 可选的值：
+none 不显示任何 goroutine 栈 trace。 single, 默认选项，显示当前 goroutine 栈 trace。 all 显示所有用户创建的 goroutine 栈 trace。 system 显示所有 goroutine 栈 trace,甚至运行时的 trace。 crash 类似 system, 而且还会生成 core dump。 可以设置 export GOTRACEBACK=crash 来生成 core dump。
+编译时要确保使用编译器标志 -N 和 -l 来构建二进制文件,它会禁用编译器优化，编译器优化可能会使调试更加困难。
+$ go build -gcflags=all=&amp;#34;-N -l&amp;#34; 如果 coredump 没有生成，可能是 coredump size 配置为 0，如下命令将 coredump 配置为 1MB 大小：</description></item><item><title>Go Modules</title><link>http://shipengqi.github.io/golang-learn/docs/practice/08_mod/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>http://shipengqi.github.io/golang-learn/docs/practice/08_mod/</guid><description>Go Modules # Golang 在 1.11 推出了 Go Module。这是官方提倡的新的包管理，乃至项目管理机制，解决了 GOPATH 的问题，相当于弃用了 GOPATH。
+Go Module 机制 # Go Module 不同于基于 GOPATH 和 Vendor 的项目构建，其主要是通过 $GOPATH/pkg/mod 下缓存的模块来对项目进行构建。 同一个模块版本的数据只缓存一份，所有其他模块共享使用。
+可以使用 go clean -modcache 清理所有已缓存的模块版本数据。
+GO111MODULE # Go Module 目前是可选的，可以通过环境变量 GO111MODULE 来控制是否启用，GO111MODULE 有三种类型:
+on 所有的构建，都使用 Module 机制 off 所有的构建，都不使用 Module 机制，而是使用 GOPATH 和 Vendor auto 在 GOPATH 下的项目，不使用 Module 机制，不在 GOPATH 下的项目使用 GOPROXY # GOPROXY 用于设置 Go Module 代理。使 Go 在后续拉取模块版本时能够脱离传统的 VCS 方式从镜像站点快速拉取。它的值是一个以 , 分割的 Go module proxy 列表。Golang 1.</description></item><item><title>Gin 静态服务器</title><link>http://shipengqi.github.io/golang-learn/docs/practice/09_gin/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>http://shipengqi.github.io/golang-learn/docs/practice/09_gin/</guid><description>Gin 如何实现前端网页的静态服务器 # Gin 作为 Web 框架提供 API 接口非常方便，但是在同一个项目中，既提供 API 接口，又要作为前端网页的静态服务器，就比较麻烦。通常 Angular (React/Vue) 项目需要在 Nginx 或者 Tomcat 转发才可以。有些小项目并不需要前后端分离，如何解决？
+利用 embed 标签 # Go 的 1.16 版本增加了 embed 的标签，可以利用这个标签将静态资源打包到二进制文件中。
+. ├── config ├── controller ├── model ├── options ├── pkg │ └── response │ └── response.go ├── resources │ ├── dist │ └── html.go ├── html.go ├── resource.go ├── router.go ├── server.go └── store ├── audited.go ├── groups.go ├── mysql.go ├── settings.</description></item><item><title>Go 远程开发调试</title><link>http://shipengqi.github.io/golang-learn/docs/practice/10_remote_dev/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>http://shipengqi.github.io/golang-learn/docs/practice/10_remote_dev/</guid><description> Go 远程开发调试 #</description></item><item><title>Go 常见错误</title><link>http://shipengqi.github.io/golang-learn/docs/practice/11_errors/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>http://shipengqi.github.io/golang-learn/docs/practice/11_errors/</guid><description>Go 常见错误 # go mod tidy error message: &amp;ldquo;but go 1.16 would select&amp;rdquo; # $ go mod tidy github.com/shipengqi/crtctl/internal/secret-writer imports github.com/shipengqi/kube imports k8s.io/client-go/kubernetes imports k8s.io/client-go/kubernetes/typed/admissionregistration/v1 imports k8s.io/client-go/applyconfigurations/admissionregistration/v1 imports k8s.io/apimachinery/pkg/util/managedfields imports k8s.io/kube-openapi/pkg/util/proto tested by k8s.io/kube-openapi/pkg/util/proto.test imports github.com/onsi/ginkgo imports github.com/onsi/ginkgo/internal/remote imports github.com/nxadm/tail imports github.com/nxadm/tail/winfile loaded from github.com/nxadm/tail@v1.4.4, but go 1.16 would select v1.4.8 To upgrade to the versions selected by go 1.16: go mod tidy -go=1.16 &amp;amp;&amp;amp; go mod tidy -go=1.17 If reproducibility with go 1.</description></item></channel></rss>

@@ -1,133 +1,0 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-  <channel>
-    <title>常用命令 on Golang Learning</title>
-    <link>http://shipengqi.github.io/golang-learn/docs/commands/</link>
-    <description>Recent content in 常用命令 on Golang Learning</description>
-    <generator>Hugo -- gohugo.io</generator>
-    <language>en</language><atom:link href="http://shipengqi.github.io/golang-learn/docs/commands/index.xml" rel="self" type="application/rss+xml" />
-    <item>
-      <title>build</title>
-      <link>http://shipengqi.github.io/golang-learn/docs/commands/build/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://shipengqi.github.io/golang-learn/docs/commands/build/</guid>
-      <description>build#go build [-o output] [-i] [build flags] [packages] 主要用于编译代码，go build 命令编译命令行参数指定的每个包。 有两种情况：
-main 包，go build 将调用链接器在当前目录创建一个可执行程序，以导入路径的最后一段作为可执行程序的名字。 如果包是一个库，则忽略输出结果；这可以用于检测包是可以正确编译的。 被编译的包会被保存到 $GOPATH/pkg 目录下，目录路径和 src 目录路径对应，可执行程序被保存到 $GOPATH/bin 目录。
-OPTIONS#-a 强制重新编译所有包 -n 把需要执行的编译命令打印出来，但是不执行，这样就可以很容易的知道底层是如何运行的 -p n 指定可以并行可运行的编译数目，默认是 CPU 的数目 -o 指定输出的可执行文件的文件名，可以带路径，例如go build -o a/b/c -i 安装相应的包，编译并且go install -race 开启编译的时候自动检测数据竞争的情况，目前只支持64位的机器 -v 打印出来我们正在编译的包名 -work 打印出来编译时候的临时文件夹名称，并且如果已经存在的话就不要删除 -x 打印出来执行的命令，其实就是和-n的结果类似，只是这个会执行 -ccflags &#39;arg list&#39; 传递参数给5c, 6c, 8c 调用 -compiler name 指定相应的编译器，gccgo还是gc -gccgoflags &#39;arg list&#39; 传递参数给gccgo编译连接调用 -gcflags &#39;arg list&#39; 编译器参数 -installsuffix suffix 为了和默认的安装包区别开来，采用这个前缀来重新安装那些依赖的包，-race的时候默认已经是-installsuffix race,大家可以通过-n命令来验证 -ldflags &#39;arg list&#39; 链接器参数 -tags &#39;tag list&#39; 设置在编译的时候可以适配的那些tag，详细的tag限制参考里面的 Build Constraints gcflags#-gcflags 参数的格式是</description>
-    </item>
-    
-    <item>
-      <title>doc</title>
-      <link>http://shipengqi.github.io/golang-learn/docs/commands/doc/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://shipengqi.github.io/golang-learn/docs/commands/doc/</guid>
-      <description>doc#usage: go doc [-u] [-c] [package|[package.]symbol[.methodOrField]] Doc prints the documentation comments associated with the item identified by its arguments (a package, const, func, type, var, method, or struct field) followed by a one-line summary of each of the first-level items &amp;#34;under&amp;#34; that item (package-level declarations for a package, methods for a type, etc.). Doc accepts zero, one, or two arguments. Given no arguments, that is, when run as go doc it prints the package documentation for the package in the current directory.</description>
-    </item>
-    
-    <item>
-      <title>env</title>
-      <link>http://shipengqi.github.io/golang-learn/docs/commands/env/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://shipengqi.github.io/golang-learn/docs/commands/env/</guid>
-      <description>env#usage: go env [-json] [var ...] Env prints Go environment information. By default env prints information as a shell script (on Windows, a batch file). If one or more variable names is given as arguments, env prints the value of each named variable on its own line. The -json flag prints the environment in JSON format instead of as a shell script. For more about environment variables, see &amp;#39;go help environment&amp;#39;.</description>
-    </item>
-    
-    <item>
-      <title>fmt</title>
-      <link>http://shipengqi.github.io/golang-learn/docs/commands/fmt/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://shipengqi.github.io/golang-learn/docs/commands/fmt/</guid>
-      <description>fmt#usage: go fmt [-n] [-x] [packages] Fmt runs the command &amp;#39;gofmt -l -w&amp;#39; on the packages named by the import paths. It prints the names of the files that are modified. For more about gofmt, see &amp;#39;go doc cmd/gofmt&amp;#39;. For more about specifying packages, see &amp;#39;go help packages&amp;#39;. The -n flag prints commands that would be executed. The -x flag prints commands as they are executed. To run gofmt with specific options, run gofmt itself.</description>
-    </item>
-    
-    <item>
-      <title>get</title>
-      <link>http://shipengqi.github.io/golang-learn/docs/commands/get/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://shipengqi.github.io/golang-learn/docs/commands/get/</guid>
-      <description>get#usage: go get [-d] [-m] [-u] [-v] [-insecure] [build flags] [packages] Get resolves and adds dependencies to the current development module and then builds and installs them. The first step is to resolve which dependencies to add. For each named package or package pattern, get must decide which version of the corresponding module to use. By default, get chooses the latest tagged release version, such as v0.4.5 or v1.</description>
-    </item>
-    
-    <item>
-      <title>Go 命令</title>
-      <link>http://shipengqi.github.io/golang-learn/docs/commands/summary/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://shipengqi.github.io/golang-learn/docs/commands/summary/</guid>
-      <description>Go 命令#$ go Go is a tool for managing Go source code. Usage: go command [arguments] The commands are: build 编译指定的源码包以及它们的依赖包 clean 删除掉执行其它命令时产生的一些文件和目录 doc show documentation for package or symbol env 打印 Go 的环境信息 bug start a bug report fix 把指定代码包的所有 Go 语言源码文件中的旧版本代码修正为新版本的代码 fmt gofmt (reformat) package sources generate generate Go files by processing source get 下载或更新指定的代码包及其依赖包，并对它们进行编译和安装 install 编译并安装指定的源码包以及它们的依赖包 list 列出指定的代码包的信息 mod Go 的依赖包管理工具 run 编译并运行 Go 程序 test 对指定包进行测试 tool 运行指定的 go 工具 version 打印 Go 的版本信息 vet 检查 Go 语言源码中静态错误的工具，报告包中可能出现的错误 Use &amp;#34;go help [command]&amp;#34; for more information about a command.</description>
-    </item>
-    
-    <item>
-      <title>golint</title>
-      <link>http://shipengqi.github.io/golang-learn/docs/commands/golint/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://shipengqi.github.io/golang-learn/docs/commands/golint/</guid>
-      <description>golint#</description>
-    </item>
-    
-    <item>
-      <title>install</title>
-      <link>http://shipengqi.github.io/golang-learn/docs/commands/install/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://shipengqi.github.io/golang-learn/docs/commands/install/</guid>
-      <description>install#usage: go install [-i] [build flags] [packages] Install compiles and installs the packages named by the import paths. The -i flag installs the dependencies of the named packages as well. For more about the build flags, see &amp;#39;go help build&amp;#39;. For more about specifying packages, see &amp;#39;go help packages&amp;#39;. See also: go build, go get, go clean. </description>
-    </item>
-    
-    <item>
-      <title>mod</title>
-      <link>http://shipengqi.github.io/golang-learn/docs/commands/mod/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://shipengqi.github.io/golang-learn/docs/commands/mod/</guid>
-      <description>mod#Golang 在 1.11 推出了 Go Module。这是官方提倡的新的包管理，乃至项目管理机制，解决了 GOPATH 的问题，相当于弃用了 GOPATH。
-Go Module 机制#Go Module 不同于基于 GOPATH 和 Vendor 的项目构建，其主要是通过 $GOPATH/pkg/mod 下缓存的模块来对项目进行构建。 同一个模块版本的数据只缓存一份，所有其他模块共享使用。
-可以使用 go clean -modcache 清理所有已缓存的模块版本数据。
-GO111MODULE#Go Module 目前是可选的，可以通过环境变量 GO111MODULE 来控制是否启用，GO111MODULE 有三种类型:
-on 所有的构建，都使用 Module 机制 off 所有的构建，都不使用 Module 机制，而是使用 GOPATH 和 Vendor auto 在 GOPATH 下的项目，不使用 Module 机制，不在 GOPATH 下的项目使用 GOPROXY#GOPROXY 用于设置 Go Module 代理。使 Go 在后续拉取模块版本时能够脱离传统的 VCS 方式从镜像站点快速拉取。它的值是一个以 , 分割的 Go module proxy 列表。Golang 1.</description>
-    </item>
-    
-    <item>
-      <title>run</title>
-      <link>http://shipengqi.github.io/golang-learn/docs/commands/run/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://shipengqi.github.io/golang-learn/docs/commands/run/</guid>
-      <description>run#usage: go run [build flags] [-exec xprog] package [arguments...] Run compiles and runs the named main Go package. Typically the package is specified as a list of .go source files, but it may also be an import path, file system path, or pattern matching a single known package, as in &amp;#39;go run .&amp;#39; or &amp;#39;go run my/cmd&amp;#39;. By default, &amp;#39;go run&amp;#39; runs the compiled binary directly: &amp;#39;a.out arguments.</description>
-    </item>
-    
-    <item>
-      <title>test</title>
-      <link>http://shipengqi.github.io/golang-learn/docs/commands/test/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://shipengqi.github.io/golang-learn/docs/commands/test/</guid>
-      <description>usage: go test [build/test flags] [packages] [build/test flags &amp;amp; test binary flags] &amp;#39;Go test&amp;#39; automates testing the packages named by the import paths. It prints a summary of the test results in the format: ok archive/tar 0.011s FAIL archive/zip 0.022s ok compress/gzip 0.033s ... followed by detailed output for each failed package. &amp;#39;Go test&amp;#39; recompiles each package along with any files with names matching the file pattern &amp;#34;*_test.go&amp;#34;. These additional files can contain test functions, benchmark functions, and example functions.</description>
-    </item>
-    
-    <item>
-      <title>tool</title>
-      <link>http://shipengqi.github.io/golang-learn/docs/commands/tool/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://shipengqi.github.io/golang-learn/docs/commands/tool/</guid>
-      <description>usage: go tool [-n] command [args...] Tool runs the go tool command identified by the arguments. With no arguments it prints the list of known tools. The -n flag causes tool to print the command that would be executed but not execute it. For more about each tool command, see &amp;#39;go doc cmd/&amp;lt;command&amp;gt;&amp;#39;. </description>
-    </item>
-    
-    <item>
-      <title>vet</title>
-      <link>http://shipengqi.github.io/golang-learn/docs/commands/vet/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://shipengqi.github.io/golang-learn/docs/commands/vet/</guid>
-      <description>vet#usage: go vet [-n] [-x] [-vettool prog] [build flags] [vet flags] [packages] Vet runs the Go vet command on the packages named by the import paths. For more about vet and its flags, see &amp;#39;go doc cmd/vet&amp;#39;. For more about specifying packages, see &amp;#39;go help packages&amp;#39;. For a list of checkers and their flags, see &amp;#39;go tool vet help&amp;#39;. For details of a specific checker such as &amp;#39;printf&amp;#39;, see &amp;#39;go tool vet help printf&amp;#39;.</description>
-    </item>
-    
-  </channel>
-</rss>

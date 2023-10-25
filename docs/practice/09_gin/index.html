@@ -1,0 +1,136 @@
+<!doctype html><html lang=en dir=ltr><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="Gin 如何实现前端网页的静态服务器 # Gin 作为 Web 框架提供 API 接口非常方便，但是在同一个项目中，既提供 API 接口，又要作为前端网页的静态服务器，就比较麻烦。通常 Angular (React/Vue) 项目需要在 Nginx 或者 Tomcat 转发才可以。有些小项目并不需要前后端分离，如何解决？
+利用 embed 标签 # Go 的 1.16 版本增加了 embed 的标签，可以利用这个标签将静态资源打包到二进制文件中。
+. ├── config ├── controller ├── model ├── options ├── pkg │ └── response │ └── response.go ├── resources │ ├── dist │ └── html.go ├── html.go ├── resource.go ├── router.go ├── server.go └── store ├── audited.go ├── groups.go ├── mysql.go ├── settings."><meta name=theme-color media="(prefers-color-scheme: light)" content="#ffffff"><meta name=theme-color media="(prefers-color-scheme: dark)" content="#343a40"><meta name=color-scheme content="light dark"><meta property="og:title" content="Gin 静态服务器"><meta property="og:description" content="Gin 如何实现前端网页的静态服务器 # Gin 作为 Web 框架提供 API 接口非常方便，但是在同一个项目中，既提供 API 接口，又要作为前端网页的静态服务器，就比较麻烦。通常 Angular (React/Vue) 项目需要在 Nginx 或者 Tomcat 转发才可以。有些小项目并不需要前后端分离，如何解决？
+利用 embed 标签 # Go 的 1.16 版本增加了 embed 的标签，可以利用这个标签将静态资源打包到二进制文件中。
+. ├── config ├── controller ├── model ├── options ├── pkg │ └── response │ └── response.go ├── resources │ ├── dist │ └── html.go ├── html.go ├── resource.go ├── router.go ├── server.go └── store ├── audited.go ├── groups.go ├── mysql.go ├── settings."><meta property="og:type" content="article"><meta property="og:url" content="http://shipengqi.github.io/golang-learn/docs/practice/09_gin/"><meta property="article:section" content="docs"><meta property="article:modified_time" content="2023-10-15T17:52:38+08:00"><title>Gin 静态服务器 | Golang Learning</title><link rel=manifest href=/golang-learn/manifest.json><link rel=icon href=/golang-learn/favicon.png><link rel=stylesheet href=/golang-learn/book.min.33a48f5432973b8ff9a82679d9e45d67f2c15d4399bd2829269455cfe390b5e8.css integrity="sha256-M6SPVDKXO4/5qCZ52eRdZ/LBXUOZvSgpJpRVz+OQteg=" crossorigin=anonymous><script defer src=/golang-learn/flexsearch.min.js></script>
+<script defer src=/golang-learn/en.search.min.0b9408b6e377d156241c62b7a8572384a62c3b29ca8ba1702cade0f681cf195b.js integrity="sha256-C5QItuN30VYkHGK3qFcjhKYsOynKi6FwLK3g9oHPGVs=" crossorigin=anonymous></script>
+<script defer src=/golang-learn/sw.min.e9a55528e030e44ecbe1b5a8da7dd8fb40bd282d02dc4574e81b999a6a21bc84.js integrity="sha256-6aVVKOAw5E7L4bWo2n3Y+0C9KC0C3EV06BuZmmohvIQ=" crossorigin=anonymous></script></head><body dir=ltr><input type=checkbox class="hidden toggle" id=menu-control>
+<input type=checkbox class="hidden toggle" id=toc-control><main class="container flex"><aside class=book-menu><div class=book-menu-content><nav><h2 class=book-brand><a class="flex align-center" href=/golang-learn/><span>Golang Learning</span></a></h2><div class=book-search><input type=text id=book-search-input placeholder=Search aria-label=Search maxlength=64 data-hotkeys=s/><div class="book-search-spinner hidden"></div><ul id=book-search-results></ul></div><ul><li><a href=https://github.com/shipengqi/golang-learn target=_blank rel=noopener>Github</a></li><li><a href=https://shipengqi.github.io/ target=_blank rel=noopener>Blog</a></li></ul><ul><li><span>语言基础</span><ul><li><a href=/golang-learn/docs/basic/01_basic_type/>基础据类型</a></li><li><a href=/golang-learn/docs/basic/02_array/>数组</a></li><li><a href=/golang-learn/docs/basic/03_slice/>切片</a></li><li><a href=/golang-learn/docs/basic/04_map/>map</a></li><li><a href=/golang-learn/docs/basic/05_function/>函数</a></li><li><a href=/golang-learn/docs/basic/06_interface/>接口</a></li><li><a href=/golang-learn/docs/basic/07_reflect/>反射</a></li><li><a href=/golang-learn/docs/basic/08_generic/>泛型</a></li><li><a href=/golang-learn/docs/basic/09_pointer/>指针</a></li><li><a href=/golang-learn/docs/basic/10_range/>range</a></li><li><a href=/golang-learn/docs/basic/11_select/>select</a></li><li><a href=/golang-learn/docs/basic/12_defer/>defer</a></li><li><a href=/golang-learn/docs/basic/13_panic/>panic</a></li><li><a href=/golang-learn/docs/basic/14_make_new/>make 和 new</a></li><li><a href=/golang-learn/docs/basic/15_oop/>面向对象</a></li></ul></li><li><a href=/golang-learn/docs/concurrent/>并发编程</a><ul><li><a href=/golang-learn/docs/concurrent/01_mutex/>互斥锁</a></li><li><a href=/golang-learn/docs/concurrent/02_rwmutex/>读写锁</a></li><li><a href=/golang-learn/docs/concurrent/03_waitgroup/>WaitGroup</a></li><li><a href=/golang-learn/docs/concurrent/04_cond/>条件变量</a></li><li><a href=/golang-learn/docs/concurrent/05_once/>Once</a></li><li><a href=/golang-learn/docs/concurrent/06_pool/>Pool</a></li><li><a href=/golang-learn/docs/concurrent/07_context/>Context</a></li><li><a href=/golang-learn/docs/concurrent/08_atomic/>原子操作</a></li><li><a href=/golang-learn/docs/concurrent/09_channel/>Channel</a></li></ul></li><li><span>实践</span><ul><li><a href=/golang-learn/docs/practice/01_build/>Go 编译</a></li><li><a href=/golang-learn/docs/practice/02_go_race/>Go 数据竞争检测器</a></li><li><a href=/golang-learn/docs/practice/03_test/>Go 测试</a></li><li><a href=/golang-learn/docs/practice/04_pprof/>Go 性能分析</a></li><li><a href=/golang-learn/docs/practice/05_performance/>Go 性能优化</a></li><li><a href=/golang-learn/docs/practice/06_trace/>Go Trace</a></li><li><a href=/golang-learn/docs/practice/07_coredump/>Go CoreDump 调试</a></li><li><a href=/golang-learn/docs/practice/08_mod/>Go Modules</a></li><li><a href=/golang-learn/docs/practice/09_gin/ class=active>Gin 静态服务器</a></li><li><a href=/golang-learn/docs/practice/10_remote_dev/>Go 远程开发调试</a></li><li><a href=/golang-learn/docs/practice/11_errors/>Go 常见错误</a></li></ul></li><li><span>底层原理</span><ul><li><a href=/golang-learn/docs/advance/mm/>内存管理</a></li><li><a href=/golang-learn/docs/advance/gc/>垃圾回收</a></li><li><a href=/golang-learn/docs/advance/scheduler/>调度器</a></li></ul></li></ul></nav><script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script></div></aside><div class=book-page><header class=book-header><div class="flex align-center justify-between"><label for=menu-control><img src=/golang-learn/svg/menu.svg class=book-icon alt=Menu></label>
+<strong>Gin 静态服务器</strong>
+<label for=toc-control><img src=/golang-learn/svg/toc.svg class=book-icon alt="Table of Contents"></label></div><aside class="hidden clearfix"><nav id=TableOfContents><ul><li><a href=#gin-如何实现前端网页的静态服务器>Gin 如何实现前端网页的静态服务器</a><ul><li><a href=#利用-embed-标签>利用 embed 标签</a></li></ul></li></ul></nav></aside></header><article class=markdown><h1 id=gin-如何实现前端网页的静态服务器>Gin 如何实现前端网页的静态服务器
+<a class=anchor href=#gin-%e5%a6%82%e4%bd%95%e5%ae%9e%e7%8e%b0%e5%89%8d%e7%ab%af%e7%bd%91%e9%a1%b5%e7%9a%84%e9%9d%99%e6%80%81%e6%9c%8d%e5%8a%a1%e5%99%a8>#</a></h1><p>Gin 作为 Web 框架提供 API 接口非常方便，但是在同一个项目中，既提供 API 接口，又要作为前端网页的静态服务器，就比较麻烦。通常 Angular (React/Vue)
+项目需要在 Nginx 或者 Tomcat 转发才可以。有些小项目并不需要前后端分离，如何解决？</p><h2 id=利用-embed-标签>利用 embed 标签
+<a class=anchor href=#%e5%88%a9%e7%94%a8-embed-%e6%a0%87%e7%ad%be>#</a></h2><p>Go 的 1.16 版本增加了 <code>embed</code> 的标签，可以利用这个标签将静态资源打包到二进制文件中。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>.
+</span></span><span style=display:flex><span>├── config
+</span></span><span style=display:flex><span>├── controller
+</span></span><span style=display:flex><span>├── model
+</span></span><span style=display:flex><span>├── options
+</span></span><span style=display:flex><span>├── pkg
+</span></span><span style=display:flex><span>│         └── response
+</span></span><span style=display:flex><span>│             └── response.go
+</span></span><span style=display:flex><span>├── resources
+</span></span><span style=display:flex><span>│   ├── dist
+</span></span><span style=display:flex><span>│   └── html.go
+</span></span><span style=display:flex><span>├── html.go
+</span></span><span style=display:flex><span>├── resource.go
+</span></span><span style=display:flex><span>├── router.go
+</span></span><span style=display:flex><span>├── server.go
+</span></span><span style=display:flex><span>└── store
+</span></span><span style=display:flex><span>    ├── audited.go
+</span></span><span style=display:flex><span>    ├── groups.go
+</span></span><span style=display:flex><span>    ├── mysql.go
+</span></span><span style=display:flex><span>    ├── settings.go
+</span></span><span style=display:flex><span>    ├── store.go
+</span></span><span style=display:flex><span>    └── tokens.go
+</span></span></code></pre></div><p>上面项目的目录结构中注意这几个文件：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>├── resources
+</span></span><span style=display:flex><span>│   ├── dist
+</span></span><span style=display:flex><span>│   └── html.go
+</span></span><span style=display:flex><span>├── html.go
+</span></span><span style=display:flex><span>├── resource.go
+</span></span><span style=display:flex><span>├── router.go
+</span></span></code></pre></div><p><code>dist</code> 是打包好的静态资源。</p><p><code>html.go</code> 为了后面渲染 <code>index.html</code> 和静态资源提供的变量：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#f92672>package</span> <span style=color:#a6e22e>resources</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> <span style=color:#e6db74>&#34;embed&#34;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>//go:embed dist/stat-web/index.html
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>var</span> <span style=color:#a6e22e>Html</span> []<span style=color:#66d9ef>byte</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>//go:embed dist/stat-web
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>var</span> <span style=color:#a6e22e>Static</span> <span style=color:#a6e22e>embed</span>.<span style=color:#a6e22e>FS</span>
+</span></span></code></pre></div><p><code>resource.go</code> 实现了 <code>FS</code> 接口：</p><p><code>FS</code> 接口：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>FS</span> <span style=color:#66d9ef>interface</span> {
+</span></span><span style=display:flex><span>  <span style=color:#75715e>// Open opens the named file.
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>  <span style=color:#75715e>//
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>  <span style=color:#75715e>// When Open returns an error, it should be of type *PathError
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>  <span style=color:#75715e>// with the Op field set to &#34;open&#34;, the Path field set to name,
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>  <span style=color:#75715e>// and the Err field describing the problem.
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>  <span style=color:#75715e>//
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>  <span style=color:#75715e>// Open should reject attempts to open names that do not satisfy
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>  <span style=color:#75715e>// ValidPath(name), returning a *PathError with Err set to
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>  <span style=color:#75715e>// ErrInvalid or ErrNotExist.
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>  <span style=color:#a6e22e>Open</span>(<span style=color:#a6e22e>name</span> <span style=color:#66d9ef>string</span>) (<span style=color:#a6e22e>File</span>, <span style=color:#66d9ef>error</span>)
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p><code>resource.go</code>：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#f92672>package</span> <span style=color:#a6e22e>apiserver</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> (
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;embed&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;io/fs&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;path&#34;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;project/resources&#34;</span>
+</span></span><span style=display:flex><span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Resource</span> <span style=color:#66d9ef>struct</span> {
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>fs</span>   <span style=color:#a6e22e>embed</span>.<span style=color:#a6e22e>FS</span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>path</span> <span style=color:#66d9ef>string</span>
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>NewResource</span>(<span style=color:#a6e22e>staticPath</span> <span style=color:#66d9ef>string</span>) <span style=color:#f92672>*</span><span style=color:#a6e22e>Resource</span> {
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>return</span> <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>Resource</span>{
+</span></span><span style=display:flex><span>		<span style=color:#a6e22e>fs</span>:   <span style=color:#a6e22e>resources</span>.<span style=color:#a6e22e>Static</span>, <span style=color:#75715e>// resources/html.go 中定义的 Static
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>		<span style=color:#a6e22e>path</span>: <span style=color:#a6e22e>staticPath</span>,
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>r</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>Resource</span>) <span style=color:#a6e22e>Open</span>(<span style=color:#a6e22e>name</span> <span style=color:#66d9ef>string</span>) (<span style=color:#a6e22e>fs</span>.<span style=color:#a6e22e>File</span>, <span style=color:#66d9ef>error</span>) {
+</span></span><span style=display:flex><span>	<span style=color:#75715e>// rewrite the static files path
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#a6e22e>fullName</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>path</span>.<span style=color:#a6e22e>Join</span>(<span style=color:#a6e22e>r</span>.<span style=color:#a6e22e>path</span>, <span style=color:#a6e22e>name</span>) <span style=color:#75715e>// 这里拼出静态资源的完整路径，注意 windows 下使用 filepath.Join，会导致找不到文件
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>r</span>.<span style=color:#a6e22e>fs</span>.<span style=color:#a6e22e>Open</span>(<span style=color:#a6e22e>fullName</span>)
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p><code>html.go</code> 中实现了 <code>HtmlHandler</code> 用来渲染 <code>index.html</code>：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#f92672>package</span> <span style=color:#a6e22e>apiserver</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> (
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;net/http&#34;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;github.com/gin-gonic/gin&#34;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;project/resources&#34;</span>
+</span></span><span style=display:flex><span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>HtmlHandler</span> <span style=color:#66d9ef>struct</span>{}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>NewHtmlHandler</span>() <span style=color:#f92672>*</span><span style=color:#a6e22e>HtmlHandler</span> {
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>return</span> <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>HtmlHandler</span>{}
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// RedirectIndex 重定向
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>h</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>HtmlHandler</span>) <span style=color:#a6e22e>RedirectIndex</span>(<span style=color:#a6e22e>c</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>gin</span>.<span style=color:#a6e22e>Context</span>) {
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>c</span>.<span style=color:#a6e22e>Redirect</span>(<span style=color:#a6e22e>http</span>.<span style=color:#a6e22e>StatusFound</span>, <span style=color:#e6db74>&#34;/&#34;</span>)
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>return</span>
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>h</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>HtmlHandler</span>) <span style=color:#a6e22e>Index</span>(<span style=color:#a6e22e>c</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>gin</span>.<span style=color:#a6e22e>Context</span>) {
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>c</span>.<span style=color:#a6e22e>Header</span>(<span style=color:#e6db74>&#34;content-type&#34;</span>, <span style=color:#e6db74>&#34;text/html;charset=utf-8&#34;</span>)
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>c</span>.<span style=color:#a6e22e>String</span>(<span style=color:#ae81ff>200</span>, string(<span style=color:#a6e22e>resources</span>.<span style=color:#a6e22e>Html</span>))
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>return</span>
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p><code>router.go</code> 中配置路由：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>installController</span>(<span style=color:#a6e22e>g</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>gin</span>.<span style=color:#a6e22e>Engine</span>) {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>html</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>NewHtmlHandler</span>()
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>g</span>.<span style=color:#a6e22e>GET</span>(<span style=color:#e6db74>&#34;/&#34;</span>, <span style=color:#a6e22e>html</span>.<span style=color:#a6e22e>Index</span>)
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>g</span>.<span style=color:#a6e22e>StaticFS</span>(<span style=color:#e6db74>&#34;/static&#34;</span>, <span style=color:#a6e22e>http</span>.<span style=color:#a6e22e>FS</span>(<span style=color:#a6e22e>NewResource</span>(<span style=color:#e6db74>&#34;dist/stat-web&#34;</span>)))
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>g</span>.<span style=color:#a6e22e>StaticFS</span>(<span style=color:#e6db74>&#34;/assets&#34;</span>, <span style=color:#a6e22e>http</span>.<span style=color:#a6e22e>FS</span>(<span style=color:#a6e22e>NewResource</span>(<span style=color:#e6db74>&#34;dist/stat-web/assets&#34;</span>)))
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>g</span>.<span style=color:#a6e22e>NoRoute</span>(<span style=color:#a6e22e>html</span>.<span style=color:#a6e22e>RedirectIndex</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// API 接口
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#a6e22e>v1</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>g</span>.<span style=color:#a6e22e>Group</span>(<span style=color:#e6db74>&#34;/api/v1&#34;</span>)
+</span></span><span style=display:flex><span>    {
+</span></span><span style=display:flex><span>	   <span style=color:#75715e>// ...
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>上面的路由 <code>g.StaticFS("/static", http.FS(NewResource("dist/stat-web")))</code> ，路径之所以是 <code>/static</code> 是因为在打包 Angular 项目时使用了 <code>--deploy-url</code>：</p><p><code>assets</code> 目录下会有 icon，image，json 等静态资源。</p><blockquote><p>注意 <code>index.html</code> 中 <code>link rel="icon" type="image/x-icon" href="assets/favicon.ico"</code>，<code>href</code> 的路径是 <code>assets/favicon.ico</code>，
+<code>deploy-url</code> 并不会给 <code>href="assets/favicon.ico"</code> 添加 static 前缀。所以如果是 <code>href="favicon.ico"</code>，编译后会找不到该文件。</p></blockquote><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>ng build &lt;project&gt; --configuration production --deploy-url /static/
+</span></span></code></pre></div><blockquote><p><code>--deploy-url</code> 将被弃用，之后需要考虑其他方式。暂时不使用 <code>--base-href</code> 是因为：
+deploy url 和 base href 都可用于初始脚本、样式表、惰性脚本和 css 资源。 但是，定义 base href 有一些独有的作用。
+base href 可用于定位相对路径模板 (HTML) 资产和针对相对路径的 fetch/XMLHttpRequests。base href 也可用于定义 Angular 路由器的默认基地址。</p></blockquote></article><footer class=book-footer><div class="flex flex-wrap justify-between"><div><a class="flex align-center" href=https://github.com/shipengqi/golang-learn/commit/e2c1b9369331db41bcc14cb50249d04165b4bc8c title='Last modified by shipengqi | October 15, 2023' target=_blank rel=noopener><img src=/golang-learn/svg/calendar.svg class=book-icon alt=Calendar>
+<span>October 15, 2023</span></a></div><div><a class="flex align-center" href=https://github.com/shipengqi/golang-learn/edit/master/content/docs/practice/09_gin.md target=_blank rel=noopener><img src=/golang-learn/svg/edit.svg class=book-icon alt=Edit>
+<span>Edit this page</span></a></div></div><script>(function(){function e(e){const t=window.getSelection(),n=document.createRange();n.selectNodeContents(e),t.removeAllRanges(),t.addRange(n)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script></footer><div class=book-comments></div><label for=menu-control class="hidden book-menu-overlay"></label></div><aside class=book-toc><div class=book-toc-content><nav id=TableOfContents><ul><li><a href=#gin-如何实现前端网页的静态服务器>Gin 如何实现前端网页的静态服务器</a><ul><li><a href=#利用-embed-标签>利用 embed 标签</a></li></ul></li></ul></nav></div></aside></main></body></html>

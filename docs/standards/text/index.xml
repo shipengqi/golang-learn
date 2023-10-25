@@ -1,50 +1,0 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-  <channel>
-    <title>text on Golang Learning</title>
-    <link>http://shipengqi.github.io/golang-learn/docs/standards/text/</link>
-    <description>Recent content in text on Golang Learning</description>
-    <generator>Hugo -- gohugo.io</generator>
-    <language>en</language><atom:link href="http://shipengqi.github.io/golang-learn/docs/standards/text/index.xml" rel="self" type="application/rss+xml" />
-    <item>
-      <title>strconv</title>
-      <link>http://shipengqi.github.io/golang-learn/docs/standards/text/strconv/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://shipengqi.github.io/golang-learn/docs/standards/text/strconv/</guid>
-      <description>strconv#strconv 包包含了一系列字符串与相关的类型转换的函数。
-转换错误处理#strconv 中的错误处理。
-由于将字符串转为其他数据类型可能会出错，strconv 包定义了两个 error 类型的变量：ErrRange 和 ErrSyntax。其中，ErrRange 表示 值超过了类型能表示的最大范围，比如将 &amp;ldquo;128&amp;rdquo; 转为 int8 就会返回这个错误；ErrSyntax 表示语法错误，比如将 &amp;quot;&amp;quot; 转为 int 类型会返 回这个错误。
-然而，在返回错误的时候，通过构造一个 NumError 类型的 error 对象返回。NumError 结构的定义如下：
-// A NumError records a failed conversion. type NumError struct { Func string // the failing function (ParseBool, ParseInt, ParseUint, ParseFloat) Num string // the input Err error // the reason the conversion failed (ErrRange, ErrSyntax) } 该结构记录了转换过程中发生的错误信息。该结构不仅包含了一个 error 类型的成员，记录具体的错误信息，包的实现中，定义了两个便捷函数， 用于构造 NumError 对象：</description>
-    </item>
-    
-    <item>
-      <title>strings</title>
-      <link>http://shipengqi.github.io/golang-learn/docs/standards/text/strings/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://shipengqi.github.io/golang-learn/docs/standards/text/strings/</guid>
-      <description>strings#字符串常见操作有：
-字符串长度； 求子串； 是否存在某个字符或子串； 子串出现的次数（字符串匹配）； 字符串分割（切分）为 []string； 字符串是否有某个前缀或后缀； 字符或子串在字符串中首次出现的位置或最后一次出现的位置； 通过某个字符串将 []string 连接起来； 字符串重复几次； 字符串中子串替换； 大小写转换； Trim 操作； &amp;hellip; 前缀和后缀#HasPrefix 判断字符串 s 是否以 prefix 开头：
-strings.HasPrefix(s, prefix string) bool HasSuffix 判断字符串 s 是否以 suffix 结尾：
-strings.HasSuffix(s, suffix string) bool 示例：
-package main import ( &amp;#34;fmt&amp;#34; &amp;#34;strings&amp;#34; ) func main() { var str string = &amp;#34;This is an example of a string&amp;#34; fmt.Printf(&amp;#34;T/F? Does the string \&amp;#34;%s\&amp;#34; have prefix %s?</description>
-    </item>
-    
-    <item>
-      <title>unicode</title>
-      <link>http://shipengqi.github.io/golang-learn/docs/standards/text/unicode/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://shipengqi.github.io/golang-learn/docs/standards/text/unicode/</guid>
-      <description>unicode#go 对 unicode 的支持包含三个包 :
-unicode unicode/utf8 unicode/utf16 unicode 包包含基本的字符判断函数。utf8 包主要负责 rune 和 byte 之间的转换。utf16 包负责 rune 和 uint16 数组之间 的转换。
-unicode 包#unicode 包含了对 rune 的判断。这个包把所有 unicode 涉及到的编码进行了分类，使用结构
-type RangeTable struct { R16 []Range16 R32 []Range32 LatinOffset int } 来表示这个功能的字符集。这些字符集都集中列表在 table.go 这个源码里面。
-比如控制字符集：
-var _Pc = &amp;amp;RangeTable{ R16: []Range16{ {0x005f, 0x203f, 8160}, {0x2040, 0x2054, 20}, {0xfe33, 0xfe34, 1}, {0xfe4d, 0xfe4f, 1}, {0xff3f, 0xff3f, 1}, }, } 回到包的函数，我们看到有下面这些判断函数：</description>
-    </item>
-    
-  </channel>
-</rss>

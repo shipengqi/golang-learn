@@ -1,67 +1,27 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-  <channel>
-    <title>并发编程 on Golang Learning</title>
-    <link>http://shipengqi.github.io/golang-learn/docs/concurrent/</link>
-    <description>Recent content in 并发编程 on Golang Learning</description>
-    <generator>Hugo -- gohugo.io</generator>
-    <language>en</language><atom:link href="http://shipengqi.github.io/golang-learn/docs/concurrent/index.xml" rel="self" type="application/rss+xml" />
-    <item>
-      <title>channel</title>
-      <link>http://shipengqi.github.io/golang-learn/docs/concurrent/channel/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://shipengqi.github.io/golang-learn/docs/concurrent/channel/</guid>
-      <description>Don’t communicate by sharing memory; share memory by communicating.（不要通过共享内存来通信，而应该通过通信来共享内存。） 这是作为 Go 语言最重要的编程理念。
-通道类型的值是并发安全的，这也是 Go 语言自带的、唯一一个可以满足并发安全性的类型。
-channel 是 goroutine 之间的通信机制。goroutine 通过 channel 向另一个 goroutine 发送消息 channel 和 goroutine 结合，可以实现用通信代替共享内存的 CSP (Communicating Sequential Process)模型。
-创建 channel：
-ch := make(chan int) ch = make(chan int, 3) // buffered channel with capacity 3 上面的代码中，int 代表这个 channel 要发送的数据的类型。第二个参数代表创建一带缓存的 channel，容量为 3。
-channel 的零值是 nil。关闭一个 nil 的 channel 会导致程序 panic。
-发送和接收两个操作使用 &amp;lt;- 运算符，一个左尖括号紧接着一个减号形象地代表了元素值的传输方向：
-// 发送一个值 ch &amp;lt;- x // 将数据 push 到 channel // 接受一个值 x = &amp;lt;-ch // 取出 channel 的值并复制给变量x &amp;lt;-ch // 接受的值会被丢弃 close#使用 close 函数关闭 channel，channel 关闭后不能再发送数据，但是可以接受已经发送成功的数据， 如果 channel 中没有数据，那么返回一个零值。</description>
-    </item>
-    
-    <item>
-      <title>goroutine</title>
-      <link>http://shipengqi.github.io/golang-learn/docs/concurrent/goroutine/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://shipengqi.github.io/golang-learn/docs/concurrent/goroutine/</guid>
-      <description>goroutine 是 Go 语言最显著的特征，Go 从根上将一切都并发化，用 goroutine 运行一切，包括入口函数 main。 goroutine 用类似协程的方式处理并发单元，并且做的更深度的优化。这就让并发编程变的简单，不需要处理回调，不需要关注 执行绪切换，一个 go 就搞定。
-goroutine#Go 语言在语言层面上支持了并发，简单将 goroutine 归为协程并不合适。Go runtime 会创建多个线程来执行并发任务，而且任务 可以跨线程调度。所以 goroutine 更像是多线程和协程的结合体。
-goroutine 可以简单理解为协程，开销较低 (大概是 4~5KB )，当然会根据相应的数据伸缩。也正因为如此，可同时运行成千 上万个并发任务。goroutine 比 thread 更易用、更高效、更轻便。我们程序运行的 main 函数在一个单独的 goroutine 中运行， 叫做 主 goroutine。在代码中可以使用 go 关键字创建 goroutine。
-go f() main 函数返回时，所有 goroutine 都会被打断，程序退出。除了从 main 函数退出或者直接终止程序之外，没有其它 的编程方法能够让一个 goroutine 来打断另一个的执行，但是之后可以看到一种方式来实现这个目的，通过 goroutine 之间 的通信来让一个 goroutine 请求其它的 goroutine，使被请求 goroutine 自行结束执行。
-什么是主 goroutine，它与我们启用的其他 goroutine 有什么不同#package main import &amp;#34;fmt&amp;#34; func main() { for i := 0; i &amp;lt; 10; i++ { go func() { fmt.</description>
-    </item>
-    
-    <item>
-      <title>同步和锁</title>
-      <link>http://shipengqi.github.io/golang-learn/docs/concurrent/sync_lock/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://shipengqi.github.io/golang-learn/docs/concurrent/sync_lock/</guid>
-      <description>同步和锁#channel 不是用来代替锁的，channel 倾向于解决逻辑层次的并发处理，而锁用来保护局部范围的数据安全。
-共享变量#无论任何时候，只要有两个以上 goroutine 并发访问同一变量，且至少其中的一个是写操作的时候就会发生数据竞争。 避免数据竞争的三种方式：
-不去写变量。读取不可能出现数据竞争。 避免从多个 goroutine 访问变量，尽量把变量限定在了一个单独的 goroutine 中。(不要使用共享数据来通信，使用通信 来共享数据) 互斥锁 同步锁#Go 语言包中的 sync 包提供了两种锁类型：sync.Mutex 和 sync.RWMutex，前者是互斥锁，后者是读写锁。
-互斥锁#使用 channel 实现互斥锁#我们可以使用容量只有 1 的 channel 来保证最多只有一个 goroutine 在同一时刻访问一个共享变量：
-var ( sema = make(chan struct{}, 1) // a binary semaphore guarding balance balance int ) func Deposit(amount int) { sema &amp;lt;- struct{}{} // acquire lock balance = balance + amount &amp;lt;-sema // release lock } func Balance() int { sema &amp;lt;- struct{}{} // acquire lock b := balance &amp;lt;-sema // release lock return b } sync.</description>
-    </item>
-    
-    <item>
-      <title>并发和并行</title>
-      <link>http://shipengqi.github.io/golang-learn/docs/concurrent/concurrent/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>http://shipengqi.github.io/golang-learn/docs/concurrent/concurrent/</guid>
-      <description>并发和并行的区别：
-并发：逻辑上具备同时处理多个任务的能力 并行：物理上同时处理多个并发任务的能力 并发#一个 cpu 上能同时执行多项任务，在很短时间内，cpu 来回切换任务执行(在某段很短时间内执行程序 a，然后又迅速得切换到程序 b 去执行)， 有时间上的重叠（宏观上是同时的，微观仍是顺序执行）,这样看起来多个任务像是同时执行，这就是并发。
-并行#当系统有多个 CPU 时,每个 CPU 同一时刻都运行任务，互不抢占自己所在的 CPU 资源，同时进行，称为并行。并行是并发设计的 理想模式。
-进程#cpu 在切换程序的时候，如果不保存上一个程序的状态（也就是我们常说的 context &amp;ndash;上下文），直接切换下一个程序，就会丢失上一个 程序的一系列状态，于是引入了进程这个概念，用以划分好程序运行时所需要的资源。因此进程就是一个程序运行时候的所需要的基本资源单 位（也可以说是程序运行的一个实体）。
-线程#cpu 切换多个进程的时候，会花费不少的时间，因为切换进程需要切换到内核态，而每次调度需要内核态都需要读取用户态的数据，进程 一旦多起来，cpu 调度会消耗一大堆资源，因此引入了线程的概念，线程本身几乎不占有资源，他们共享进程里的资源，内核调度起来不 会那么像进程切换那么耗费资源。
-协程#多线程和多进程是并行的基本条件，但是单线程可以利用协程做到并发。协程拥有自己的寄存器上下文和栈。协程在线程上通过主动 切换来实现并发，减少了阻塞时间，还避免了线程切换的开销。但协程运行的并发本质上还是串行的。线程和进程的操作是由程序触发系统 接口，最后的执行者是系统；协程的操作执行者则是用户自身程序。
-https://segmentfault.com/a/1190000003063859</description>
-    </item>
-    
-  </channel>
-</rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>并发编程 on Golang Learning</title><link>http://shipengqi.github.io/golang-learn/docs/concurrent/</link><description>Recent content in 并发编程 on Golang Learning</description><generator>Hugo -- gohugo.io</generator><language>en</language><atom:link href="http://shipengqi.github.io/golang-learn/docs/concurrent/index.xml" rel="self" type="application/rss+xml"/><item><title>互斥锁</title><link>http://shipengqi.github.io/golang-learn/docs/concurrent/01_mutex/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>http://shipengqi.github.io/golang-learn/docs/concurrent/01_mutex/</guid><description>互斥锁 # Go 的标准库 sync 提供了两种锁类型：sync.Mutex 和 sync.RWMutex，前者是互斥锁（也叫做排他锁），后者是读写锁。
+互斥锁是并发控制的一个基本手段，是为了避免竞争而建立的一种并发控制机制。
+Go 定义的锁接口只有两个方法：
+type Locker interface { Lock() // 请求锁 Unlock() // 释放锁 } Mutex 和 RWMutex 都实现了 Locker 接口
+import &amp;#34;sync&amp;#34; var ( mu sync.Mutex // guards balance balance int ) func Deposit(amount int) { mu.Lock() defer mu.Unlock() balance = balance + amount } func Balance() int { mu.Lock() defer mu.Unlock() b := balance return b } 当已经有 goroutine 调用 Lock 方法获得了这个锁，再有 goroutine 请求这个锁就会阻塞在 Lock 方法的调用上， 直到持有这个锁的 goroutine 调用 UnLock 释放这个锁。</description></item><item><title>读写锁</title><link>http://shipengqi.github.io/golang-learn/docs/concurrent/02_rwmutex/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>http://shipengqi.github.io/golang-learn/docs/concurrent/02_rwmutex/</guid><description>读写锁 # 如果有多个 goroutine 读取变量，那么是并发安全的，这个时候使用 sync.Mutex 加锁就没有必要。可以使 用 sync.RWMutex 读写锁（多读单写锁）。
+读写锁是把对共享资源的“读操作”和“写操作”区别对待了。它可以对这两种操作施加不同程度的保护。
+一个读写锁中实际上包含了两个锁，即：读锁和写锁。sync.RWMutex 类型中的 Lock 方法和 Unlock 方法用于对写锁进行锁定和解锁， RLock 方法和 RUnlock 方法则分别用于对读锁进行锁定和解锁。
+对于某个受到读写锁保护的共享资源，
+多个写操作不能同时进行 写操作和读操作不能同时进行 多个读操作可以同时进行 var mu sync.RWMutex var balance int func Balance() int { mu.RLock() // readers lock defer mu.RUnlock() return balance } 为什么只读操作也需要加锁？
+var x, y int go func() { x = 1 // A1 fmt.Print(&amp;#34;y:&amp;#34;, y, &amp;#34; &amp;#34;) // A2 }() go func() { y = 1 // B1 fmt.</description></item><item><title>WaitGroup</title><link>http://shipengqi.github.io/golang-learn/docs/concurrent/03_waitgroup/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>http://shipengqi.github.io/golang-learn/docs/concurrent/03_waitgroup/</guid><description> WaitGroup #</description></item><item><title>条件变量</title><link>http://shipengqi.github.io/golang-learn/docs/concurrent/04_cond/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>http://shipengqi.github.io/golang-learn/docs/concurrent/04_cond/</guid><description>条件变量 # Go 标准库提供了条件变量 sync.Cond 它可以让一组的 goroutine 都在满足特定条件时被唤醒。
+sync.Cond 不是一个常用的同步机制，但是在条件长时间无法满足时，与使用 for {} 进行忙碌等待相比，sync.Cond 能够让出处理器的使用权，提高 CPU 的利用率。
+sync.Cond 基于互斥锁/读写锁，它和互斥锁的区别是什么？
+互斥锁 sync.Mutex 通常用来保护临界区和共享资源，条件变量 sync.Cond 用来协调想要访问共享资源的 goroutine。
+sync.Cond 经常用在多个 goroutine 等待，一个 goroutine 通知的场景。
+比如有一个 goroutine 在异步地接收数据，剩下的多个 goroutine 必须等待这个协程接收完数据，才能读取到正确的数据。这个时候，就需要有个全局的变量来标志第一 个 goroutine 数据是否接受完毕，剩下的 goroutine，反复检查该变量的值，直到满足要求。
+当然也可以创建多个 channel，每个 goroutine 阻塞在一个 channel 上，由接收数据的 goroutine 在数据接收完毕后，逐个通知。但是这种方式更复杂一点。
+使用 # NewCond 用来创建 sync.Cond 实例，sync.Cond 暴露了几个方法：
+Broadcast 用来唤醒所有等待条件变量的 goroutine，无需锁保护。 Signal 唤醒一个 goroutine。 Wait 调用 Wait 会自动释放锁，并挂起调用者所在的 goroutine，也就是当前 goroutine 会阻塞在 Wait 方法调用的地方。如果其他 goroutine 调用了 Signal 或 Broadcast 唤醒 了该 goroutine，那么 Wait 方法在结束阻塞时，会重新加锁，并且继续执行 Wait 后面的代码。 var status int64 func main() { c := sync.</description></item><item><title>Once</title><link>http://shipengqi.github.io/golang-learn/docs/concurrent/05_once/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>http://shipengqi.github.io/golang-learn/docs/concurrent/05_once/</guid><description>Once # Go 标准库中 sync.Once 可以保证 Go 程序运行期间的某段代码只会执行一次。常常用于单例对象的初始化场景。
+sync.Once 只有一个对外唯一暴露的方法 Do，可以多次调用，但是只第一次调用时会执行一次。
+func main() { o := &amp;amp;sync.Once{} for i := 0; i &amp;lt; 10; i++ { o.Do(func() { fmt.Println(&amp;#34;only once&amp;#34;) }) } } 运行：
+$ go run main.go only once 原理 # sync.Once 的实现：
+// src/sync/once.go type Once struct { done uint32 m Mutex } func (o *Once) Do(f func()) { // 如果传入的参数 f 已经执行过，直接返回 if atomic.LoadUint32(&amp;amp;o.done) == 0 { o.</description></item><item><title>Pool</title><link>http://shipengqi.github.io/golang-learn/docs/concurrent/06_pool/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>http://shipengqi.github.io/golang-learn/docs/concurrent/06_pool/</guid><description>Pool # Go 从 1.3 版本开始提供了对象重用的机制，即 sync.Pool。sync.Pool 用来保存可以被重复使用的临时对象，避免了重复创建和销毁临时对象带来的消耗，降低 GC 压力，提高性能。
+sync.Pool 是可伸缩的，也是并发安全的。可以在多个 goroutine 中并发调用 sync.Pool 存取对象。
+使用 # var buffers = sync.Pool{ New: func() interface{} { return new(bytes.Buffer) }, } func GetBuffer() *bytes.Buffer { return buffers.Get().(*bytes.Buffer) } func PutBuffer(buf *bytes.Buffer) { buf.Reset() buffers.Put(buf) } New：类型是 func() interface{}，用来创建新的元素。 Get：从 Pool 中取出一个元素，如果没有更多的空闲元素，就调用 New 创建新的元素。如果没有设置 New 那么可能返回 nil。 Put：将一个元素放回 Pool 中，使该元素可以重复使用，如果 Put 的值是 nil，会被忽略。
+可以先 Put，再 Get 么？ # 不可以。
+type item struct { value int } func main() { pool := sync.</description></item><item><title>Context</title><link>http://shipengqi.github.io/golang-learn/docs/concurrent/07_context/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>http://shipengqi.github.io/golang-learn/docs/concurrent/07_context/</guid><description> Context #</description></item><item><title>原子操作</title><link>http://shipengqi.github.io/golang-learn/docs/concurrent/08_atomic/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>http://shipengqi.github.io/golang-learn/docs/concurrent/08_atomic/</guid><description> 原子操作 #</description></item><item><title>Channel</title><link>http://shipengqi.github.io/golang-learn/docs/concurrent/09_channel/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>http://shipengqi.github.io/golang-learn/docs/concurrent/09_channel/</guid><description>Channel # 使用 channel 实现互斥锁 # 我们可以使用容量只有 1 的 channel 来保证最多只有一个 goroutine 在同一时刻访问一个共享变量：
+var ( sema = make(chan struct{}, 1) // a binary semaphore guarding balance balance int ) func Deposit(amount int) { sema &amp;lt;- struct{}{} // acquire lock balance = balance + amount &amp;lt;-sema // release lock } func Balance() int { sema &amp;lt;- struct{}{} // acquire lock b := balance &amp;lt;-sema // release lock return b } Don’t communicate by sharing memory; share memory by communicating.</description></item></channel></rss>
