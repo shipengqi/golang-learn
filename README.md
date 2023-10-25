@@ -4,7 +4,7 @@ Golang language learning ...
 
 ## Usage
 
-development:
+Development:
 
 ```sh
 # install hugo-book as git submodule
@@ -13,11 +13,13 @@ git submodule add git@github.com:alex-shpak/hugo-book.git themes/book
 hugo server --minify --theme book
 ```
 
-deploy:
+Manually deploy:
 
 ```sh
 ./deploy.sh
 ```
+
+> Any changes in the `content` directory will automatically trigger a deployment.
 
 ## Menu
 
