@@ -415,6 +415,8 @@ func main() {
 
 [sync.Pool 使用](https://github.com/shipengqi/golang-learn/blob/master/content/docs/concurrent/06_pool.md)。
 
+## 控制 goroutine 的并发数量
+
 ## 字符串与字节转换优化，减少内存分配
 
 ## 垃圾回收优化
