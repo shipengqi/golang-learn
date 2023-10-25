@@ -6,9 +6,7 @@ on:
       - master  # Set a branch to deploy
     paths:
       - 'content/**'
-  pull_request:
-    paths:
-      - 'content/**'
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
