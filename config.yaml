@@ -1,5 +1,5 @@
-baseURL: "http://shipengqi.github.io/golang-learn"
-title: "Golang Learning"
+baseURL: "https://shipengqi.github.io/golang-learn"
+title: "Go Learning"
 theme: book
 
 # Book configuration
@@ -27,13 +27,12 @@ languages:
 menu:
   # after: []
   before:
-    - name: "Github"
-      url: "https://github.com/shipengqi/golang-learn"
-      weight: 10
-    - name: "Blog"
+    - name: Blog
       url: "https://shipengqi.github.io/"
+      weight: 10
+    - name: Github
+      url: "https://github.com/shipengqi/golang-learn"
       weight: 20
-
 params:
   # (Optional, default light) Sets color theme: light, dark or auto.
   # Theme 'auto' switches between dark and light modes based on browser/os preferences

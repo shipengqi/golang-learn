@@ -175,6 +175,110 @@ pattern 是选择包的模式，它可以有以下几种定义:
 - `-X` 设置字符串全局变量值 `-X ver="0.99"`
 - `-H` 设置可执行文件格式 `-H windowsgui`
 
+## 内联优化（inline）
+
+内联优化就是在编译期间，直接将调用函数的地方替换为函数的实现，它可以减少函数调用的开销（创建栈帧，读写寄存器，栈溢出检测等）以提高程序的性能。因为优化的对象为函数，所以也叫**函数内联**。
+
+内联是一个递归的过程，一旦一个函数被内联到它的调用者中，编译器就可能将产生的代码内联到它的调用者中，依此类推。
+
+内联优化示例：
+
+```go
+func f() {
+	fmt.Println("inline")
+}
+
+func a() {
+	f()
+}
+
+func b() {
+    f()
+}
+```
+
+内联优化后：
+
+```go
+func a() {
+    fmt.Println("inline")
+}
+
+func b() {
+    fmt.Println("inline")
+}
+```
+
+### 内联优化的效果
+
+```go
+package inlinetest
+
+//go:noinline
+func max(a, b int) int {
+    if a > b {
+        return a
+    }
+    return b
+}
+```
+
+`max_test.go`：
+
+```go
+package inlinetest
+
+import "testing"
+
+var Result int
+
+func BenchmarkMax(b *testing.B) {
+	var r int
+	for i := 0; i < b.N; i++ {
+		r = max(-1, i)
+	}
+	Result = r
+}
+```
+
+现在是在禁用内联优化的情况下运行基准测试：
+
+```
+$ go test -bench=. 
+cpu: Intel(R) Core(TM) i7-10850H CPU @ 2.70GHz
+BenchmarkMax-12         871122506                1.353 ns/op
+```
+
+去掉 `//go:noinline` 后（可以使用 `go build -gcflags="-m -m" main.go` 来查看编译器的优化）再次运行基准测试：
+
+```
+$ go test -bench=. 
+cpu: Intel(R) Core(TM) i7-10850H CPU @ 2.70GHz
+BenchmarkMax-12         1000000000               0.3534 ns/op
+```
+
+对比两次基准测试的结果，`1.353ns` 和 `0.3534ns`。打开内联优化的情况下，性能提高了 75%。
+
+### 禁用内联
+
+Go 编译器默认开启内联优化，可以使用 `-gcflags="-l"` 来关闭。但是如果传递两个或两个以上的 `-l` 则会打开内联，并启用更激进的内联策略：
+
+- `-gcflags="-l -l"` 2 级内联
+- `-gcflags="-l -l -l"` 3 级内联
+- `gcflags=-l=4` 4 级别内联
+
+`//go:noinline` 编译指令，可以禁用单个函数的内联：
+
+```go
+//go:noinline
+func max(x, y int) int {
+    if x > y {
+		return x
+	}
+	return y
+}
+```
+
 ## 减小编译体积
 
 Go 编译器默认编译出来的程序会带有符号表和调试信息，一般来说 release 版本可以去除调试信息以减小二进制体积。
