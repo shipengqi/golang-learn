@@ -1,6 +1,6 @@
 {
-  "name": "Golang Learning",
-  "short_name": "Golang Learning",
+  "name": "Go Learning",
+  "short_name": "Go Learning",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
