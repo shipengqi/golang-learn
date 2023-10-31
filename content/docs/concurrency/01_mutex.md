@@ -290,13 +290,15 @@ func (m *Mutex) unlockSlow(new int32) {
 	if (new+mutexLocked)&mutexLocked == 0 { // unlock 一个未加锁的锁
 		fatal("sync: unlock of unlocked mutex")
 	}
-	if new&mutexStarving == 0 {
+	if new&mutexStarving == 0 { // 正常模式
 		old := new
 		for {
+			// 不存在等待者 或者 mutexLocked、mutexStarving、mutexWoken 状态不都为 0
+			// 则不需要唤醒其他等待者
 			if old>>mutexWaiterShift == 0 || old&(mutexLocked|mutexWoken|mutexStarving) != 0 {
 				return
 			}
-			// Grab the right to wake someone.
+			// 存在等待者，通过 runtime_Semrelease 唤醒等待者并移交锁的所有权
 			new = (old - 1<<mutexWaiterShift) | mutexWoken
 			if atomic.CompareAndSwapInt32(&m.state, old, new) {
 				runtime_Semrelease(&m.sema, false, 1)
@@ -304,7 +306,8 @@ func (m *Mutex) unlockSlow(new int32) {
 			}
 			old = m.state
 		}
-	} else {
+	} else { // 饥饿模式
+		// 直接调用 runtime_Semrelease 将当前锁交给下一个正在尝试获取锁的等待者，等待者被唤醒后会得到锁，在这时还不会退出饥饿状态
 		runtime_Semrelease(&m.sema, true, 1)
 	}
 }

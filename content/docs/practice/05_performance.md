@@ -447,18 +447,13 @@ func main() {
 }
 ```
 
-
 ### 第三方 goroutine pool
 
 - [ants](https://github.com/panjf2000/ants)
 - [conc](https://github.com/sourcegraph/conc)
 
-## 字符串与字节转换优化，减少内存分配
+## 零拷贝优化
 
-## 函数内联
-
-[内联优化](/golang-learn/docs/practice/01_build/#%E5%86%85%E8%81%94%E4%BC%98%E5%8C%96inline)。
-
-## 垃圾回收优化
+### 字符串与字节转换优化，减少内存分配
 
 ## 设置 GOMAXPROCS

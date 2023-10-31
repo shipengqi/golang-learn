@@ -5,119 +5,293 @@ weight: 7
 
 # Context
 
-使用 `WaitGroup` 值的时候，我们最好用**先统一 `Add`，再并发 `Done`，最后 `Wait`** 的标准模式来构建协作流程。如果在调用
-该值的 `Wait` 方法的同时，为了增大其计数器的值，而并发地调用该值的 `Add` 方法，那么就很可能会引发 panic。
-
-但是**如果，我们不能在一开始就确定执行子任务的 goroutine 的数量，那么使用 `WaitGroup` 值来协调它们和分发子任务的 goroutine，就是有一定风险的**。一个解决方案是：**分批地启用执行子任务的 goroutine**。
-
-只要我们在严格遵循上述规则的前提下，分批地启用执行子任务的 goroutine，就肯定不会有问题。
+Go 1.7 版本中正式引入新标准库 `context`。主要的作用是在在一组 goroutine 之间传递共享的值、取消信号、deadline 等。
 
 ```go
-func coordinateWithWaitGroup() {
-    total := 12
-    stride := 3
-    var num int32
-    fmt.Printf("The number: %d [with sync.WaitGroup]\n", num)
-    var wg sync.WaitGroup
-    for i := 1; i <= total; i = i + stride {
-        wg.Add(stride)
-        for j := 0; j < stride; j++ {
-            go addNum(&num, i+j, wg.Done)
+type Context interface {
+	Deadline() (deadline time.Time, ok bool)
+	Done() <-chan struct{}
+	Err() error
+	Value(key interface{}) interface{}
+}
+```
+
+- `Deadline` — 返回当前 context 的截止时间。
+- `Done` — 返回一个只读的 channel，可用于识别当前 channel 是否已经被关闭，其原因可能是到期，也可能是被取消了。多次调用 `Done` 方法会返回同一个 channel。
+- `Err` — 返回当前 context 被关闭的原因。
+  - 如果 context 被取消，会返回 `Canceled` 错误。
+  - 如果 context 超时，会返回 `DeadlineExceeded` 错误。
+- `Value` — 返回当前 context 对应所存储的 context信息，可以用来传递请求特定的数据。
+
+创建 context：
+
+- `Background`：创建一个空的 context，一般用在主函数、初始化、测试以及创建 root context 的时候。
+- `TODO`：创建一个空的 context，不知道要传递一些什么上下文信息的时候，就用这个。
+- `WithCancel`：基于 parent context 创建一个可以取消的新 context。
+- `WithTimeout`：基于 parent context 创建一个具有**超时时间**的新 context。
+- `WithDeadline`：和 `WithTimeout` 一样，只不过参数是**截止时间**（超时时间加上当前时间）。
+- `WithValue`：基于某个 context 创建并存储对应的上下文信息。
+
+最常用的场景，使用 context 来取消一个 goroutine 的运行：
+
+```go
+func main() {
+    ctx, cancel := context.WithCancel(context.Background())
+
+    go func() {
+        defer func() {
+            fmt.Println("goroutine exit")
+        }()
+
+        for {
+            select {
+            case <-ctx.Done():
+                return
+            default:
+                time.Sleep(time.Second)
+            }
         }
-        wg.Wait()
-    }
-    fmt.Println("End.")
+    }()
+
+    time.Sleep(time.Second)
+    cancel()
+    time.Sleep(2 * time.Second)
 }
 ```
 
-### 使用 `context` 包中的程序实体，实现一对多的 goroutine 协作流程
+可以多个 goroutine 同时订阅 `ctx.Done()` 管道中的消息，一旦接收到取消信号就立刻停止当前正在执行的工作。
 
-用 `context` 包中的函数和 `Context` 类型作为实现工具，实现 `coordinateWithContext` 的函数。这个函数应该具有上
-面 `coordinateWithWaitGroup` 函数相同的功能。
+## 原理
+
+context 的最大作用就是在一组 goroutine 构成的树形结构中对信号进行同步，以减少计算资源的浪费。
+
+例如，Go 的 HTTP server，处理每一个请求，都是启动一个单独的 goroutine，处理过程中还会启动新的 goroutine 来访问数据库和其他服务。而 context 在不同 Goroutine 之间可以同步请求特定数据、取消信号以及处理
+请求的截止日期。
+
+![context](https://raw.githubusercontent.com/shipengqi/illustrations/505be84aff62a8b94292bf3468f0d9a1c8c049cf/go/context.png)
+
+每一个 context 都会从 root goroutine 一层层传递到底层。context 可以在上层 goroutine 执行出现错误时，将信号及时同步给下层。
+
+### WithCancel
 
 ```go
-func coordinateWithContext() {
- total := 12
- var num int32
- fmt.Printf("The number: %d [with context.Context]\n", num)
- cxt, cancelFunc := context.WithCancel(context.Background())
- for i := 1; i <= total; i++ {
-  go addNum(&num, i, func() {
-   if atomic.LoadInt32(&num) == int32(total) {
-    cancelFunc()
-   }
-  })
- }
- <-cxt.Done()
- fmt.Println("End.")
+// src/context/context.go#L235
+func WithCancel(parent Context) (ctx Context, cancel CancelFunc) {
+	c := withCancel(parent)
+	return c, func() { c.cancel(true, Canceled, nil) }
+}
+
+func withCancel(parent Context) *cancelCtx {
+	if parent == nil {
+		panic("cannot create context from nil parent")
+	}
+	c := &cancelCtx{}
+	// 构建 父子 context 之间的关联，当 父 context 被取消时，子 context 也会被取消
+	c.propagateCancel(parent, c)
+	return c
+}
+
+func (c *cancelCtx) propagateCancel(parent Context, child canceler) {
+	c.Context = parent
+
+	done := parent.Done()
+	if done == nil { // parent context 是个空 context
+		return // parent is never canceled
+	}
+
+	select {
+	case <-done:
+		// parent context 已经被取消，child 也会立刻被取消
+		child.cancel(false, parent.Err(), Cause(parent))
+		return
+	default:
+	}
+
+    // 找到可以取消的 parent context
+	if p, ok := parentCancelCtx(parent); ok {
+		p.mu.Lock()
+		if p.err != nil {
+            // parent context 已经被取消，child 也会立刻被取消
+			child.cancel(false, p.err, p.cause)
+		} else {
+			// 将 child 加入到 parent 的 children 列表中
+			// 等待 parent 释放取消信号
+			if p.children == nil {
+				p.children = make(map[canceler]struct{})
+			}
+			p.children[child] = struct{}{}
+		}
+		p.mu.Unlock()
+		return
+	}
+
+	if a, ok := parent.(afterFuncer); ok {
+		// parent implements an AfterFunc method.
+		c.mu.Lock()
+		stop := a.AfterFunc(func() {
+			child.cancel(false, parent.Err(), Cause(parent))
+		})
+		c.Context = stopCtx{
+			Context: parent,
+			stop:    stop,
+		}
+		c.mu.Unlock()
+		return
+	}
+
+	goroutines.Add(1)
+	// 没有找到可取消的 parent context
+	// 运行一个新的 goroutine 同时监听 parent.Done() 和 child.Done() 两个 channel
+	go func() {
+		select {
+		case <-parent.Done():
+			// 在 parent.Done() 关闭时调用 child.cancel 取消 子 context
+			child.cancel(false, parent.Err(), Cause(parent))
+		case <-child.Done(): // 这个空的 case 表示如果子节点自己取消了，那就退出这个 select，父节点的取消信号就不用管了。
+		                     // 如果去掉这个 case，那么很可能父节点一直不取消，这个 goroutine 就泄漏了
+		}
+	}()
 }
 ```
 
-先后调用了 `context.Background` 函数和 `context.WithCancel` 函数，并得到了一个可撤销的 `context.Context` 类型的值
-（由变量 `cxt` 代表），以及一个 `context.CancelFunc`类型的撤销函数（由变量 `cancelFunc` 代表）。
+`propagateCancel` 的作用就是向上寻找可以“挂靠”的“可取消”的 context，并且“挂靠”上去。这样，调用上层 `cancel` 方法的时候，就可以层层传递，
+将那些挂靠的子 context 同时“取消”。
 
-注意我给予 `addNum` 函数的最后一个参数值。它是一个匿名函数，其中只包含了一条 `if` 语句。这条 `if` 语句会**原子地**加载
-`num` 变量的值，并判断它是否等于 `total` 变量的值。
+`cancelCtx.cancel` 会关闭 context 中的 channel 并向所有的 子 context 同步取消信号：
 
-如果两个值相等，那么就调用 `cancelFunc` 函数。其含义是，如果所有的 `addNum` 函数都执行完毕，那么就立即通知分发子任务
-的 goroutine。
+```go
+func (c *cancelCtx) cancel(removeFromParent bool, err, cause error) {
+	...
+	if d == nil {
+		c.done.Store(closedchan)
+	} else {
+		close(d)
+	}
+	// 遍历所有 子 context，取消所有 子 context
+	for child := range c.children {
+		// NOTE: acquiring the child's lock while holding parent's lock.
+		child.cancel(false, err, cause)
+	}
+	...
+    if removeFromParent {
+		// 从父节点中移除自己 
+		removeChild(c.Context, c)
+	}
+}
+```
 
-**这里分发子任务的 goroutine，即为执行 `coordinateWithContext` 函数的 goroutine**。它在执行完 `for` 语句后，会
-立即调用 `cxt` 变量的 `Done` 函数，并试图针对该函数返回的通道，进行接收操作。
+### WithTimeout 和 WithDeadline
 
-一旦 `cancelFunc` 函数被调用，针对该通道的接收操作就会马上结束，所以，这样做就可以实现“等待所有的 `addNum` 函数都执
-行完毕”的功能。
+`WithTimeout` 和 `WithDeadline` 创建的 context 也都是可以被取消的。
 
-### context.Context 类型
+`WithTimeout` 和 `WithDeadline` 创建的是 `timeCtx`，`timerCtx` 基于 `cancelCtx`，多了一个 `time.Timer` 和 `deadline`：
 
-`Context` 类型的值（以下简称 `Context` 值）是可以繁衍的，这意味着我们可以通过一个 `Context` 值产生出任意个子值。这些子值
-可以携带其父值的属性和数据，也可以响应通过其父值传达的信号。
+```go
+type timerCtx struct {
+	cancelCtx
+	timer *time.Timer // Under cancelCtx.mu.
+	
+	deadline time.Time
+}
 
-正因为如此，所有的 `Context` 值共同构成了一颗代表了上下文全貌的树形结构。这棵树的**树根（或者称上下文根节点）是一个已经
-在 `context` 包中预定义好的 `Context` 值**，它是**全局唯一**的。通过调用 `context.Background` 函数，我们就可以获取到
-它（在 `coordinateWithContext` 函数中就是这么做的）。
+func (c *timerCtx) cancel(removeFromParent bool, err error) {
+	// 直接调用 cancelCtx 的取消方法
+	c.cancelCtx.cancel(false, err)
+	if removeFromParent {
+		// 从父节点中删除子节点
+		removeChild(c.cancelCtx.Context, c)
+	}
+	c.mu.Lock()
+	if c.timer != nil {
+		// 关掉定时器，这样，在deadline 到来时，不会再次取消
+		c.timer.Stop()
+		c.timer = nil
+	}
+	c.mu.Unlock()
+}
+```
 
-注意一下，这个**上下文根节点仅仅是一个最基本的支点，它不提供任何额外的功能**。也就是说，它既不可以被撤销（`cancel`），
-也不能携带任何数据。
+`WithTimeout` 实际就时调用了 `WithDeadline`，传入的 deadline 是当前时间加上 timeout 的时间：
 
-`context` 包中还包含了**四个用于繁衍 `Context` 值的函数，即：`WithCancel`、`WithDeadline`、`WithTimeout` 和 `WithValue`**。
+```go
+func WithTimeout(parent Context, timeout time.Duration) (Context, CancelFunc) {
+	return WithDeadline(parent, time.Now().Add(timeout))
+}
+```
 
-这些函数的第一个参数的类型都是 `context.Context`，而名称都为 `parent`。顾名思义，**这个位置上的参数对应的都是它们将会产生
-的 `Context` 值的父值**。
+`WithDeadline` 的实现：
 
-**`WithCancel` 函数用于产生一个可撤销的 parent 的子值**。
+```go
+func WithDeadline(parent Context, d time.Time) (Context, CancelFunc) {
+	return WithDeadlineCause(parent, d, nil)
+}
 
-在 `coordinateWithContext` 函数中，通过调用该函数，获得了一个衍生自上下文根节点的 `Context` 值，和一个用于触发撤销信号的函数。
+func WithDeadlineCause(parent Context, d time.Time, cause error) (Context, CancelFunc) {
+	if parent == nil {
+		panic("cannot create context from nil parent")
+	}
+	// 如果 parent context 的 deadline 早于指定时间。直接构建一个可取消的 context
+	// 原因是一旦 parent context 超时，自动调用 cancel 函数，子节点也会随之取消
+	// 所以没有必要再处理 子 context 的计时器
+	if cur, ok := parent.Deadline(); ok && cur.Before(d) {
+		return WithCancel(parent)
+	}
+	c := &timerCtx{
+		deadline: d,
+	}
+	// 构建一个 cancelCtx，挂靠到一个可取消的 parent context 上
+	// 也就是说一旦 parent context 取消了，这个子 context 随之取消。
+	c.cancelCtx.propagateCancel(parent, c)
+	dur := time.Until(d)
+	if dur <= 0 {
+        // 超过了截止日期，直接取消
+		c.cancel(true, DeadlineExceeded, cause)
+		return c, func() { c.cancel(false, Canceled, nil) }
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.err == nil {
+		// 到了截止时间，timer 会自动调用 cancel 函数取消
+		c.timer = time.AfterFunc(dur, func() {
+			// 传入错误 DeadlineExceeded
+			c.cancel(true, DeadlineExceeded, cause)
+		})
+	}
+	return c, func() { c.cancel(true, Canceled, nil) }
+}
+```
 
-`WithDeadline` 函数和 `WithTimeout` 函数则都可以被用来产生一个会**定时撤销**的 `parent` 的子值。至于 `WithValue` 函数，
-我们可以通过调用它，产生一个会携带额外数据的 `parent` 的子值。
+> 如果要创建的这个 子 context 的 deadline 比 parent context 的要晚，parent context 到时间了会自动取消，子 context 也会取消，
+> 导致 子 context 的 deadline 时间还没到就会被取消
 
-### “可撤销的”在 context 包中代表着什么？“撤销”一个 Context 值又意味着什么？
+### WithValue
 
-这需要从 `Context` 类型的声明讲起。这个接口中有两个方法与“撤销”息息相关。`Done` 方法会返回一个元素类型为 `struct{}` 的接
-收通道。不过，这个接收通道的用途并不是传递元素值，而是**让调用方去感知“撤销”当前Context值的那个信号**。
+```go
+// src/context/context.go#L713
+func WithValue(parent Context, key, val any) Context {
+	if parent == nil {
+		panic("cannot create context from nil parent")
+	}
+	if key == nil {
+		panic("nil key")
+	}
+	if !reflectlite.TypeOf(key).Comparable() {
+		panic("key is not comparable")
+	}
+	return &valueCtx{parent, key, val}
+}
 
-一旦当前的 `Context` 值被撤销，这里的接收通道就会被立即关闭。我们都知道，对于一个未包含任何元素值的通道来说，它的关闭会
-使任何针对它的接收操作立即结束。
+type valueCtx struct {
+	Context
+	key, val interface{}
+}
 
-正因为如此，在 `coordinateWithContext` 函数中，基于调用表达式 `cxt.Done()` 的接收操作，才能够起到感知撤销信号的作用。
-
-### 撤销信号是如何在上下文树中传播的
-
-`context`包的 `WithCancel` 函数在被调用后会产生两个结果值。第一个结果值就是那个可撤销的 `Context` 值，而第二个结果值则是
-用于触发撤销信号的函数。
-
-在撤销函数被调用之后，对应的 `Context` 值会先关闭它内部的接收通道，也就是它的 `Done` 方法会返回的那个通道。
-
-然后，它会向它的所有子值（或者说子节点）传达撤销信号。这些子值会如法炮制，把撤销信号继续传播下去。最后，这个 `Context` 值会
-断开它与其父值之间的关联。
-
-**通过调用 `context.WithValue` 函数得到的 `Context` 值是不可撤销的**。
-
-### 怎样通过 Context 值携带数据
-
-**`WithValue` 函数在产生新的 `Context` 值（以下简称含数据的 `Context` 值）的时候需要三个参数，即：父值、键和值**。
-“字典对于键的约束”类似，这里**键的类型必须是可判等**的。
-
-原因很简单，当我们从中获取数据的时候，它需要根据给定的键来查找对应的值。不过，这种 `Context` 值并不是用字典来存储键和值的，
-后两者只是被简单地存储在前者的相应字段中而已。
+func (c *valueCtx) Value(key any) any {
+	if c.key == key {
+		return c.val
+	}
+	// 如果 valueCtx 中存储的键值对与传入的参数不匹配
+	// 就会从 parent context 中查找该键对应的值直到某个 parent context 中返回 nil 或者查找到对应的值。
+	return value(c.Context, key)
+}
+```
