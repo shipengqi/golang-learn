@@ -413,12 +413,47 @@ func main() {
 
 ## 利用 sync.Pool 减少堆分配
 
-[sync.Pool 使用](https://github.com/shipengqi/golang-learn/blob/master/content/docs/concurrent/06_pool.md)。
+[sync.Pool 使用](/golang-learn/docs/concurrency/06_pool/)。
 
 ## 控制 goroutine 的并发数量
 
-## 字符串与字节转换优化，减少内存分配
+基于 GPM 的 Go 调度器，可以大规模的创建 goroutine 来执行任务，可能 1k，1w 个 goroutine 没有问题，但是当 goroutine 非常大时，比如 10w，100w 甚至更多
+就会出现问题。
 
-## 垃圾回收优化
+1. 即使每个 goroutine 只分配 2KB 的内存，但是数量太多会导致内存占用暴涨，对 GC 造成极大的压力，GC 是有 STW 机制的，运行时会挂起用户程序直到垃圾回收完。虽然 Go 1.8 去掉了 STW 以及改成了并行 GC，性能上有了不
+   小的提升但是，如果太过于频繁地进行 GC，依然会有性能瓶颈。
+2. runtime 和 GC 也都是 goroutine，如果 goroutine 规模太大，内存吃紧，Go 调度器就会阻塞 goroutine，进而导致内存溢出，甚至 crash。
+
+### 利用 channel 的缓存区控制并发数量
+
+```go
+func main() {
+	var wg sync.WaitGroup
+	// 创建缓冲区大小为 3 的 channel
+	ch := make(chan struct{}, 3)
+	for i := 0; i < 10; i++ {
+		// 如果缓存区满了，则会阻塞在这里
+		ch <- struct{}{}
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			log.Println(i)
+			time.Sleep(time.Second)
+			// 释放缓冲区
+			<-ch
+		}(i)
+	}
+	wg.Wait()
+}
+```
+
+### 第三方 goroutine pool
+
+- [ants](https://github.com/panjf2000/ants)
+- [conc](https://github.com/sourcegraph/conc)
+
+## 零拷贝优化
+
+### 字符串与字节转换优化，减少内存分配
 
 ## 设置 GOMAXPROCS

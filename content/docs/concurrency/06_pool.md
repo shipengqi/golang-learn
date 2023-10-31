@@ -68,8 +68,6 @@ Pool 的结构体：
 
 ```go
 type Pool struct {
-	// Pool 不希望被复制，noCopy 是 go 1.7 开始引入的一个静态检查机制
-	// 使用 go vet 工具可以检测到用户代码是否复制了 Pool
 	noCopy noCopy
 
     // 每个 P 的本地队列，实际类型为 [P]poolLocal
