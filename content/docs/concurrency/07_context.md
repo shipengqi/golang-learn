@@ -152,6 +152,21 @@ func (c *cancelCtx) propagateCancel(parent Context, child canceler) {
 		}
 	}()
 }
+
+
+func (c *cancelCtx) Done() <-chan struct{} {
+	c.mu.Lock()
+	// 有调用了 Done() 方法的时候才会被创建
+	if c.done == nil {
+		c.done = make(chan struct{})
+	}
+	// 返回的是一个只读的 channel
+	// 这个 channel 不会被写入数据，直接调用读这个 channel，协程会被 block 住。
+	// 一般通过搭配 select 来使用。一旦关闭，就会立即读出零值。
+	d := c.done
+	c.mu.Unlock()
+	return d
+}
 ```
 
 `propagateCancel` 的作用就是向上寻找可以“挂靠”的“可取消”的 context，并且“挂靠”上去。这样，调用上层 `cancel` 方法的时候，就可以层层传递，
@@ -172,6 +187,8 @@ func (c *cancelCtx) cancel(removeFromParent bool, err, cause error) {
 		// NOTE: acquiring the child's lock while holding parent's lock.
 		child.cancel(false, err, cause)
 	}
+    // 将子节点置空
+    c.children = nil
 	...
     if removeFromParent {
 		// 从父节点中移除自己 

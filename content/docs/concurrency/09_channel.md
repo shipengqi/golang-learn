@@ -5,41 +5,14 @@ weight: 9
 
 # Channel
 
-### 使用 channel 实现互斥锁
-
-我们可以使用容量只有 `1` 的 `channel` 来保证最多只有一个 goroutine 在同一时刻访问一个共享变量：
-
-```go
-var (
-  sema = make(chan struct{}, 1) // a binary semaphore guarding balance
-  balance int
-)
-
-func Deposit(amount int) {
-  sema <- struct{}{} // acquire lock
-  balance = balance + amount
-  <-sema // release lock
-}
-
-func Balance() int {
-  sema <- struct{}{} // acquire lock
-  b := balance
-  <-sema // release lock
-  return b
-}
-```
-
 ```
 Don’t communicate by sharing memory; share memory by communicating.
-（不要通过共享内存来通信，而应该通过通信来共享内存。）
+不要通过共享内存来通信，通过通信来共享内存。
 ```
 
-这是作为 Go 语言最重要的编程理念。
+这是 Go 语言最重要的编程理念。goroutine 通过 `channel` 向另一个 goroutine 发送消息 `channel` 和 goroutine 结合，可以实现用通信代替共享内存的 `CSP` (Communicating Sequential Process)模型。
 
-通道类型的值是**并发安全**的，这也是 **Go 语言自带的、唯一一个可以满足并发安全性的类型**。
-
-`channel` 是 goroutine 之间的通信机制。goroutine 通过 `channel` 向另一个 goroutine 发送消息
-`channel` 和 goroutine 结合，可以实现用通信代替共享内存的 `CSP` (Communicating Sequential Process)模型。
+## 使用
 
 创建 `channel`：
 
@@ -55,15 +28,6 @@ ch = make(chan int, 3) // buffered channel with capacity 3
 
 发送和接收两个操作使用 `<-` 运算符，一个左尖括号紧接着一个减号形象地代表了元素值的传输方向：
 
-```go
-// 发送一个值
-ch <- x // 将数据 push 到 channel
-
-// 接受一个值
-x = <-ch // 取出 channel 的值并复制给变量x
-
-<-ch // 接受的值会被丢弃
-```
 
 ### close
 
@@ -157,6 +121,36 @@ fmt.Println(len(ch)) // 2
 fmt.Println(<-ch) // A
 fmt.Println(len(ch)) // 1
 ```
+
+### select 和 channel
+
+### 使用 range 遍历 channel
+
+### 使用 channel 实现互斥锁
+
+我们可以使用容量只有 `1` 的 `channel` 来保证最多只有一个 goroutine 在同一时刻访问一个共享变量：
+
+```go
+var (
+  sema = make(chan struct{}, 1) // a binary semaphore guarding balance
+  balance int
+)
+
+func Deposit(amount int) {
+  sema <- struct{}{} // acquire lock
+  balance = balance + amount
+  <-sema // release lock
+}
+
+func Balance() int {
+  sema <- struct{}{} // acquire lock
+  b := balance
+  <-sema // release lock
+  return b
+}
+```
+
+## 原理
 
 ### 通道的发送和接收操作的特性
 
