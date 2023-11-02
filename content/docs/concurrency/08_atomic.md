@@ -5,97 +5,52 @@ weight: 8
 
 # 原子操作
 
-Go 语言的原子操作当然是基于 CPU 和操作系统的，所以它也只针对少数数据类型的值提供了原子操作函数。这些函数都存在于标准库代
-码包 `sync/atomic` 中。
+原子操作就是执行过程中不能被中断的操作。
 
-`sync/atomic` 包中的函数可以做的原子操作有：加法（add）、比较并交换（compare and swap，简称 CAS）、加载（load）、
-存储（store）和交换（swap）。
+Go 的标准库 `sync/atomic` 提供了一些实现原子操作的方法：
 
-这些函数针对的数据类型并不多。对这些类型中的每一个，`sync/atomic` 包都会有一套函数给予支持。这些数据类型有：
-`int32`、`int64`、`uint32`、`uint64`、`uintptr`，以及 `unsafe` 包中的 `Pointer`。不过，针对
-`unsafe.Pointer` 类型，该包并未提供进行原子加法操作的函数。
+- Add
+- CompareAndSwap（简称 CAS）
+- Load
+- Swap
+- Store
 
-`sync/atomic` 包还提供了一个名为 `Value` 的类型，它可以被用来存储任意类型的值。
+这些函数针对的数据类型有：
 
-`atomic.AddInt32` 函数的第一个参数，为什么不是 `int32` 而是 `*int32` 呢？
-因为**原子操作函数需要的是被操作值的指针，而不是这个值本身**；被传入函数的参数值都会被复制，像这种基本类型的值一旦被传入函数，
-就已经与函数外的那个值毫无关系了。
+- `int32`
+- `int64`
+- `uint32`
+- `uint64`
+- `uintptr`
+- `unsafe` 包中的 `Pointer`
 
-所以，传入值本身没有任何意义。`unsafe.Pointer` 类型虽然是指针类型，但是那些原子操作函数要操作的是这个指针值，而不是它指向
-的那个值，所以需要的仍然是指向这个指针值的指针。
+以 `Add` 为例，上面类型对应的原子操作函数为：
 
-只要原子操作函数拿到了被操作值的指针，就可以定位到存储该值的内存地址。只有这样，它们才能够通过底层的指令，准确地操作这个内
-存地址上的数据。
+- `func AddInt32(addr *int32, delta int32) (new int32)`
+- `func AddInt64(addr *int64, delta int64) (new int64)`
+- `func AddUint32(addr *uint32, delta uint32) (new uint32)`
+- `func AddUint64(addr *uint64, delta uint64) (new uint64)`
+- `func AddUintptr(addr *uintptr, delta uintptr) (new uintptr)`
 
-## 比较并交换操作与交换操作相比有什么不同
+> `unsafe.Pointer` 类型，并未提供进行原子加法操作的函数。
 
-**比较并交换操作即 CAS 操作**，是有条件的交换操作，**只有在条件满足的情况下才会进行值的交换**。
+`sync/atomic` 包还提供了一个名为 `Value` 的类型，它可以被用来存储（Store）和加载（Load）任意类型的值。
 
-**所谓的交换指的是，把新值赋给变量，并返回变量的旧值**。
+它只有两个指针方法：
 
-CAS 操作用途要更广泛一些。例如，我们将它与 `for` 语句联用就可以实现一种简易的自旋锁（spinlock）。
+- `Store` 
+- `Load`。
 
-```go
-for {
-    if atomic.CompareAndSwapInt32(&num2, 10, 0) {
-        fmt.Println("The second number has gone to zero.")
-        break
-    }
-    time.Sleep(time.Millisecond * 500)
-}
-```
-
-在 `for` 语句中的 CAS 操作可以不停地检查某个需要满足的条件，一旦条件满足就退出 `for` 循环。这就相当于，只要条件未被满足，
-当前的流程就会被一直“阻塞”在这里。
-
-这在效果上与互斥锁有些类似。不过，它们的适用场景是不同的。我们在使用互斥锁的时候，总是假设共享资源的状态会被其他
-的 goroutine 频繁地改变。
-
-而 `for` 语句加 CAS 操作的假设往往是：共享资源状态的改变并不频繁，或者，它的状态总会变成期望的那样。这是一种更加乐观，
-或者说更加宽松的做法。
-
-**假设我已经保证了对一个变量的写操作都是原子操作，比如：加或减、存储、交换等等，那我对它进行读操作的时候，还有必要使用原
-子操作吗**？
-
-很有必要。其中的道理你可以对照一下读写锁。为什么在读写锁保护下的写操作和读操作之间是互斥的？这是为了防止读操作读到没有
-被修改完的值，对吗？
-
-如果写操作还没有进行完，读操作就来读了，那么就只能读到仅修改了一部分的值。这显然破坏了值的完整性，读出来的值也是完全错误的。
-
-所以，一旦你决定了要对一个共享资源进行保护，那就要做到完全的保护。不完全的保护基本上与不保护没有什么区别。
-
-### ABA 问题
-
-2.什么是ABA问题？怎么解决？
-答：当一个值从A更新为B，再从B更新为A，普通CAS机制会误判通过检测。解决方案是使用版本号，通过比较值和版本号才判断是否可以替换。
-
-https://blog.csdn.net/weixin_41832850/article/details/100095677
-
-添加版本号解决 ABA 问题
-真正要做到严谨的CAS机制，我们在 compare 阶段不仅需要比较内存地址V中的值是否和旧的期望值A相同，还需要比较变量的版本号是否一致。
-
-## `sync/atomic.Value`
-
-此类型的值相当于一个容器，可以被用来“原子地”存储和加载任意的值。开箱即用。
-
-它只有两个指针方法—— `Store` 和 `Load`。不过，虽然简单，但还是有一些值得注意的地方的。
-
-1. 一旦 `atomic.Value` 类型的值（以下简称原子值）被真正使用，它就不应该再被复制了。只要用它来存储值了，就相当于开始真正使用了。
-   `atomic.Value` 类型属于结构体类型，而结构体类型属于值类型。所以，复制该类型的值会产生一个完全分离的新值。这个新值相当于被
-   复制的那个值的一个快照。之后，不论后者存储的值怎样改变，都不会影响到前者。
-2. 不能用原子值存储 `nil`。
-3. 我们向原子值存储的第一个值，决定了它今后能且只能存储哪一个类型的值。
-4. 尽量不要向原子值中存储引用类型的值。因为这很容易造成安全漏洞。
+**尽量不要向原子值中存储引用类型的值**。
 
 ```go
 var box6 atomic.Value
 v6 := []int{1, 2, 3}
 box6.Store(v6)
-v6[1] = 4 // 注意，此处的操作不是并发安全的！
+v6[1] = 4 // 此处的操作不是并发安全的
 ```
 
-切片类型属于引用类型。所以，我在外面改动这个切片值，就等于修改了 `box6` 中存储的那个值。这相当于绕过了原子值而进行了非并发
-安全的操作。怎样修补：
+上面的代码 `v6[1] = 4` 绕过了原子值而进行了非并发安全的操作。可以改为：
 
 ```go
 store := func(v []int) {
@@ -104,8 +59,96 @@ store := func(v []int) {
     box6.Store(replica)
 }
 store(v6)
-v6[2] = 5 // 此处的操作是安全的。
+v6[2] = 5
 ```
 
-先为切片值 `v6` 创建了一个完全的副本。这个副本涉及的数据已经与原值毫不相干了。然后，我再把这个副本存入 `box6`。如此一来，
-无论我再对 `v6` 的值做怎样的修改，都不会破坏 `box6` 提供的安全保护。
+## 使用
+
+### 互斥锁与原子操作
+
+区别：
+
+- **互斥锁是用来保护临界区，原子操作用于对一个变量的更新保护**。
+- 互斥锁由操作系统的调度器实现，原子操作由底层硬件指令直接提供支持
+
+对于一个变量更新的保护，原子操作通常会更有效率，并且更能利用计算机多核的优势。而互斥锁保护的共享资源每次只给一个线程使用，其它线程阻塞，用完后再把资源转让给其它线程。
+
+使用互斥锁实现并发计数：
+
+```go
+func MutexAdd() {
+	var a int32 =  0
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	start := time.Now()
+	for i := 0; i < 10000; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			mu.Lock()
+			a += 1
+			mu.Unlock()
+		}()
+	}
+	wg.Wait()
+	timeSpends := time.Now().Sub(start).Nanoseconds()
+    fmt.Printf("mutex value %d, spend time: %v\n", a, timeSpends)
+}
+```
+
+使用原子操作替换互斥锁：
+
+```go
+func AtomicAdd() {
+	var a int32 =  0
+	var wg sync.WaitGroup
+	start := time.Now()
+	for i := 0; i < 10000; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			atomic.AddInt32(&a, 1)
+		}()
+	}
+	wg.Wait()
+	timeSpends := time.Now().Sub(start).Nanoseconds()
+    fmt.Printf("atomic value %d, spend time: %v\n", atomic.LoadInt32(&a), timeSpends)
+}
+```
+
+运行后得到的结果：
+
+```
+mutex value 10000, spend time: 5160800 
+atomic value 10000, spend time: 2577300
+```
+
+原子操作节省了大概一半的时间。
+
+### 利用 CAS 实现自旋锁
+
+```go
+func addValue(v int32)  {
+	for {
+		// 在进行读取 value 的操作的过程中,其他对此值的读写操作是可以被同时进行的,那么这个读操作很可能会读取到一个只被修改了一半的数据.
+		// 因此要使用原子读取
+		old := atomic.LoadInt32(&value)
+		if atomic.CompareAndSwapInt32(&value, old, old + v) {
+			break
+		}
+	}
+}
+```
+
+在高并发的情况下，单次 CAS 的执行成功率会降低，因此需要配合循环语句 `for`，形成一个 `for+atomic` 的类似自旋乐观锁。
+
+### ABA 问题
+
+使用 CAS，会有 ABA 问题，ABA 问题是什么？
+
+例如，一个 goroutine a 从内存位置 V 中取出 1，这时候另一个 goroutine b 也从内存位置 V 中取出 1，并且 goroutine b 将 V 位置的值更新为 0，接着又将 V 位置的值改为 1，这时候 goroutine a 进行 CAS 操作发现位置 V 的值仍然是 1，然后 goroutine a 操作成功。虽然 goroutine a 的 CAS 操
+作成功，但是这个值其实已经被修改过。
+
+可以给变量附加时间戳、版本号等信息来解决。
+
+
