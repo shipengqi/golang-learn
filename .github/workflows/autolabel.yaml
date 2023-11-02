@@ -16,6 +16,6 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/labeler@v4
+      - uses: actions/labeler@v3
         with:
           repo-token: ${{ secrets.PAT }}
