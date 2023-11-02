@@ -103,7 +103,7 @@ func Balance() int {
 
 ## 原理
 
-channel 的结构体 `hchan`：
+channel 本质上就是一个有锁的环形队列，channel 的结构体 `hchan`：
 
 ```go
 // src/runtime/chan.go
@@ -148,15 +148,143 @@ type waitq struct {
 	first *sudog
 	last  *sudog
 }
+
+type sudog struct {
+	// 指向当前的 goroutine
+	g *g
+	
+	// 指向下一个 goroutine
+	next *sudog
+	// 指向上一个 goroutine
+	prev *sudog
+	elem unsafe.Pointer
+    ...
+}
 ```
 
 ### 向 channel 发送数据
 
-发送操作对应底层的 `chansend` 函数：
+发送操作，也就是 `ch <- i` 语句，编译器最终会将该语句转换成 `chansend` 函数：
 
 ```go
 // src/runtime/chan.go
+func chansend(c *hchan, ep unsafe.Pointer, block bool, callerpc uintptr) bool {
+	if c == nil {
+		// 不可以阻塞
+		if !block {
+			return false
+		}
+        // 挂起当前 goroutine
+		gopark(nil, nil, waitReasonChanSendNilChan, traceBlockForever, 2)
+		throw("unreachable")
+	}
+	...
+	if !block && c.closed == 0 && full(c) {
+		return false
+	}
+
+	var t0 int64
+	if blockprofilerate > 0 {
+		t0 = cputicks()
+	}
+
+	lock(&c.lock)
+
+	if c.closed != 0 {
+		unlock(&c.lock)
+		panic(plainError("send on closed channel"))
+	}
+
+	if sg := c.recvq.dequeue(); sg != nil {
+		// Found a waiting receiver. We pass the value we want to send
+		// directly to the receiver, bypassing the channel buffer (if any).
+		send(c, sg, ep, func() { unlock(&c.lock) }, 3)
+		return true
+	}
+
+	if c.qcount < c.dataqsiz {
+		// Space is available in the channel buffer. Enqueue the element to send.
+		qp := chanbuf(c, c.sendx)
+		if raceenabled {
+			racenotify(c, c.sendx, nil)
+		}
+		typedmemmove(c.elemtype, qp, ep)
+		c.sendx++
+		if c.sendx == c.dataqsiz {
+			c.sendx = 0
+		}
+		c.qcount++
+		unlock(&c.lock)
+		return true
+	}
+
+	if !block {
+		unlock(&c.lock)
+		return false
+	}
+
+	// Block on the channel. Some receiver will complete our operation for us.
+	gp := getg()
+	mysg := acquireSudog()
+	mysg.releasetime = 0
+	if t0 != 0 {
+		mysg.releasetime = -1
+	}
+	// No stack splits between assigning elem and enqueuing mysg
+	// on gp.waiting where copystack can find it.
+	mysg.elem = ep
+	mysg.waitlink = nil
+	mysg.g = gp
+	mysg.isSelect = false
+	mysg.c = c
+	gp.waiting = mysg
+	gp.param = nil
+	c.sendq.enqueue(mysg)
+	// Signal to anyone trying to shrink our stack that we're about
+	// to park on a channel. The window between when this G's status
+	// changes and when we set gp.activeStackChans is not safe for
+	// stack shrinking.
+	gp.parkingOnChan.Store(true)
+	gopark(chanparkcommit, unsafe.Pointer(&c.lock), waitReasonChanSend, traceBlockChanSend, 2)
+	// Ensure the value being sent is kept alive until the
+	// receiver copies it out. The sudog has a pointer to the
+	// stack object, but sudogs aren't considered as roots of the
+	// stack tracer.
+	KeepAlive(ep)
+
+	// someone woke us up.
+	if mysg != gp.waiting {
+		throw("G waiting list is corrupted")
+	}
+	gp.waiting = nil
+	gp.activeStackChans = false
+	closed := !mysg.success
+	gp.param = nil
+	if mysg.releasetime > 0 {
+		blockevent(mysg.releasetime-t0, 2)
+	}
+	mysg.c = nil
+	releaseSudog(mysg)
+	if closed {
+		if c.closed == 0 {
+			throw("chansend: spurious wakeup")
+		}
+		panic(plainError("send on closed channel"))
+	}
+	return true
+}
 ```
 
 ### 从 channel 接收数据
 
+```go
+// src/runtime/chan.go
+func chanrecv1(c *hchan, elem unsafe.Pointer) {
+	chanrecv(c, elem, true)
+}
+
+func chanrecv2(c *hchan, elem unsafe.Pointer) (received bool) {
+	_, received = chanrecv(c, elem, true)
+	return
+}
+```
