@@ -139,7 +139,7 @@ func notifyListWait(l *notifyList, t uint32) {
         l.tail.next = s
     }
     l.tail = s
-	// 调用 runtime.goparkunlock 将当前 goroutine 陷入休眠
+	// 调用 runtime.goparkunlock 使当前 goroutine 陷入休眠
 	// 该函数会直接让出当前处理器的使用权并等待调度器的唤醒
     goparkunlock(&l.lock, waitReasonSyncCondWait, traceEvGoBlockCond, 3)
     releaseSudog(s)
