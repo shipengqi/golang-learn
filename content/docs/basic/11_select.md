@@ -71,3 +71,113 @@ LOOP: for a < 20 {
  a ++  
 }  
 ```
+
+
+
+### select 多路复用
+
+`select` 语句是专为通道而设计的，**所以每个 `case` 表达式中都只能包含操作通道的表达式**，比如接收表达式。
+
+```go
+select {
+  case communication clause  :
+      ...     
+  case communication clause  :
+      ... 
+  default : /* 可选 */
+   ... 
+}   
+```
+
+如果有多个 `channel` 需要接受消息，如果第一个 `channel` 没有消息发过来，那么程序会被阻塞，第二个 `channel` 的消息就也
+无法接收了。这时候就需要使用 `select` 多路复用。
+
+```go
+select {
+  case <-ch1:
+      ...     
+  case x := <-ch2:
+     ...
+  case ch3 <- y:
+   ...  
+  default:
+   ... 
+} 
+```
+
+每一个 `case` 代表一个通信操作，发送或者接收。**如果没有 `case` 可运行，它将阻塞，直到有 `case` 可运行**。
+如果多个 `case` 同时满足条件，`select` 会**随机**地选择一个执行。
+
+**为了避免因为发送或者接收导致的阻塞，尤其是当 `channel` 没有准备好写或者读时。`default` 可以设置当其它的操作
+都不能够马上被处理时程序需要执行哪些逻辑**。
+
+### 超时
+
+我们可以利用 `select` 来设置超时，避免 goroutine 阻塞的情况：
+
+```go
+func main() {
+ c := make(chan int)
+ o := make(chan bool)
+ go func() {
+  for {
+   select {
+    case v := <- c:
+     fmt.println(v)
+    case <- time.After(5 * time.Second):
+     fmt.println("timeout")
+     o <- true
+     break
+   }
+  }
+ }()
+ <- o
+}
+```
+
+#### 使用 select 语句的时候，需要注意的事情
+
+1. 如果加入了默认分支，那么无论涉及通道操作的表达式是否有阻塞，`select` 语句都不会被阻塞。如果那几个表达式都阻塞了，或者
+   说都没有满足求值的条件，那么默认分支就会被选中并执行。
+2. 如果没有加入默认分支，那么一旦所有的 `case` 表达式都没有满足求值条件，那么 `select` 语句就会被阻塞。
+   直到至少有一个 `case` 表达式满足条件为止。
+3. 还记得吗？我们可能会因为通道关闭了，而直接从通道接收到一个其元素类型的零值。所以，**在很多时候，我们需要通过接收表达式
+   的第二个结果值来判断通道是否已经关闭**。一旦发现某个通道关闭了，我们就应该及时地屏蔽掉对应的分支或者采取其他措施。这对
+   于程序逻辑和程序性能都是有好处的。
+4. `select` 语句只能对其中的每一个 `case` 表达式各求值一次。所以，如果我们想连续或定时地操作其中的通道的话，就往往需要
+   通过在 `for` 语句中嵌入 `select` 语句的方式实现。但这时要注意，**简单地在 `select` 语句的分支中使用 `break` 语句，只能结
+   束当前的 `select` 语句的执行，而并不会对外层的 `for` 语句产生作用。这种错误的用法可能会让这个 `for` 语句无休止地运行下去**。
+
+`break` 退出嵌套循环：
+
+```go
+I:
+ for i := 0; i < 2; i++ {
+  for j := 0; j < 5; j++ {
+   if j == 2 {
+    break I
+   }
+   fmt.Println("hello")
+  }
+  fmt.Println("hi")
+ }
+```
+
+```go
+intChan := make(chan int, 1)
+// 一秒后关闭通道。
+time.AfterFunc(time.Second, func() {
+  close(intChan)
+})
+select {
+  case _, ok := <-intChan:
+    if !ok { // 使用 ok-idom，判断 channel 是否被关闭
+      fmt.Println("The candidate case is closed.")
+      break
+    }
+    fmt.Println("The candidate case is selected.")
+}
+```
+
+上面的代码 `select` 语句只有一个候选分支，我在其中利用接收表达式的第二个结果值对 `intChan` 通道是否已关闭做了判断，并在
+得到肯定结果后，通过 `break` 语句立即结束当前 `select` 语句的执行。

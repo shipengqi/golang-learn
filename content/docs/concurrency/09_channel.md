@@ -10,53 +10,65 @@ Don’t communicate by sharing memory; share memory by communicating.
 不要通过共享内存来通信，通过通信来共享内存。
 ```
 
-这是 Go 语言最重要的编程理念。goroutine 通过 `channel` 向另一个 goroutine 发送消息 `channel` 和 goroutine 结合，可以实现用通信代替共享内存的 `CSP` (Communicating Sequential Process)模型。
+这是 Go 语言最重要的编程理念。goroutine 通过 channel 向另一个 goroutine 发送消息，channel 和 goroutine 结合，可以实现用通信代替共享内存的 CSP （Communicating Sequential Process）模型。
 
 ## 使用
 
-创建 `channel`：
+创建 channel：
 
 ```go
+// 无缓冲 channel
 ch := make(chan int)
 
-ch = make(chan int, 3) // buffered channel with capacity 3
+// 带缓冲 channel，缓冲区为 3
+ch = make(chan int, 3)
 ```
 
-上面的代码中，`int` 代表这个 `channel` 要发送的数据的类型。第二个参数代表创建一带缓存的 `channel`，容量为 `3`。
+> channel 的零值是 `nil`。
 
-**`channel` 的零值是 `nil`。关闭一个 `nil` 的 `channel` 会导致程序 `panic`**。
+### 无缓冲 channel
 
-发送和接收两个操作使用 `<-` 运算符，一个左尖括号紧接着一个减号形象地代表了元素值的传输方向：
+无缓冲 channel 也叫做同步 channel：
 
+- 一个 goroutine 基于一个无缓冲 channel 发送数据，那么就会阻塞，直到另一个 goroutine 在相同的 channel 上执行接收操作。
+- 一个 goroutine 基于一个无缓冲 channel 先执行了接收操作，也会阻塞，直到另一个 goroutine 在相同的 channel 上执行发送操作
 
-### close
+### 带缓冲 channel
 
-使用 `close` 函数关闭 `channel`，`channel` 关闭后不能再发送数据，但是可以接受已经发送成功的数据，
-如果 `channel` 中没有数据，那么返回一个零值。
+带缓冲的 channel 有一个缓冲区：
 
-注意，**`close` 函数不是一个清理操作，而是一个控制操作**，在确定这个 `channel` 不会继续发送数据时调用。
+- 若缓冲区未满则不会阻塞，发送者可以不断的发送数据。当缓冲区满了后，发送者就会阻塞。
+- 当缓冲区为空时，接受者就会阻塞，直至有新的数据
 
-**因为关闭操作只用于断言不再向 `channel` 发送新的数据，所以只有在 "发送者" 所在的 goroutine 才会调用 `close` 函数**，
-因此对一个只接收的 `channel` 调用 `close` 将是一个编译错误。
+### 关闭 channel
 
-使用 `range` 循环可直接在 `channels` 上面迭代。它依次从 `channel` 接收数据，当 `channel` 被关闭并且没有值可接收时
-跳出循环。
+使用 `close` 函数关闭 channel：
 
-```go
-naturals := make(chan int)
-for x := 0; x < 100; x++ {
-    naturals <- x
-}
-for x := range naturals {
-    fmt.Println(x)
-}
-```
+- channel 关闭后不能再发送数据
+- channel 关闭后可以接收已经发送成功的数据。
+- channel 关闭后如果 channel 中没有数据，那么接收者会收到一个 channel 元素的零值。
 
-**注意上面的代码会报 `fatal error: all goroutines are asleep - deadlock!`。这个是死锁的错误，因为 `range` 不等到信
-道关闭是不会结束读取的。也就是如果 `channel` 没有数据了，那么 `range` 就会阻塞当前 goroutine, 直到信道关闭，所以导
-致了死锁**。
+`close` 表示这个 channel 不会再继续发送数据，所以要**在发送者所在的 goroutine 去关闭 channel**。
 
-为了避免这种情况，对于有缓存的信道，显式地关闭信道:
+> 关闭一个 `nil` 的 channel 会导致 panic。<br>
+> 重复关闭 channel 会导致 panic。<br>
+> 向已关闭的 channel 发送值会导致 panic。<br>
+
+### 单向 channel
+
+当一个 channel 作为一个函数参数时，它一般总是被专门用于**只发送或者只接收**。
+
+- `chan<- int` 表示一个只发送 `int` 的 channel。
+- `<-chan int` 表示一个只接收 `int` 的 channel。
+
+### cap 和 len
+
+- `cap` 函数可以获取 channel 内部缓冲区的容量。
+- `len` 函数可以获取 channel 内部缓冲区有效元素的个数。
+
+### 使用 range 遍历 channel
+
+使用 `range` 循环可以遍历 channel，它依次从 channel 中接收数据，当 channel 被关闭并且没有值可接收时跳出循环：
 
 ```go
 ch := make(chan int, 3)
@@ -64,7 +76,8 @@ ch <- 1
 ch <- 2
 ch <- 3
 
-// 显式地关闭信道
+// 关闭 channel
+// 如果不关闭 channel，range 就会阻塞当前 goroutine, 直到 channel 关闭
 close(ch)
 
 for v := range ch {
@@ -72,316 +85,595 @@ for v := range ch {
 }
 ```
 
-### 无缓存 channel
-
-**无缓存 `channel` 也叫做同步 `channel`**，这是因为**如果一个 goroutine 基于一个无缓存 `channel` 发送数据，那么就会
-阻塞，直到另一个 goroutine 在相同的 `channel` 上执行接收操作**。同样的，**如果一个 goroutine 基于一个无缓存 `channel`
-先执行了接受操作，也会阻塞，直到另一个 goroutine 在相同的 `channel` 上执行发送操作**。在 `channel` 成功传输之后，两个
-goroutine 之后的语句才会继续执行。
-
-### 带缓存 channel
-
-```go
-ch = make(chan int, 3)
-```
-
-带缓存的 `channel` 内部持有一个元素队列。`make` 函数创建 `channel` 时通过第二个参数指定队列的最大容量。
-
-发送操作会向 `channel` 的缓存队列 `push` 元素，接收操作则是 `pop` 元素，如果队列被塞满了，那么发送操作将阻
-塞直到另一个 goroutine 执行接收操作而释放了新的队列空间。
-相反，如果 `channel` 是空的，接收操作将阻塞直到有另一个 goroutine 执行发送操作而向队列插入元素。
-
-在大多数情况下，缓冲通道会作为收发双方的中间件。正如前文所述，元素值会先从发送方复制到缓冲通道，之后再由缓冲通道复制给接收方。
-
-但是，当发送操作在执行的时候发现空的通道中，正好有等待的接收操作，那么它会直接把元素值复制给接收方。
-
-### 单向 channel
-
-当一个 `channel` 作为一个函数参数时，它一般总是被专门用于**只发送或者只接收**。
-
-类型 `chan<- int` 表示一个只发送 `int` 的 `channel`。相反，类型 `<-chan int` 表示一个只接收 `int` 的 `channel`。
-
-```go
-var uselessChan = make(chan<- int, 1)
-```
-
-### cap 和 len
-
-`cap` 函数可以获取 `channel` 内部缓存的容量。
-`len` 函数可以获取 `channel` 内部缓存有效元素的个数。
-
-```go
-ch = make(chan int, 3)
-fmt.Println(cap(ch)) // 3
-
-ch <- "A"
-ch <- "B"
-
-fmt.Println(len(ch)) // 2
-fmt.Println(<-ch) // A
-fmt.Println(len(ch)) // 1
-```
-
-### select 和 channel
-
-### 使用 range 遍历 channel
-
 ### 使用 channel 实现互斥锁
 
-我们可以使用容量只有 `1` 的 `channel` 来保证最多只有一个 goroutine 在同一时刻访问一个共享变量：
+我们可以使用容量只有 `1` 的 channel 来保证最多只有一个 goroutine 在同一时刻访问一个共享变量：
 
 ```go
 var (
-  sema = make(chan struct{}, 1) // a binary semaphore guarding balance
-  balance int
+	sema = make(chan struct{}, 1) // a binary semaphore guarding balance 
+	balance int
 )
 
 func Deposit(amount int) {
-  sema <- struct{}{} // acquire lock
-  balance = balance + amount
-  <-sema // release lock
+	sema <- struct{}{} // acquire lock 
+	balance = balance + amount
+	<-sema // release lock
 }
 
 func Balance() int {
-  sema <- struct{}{} // acquire lock
-  b := balance
-  <-sema // release lock
-  return b
+	sema <- struct{}{} // acquire lock 
+	b := balance
+	<-sema // release lock 
+	// return b
 }
 ```
 
 ## 原理
 
-### 通道的发送和接收操作的特性
-
-1. 对于同一个通道，发送操作之间是互斥的，接收操作之间也是互斥的。Go 语言的运行时系统（以下简称运行时系统）只会执行对同一个通
-道的任意个发送操作中的某一个。直到这个元素值被完全复制进该通道之后，其他针对该通道的发送操作才可能被执行。
-2. 发送操作和接收操作中对元素值的处理都是不可分割的。发送操作要么还没复制元素值，要么已经复制完毕，绝不会出现只复制了一部分
-的情况。接收操作在准备好元素值的副本之后，一定会删除掉通道中的原值，绝不会出现通道中仍有残留的情况。
-3. 发送操作在完全完成之前会被阻塞。接收操作也是如此。
-
-**元素值从外界进入通道时会被复制。更具体地说，进入通道的并不是在接收操作符右边的那个元素值，而是它的副本**。
-
-**对于通道中的同一个元素值来说，发送操作和接收操作之间也是互斥的。例如，虽然会出现，正在被复制进通道但还未复制完成的元素值，
-但是这时它绝不会被想接收它的一方看到和取走**。
-
-### 发送操作和接收操作在什么时候可能被长时间的阻塞
-
-- 针对**缓冲通道**的情况。如果通道已满，那么对它的所有发送操作都会被阻塞，直到通道中有元素值被接收走。相对的，如果通道已空，
-那么对它的所有接收操作都会被阻塞，直到通道中有新的元素值出现。这时，通道会通知最早等待的那个接收操作所在的 goroutine，
-并使它再次执行接收操作。
-- 对于**非缓冲通道**，情况要简单一些。无论是发送操作还是接收操作，一开始执行就会被阻塞，直到配对的操作也开始执行，才会继续传递。
-- **对于值为 `nil` 的通道，不论它的具体类型是什么，对它的发送操作和接收操作都会永久地处于阻塞状态**。它们所属的 goroutine
-中的任何代码，都不再会被执行。注意，由于通道类型是引用类型，所以它的零值就是 `nil`。**当我们只声明该类型的变量但没
-有用 `make` 函数对它进行初始化时，该变量的值就会是 `nil`。我们一定不要忘记初始化通道**！
-
-### select 多路复用
-
-`select` 语句是专为通道而设计的，**所以每个 `case` 表达式中都只能包含操作通道的表达式**，比如接收表达式。
+channel 本质上就是一个有锁的环形队列，channel 的结构体 `hchan`：
 
 ```go
-select {
-  case communication clause  :
-      ...     
-  case communication clause  :
-      ... 
-  default : /* 可选 */
-   ... 
-}   
-```
-
-如果有多个 `channel` 需要接受消息，如果第一个 `channel` 没有消息发过来，那么程序会被阻塞，第二个 `channel` 的消息就也
-无法接收了。这时候就需要使用 `select` 多路复用。
-
-```go
-select {
-  case <-ch1:
-      ...     
-  case x := <-ch2:
-     ...
-  case ch3 <- y:
-   ...  
-  default:
-   ... 
-} 
-```
-
-每一个 `case` 代表一个通信操作，发送或者接收。**如果没有 `case` 可运行，它将阻塞，直到有 `case` 可运行**。
-如果多个 `case` 同时满足条件，`select` 会**随机**地选择一个执行。
-
-**为了避免因为发送或者接收导致的阻塞，尤其是当 `channel` 没有准备好写或者读时。`default` 可以设置当其它的操作
-都不能够马上被处理时程序需要执行哪些逻辑**。
-
-### 超时
-
-我们可以利用 `select` 来设置超时，避免 goroutine 阻塞的情况：
-
-```go
-func main() {
- c := make(chan int)
- o := make(chan bool)
- go func() {
-  for {
-   select {
-    case v := <- c:
-     fmt.println(v)
-    case <- time.After(5 * time.Second):
-     fmt.println("timeout")
-     o <- true
-     break
-   }
-  }
- }()
- <- o
-}
-```
-
-#### 使用 select 语句的时候，需要注意的事情
-
-1. 如果加入了默认分支，那么无论涉及通道操作的表达式是否有阻塞，`select` 语句都不会被阻塞。如果那几个表达式都阻塞了，或者
-说都没有满足求值的条件，那么默认分支就会被选中并执行。
-2. 如果没有加入默认分支，那么一旦所有的 `case` 表达式都没有满足求值条件，那么 `select` 语句就会被阻塞。
-直到至少有一个 `case` 表达式满足条件为止。
-3. 还记得吗？我们可能会因为通道关闭了，而直接从通道接收到一个其元素类型的零值。所以，**在很多时候，我们需要通过接收表达式
-的第二个结果值来判断通道是否已经关闭**。一旦发现某个通道关闭了，我们就应该及时地屏蔽掉对应的分支或者采取其他措施。这对
-于程序逻辑和程序性能都是有好处的。
-4. `select` 语句只能对其中的每一个 `case` 表达式各求值一次。所以，如果我们想连续或定时地操作其中的通道的话，就往往需要
-通过在 `for` 语句中嵌入 `select` 语句的方式实现。但这时要注意，**简单地在 `select` 语句的分支中使用 `break` 语句，只能结
-束当前的 `select` 语句的执行，而并不会对外层的 `for` 语句产生作用。这种错误的用法可能会让这个 `for` 语句无休止地运行下去**。
-
-`break` 退出嵌套循环：
-
-```go
-I:
- for i := 0; i < 2; i++ {
-  for j := 0; j < 5; j++ {
-   if j == 2 {
-    break I
-   }
-   fmt.Println("hello")
-  }
-  fmt.Println("hi")
- }
-```
-
-```go
-intChan := make(chan int, 1)
-// 一秒后关闭通道。
-time.AfterFunc(time.Second, func() {
-  close(intChan)
-})
-select {
-  case _, ok := <-intChan:
-    if !ok { // 使用 ok-idom，判断 channel 是否被关闭
-      fmt.Println("The candidate case is closed.")
-      break
-    }
-    fmt.Println("The candidate case is selected.")
-}
-```
-
-上面的代码 `select` 语句只有一个候选分支，我在其中利用接收表达式的第二个结果值对 `intChan` 通道是否已关闭做了判断，并在
-得到肯定结果后，通过 `break` 语句立即结束当前 `select` 语句的执行。
-
-## channel 的性能
-
-channel 队列使用锁同步机制，也就意味着，频繁加锁会带来性能问题。要改善这个问题，就要减少通道的传输次数，将发送到通道的数据打包，
-避免频繁加锁。[示例](github.com/shipengqi/golang-learn/demos/channels)
-
-```sh
-$ go test -bench=. -v
-goos: windows
-goarch: amd64
-pkg: github.com/shipengqi/golang-learn/demos/channels
-BenchmarkMultiSend-8           1        4694289200 ns/op
-BenchmarkBlockSend-8          13          80106754 ns/op
-PASS
-ok      github.com/shipengqi/golang-learn/demos/channels        5.949s
-```
-
-使用 runtime.hchan 结构体表示
-
-```go
+// src/runtime/chan.go
 type hchan struct {
- qcount   uint
- dataqsiz uint
- buf      unsafe.Pointer
- elemsize uint16
- closed   uint32
- elemtype *_type
- sendx    uint  
- recvx    uint
- recvq    waitq
- sendq    waitq
+	qcount   uint           // total data in the queue
+	dataqsiz uint           // size of the circular queue
+	buf      unsafe.Pointer // points to an array of dataqsiz elements
+	elemsize uint16
+	closed   uint32
+	elemtype *_type // element type
+	sendx    uint   // send index
+	recvx    uint   // receive index
+	recvq    waitq  // list of recv waiters
+	sendq    waitq  // list of send waiters
 
- lock mutex
+	// lock protects all fields in hchan, as well as several
+	// fields in sudogs blocked on this channel.
+	//
+	// Do not change another G's status while holding this lock
+	// (in particular, do not ready a G), as this can deadlock
+	// with stack shrinking.
+	lock mutex
 }
 ```
 
-qcount — Channel 中的元素个数；
-dataqsiz — Channel 中的循环队列的长度；
-buf — Channel 的缓冲区数据指针；
-sendx — Channel 的发送操作处理到的位置；
-recvx — Channel 的接收操作处理到的位置；
+- `qcount`：channel 中的元素个数
+- `dataqsiz`：channel 中的循环队列的长度
+- `buf`：channel 的缓冲区数据指针，指向底层的循环数组，只针对有缓冲的 channel。
+- `elemsize`：channel 中元素大小
+- `elemtype`：channel 中元素类型
+- `closed`：channel 是否被关闭的标志位
+- `sendx`：表示当前可以发送的元素在底层循环数组中位置索引
+- `recvx`：表示当前可以发送的元素在底层循环数组中位置索引
+- `sendq`：向 channel 发送数据而被阻塞的 goroutine 队列
+- `recvq`：读取 channel 的数据而被阻塞的 goroutine 队列
+- `lock`：保护 `hchan` 中所有字段
 
-elemsize 和 elemtype 分别表示当前 Channel 能够收发的元素类型和大小；sendq 和 recvq 存储了当前 Channel 由于缓冲区空间不足而阻塞的 Goroutine 列表，这些等待队列使用双向链表 runtime.waitq 表示，链表中所有的元素都是 runtime.sudog 结构：
+`waitq` 是一个双向链表，链表中所有的元素都是 `sudog`：
 
 ```go
 type waitq struct {
- first *sudog
- last  *sudog
+	first *sudog
+	last  *sudog
 }
 
-// sudog represents a g in a wait list, such as for sending/receiving
-// on a channel.
-//
-// sudog is necessary because the g ↔ synchronization object relation
-// is many-to-many. A g can be on many wait lists, so there may be
-// many sudogs for one g; and many gs may be waiting on the same
-// synchronization object, so there may be many sudogs for one object.
-//
-// sudogs are allocated from a special pool. Use acquireSudog and
-// releaseSudog to allocate and free them.
 type sudog struct {
- // The following fields are protected by the hchan.lock of the
- // channel this sudog is blocking on. shrinkstack depends on
- // this for sudogs involved in channel ops.
-
- g *g
-
- // isSelect indicates g is participating in a select, so
- // g.selectDone must be CAS'd to win the wake-up race.
- isSelect bool
- next     *sudog
- prev     *sudog
- elem     unsafe.Pointer // data element (may point to stack)
-
- // The following fields are never accessed concurrently.
- // For channels, waitlink is only accessed by g.
- // For semaphores, all fields (including the ones above)
- // are only accessed when holding a semaRoot lock.
-
- acquiretime int64
- releasetime int64
- ticket      uint32
- parent      *sudog // semaRoot binary tree
- waitlink    *sudog // g.waiting list or semaRoot
- waittail    *sudog // semaRoot
- c           *hchan // channel
+	// 指向当前的 goroutine
+	g *g
+	
+	// 指向下一个 goroutine
+	next *sudog
+	// 指向上一个 goroutine
+	prev *sudog
+	// 指向元素数据
+	elem unsafe.Pointer
+    // ...
 }
 ```
 
-我们在这里可以简单梳理和总结一下使用 ch <- i 表达式向 Channel 发送数据时遇到的几种情况：
+### 创建 channel
 
-如果当前 Channel 的 recvq 上存在已经被阻塞的 Goroutine，那么会直接将数据发送给当前的 Goroutine 并将其设置成下一个运行的 Goroutine；
-如果 Channel 存在缓冲区并且其中还有空闲的容量，我们就会直接将数据直接存储到当前缓冲区 sendx 所在的位置上；
-如果不满足上面的两种情况，就会创建一个 runtime.sudog 结构并将其加入 Channel 的 sendq 队列中，当前 Goroutine 也会陷入阻塞等待其他的协程从 Channel 接收数据；
-发送数据的过程中包含几个会触发 Goroutine 调度的时机：
+创建 channel 要使用 `make`，编译器会将 `make` 转换成 `makechan` 或者 `makechan64` 函数：
 
-发送数据时发现 Channel 上存在等待接收数据的 Goroutine，立刻设置处理器的 runnext 属性，但是并不会立刻触发调度；
-发送数据时并没有找到接收方并且缓冲区已经满了，这时就会将自己加入 Channel 的 sendq 队列并调用 runtime.goparkunlock 触发 Goroutine 的调度让出处理器的使用权；
+```go
+// src/runtime/chan.go#L72
+func makechan(t *chantype, size int) *hchan {
+	elem := t.Elem
 
-我们总结一下从 Channel 接收数据时，会触发 Goroutine 调度的两个时机：
+	// compiler checks this but be safe.
+	// ...
+	
+	var c *hchan
+	switch {
+	case mem == 0:
+		// 无缓冲 channel
+		// 调用 mallocgc 方法分配一段连续的内存空间
+		c = (*hchan)(mallocgc(hchanSize, nil, true))
+		c.buf = c.raceaddr()
+	case elem.PtrBytes == 0:
+		// channel 存储的元素类型不是指针
+		// 分配一块连续的内存给 hchan 和底层数组
+		c = (*hchan)(mallocgc(hchanSize+mem, nil, true))
+		c.buf = add(unsafe.Pointer(c), hchanSize)
+	default:
+        // 默认情况下，进行两次内存分配操作，分别为 hchan 和缓冲区分配内存
+		c = new(hchan)
+		c.buf = mallocgc(mem, elem, true)
+	}
 
-当 Channel 为空时；
-当缓冲区中不存在数据并且也不存在数据的发送者时；
+	// 设置元素大小，元素类型，循环数组的长度
+	c.elemsize = uint16(elem.Size_)
+	c.elemtype = elem
+	c.dataqsiz = uint(size)
+	lockInit(&c.lock, lockRankHchan)
+    // ...
+	return c
+}
+```
+
+使用 mallocgc 函数创建 channel，就意味着 channel 都是分配在堆上的。所以**当一个 channel 没有被任何 goroutine 引用时，是会被 GC 回收的**。
+
+### 向 channel 发送数据
+
+发送操作，也就是 `ch <- i` 语句，编译器最终会将该语句转换成 `chansend` 函数：
+
+```go
+// src/runtime/chan.go
+// block 为 true 时，表示当前操作是阻塞的 
+func chansend(c *hchan, ep unsafe.Pointer, block bool, callerpc uintptr) bool {
+	if c == nil {
+		// 不可以阻塞，直接返回 false，表示未发送成功
+		if !block {
+			return false
+		}
+        // 挂起当前 goroutine
+		gopark(nil, nil, waitReasonChanSendNilChan, traceBlockForever, 2)
+		throw("unreachable")
+	}
+	// ...
+	if !block && c.closed == 0 && full(c) {
+		return false
+	}
+
+	var t0 int64
+	if blockprofilerate > 0 {
+		t0 = cputicks()
+	}
+
+	// 执行发送数据的逻辑之前，先为当前 channel 加锁，防止多个线程并发修改数据
+	lock(&c.lock)
+
+	// 如果 channel 已经关闭，那么向该 channel 发送数据会导致 panic：send on closed channel
+	if c.closed != 0 {
+		// 解锁
+		unlock(&c.lock)
+		// panic
+		panic(plainError("send on closed channel"))
+	}
+
+	// 当前接收队列里存在 goroutine，通过 runtime.send 直接将数据发送给阻塞的接收者
+	if sg := c.recvq.dequeue(); sg != nil {
+		send(c, sg, ep, func() { unlock(&c.lock) }, 3)
+		return true
+	}
+
+	// 走到这里，说明没有等待数据的接收者
+	
+	// 对于有缓冲的 channel，并且还有缓冲空间
+	if c.qcount < c.dataqsiz {
+        // 计算出下一个可以存储数据的位置
+		qp := chanbuf(c, c.sendx)
+		if raceenabled {
+			racenotify(c, c.sendx, nil)
+		}
+		// 将发送的数据拷贝到缓冲区中并增加 sendx 索引和 qcount 计数器
+		typedmemmove(c.elemtype, qp, ep)
+		// sendx 索引 +1
+		c.sendx++
+		// 由于 buf 是一个循环数组，所以当 sendx 等于 dataqsiz 时会重新回到数组开始的位置。
+		if c.sendx == c.dataqsiz {
+			c.sendx = 0
+		}
+		c.qcount++
+		// 释放锁
+		unlock(&c.lock)
+		return true
+	}
+
+	// 走到这里，说明缓冲空间已满，或者是无缓冲 channel
+	
+	// 如果不可以阻塞，直接返回 false，表示未发送成功
+	if !block {
+		unlock(&c.lock)
+		return false
+	}
+
+	// 缓冲空间已满或者是无缓冲 channel，发送方会被阻塞
+	
+	// 获取当前发送数据的 goroutine 的指针
+	gp := getg()
+	// 构造一个 sudog
+	mysg := acquireSudog()
+	mysg.releasetime = 0
+	if t0 != 0 {
+		mysg.releasetime = -1
+	}
+	// 设置这一次阻塞发送的相关信息
+	mysg.elem = ep // 待发送数据的内存地址
+	mysg.waitlink = nil
+	mysg.g = gp // 当前发送数据的 goroutine 的指针
+	mysg.isSelect = false // 是否在 select 中
+	mysg.c = c // 发送的 channel
+	gp.waiting = mysg
+	gp.param = nil
+	// 将 sudog 放入到发送等待队列
+	c.sendq.enqueue(mysg)
+	// 挂起当前 goroutine，等待唤醒
+	gp.parkingOnChan.Store(true)
+	gopark(chanparkcommit, unsafe.Pointer(&c.lock), waitReasonChanSend, traceBlockChanSend, 2)
+	KeepAlive(ep)
+
+	// goroutine 开始被唤醒了
+	if mysg != gp.waiting {
+		throw("G waiting list is corrupted")
+	}
+	gp.waiting = nil
+	gp.activeStackChans = false
+	closed := !mysg.success
+	gp.param = nil
+	if mysg.releasetime > 0 {
+		blockevent(mysg.releasetime-t0, 2)
+	}
+	// 移除 mysg 上绑定的 channel
+	mysg.c = nil
+	releaseSudog(mysg)
+	if closed {
+		if c.closed == 0 {
+			throw("chansend: spurious wakeup")
+		}
+		// 被唤醒了，但是 channel 已经关闭了，panic
+		panic(plainError("send on closed channel"))
+	}
+	// 返回 true 表示已经成功向 channel 发送了数据
+	return true
+}
+```
+
+`send` 发送数据：
+
+```go
+func send(c *hchan, sg *sudog, ep unsafe.Pointer, unlockf func(), skip int) {
+	// ...
+	// sg 是接收者的 sudog 结构
+	// sg.elem 指向接收到的值存放的位置，如 val <- ch，指的就是 &val
+	if sg.elem != nil {
+		// 直接拷贝内存到 val <- ch 表达式中变量 val 所在的内存地址（&val）上
+		sendDirect(c.elemtype, sg, ep)
+		sg.elem = nil
+	}
+	// 获取 sudog 上绑定的等待接收的 goroutine 的指针
+	gp := sg.g
+	unlockf()
+	gp.param = unsafe.Pointer(sg)
+	// 唤醒等待接收的 goroutine
+	goready(gp, skip+1)
+}
+```
+
+> `goready` 是将 goroutine 的状态改成 `runnable`，然后需要等待调度器的调度。
+
+```go
+func sendDirect(t *_type, sg *sudog, src unsafe.Pointer) {
+	// src 是当前 goroutine 发送的数据的内存地址
+	// dst 是接收者的
+	dst := sg.elem
+	// 写屏障
+	typeBitsBulkBarrier(t, uintptr(dst), uintptr(src), t.size)
+	// 拷贝内存数据
+	memmove(dst, src, t.size)
+}
+```
+
+### 从 channel 接收数据
+
+Go 中可以使用两种不同的方式去接收 channel 中的数据：
+
+```go
+i <- ch
+i, ok <- ch
+```
+
+编译器的处理后分别会转换成 `chanrecv1`，`chanrecv2`：
+
+```go
+// src/runtime/chan.go
+func chanrecv1(c *hchan, elem unsafe.Pointer) {
+	chanrecv(c, elem, true)
+}
+
+func chanrecv2(c *hchan, elem unsafe.Pointer) (received bool) {
+	_, received = chanrecv(c, elem, true)
+	return
+}
+```
+
+两个方法最终还是调用了 `chanrecv` 函数：
+
+```go
+// src/runtime/chan.go
+func chanrecv(c *hchan, ep unsafe.Pointer, block bool) (selected, received bool) {
+    // ...
+	// channel 是 nil
+	if c == nil {
+		// 不可以阻塞，直接返回
+		if !block {
+			return
+		}
+		// 挂起当前 goroutine
+		gopark(nil, nil, waitReasonChanReceiveNilChan, traceBlockForever, 2)
+		throw("unreachable")
+	}
+	
+	if !block && empty(c) {
+		if atomic.Load(&c.closed) == 0 {
+			return
+		}
+		if empty(c) {
+			if raceenabled {
+				raceacquire(c.raceaddr())
+			}
+			if ep != nil {
+				typedmemclr(c.elemtype, ep)
+			}
+			return true, false
+		}
+	}
+
+	var t0 int64
+	if blockprofilerate > 0 {
+		t0 = cputicks()
+	}
+
+	// 执行接收数据的逻辑之前，先为当前 channel 加锁
+	lock(&c.lock)
+
+	// channel 已关闭
+	if c.closed != 0 {
+		// 底层的循环数组 buf 中没有元素
+		if c.qcount == 0 {
+			if raceenabled {
+				raceacquire(c.raceaddr())
+			}
+			// 释放锁
+			unlock(&c.lock)
+			if ep != nil {
+				// typedmemclr 根据类型清理相应地址的内存
+				typedmemclr(c.elemtype, ep)
+			}
+			return true, false
+		}
+	} else {
+		// channel 未关闭，并且等待发送队列里存在 goroutine
+		// 发送的 goroutine 被阻塞，那有两种情况：
+		// 1. 这是一个非缓冲型的 channel
+		// 2. 缓冲型的 channel，但是 buf 满了
+		// recv 直接进行内存拷贝
+		if sg := c.sendq.dequeue(); sg != nil {
+			recv(c, sg, ep, func() { unlock(&c.lock) }, 3)
+			return true, true
+		}
+	}
+	
+	// channel 未关闭
+	// 缓冲型 channel 并且 buf 里有元素，可以正常接收
+	if c.qcount > 0 {
+        // 直接从循环数组里取出要接收的元素
+		qp := chanbuf(c, c.recvx)
+		if raceenabled {
+			racenotify(c, c.recvx, nil)
+		}
+		// 这里表示，代码中没有忽略要接收的值，不是 "<- ch"，而是 "val <- ch"，ep 指向 val
+		if ep != nil {
+			// 拷贝数据
+			typedmemmove(c.elemtype, ep, qp)
+		}
+		// 清理掉循环数组里相应位置的值
+		typedmemclr(c.elemtype, qp)
+		// recvx 索引 +1
+		c.recvx++
+		if c.recvx == c.dataqsiz {
+			c.recvx = 0
+		}
+		// 元素个数 -1
+		c.qcount--
+		unlock(&c.lock)
+		return true, true
+	}
+
+	// 非阻塞接收，释放锁
+	// selected 返回 false，因为没有接收到值
+	if !block {
+		unlock(&c.lock)
+		return false, false
+	}
+	
+	// 走到这里说明 buf 是空的
+	
+	// 没有数据可接收，阻塞当前接收的 goroutine
+	
+	// 获取当前接收的 goroutine
+	gp := getg()
+	// 构造一个 sudog
+	mysg := acquireSudog()
+	mysg.releasetime = 0
+	if t0 != 0 {
+		mysg.releasetime = -1
+	}
+    // 设置这一次阻塞接收的相关信息
+	mysg.elem = ep // 待接收数据的地址
+	mysg.waitlink = nil
+	gp.waiting = mysg
+	mysg.g = gp // 当前接收的 goroutine 指针
+	mysg.isSelect = false // 是否在 select 中
+	mysg.c = c // 接收的 channel
+	gp.param = nil
+	// 将 sudog 放入到接收等待队列
+	c.recvq.enqueue(mysg)
+	gp.parkingOnChan.Store(true)
+	// 挂起当前接收 goroutine
+	gopark(chanparkcommit, unsafe.Pointer(&c.lock), waitReasonChanReceive, traceBlockChanRecv, 2)
+
+	// 被唤醒了
+	if mysg != gp.waiting {
+		throw("G waiting list is corrupted")
+	}
+	gp.waiting = nil
+	gp.activeStackChans = false
+	if mysg.releasetime > 0 {
+		blockevent(mysg.releasetime-t0, 2)
+	}
+	success := mysg.success
+	gp.param = nil
+	mysg.c = nil
+	releaseSudog(mysg)
+	return true, success
+}
+```
+
+`recv` 接收数据：
+
+```go
+func recv(c *hchan, sg *sudog, ep unsafe.Pointer, unlockf func(), skip int) {
+	// 无缓冲的 channel
+	if c.dataqsiz == 0 {
+		if raceenabled {
+			racesync(c, sg)
+		}
+        // 这里表示，代码中没有忽略要接收的值，不是 "<- ch"，而是 "val <- ch"，ep 指向 val
+		if ep != nil {
+			// 直接拷贝数据
+			recvDirect(c.elemtype, sg, ep)
+		}
+	} else {
+		// 缓冲型的 channel，但是 buf 已满
+		// 将底层的循环数组 buf 队首的元素拷贝到接收数据的地址
+		// 将发送者的数据放入 buf
+		qp := chanbuf(c, c.recvx)
+		if ep != nil {
+			typedmemmove(c.elemtype, ep, qp)
+		}
+
+		// 将发送者数据拷贝到 buf
+		typedmemmove(c.elemtype, qp, sg.elem)
+		// 增加 recvx 索引
+		c.recvx++
+		if c.recvx == c.dataqsiz {
+			c.recvx = 0
+		}
+		c.sendx = c.recvx
+	}
+	sg.elem = nil
+	gp := sg.g
+
+	// 释放锁
+	unlockf()
+	gp.param = unsafe.Pointer(sg)
+	if sg.releasetime != 0 {
+		sg.releasetime = cputicks()
+	}
+
+	// 唤醒发送的 goroutine
+	goready(gp, skip+1)
+}
+```
+
+### 关闭 channel
+
+`close` 关闭 channel 会被编译器转换成 `closechan` 函数：
+
+```go
+// src/runtime/chan.go#L357
+func closechan(c *hchan) {
+	// 关闭一个 nil 的 channel，panic
+	if c == nil {
+		panic(plainError("close of nil channel"))
+	}
+
+	// 先加锁
+	lock(&c.lock)
+	// 重复关闭，panic
+	if c.closed != 0 {
+		unlock(&c.lock)
+		panic(plainError("close of closed channel"))
+	}
+	// ...
+	// 设置 channel 关闭的标志位
+	c.closed = 1
+
+	var glist gList
+
+    // 将 channel 等待接收队列的里 sudog 释放
+	for {
+		// 从接收队列里取出一个 sudog
+		sg := c.recvq.dequeue()
+		// 接收队列空了，跳出循环
+		if sg == nil {
+			break
+		}
+		// 
+		if sg.elem != nil {
+			typedmemclr(c.elemtype, sg.elem)
+			sg.elem = nil
+		}
+		if sg.releasetime != 0 {
+			sg.releasetime = cputicks()
+		}
+		// 获取接收 goroutine 的指针
+		gp := sg.g
+		gp.param = unsafe.Pointer(sg)
+		sg.success = false
+		if raceenabled {
+			raceacquireg(gp, c.raceaddr())
+		}
+		// 放入链表
+		glist.push(gp)
+	}
+
+	// 将 channel 等待发送队列的里 sudog 释放
+	// 如果存在，这些 goroutine 将会 panic
+	// 可以查看 chansend 函数中的逻辑：
+	// 对于发送者，如果被唤醒后 channel 已关闭，则会 panic
+	for {
+        // 从发送队列里取出一个 sudog
+		sg := c.sendq.dequeue()
+        // 发送队列空了，跳出循环
+		if sg == nil {
+			break
+		}
+		sg.elem = nil
+		if sg.releasetime != 0 {
+			sg.releasetime = cputicks()
+		}
+        // 获取发送 goroutine 的指针
+		gp := sg.g
+		gp.param = unsafe.Pointer(sg)
+		sg.success = false
+		if raceenabled {
+			raceacquireg(gp, c.raceaddr())
+		}
+        // 放入链表
+		glist.push(gp)
+	}
+	// 释放锁
+	unlock(&c.lock)
+
+	// 遍历链表，唤醒所有 goroutine
+	for !glist.empty() {
+		gp := glist.pop()
+		gp.schedlink = 0
+		goready(gp, 3)
+	}
+}
+```
+
+`recvq` 和 `sendq` 中的所有 goroutine 被唤醒后，会分别去执行 `chanrecv` 和 `chansend` 中 `gopark` 后面的代码。

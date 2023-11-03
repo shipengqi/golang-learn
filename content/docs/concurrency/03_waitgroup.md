@@ -122,6 +122,7 @@ func (wg *WaitGroup) Add(delta int) {
     if v < 0 {
         panic("sync: negative WaitGroup counter")
     }
+	// 并发的 Add 会导致 panic
     if w != 0 && delta > 0 && v == int32(delta) {
         panic("sync: WaitGroup misuse: Add called concurrently with Wait")
     }

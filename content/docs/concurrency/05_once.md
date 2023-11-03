@@ -28,6 +28,21 @@ $ go run main.go
 only once
 ```
 
+### 利用 channel 实现 Once
+
+下面的代码也可以达到执行一次的效果，不过重复执行会导致 panic：
+
+```go
+var setonce chan struct{}
+
+func initialize() {
+	// channel 不可以重复关闭，否则会 panic
+    close(a.setonce)
+	// 初始化
+	// ...
+}
+```
+
 ## 原理
 
 `sync.Once` 的实现：
