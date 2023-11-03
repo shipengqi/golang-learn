@@ -176,7 +176,7 @@ func (c *cancelCtx) Done() <-chan struct{} {
 
 ```go
 func (c *cancelCtx) cancel(removeFromParent bool, err, cause error) {
-	...
+	// ...
 	if d == nil {
 		c.done.Store(closedchan)
 	} else {
@@ -189,7 +189,7 @@ func (c *cancelCtx) cancel(removeFromParent bool, err, cause error) {
 	}
     // 将子节点置空
     c.children = nil
-	...
+	// ...
     if removeFromParent {
 		// 从父节点中移除自己 
 		removeChild(c.Context, c)
