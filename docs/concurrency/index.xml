@@ -37,6 +37,10 @@ Store Load。 尽量不要向原子值中存储引用类型的值。</descriptio
 使用 # 创建 channel：
 // 无缓冲 channel ch := make(chan int) // 带缓冲 channel，缓冲区为 3 ch = make(chan int, 3) channel 的零值是 nil。
 无缓冲 channel # 无缓冲 channel 也叫做同步 channel：
-一个 goroutine 基于一个无缓冲 channel 发送数据，那么就会阻塞，直到另一个 goroutine 在相同的 channel 上执行接收操作。 一个 goroutine 基于一个无缓冲 channel 先执行了接收操作，也会阻塞，直到另一个 goroutine 在相同的 channel 上执行发送操作 带缓冲 channel # 带缓冲的 channel 有一个缓冲区：</description></item><item><title>信号量</title><link>https://shipengqi.github.io/golang-learn/docs/concurrency/10_sema/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/concurrency/10_sema/</guid><description>mutex 和 waitgroup 不保存 goroutine 的信息，所以通过信号量（底层依然是 gopark goready 来实现让出cpu，和唤醒）来通知所有阻塞的 goroutine。 但是 channel 需要在 goroutine 之间传递数据的，需要拷贝内存，仅通过信号量无法实现，信号量只能做到通知，所以 channel 保存了 goroutine 的信息。
-信号量 # Go 通过信号量来控制 goroutine 的阻塞和唤醒，例如 Mutex 结构体重的 sema：
-type Mutex struct { state int32 sema uint32 }</description></item></channel></rss>
+一个 goroutine 基于一个无缓冲 channel 发送数据，那么就会阻塞，直到另一个 goroutine 在相同的 channel 上执行接收操作。 一个 goroutine 基于一个无缓冲 channel 先执行了接收操作，也会阻塞，直到另一个 goroutine 在相同的 channel 上执行发送操作 带缓冲 channel # 带缓冲的 channel 有一个缓冲区：</description></item><item><title>信号量</title><link>https://shipengqi.github.io/golang-learn/docs/concurrency/10_sema/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/concurrency/10_sema/</guid><description>信号量 # 信号量（Semaphore）是一种用于实现多进程或多线程之间同步和互斥的机制。
+信号量可以简单理解为一个整型数，包含两种操作：P（Proberen，测试）操作和 V（Verhogen，增加）操作。其中，P 操作会尝试获取一个信号量，如果信号量的值大于 0，则将信号量的值减 1 并 继续执行。否则，当前进程或线程就会被阻塞，直到有其他进程或线程释放这个信号量为止。V 操作则是释放一个信号量，将信号量的值加 1。
+P 操作和 V 操作可以看做是对资源的获取和释放。
+Go 的 WaitGroup 和 Metux 都是通过信号量来控制 goroutine 的阻塞和唤醒，例如 Mutex 结构体中的 sema：
+type Mutex struct { state int32 sema uint32 } Metux 本质上就是基于信号量（sema）+ 原子操作来实现并发控制的。
+Go 操作信号量的方法：
+// src/sync/runtime.go // 阻塞等待直到 s 大于 0，然后立刻将 s 减去 1 func runtime_Semacquire(s *uint32) // 类似于 runtime_Semacquire // 如果 lifo 为 true，waiter 将会被插入到队列的头部，否则插入到队列尾部 // skipframes 是跟踪过程中要省略的帧数，从这里开始计算 func runtime_SemacquireMutex(s *uint32, lifo bool, skipframes int) // 将 s 增加 1，然后通知阻塞在 runtime_Semacquire 的 goroutine // 如果 handoff 为 true，传递信号到队列头部的 waiter // skipframes 是跟踪过程中要省略的帧数，从这里开始计算 func runtime_Semrelease(s *uint32, handoff bool, skipframes int) Acquire 和 Release 分别对应了 P 操作和 V 操作。</description></item></channel></rss>
