@@ -5,100 +5,53 @@ weight: 3
 
 # 切片
 
-`slice` 的语法和数组很像，由于数组长度是固定的，所以使用 `slice` 相比数组会更灵活，`slice` 是动态的。
+切片 (slice) 在使用上和数组差不多，区别是切片是**可变长**的，定义的时候不需要指定 size。
 
-**切片（slice） 是对底层数组一个连续片段的引用，所以切片是一个引用类型**。
+## 初始化
 
-**定义切片，和定义数组的区别就是不需要指定 `SIZE`**：
+初始化切片有三种方式：
 
-```go
-var 变量名 []类型
-```
+1. 使用 `make`
+   ```go
+    // len 是切片的初始长度
+    // capacity 为可选参数, 指定容量
+    s := make([]int, len, capacity)
+   ```
+2. 使用字面量
+   ```go
+   arr :=[]int{1,2,3}
+   ```
+3. 使用下标截取数组或者切片的一部分，这里可以传入三个参数 `[low:high:max]`，`max - low` 是新的切片的容量 cap。
+   ```go
+   numbers := []int{0,1,2,3,4,5,6,7,8}
+   s := numbers[1:4] // [1 2 3]
+   s := numbers[4:] // [4 5 6 7 8]
+   s := numbers[:3]) // [0 1 2]
+   ```
 
-一个 `slice` 由三个部分构成：指针、长度和容量。长度不能超过容量。
-一个切片在未初始化之前默认为 `nil`，长度为 `0`。
 
-初始化切片：
 
-```go
-// 直接初始化切片，[] 表示是切片类型，{1,2,3} 初始化值依次是 1,2,3.其 cap=len=3
-s :=[]int {1,2,3}
-
-// 初始化切片 s,是数组 arr 的引用
-s := arr[:]
-
-// 将 arr 中从下标 startIndex 到 endIndex-1 下的元素创建为一个新的切片
-s := arr[startIndex:endIndex]
-
-// 缺省 endIndex 时将表示一直到 arr 的最后一个元素
-s := arr[startIndex:]
-
-// 缺省 startIndex 时将表示从 arr 的第一个元素开始
-s := arr[:endIndex]
-
-// 使用 make 函数来创建切片
-// len 是数组的长度并且也是切片的初始长度
-// capacity 为可选参数, 指定容量
-s := make([]int, len, capacity)
-```
-
-## len() 和 cap()
-
-- `len`获取切片长度。
-- `cap`计算切片的最大容量
-
-## append() 和 copy()
-
-- `append` 向切片追加新元素
-- `copy` 拷贝切片
-
-### append 的使用
-
-使用 `append` 函数时要注意，`append` 总是从 `slice` 的尾部开始追加数据。比如下面的代码：
+切片的结构体：
 
 ```go
-urls := make([]string, 3)
-append(urls, "hello")
-len(urls) // 4
-
-urls2 := make([]string, 0)
-append(urls, "hello")
-len(urls) // 1
+// src/reflect/value.go
+type SliceHeader struct {
+	Data uintptr // 指向底层数组
+	Len  int     // 长度
+	Cap  int     // 当前切片容量
+}
 ```
 
-## 切片操作
+### 切片是如何扩容的？ 
 
-### 截取切片
+`append` 是用来向 slice 追加元素的，并**返回一个新的 slice**。
 
-```go
-/* 创建切片 */
-numbers := []int{0,1,2,3,4,5,6,7,8}
+`append` 实际上就是向底层数组添加元素，但是数组的长度是固定的：
 
-/* 打印子切片从索引 1 (包含) 到索引 4(不包含)*/
-fmt.Println("numbers[1:4] ==", numbers[1:4]) // numbers[1:4] == [1 2 3]
+1. 当追加元素后长度大于底层数组的长度，slice 会
+2. 当追加元素后长度大于底层数组的长度，slice 会
+3. 
 
-/* 默认下限为 0*/
-fmt.Println("numbers[:3] ==", numbers[:3]) // numbers[:3] == [0 1 2]
-
-/* 默认上限为 len(s)*/
-fmt.Println("numbers[4:] ==", numbers[4:]) // numbers[4:] == [4 5 6 7 8]
-
-numbers1 := make([]int,0,5)
-
-/* 打印子切片从索引  0 (包含) 到索引 2 (不包含) */
-number2 := numbers[:2]
-fmt.Printf("len=%d cap=%d slice=%v\n",len(number2),cap(number2),number2) // len=2 cap=9 slice=[0 1]
-/* 打印子切片从索引 2 (包含) 到索引 5 (不包含) */
-number3 := numbers[2:5]
-fmt.Printf("len=%d cap=%d slice=%v\n",len(number3),cap(number3),number3) // len=3 cap=7 slice=[2 3 4]
-```
-
-### 切片初始化要注意的事情
-
-初始化切片可以使用两种方式：
-
-1. 比如 `s := []string{}`，这种方式初始化的切片长度为 0，不能直接使用下标赋值（`s[0] = "hello"`），会报错 `index out of range`。
-2. 使用 `make` 初始化切片，要注意使用 `append` 函数时，是从末尾开始添加数据，注意 `slice` 的 `len` 参数。
 
 ## 长度和容量
 
@@ -108,37 +61,6 @@ fmt.Printf("len=%d cap=%d slice=%v\n",len(number3),cap(number3),number3) // len=
 
 如果通过 `make` 函数创建 `Slice` 的时候指定了容量参数，那内存管理器会根据指定的容量的值先划分一块内存空间，然后才在其中存放有数组元素，多余部分处于空闲状态，在 `Slice` 上追加元素的时候，首先会放到这块空闲的内存中，如果添加的参数个数超过了容量值，内存管理器会重新划分一块容量值为原容量值 `*2` 大小的内存空间，依次类推。这个机制的好处在能够提升运算性能，因为内存的重新划分会降低性能。
 
-## 数据结构
-
-切片可以由如下的 `reflect.SliceHeader` 结构体表示，其中:
-
-```go
-type SliceHeader struct {
-  Data uintptr
-  Len  int
-  Cap  int
-}
-```
-
-- Data 是指向数组的指针;
-- Len 是当前切片的长度；
-- Cap 是当前切片的容量，即 Data 数组的大小：
-
-Data 是一片连续的内存空间，这片内存空间可以用于存储切片中的全部元素，数组中的元素只是逻辑上的概念，底层存储其实都是连续的，所以我们可以将切片理解成一片连续的内存空间加上长度与容量的标识。
-
-## 初始化
-
-三种初始化切片的方式：
-
-通过下标的方式获得数组或者切片的一部分；
-使用字面量初始化新的切片；
-使用关键字 make 创建切片：
-
-```go
-arr[0:3] or slice[0:3]
-slice := []int{1, 2, 3}
-slice := make([]int, 10)
-```
 
 ## 怎样估算切片容量的增长
 
