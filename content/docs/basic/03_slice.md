@@ -7,6 +7,25 @@ weight: 3
 
 切片 (slice) 在使用上和数组差不多，区别是切片是**可变长**的，定义的时候不需要指定 size。
 
+切片可以看做是对数组的一层简单的封装，切片的底层数据结构中，包含了一个数组。
+
+切片的结构体：
+
+```go
+// src/reflect/value.go
+type SliceHeader struct {
+	Data uintptr // 指向底层数组
+	Len  int     // 当前切片长度
+	Cap  int     // 当前切片容量
+}
+```
+
+注意 `Cap` 也是底层数组的长度。`Data` 是一块连续的内存，可以存储切片 `Cap` 大小的所有元素。
+
+![slice-struct](https://raw.githubusercontent.com/shipengqi/illustrations/76c579125ad122d2f1a4d9e605139af61da3a7c5/go/slice-struct.png)
+
+如图，虽然 slice 的 `Len` 是 5，但是底层数组的长度是 10，也就是 `Cap`。
+
 ## 初始化
 
 初始化切片有三种方式：
@@ -29,51 +48,108 @@ weight: 3
    s := numbers[:3]) // [0 1 2]
    ```
 
-
-
-切片的结构体：
+《Go 学习笔记》 第四版 中的示例：
 
 ```go
-// src/reflect/value.go
-type SliceHeader struct {
-	Data uintptr // 指向底层数组
-	Len  int     // 长度
-	Cap  int     // 当前切片容量
+package main
+
+import "fmt"
+
+func main() {
+	slice := []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+	s1 := slice[2:5]
+	s2 := s1[2:6:7]
+
+	s2 = append(s2, 100)
+	s2 = append(s2, 200)
+
+	s1[2] = 20
+
+	fmt.Println(s1)
+	fmt.Println(s2)
+	fmt.Println(slice)
 }
 ```
 
-### 切片是如何扩容的？ 
+输出：
+
+```
+[2 3 20]                
+[4 5 6 7 100 200]       
+[0 1 2 3 20 5 6 7 100 9]
+```
+
+示例中：
+
+- `s1 := slice[2:5]` 得到的 `s1` 的容量为 8，因为没有传入 `max`，容量默认是到底层数组的结尾。
+- `s2 := s1[2:6:7]` 得到的 `s2` 的容量为 5（`max - low`）。因为 `s2`，`s1` 和 `slice` 底层数组是同一个，所以 `s2` 中的元素是 `[4,5,6,7]`
+
+![slice-cut](https://raw.githubusercontent.com/shipengqi/illustrations/d28ded522afae7c5fec7cd9a38d6ba3e4287c52d/go/slice-cut.png)
+
+下面的 `s2 = append(s2, 100)` 追加一个元素，容量够用，不需要扩容，但是这个修改会影响所有指向这个底层数组的切片。
+
+![slice-cut-append](https://raw.githubusercontent.com/shipengqi/illustrations/d28ded522afae7c5fec7cd9a38d6ba3e4287c52d/go/slice-cut-append.png)
+
+再次追加一个元素 `s2 = append(s2, 200)`，`s2` 的容量不够了，需要扩容，于是 `s2` 申请一块新的连续内存，并将数据拷贝过去，扩容后的容量是原来的 2 倍。
+这时候 `s2` 的 `Data` 指向了新的底层数组，已经和 `s1` `slice` 没有关系了，对 `s2` 的修改不会再影响 `s1` `slice`。
+
+![slice-cut-append2](https://raw.githubusercontent.com/shipengqi/illustrations/d28ded522afae7c5fec7cd9a38d6ba3e4287c52d/go/slice-cut-append2.png)
+
+最后 `s1[2] = 20` 也不会再影响 `s2`。
+
+![slice-cut-append3](https://raw.githubusercontent.com/shipengqi/illustrations/d28ded522afae7c5fec7cd9a38d6ba3e4287c52d/go/slice-cut-append3.png)
+
+## 切片是如何扩容的？ 
 
 `append` 是用来向 slice 追加元素的，并**返回一个新的 slice**。
 
 `append` 实际上就是向底层数组添加元素，但是数组的长度是固定的：
 
-1. 当追加元素后长度大于底层数组的长度，slice 会
-2. 当追加元素后长度大于底层数组的长度，slice 会
-3. 
+当追加元素后切片的大小大于容量，runtime 会对切片进行扩容，这时会申请一块新的连续的内存空间，然后将原数据拷贝到新的内存空间，并且将 `append` 的元素添加到新的底层数组中，并返回这个新的切片。
 
+Go 1.18 后切片的扩容策略：
 
-## 长度和容量
+- 如果当前切片的容量（`oldcap`）小于 256，新切片的容量（`newcap`）为原来的 2 倍.
+- 如果当前切片的容量大于 256，计算新切片的容量的公式 `newcap = oldcap+(oldcap+3*256)/4`
 
-`Slice` 有两个比较混淆的概念，就是长度和容量。这个长度跟数组的长度是一个概念，即在内存中进行了初始化实际存在的元素的个数。
+## 切片传入函数
 
-何谓容量？
+Go 是值传递。那么传入一个切片，切片会不会被函数中的操作改变？
 
-如果通过 `make` 函数创建 `Slice` 的时候指定了容量参数，那内存管理器会根据指定的容量的值先划分一块内存空间，然后才在其中存放有数组元素，多余部分处于空闲状态，在 `Slice` 上追加元素的时候，首先会放到这块空闲的内存中，如果添加的参数个数超过了容量值，内存管理器会重新划分一块容量值为原容量值 `*2` 大小的内存空间，依次类推。这个机制的好处在能够提升运算性能，因为内存的重新划分会降低性能。
+**不管传入的是切片还是切片指针，如果改变了底层数组，原切片的底层数组也会被改变**。
 
+示例：
 
-## 怎样估算切片容量的增长
+```go
+package main
 
-一旦**一个切片无法容纳更多的元素，Go 语言就会想办法扩容。但它并不会改变原来的切片，而是会生成一个容量更大的切片，然后将把原有的元素和新元素一并拷贝到新切片中**。一般的情况下，你**可以简单地认为新切片的容量（以下简称新容量）将会是原切片容量（以下简称原容量）的 2 倍**。
+import "fmt"
 
-但是，当原切片的长度（以下简称原长度）大于或等于 1024 时，Go 语言将会以原容量的 1.25 倍作为新容量的基准（以下新容量基准）。新容量基准会被调整（不断地与 1.25 相乘），直到结果不小于原长度与要追加的元素数量之和（以下简称新长度）。最终，新容量往往会、比新长度大一些，当然，相等也是可能的。
+func appendFunc(s []int) {
+	s = append(s, 10, 20, 30)
+}
 
-一个切片的底层数组永远不会被替换。为什么？虽然在扩容的时候 Go 语言一定会生成新的底层数组，但是它也同时生成了新的切片。它是把新的切片作为了新底层数组的窗口，而没有对原切片及其底层数组做任何改动。
+func appendPtrFunc(s *[]int) {
+   *s = append(*s, 10, 20, 30)
+}
 
-**在无需扩容时，`append` 函数返回的是指向“原底层数组”的新切片，而在需要扩容时，`append` 函数返回的是指向“新底层数组”的新切片**。
+func main() {
+	sl := make([]int, 0, 10)
 
-在分配内存空间之前需要先确定新的切片容量，运行时根据切片的当前容量选择不同的策略进行扩容：
+	appendFunc(sl)
+	// appendFunc 修改的是 sl 的副本，len 和 cap 并没有被修改，下面的输出是 []
+	fmt.Println(sl) // []
+	// appendFunc，虽然没有修改 len 和 cap，但是底层数组是被修改了的，所以下面的输出会包含 10 20 30
+	fmt.Println(sl[:10]) // [10 20 30 0 0 0 0 0 0 0]
+	// 为什么 sl[:10] 和 sl[:] 的输出不同，是因为 go 的切片的一个优化
+	// slice[low:high] 中的 high，最大的取值范围对应着切片的容量（cap），不是单纯的长度（len）。
+	// sl[:10] 可以输出容量范围内的值，并且没有越界。
+	// sl[:] 由于 len 为 0，并且没有指定最大索引。high 则会取 len 的值，所以输出为 []
+	fmt.Println(sl[:]) // []
 
-- 如果期望容量大于当前容量的两倍就会使用期望容量；
-- 如果当前切片的长度小于 1024 就会将容量翻倍；
-- 如果当前切片的长度大于 1024 就会每次增加 25% 的容量，直到新容量大于期望容量；
+   slptr := make([]int, 0, 10)
+   appendPtrFunc(&slptr)
+   // 这里传入的是切片的指针，会改变外层的 slptr
+   fmt.Println(slptr) // [10 20 30]
+}
+```
