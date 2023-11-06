@@ -1,5 +1,5 @@
 ---
-title: Go Learning
+title: 主要内容
 ---
 
 # Go Learning

@@ -226,7 +226,7 @@ func readyWithTime(s *sudog, traceskip int) {
 - `TryAcquire(n int64) bool`：尝试获取 n 个资源，但是它不会阻塞，成功获取 n 个资源则返回 `true`。否则一个也不获取，返回 `false`。
 
 
-## 使用
+### 使用
 
 ```go
 var (
