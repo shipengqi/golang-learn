@@ -64,8 +64,6 @@ type StringHeader struct {
 
 ### 字符串拼接
 
-字符串是只读的，虽然可以通过 `string[index]` 获取某个索引位置的字节值，但是不能使用 `string[index] = "string2"` 这种方式来修改字符串。可以将其转为可变类型（`[]rune` 或 `[]byte`），完成后再转回来。
-
 拼接字符串的几种方式：
 
 #### `+` 拼接字符串
@@ -105,3 +103,7 @@ b1.WriteString("DEF")
 
 fmt.Print(b1.String())
 ```
+
+### 类型转换
+
+在日常开发中，`string` 和 `[]byte` 之间的转换是很常见的，不管是 `string` 转 `[]byte` 还是 `[]byte` 转 `string` 都需要拷贝数据，而内存拷贝带来的性能损耗会随着字符串和 `[]byte` 长度的增长而增长。
