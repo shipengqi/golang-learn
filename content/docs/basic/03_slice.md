@@ -82,7 +82,7 @@ func main() {
 示例中：
 
 - `s1 := slice[2:5]` 得到的 `s1` 的容量为 8，因为没有传入 `max`，容量默认是到底层数组的结尾。
-- `s2 := s1[2:6:7]` 得到的 `s2` 的容量为 5（`max - low`）。因为 `s2`，`s1` 和 `slice` 底层数组是同一个，所以 `s2` 中的元素是 `[4,5,6,7]`
+- `s2 := s1[2:6:7]` 得到的 `s2` 的容量为 5（`max - low`）。`s2`，`s1` 和 `slice` 底层数组是同一个，所以 `s2` 中的元素是 `[4,5,6,7]`。
 
 ![slice-cut](https://raw.githubusercontent.com/shipengqi/illustrations/d28ded522afae7c5fec7cd9a38d6ba3e4287c52d/go/slice-cut.png)
 
