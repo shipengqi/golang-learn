@@ -9,11 +9,24 @@ weight: 4
 
 ## 哈希表的设计原理
 
+哈希表其实是数组的扩展。哈希表是利用数组可以根据下标随机访问（时间复杂度是 `O(1)`）这一特性来实现快速查找的。
+
+哈希表是通过**哈希函数**将 key 转化为数组的下标，然后将数据存储在数组下标对应的位置。查询时，也是同样的使用哈希函数计算出数组下标，从下标对应的位置取出数据。
+
+哈希函数的基本要求：
+
+1. 哈希函数计算出来的值是一个非负整数。
+2. 如果 `key1 == key2` 那么 `hash(key1) == hash(key2)`
+3. 如果 `key1 != key2` 那么 `hash(key1) != hash(key2)`
+
+
 实现哈希表的两个关键点：**哈希函数**和**冲突解决**。
 
 哈希表使用哈希函数将 key 分配到不同的桶，
 
 ### 哈希函数
+
+
 
 #### delete()
 
@@ -145,23 +158,22 @@ index := hash("Key6") % array.len
 
 ```go
 type hmap struct {
- count     int        // 哈希表中的元素数量
- flags     uint8      // 状态标识，主要是 goroutine 写入和扩容机制的相关状态控制。并发读写的判断条件之一就是该值
- B         uint8      // 哈希表持有的 buckets 数量，但是因为哈希表中桶的数量都 2 的倍数，所以该字段会存储对数，也就是 len(buckets) == 2^B
- noverflow uint16     // 溢出桶的数量
- hash0     uint32     // 哈希的种子，它能为哈希函数的结果引入随机性，这个值在创建哈希表时确定，并在调用哈希函数时作为参数传入
-
- buckets    unsafe.Pointer  // 当前桶
- oldbuckets unsafe.Pointer  // 哈希在扩容时用于保存之前 buckets 的字段，它的大小是当前 buckets 的一半
- nevacuate  uintptr         // 迁移进度
-
- extra *mapextra
+	count     int        // 哈希表中的元素数量 
+	flags     uint8      // 状态标识，主要是 goroutine 写入和扩容机制的相关状态控制。并发读写的判断条件之一就是该值 
+	B         uint8      // 哈希表持有的 buckets 数量，但是因为哈希表中桶的数量都 2 的倍数，所以该字段会存储对数，也就是 len(buckets) == 2^B 
+	noverflow uint16     // 溢出桶的数量 
+	hash0     uint32     // 哈希的种子，它能为哈希函数的结果引入随机性，这个值在创建哈希表时确定，并在调用哈希函数时作为参数传入
+	
+	buckets    unsafe.Pointer  // 当前桶
+	oldbuckets unsafe.Pointer  // 哈希在扩容时用于保存之前 buckets 的字段，它的大小是当前 buckets 的一半 
+	nevacuate  uintptr         // 迁移进度
+	extra *mapextra
 }
 
 type mapextra struct {
- overflow    *[]*bmap   为 hmap.buckets （当前）溢出桶的指针地址
- oldoverflow *[]*bmap   为 hmap.oldbuckets （旧）溢出桶的指针地址
- nextOverflow *bmap     为空闲溢出桶的指针地址
+	overflow    *[]*bmap   为 hmap.buckets （当前）溢出桶的指针地址
+	oldoverflow *[]*bmap   为 hmap.oldbuckets （旧）溢出桶的指针地址
+	nextOverflow *bmap     为空闲溢出桶的指针地址
 }
 ```
 
