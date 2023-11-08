@@ -1,50 +1,32 @@
 ---
-title: map
+title: 哈希表
 weight: 4
 ---
 
-# map
+# 哈希表
 
-`map` 是一个无序的 `key/value` 对的集合。**`map` 是引用类型**。这意味着它拥有对底层数据结构的引用，
-就像指针一样。它底层的数据结构是 `hash table` 或 `hash map`。
+`map` 是一个无序的 `key/value` 对的集合，同一个 key 只会出现一次。
 
-`map` 作为引用类型是非常好的，因为无论 `map` 有多大，都只会有一个副本。
+## 哈希表的设计原理
 
-定义 `map`，使用 `map` 关键字：
+哈希表其实是数组的扩展。哈希表是利用数组可以根据下标随机访问（时间复杂度是 `O(1)`）这一特性来实现快速查找的。
 
-```go
-/* 声明变量，默认 map 是 nil */
-var 变量名 map[键类型]值类型
+哈希表是通过**哈希函数**将 key 转化为数组的下标，然后将数据存储在数组下标对应的位置。查询时，也是同样的使用哈希函数计算出数组下标，从下标对应的位置取出数据。
 
-/* 使用 make 函数 */
-变量名 := make(map[键类型]值类型)
+哈希函数的基本要求：
 
-/* 字面值的语法创建 */
-变量名 := map[键类型]值类型{
-  key1: value1,
-  key2: value2,
-  ...
-}
-```
+1. 哈希函数计算出来的值是一个非负整数。
+2. 如果 `key1 == key2` 那么 `hash(key1) == hash(key2)`
+3. 如果 `key1 != key2` 那么 `hash(key1) != hash(key2)`
 
-一个 `map` 在未初始化之前默认为 `nil`。
-通过索引下标 `key` 来访问 `map` 中对应的 `value`
 
-```go
-age, ok := ages["bob"]
-if !ok { /* "bob" is not a key in this map; age == 0. */ }
-```
+实现哈希表的两个关键点：**哈希函数**和**冲突解决**。
 
-`ok` 表示操作结果，是一个布尔值。**这叫做 `ok-idiom` 模式，就是在多返回值中返回一个 `ok` 布尔值，表示是否操作
-成功**。
+哈希表使用哈希函数将 key 分配到不同的桶，
 
-使用 `map` 过程中需要注意的几点：
+### 哈希函数
 
-- **`map` 是无序的，每次打印出来的 `map` 都会不一样**，它不能通过 `index` 获取，而必须通过 `key` 获取
-- `map` 的长度是不固定的，也就是和 `slice` 一样，也是一种引用类型
-- 内置的 `len` 函数同样适用于 `map`，返回 `map` 拥有的 `key` 的数量
-- `map` 的值可以很方便的修改，通过 `numbers["one"]=11` 可以很容易的把 `key` 为 `one` 的字典值改为 11
-- **`map` 和其他基本型别不同，它不是 `thread-safe` 的**，在多个 `go-routine` 存取时，必须使用 `mutex lock` 机制
+
 
 #### delete()
 
@@ -176,23 +158,22 @@ index := hash("Key6") % array.len
 
 ```go
 type hmap struct {
- count     int        // 哈希表中的元素数量
- flags     uint8      // 状态标识，主要是 goroutine 写入和扩容机制的相关状态控制。并发读写的判断条件之一就是该值
- B         uint8      // 哈希表持有的 buckets 数量，但是因为哈希表中桶的数量都 2 的倍数，所以该字段会存储对数，也就是 len(buckets) == 2^B
- noverflow uint16     // 溢出桶的数量
- hash0     uint32     // 哈希的种子，它能为哈希函数的结果引入随机性，这个值在创建哈希表时确定，并在调用哈希函数时作为参数传入
-
- buckets    unsafe.Pointer  // 当前桶
- oldbuckets unsafe.Pointer  // 哈希在扩容时用于保存之前 buckets 的字段，它的大小是当前 buckets 的一半
- nevacuate  uintptr         // 迁移进度
-
- extra *mapextra
+	count     int        // 哈希表中的元素数量 
+	flags     uint8      // 状态标识，主要是 goroutine 写入和扩容机制的相关状态控制。并发读写的判断条件之一就是该值 
+	B         uint8      // 哈希表持有的 buckets 数量，但是因为哈希表中桶的数量都 2 的倍数，所以该字段会存储对数，也就是 len(buckets) == 2^B 
+	noverflow uint16     // 溢出桶的数量 
+	hash0     uint32     // 哈希的种子，它能为哈希函数的结果引入随机性，这个值在创建哈希表时确定，并在调用哈希函数时作为参数传入
+	
+	buckets    unsafe.Pointer  // 当前桶
+	oldbuckets unsafe.Pointer  // 哈希在扩容时用于保存之前 buckets 的字段，它的大小是当前 buckets 的一半 
+	nevacuate  uintptr         // 迁移进度
+	extra *mapextra
 }
 
 type mapextra struct {
- overflow    *[]*bmap   为 hmap.buckets （当前）溢出桶的指针地址
- oldoverflow *[]*bmap   为 hmap.oldbuckets （旧）溢出桶的指针地址
- nextOverflow *bmap     为空闲溢出桶的指针地址
+	overflow    *[]*bmap   为 hmap.buckets （当前）溢出桶的指针地址
+	oldoverflow *[]*bmap   为 hmap.oldbuckets （旧）溢出桶的指针地址
+	nextOverflow *bmap     为空闲溢出桶的指针地址
 }
 ```
 

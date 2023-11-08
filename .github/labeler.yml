@@ -1,7 +1,7 @@
 # Works with https://github.com/actions/labeler/
 # Below this line, the keys are labels to be applied, and the values are the file globs to match against.
 
-concurrency: content/concurrency/*
-basic: content/basic/*
-practice: content/practice/*
-advance: content/advance/*
+concurrency: content/docs/concurrency/*
+basic: content/docs/basic/*
+practice: content/docs/practice/*
+advance: content/docs/advance/*
