@@ -63,14 +63,19 @@ var wg sync.WaitGroup go func(){ wg.</description></item><item><title>切片</ti
 runtime/pprof：采集程序（非 Server）的运行数据进行分析 net/http/pprof：采集 HTTP Server 的运行时数据进行分析 主要可以用于：
 CPU Profiling：CPU 分析，按照一定的频率采集所监听的应用程序 CPU（含寄存器）的使用情况，可确定应用程序在主动消耗 CPU 周期 时花费时间的位置。 Memory Profiling：内存分析，在应用程序进行堆分配时记录堆栈跟踪，用于监视当前和历史内存使用情况，以及检查内存泄漏。 Block Profiling：阻塞分析，记录 goroutine 阻塞等待同步（包括定时器通道）的位置。 Mutex Profiling：互斥锁分析，报告互斥锁的竞争情况。 性能分析 # 分析 HTTP Server # Web # import ( &amp;#34;log&amp;#34; &amp;#34;net/http&amp;#34; _ &amp;#34;net/http/pprof&amp;#34; ) var datas []string func Add(str string) string { data := []byte(str) sData := string(data) datas = append(datas, sData) return sData } func main() { go func() { for { log.</description></item><item><title>哈希表</title><link>https://shipengqi.github.io/golang-learn/docs/basic/04_map/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/basic/04_map/</guid><description>哈希表 # map 是一个无序的 key/value 对的集合，同一个 key 只会出现一次。
 哈希表的设计原理 # 哈希表其实是数组的扩展。哈希表是利用数组可以根据下标随机访问（时间复杂度是 O(1)）这一特性来实现快速查找的。
-哈希表是通过哈希函数将 key 转化为数组的下标，然后将数据存储在数组下标对应的位置。查询时，也是同样的使用哈希函数计算出数组下标，从下标对应的位置取出数据。
+哈希函数 # 哈希表是通过哈希函数将 key 转化为数组的下标，然后将数据存储在数组下标对应的位置。查询时，也是同样的使用哈希函数计算出数组下标，从下标对应的位置取出数据。
 哈希函数的基本要求：
-哈希函数计算出来的值是一个非负整数。 如果 key1 == key2 那么 hash(key1) == hash(key2) 如果 key1 != key2 那么 hash(key1) != hash(key2) 实现哈希表的两个关键点：哈希函数和冲突解决。
-哈希表使用哈希函数将 key 分配到不同的桶，
-哈希函数 # delete() # delete 函数删除 map 元素。
-delete(mapName, key) 遍历 # 可以使用 for range 遍历 map：
-for key, value := range mapName { fmt.Println(mapName[key]) } Map 的迭代顺序是不确定的。可以先使用 sort 包排序。
-map 为什么是无序的 # 编译器对于 slice 和 map 的循环迭代有不同的实现方式，for 遍历 map，调用了两个方法：</description></item><item><title>条件变量</title><link>https://shipengqi.github.io/golang-learn/docs/concurrency/04_cond/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/concurrency/04_cond/</guid><description>条件变量 # Go 标准库提供了条件变量 sync.Cond 它可以让一组的 goroutine 都在满足特定条件时被唤醒。
+哈希函数计算出来的值是一个非负整数。 如果 key1 == key2 那么 hash(key1) == hash(key2) 如果 key1 != key2 那么 hash(key1) != hash(key2) 第三点，想要实现一个不同的 key 对应的哈希值绝对不一样的哈希函数，几乎是不可能的，也就说无法避免哈希冲突。
+常用的处理哈希冲突的方法有两种：开放寻址法和链表法。
+开放寻址法 # 开放寻址法核心思想是，如果出现了哈希冲突，就重新探测一个空闲位置，将其插入。
+上图蓝色表示已经插入的元素，key9 哈希后得到的数组下标为 6，但是已经有数据了，产生了冲突。那么就按顺序向后查找直到找到一个空闲的位置，如果到数组的尾部都没有找到空闲的位置，就从头开始继续找。 上图最终找到位置 1 并插入元素。
+查找的逻辑和插入类似，从哈希函数计算出来的下标位置开始查找，比较数组中下标位置的元素和要查找的元素。如果相等，则说明就是要找的元素；否则就顺序往后依次查找。直到找到数组中的空闲位置，还没有找到，就说明要查找的元素并没有在哈希表中。
+可以看出当数组中空闲位置不多的时候，哈希冲突的概率就会大大提高。装载因子（load factor）就是用来表示空位的多少。
+装载因子=已插入的元素个数/哈希表的长度 装载因子越大，说明空闲位置越少，冲突越多，哈希表的性能会下降。
+链表法 # 链表法是最常见的哈希冲突的解决办法。在哈希表中，每个桶（bucket）会对应一条链表，所有哈希值相同的元素都放到相同桶对应的链表中。
+插入时，哈希函数计算后得出存放在几号桶，然后遍历桶中的链表了：
+找到键相同的键值对，则更新键对应的值； 没有找到键相同的键值对，则在链表的末尾追加新的键值对 链表法实现的哈希表的装载因子：
+装载因子=已插入的元素个数/桶数量 Go map 原理 # 表示 map 的结构体是 hmap：</description></item><item><title>条件变量</title><link>https://shipengqi.github.io/golang-learn/docs/concurrency/04_cond/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/concurrency/04_cond/</guid><description>条件变量 # Go 标准库提供了条件变量 sync.Cond 它可以让一组的 goroutine 都在满足特定条件时被唤醒。
 sync.Cond 不是一个常用的同步机制，但是在条件长时间无法满足时，与使用 for {} 进行忙碌等待相比，sync.Cond 能够让出处理器的使用权，提高 CPU 的利用率。
 sync.Cond 基于互斥锁/读写锁，它和互斥锁的区别是什么？
 互斥锁 sync.Mutex 通常用来保护临界区和共享资源，条件变量 sync.Cond 用来协调想要访问共享资源的 goroutine。
@@ -157,7 +162,9 @@ numbers1 := []int{1, 2, 3, 4, 5, 6} for i := range numbers1 { if i == 3 { number
 使用 # package main import ( &amp;#34;fmt&amp;#34; &amp;#34;time&amp;#34; &amp;#34;golang.org/x/sync/singleflight&amp;#34; ) func GetValueFromRedis(key string) string { fmt.Println(&amp;#34;query ...&amp;#34;) time.Sleep(10 * time.Second) // 模拟一个比较耗时的操作 return &amp;#34;singleflight demo&amp;#34; } func main() { requestGroup := new(singleflight.Group) cachekey := &amp;#34;demokey&amp;#34; go func() { v1, _, shared := requestGroup.Do(cachekey, func() (interface{}, error) { ret := GetValueFromRedis(cachekey) return ret, nil }) fmt.</description></item><item><title>defer</title><link>https://shipengqi.github.io/golang-learn/docs/basic/12_defer/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/basic/12_defer/</guid><description>defer # 堆上分配 # 编译器不仅将 defer 关键字都转换成 runtime.deferproc 函数，它还会通过以下三个步骤为所有调用 defer 的函数末尾插入 runtime.deferreturn 的函数调用
 runtime.deferproc 负责创建新的延迟调用； runtime.deferreturn 负责在函数调用结束时执行所有的延迟调用；
 runtime.deferproc 会为 defer 创建一个新的 runtime._defer 结构体、设置它的函数指针 fn、程序计数器 pc 和栈指针 sp 并将相关的参数拷贝到相邻的内存空间中：
-func deferproc(siz int32, fn *funcval) { sp := getcallersp() argp := uintptr(unsafe.Pointer(&amp;amp;fn)) + unsafe.Sizeof(fn) callerpc := getcallerpc() d := newdefer(siz) if d._panic != nil { throw(&amp;#34;deferproc: d.panic != nil after newdefer&amp;#34;) } d.fn = fn d.pc = callerpc d.sp = sp switch siz { case 0: case sys.</description></item><item><title>panic</title><link>https://shipengqi.github.io/golang-learn/docs/basic/13_panic/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/basic/13_panic/</guid><description>panic # Panic 异常 # Go 运行时错误会引起 painc 异常。 一般而言，当 panic 异常发生时，程序会中断运行，并立即执行在该 goroutine 中被延迟的函数（defer 机制）。随后，程序崩溃 并输出日志信息。
+func deferproc(siz int32, fn *funcval) { sp := getcallersp() argp := uintptr(unsafe.Pointer(&amp;amp;fn)) + unsafe.Sizeof(fn) callerpc := getcallerpc() d := newdefer(siz) if d._panic != nil { throw(&amp;#34;deferproc: d.panic != nil after newdefer&amp;#34;) } d.fn = fn d.pc = callerpc d.sp = sp switch siz { case 0: case sys.</description></item><item><title>ErrGroup</title><link>https://shipengqi.github.io/golang-learn/docs/concurrency/12_errorgroup/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/concurrency/12_errorgroup/</guid><description>ErrGroup # Go 的扩展库 golang.org/x/sync 提供了 errgroup 包，它是基于 WaitGroup 实现的，功能上和 WaitGroup 类似，不过可以通过上下文取消，控制并发数量，还能返回错误。
+使用 # 最简单的使用方式：
+package main import ( &amp;#34;errors&amp;#34; &amp;#34;fmt&amp;#34; &amp;#34;time&amp;#34; &amp;#34;golang.org/x/sync/errgroup&amp;#34; ) func main() { var g errgroup.Group // g, ctx := errgroup.WithContext(context.Background()) g.Go(func() error { time.Sleep(5 * time.Second) fmt.Println(&amp;#34;exec 1&amp;#34;) return nil }) g.Go(func() error { time.Sleep(10 * time.Second) fmt.Println(&amp;#34;exec 2&amp;#34;) return errors.New(&amp;#34;failed to exec 2&amp;#34;) }) if err := g.Wait(); err == nil { fmt.Println(&amp;#34;exec done&amp;#34;) } else { fmt.</description></item><item><title>panic</title><link>https://shipengqi.github.io/golang-learn/docs/basic/13_panic/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/basic/13_panic/</guid><description>panic # Panic 异常 # Go 运行时错误会引起 painc 异常。 一般而言，当 panic 异常发生时，程序会中断运行，并立即执行在该 goroutine 中被延迟的函数（defer 机制）。随后，程序崩溃 并输出日志信息。
 由于 panic 会引起程序的崩溃，因此 panic 一般用于严重错误，如程序内部的逻辑不一致。但是对于大部分漏洞，我们应该使 用 Go 提供的错误机制，而不是 panic，尽量避免程序的崩溃。
 panic 函数 # panic 函数接受任何值作为参数。当某些不应该发生的场景发生时，我们就应该调用 panic。
 panic 详情中都有什么 # panic: runtime error: index out of range goroutine 1 [running]: main.main() /Users/haolin/GeekTime/Golang_Puzzlers/src/puzzlers/article19/q0/demo47.go:5 +0x3d exit status 2 第一行是 panic: runtime error: index out of range。其中的 runtime error 的含义是，这是一个 runtime 代码包中 抛出的 panic。
