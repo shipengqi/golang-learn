@@ -144,3 +144,155 @@ func deferprocStack(d *_defer) {
 编译期间判断 defer 关键字、return 语句的个数确定是否开启开放编码优化；
 通过 deferBits 和 cmd/compile/internal/gc.openDeferInfo 存储 defer 关键字的相关信息；
 如果 defer 关键字的执行可以在编译期间确定，会在函数返回前直接插入相应的代码，否则会由运行时的 runtime.deferreturn 处理；
+
+
+
+
+
+## 关键字 defer
+
+在普通函数或方法前加关键字 `defer`，会使函数或方法延迟执行，直到包含该 `defer` 语句的函数执行完毕时（**无论函数是否出错**），
+`defer` 后的函数才会被执行。
+
+Go官方文档中对 `defer` 的执行时机做了阐述，分别是。
+
+- 包裹 `defer` 的函数返回时
+- 包裹 `defer` 的函数执行到末尾时
+- 所在的 goroutine 发生 panic 时
+
+**注意：** 调用 `os.Exit` 时 `defer` 不会被执行。
+
+`defer` 语句一般被用于处理成对的操作，如打开、关闭、连接、断开连接、加锁、释放锁。因为 `defer` 可以保证让你更任何情况下，
+资源都会被释放。
+
+```go
+package ioutil
+func ReadFile(filename string) ([]byte, error) {
+ f, err := os.Open(filename)
+ if err != nil {
+   return nil, err
+ }
+ defer f.Close()
+ return ReadAll(f)
+}
+
+// 互斥锁
+var mu sync.Mutex
+var m = make(map[string]int)
+func lookup(key string) int {
+ mu.Lock()
+ defer mu.Unlock()
+ return m[key]
+}
+
+// 记录何时进入和退出函数
+func bigSlowOperation() {
+ defer trace("bigSlowOperation")() // 运行 trace 函数，记录了进入函数的时间，并返回一个函数值，这个函数值会延迟执行
+ extra parentheses
+ // ...lots of work…
+ time.Sleep(10 * time.Second) // simulate slow
+ operation by sleeping
+}
+func trace(msg string) func() {
+ start := time.Now()
+ log.Printf("enter %s", msg)
+ return func() { 
+  log.Printf("exit %s (%s)", msg,time.Since(start)) 
+ }
+}
+
+// 观察函数的返回值
+func double(x int) (result int) { // 有名返回值
+  // 由于 defer 在 return 之后执行，所以这里的 result 就是函数最终的返回值
+ defer func() { fmt.Printf("double(%d) = %d\n", x,result) }()
+
+ return x + x
+}
+
+_ = double(4) // 输出 "double(4) = 8"
+```
+
+上面的例子中我们知道 `defer` 函数可以观察函数返回值，`defer` 函数还可以修改函数的返回值：
+
+```go
+func triple(x int) (result int) {
+ defer func() { result += x }()
+ return double(x)
+}
+fmt.Println(triple(4)) // "12"
+```
+
+### defer 的性能
+
+相比直接用 CALL 汇编指令调用函数，`defer` 要花费更大代价，包括注册，调用操作，额为的缓存开销。
+
+```go
+func call () {
+ m.Lock()
+ m.Unlock()
+}
+
+func deferCall()  {
+ m.Lock()
+ defer m.Unlock()
+}
+
+func BenchmarkCall(b *testing.B)  {
+ for i := 0; i < b.N; i ++ {
+  call()
+ }
+}
+
+
+func BenchmarkDeferCall(b *testing.B)  {
+ for i := 0; i < b.N; i ++ {
+  deferCall()
+ }
+}
+```
+
+```sh
+$ go test -bench=.
+goos: windows
+goarch: amd64
+pkg: github.com/shipengqi/golang-learn/demos/defers
+BenchmarkCall-8         92349604                12.9 ns/op
+BenchmarkDeferCall-8    34305316                36.3 ns/op
+PASS
+ok      github.com/shipengqi/golang-learn/demos/defers  2.571s
+
+```
+
+性能相差三倍，尽量避免使用 `defer`。
+
+### 什么时候不应该使用 defer
+
+比如处理日志文件，不恰当的 `defer` 会导致关闭文件延时。
+
+```go
+func main() {
+    for i := 0; i < 100; i ++ {
+        f, err := os.Open(fmt.Sprintf("%d.log", i))
+        if err != nil {
+            continue
+        }
+        defer f.Close()
+        // something
+    }
+}
+
+```
+
+上面的 `defer` 导致所有的 `f` 都是在 `main` 函数退出时才调用，白白消耗了资源。所以应该直接调用 `Close` 函数，
+将文件操作封装到一个函数中，在该函数中调用 `Close` 函数。
+
+### 如果一个函数中有多条 defer 语句，那么那几个 defer 函数调用的执行顺序是怎样的
+
+在同一个函数中，**`defer` 函数调用的执行顺序与它们分别所属的 `defer` 语句的出现顺序（更严谨地说，是执行顺序）完全相反**。
+
+在 `defer` 语句每次执行的时候，Go 语言会把它携带的 `defer` 函数及其参数值另行存储到一个队列中。
+
+这个队列与该 `defer` 语句所属的函数是对应的，并且，它是先进后出（FILO）的，相当于一个栈。
+
+在需要执行某个函数中的 `defer` 函数调用的时候，Go 语言会先拿到对应的队列，然后从该队列中一个一个地取出 `defer` 函数及
+其参数值，并逐个执行调用。
