@@ -1,5 +1,5 @@
 ---
-title: 基础据类型
+title: 基础数据类型
 weight: 1
 ---
 
@@ -68,20 +68,15 @@ type StringHeader struct {
 
 #### `+` 拼接字符串
 
-例如 `fmt.Println("hello" + s[5:])` 输出 `"hello, world"`。这种方式每次运算都会产生一个新的字符串，需要重新分配内存，会给内存分配和 GC 带来额外的负担，所以性能比较差。
+例如 `fmt.Println("hello" + s[5:])` 输出 `"hello, world"`。使用 `+` 来拼接两个字符串时，它会申请一块新的内存空间，大小是两个字符串的大小之和。拼接第三个字符串时，再申请一块新的内存空间，大小是三个字符串大小之和。这种方式每次运算都需要重新分配内存，会给内存分配和 GC 带来额外的负担，所以性能比较差。
 
 #### fmt.Sprintf
 
 `fmt.Sprintf()` 拼接字符串，内部使用 `[]byte` 实现，不像直接运算符这种会产生很多临时的字符串，但是内部的逻辑比较复杂，有很多额外的判断，还用到了 `interface`，所以性能一般。
 
-#### strings.Join
-
-`strings.Join()` 拼接字符串，`Join` 会先根据字符串数组的内容，计算出一个拼接之后的长度，然后申请对应大小的内存，一个一个字符串填入，在已有一个数组的情况下，这种效率会很高，但是本来没有，去构造
-这个数据的代价也不小。
-
 #### bytes.Buffer
 
-利用 `bytes.Buffer` 拼接字符串，是比较理想的一种方式。对内存的增长有优化，如果能预估字符串的长度，还可以用 `buffer.Grow()` 接口来设置 `capacity`。
+利用 `bytes.Buffer` 拼接字符串，是比较理想的一种方式。对内存的增长有优化，如果能预估字符串的长度，还可以用 `buffer.Grow` 接口来设置 `capacity`。
 
 ```go
 var buffer bytes.Buffer
@@ -102,6 +97,32 @@ b1.WriteString("ABC")
 b1.WriteString("DEF")
 
 fmt.Print(b1.String())
+```
+
+`Builder.Grow` 方法可以预分配内存。
+
+推荐使用 `strings.Builder` 来拼接字符串。
+
+`strings.Builder` 性能上比 `bytes.Buffer` 略快，一个比较重要的区别在于，`bytes.Buffer` 转化为字符串时重新申请了一块空间，存放生成的字符串变量，而 `strings.Builder` 直接将底层的 `[]byte` 转换成了字符串类型并返回。
+
+`bytes.Buffer`：
+
+```go
+func (b *Buffer) String() string {
+	if b == nil {
+		// Special case, useful in debugging.
+		return "<nil>"
+	}
+	return string(b.buf[b.off:])
+}
+```
+
+`strings.Builder`：
+
+```go
+func (b *Builder) String() string {
+	return unsafe.String(unsafe.SliceData(b.buf), len(b.buf))
+}
 ```
 
 ### 类型转换
