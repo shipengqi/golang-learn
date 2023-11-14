@@ -4,3 +4,5 @@ weight: 8
 ---
 
 # 泛型
+
+Coming soon ...
