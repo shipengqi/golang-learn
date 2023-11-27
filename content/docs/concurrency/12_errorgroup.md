@@ -53,7 +53,7 @@ func main() {
   - 如果返回 `nil`，表示所有 goroutine 都成功执行。
 
 
-限制 goroutine 的并发数量：
+### 限制 goroutine 的并发数量
 
 ```go
 package main
@@ -95,7 +95,7 @@ func main() {
   
 ## 原理
 
-`Group` 的结构体：
+`errgroup.Group` 的结构体：
 
 ```go
 type Group struct {

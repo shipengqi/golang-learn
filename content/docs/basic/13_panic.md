@@ -1,6 +1,7 @@
 ---
 title: panic
 weight: 13
+draft: true
 ---
 
 # panic

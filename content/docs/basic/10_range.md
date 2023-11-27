@@ -1,6 +1,7 @@
 ---
 title: range
 weight: 10
+draft: true
 ---
 
 # range
