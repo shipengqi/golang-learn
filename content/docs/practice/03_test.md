@@ -1,6 +1,7 @@
 ---
 title: Go 测试
 weight: 3
+draft: true
 ---
 
 # Go 测试
