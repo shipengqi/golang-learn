@@ -102,7 +102,7 @@ type Mutex struct {
 
 `state` 和 `sema` 加起来占用 8 个字节。
 
-state 是一个复合型的字段，包含多个意义：
+`state` 是一个复合型的字段，包含多个意义：
 
 ![mutex-state](https://raw.githubusercontent.com/shipengqi/illustrations/132b0f97ec250e221f725cbeb2d5c323a35f1cfe/go/mutex-state.png)
 
