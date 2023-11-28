@@ -1,0 +1,410 @@
+<!doctype html><html lang=en dir=ltr><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="基于 GitHub Actions 的 CI/CD # 静态代码检查 # GitHub Actions 是 GitHub 为托管在 github.com 站点的项目提供的持续集成服务。
+在构建持续集成任务时，我们会在任务中心完成各种操作，比如克隆代码、编译代码、运行单元测试、构建和发布镜像等。GitHub 把这些操作称为 Actions。
+Actions 是可以共享的，开发者可以将 Actions 上传到 GitHub 的 Actions 市场。 一个 awesome actions 仓库，里面也有不少的 Action。如果需要某个 Action，直接引用他人写好的 Action 即可。 整个持续集成过程，就变成了一个 Actions 的组合。
+Action 其实是一个独立的脚本，可以将 Action 存放在 GitHub 代码仓库中，通过 <userName>/<repoName> 的语法引用 Action。例如， actions/checkout@v2 表示 https://github.com/actions/checkout 这个仓库，tag 是 v2。
+GitHub Actions 术语：
+workflow：一个 .yml 文件对应一个 workflow，也就是一次持续集成。一个 GitHub 仓库可以包含多个 workflow，只要是在 .github/workflow 目录下的 .yml 文件都会被 GitHub 执行。 job：一个 workflow 由一个或多个 job 构成，每个 job 代表一个持续集成任务。 step：每个 job 由多个 step 构成，一步步完成。 action：每个 step 可以依次执行一个或多个命令（action）。 on：一个 workflow 的触发条件，决定了当前的 workflow 在什么时候被执行。 workflow 文件 # GitHub Actions 配置文件存放在代码仓库的 ."><meta name=theme-color media="(prefers-color-scheme: light)" content="#ffffff"><meta name=theme-color media="(prefers-color-scheme: dark)" content="#343a40"><meta name=color-scheme content="light dark"><meta property="og:title" content="基于 GitHub Actions 的 CI/CD"><meta property="og:description" content="基于 GitHub Actions 的 CI/CD # 静态代码检查 # GitHub Actions 是 GitHub 为托管在 github.com 站点的项目提供的持续集成服务。
+在构建持续集成任务时，我们会在任务中心完成各种操作，比如克隆代码、编译代码、运行单元测试、构建和发布镜像等。GitHub 把这些操作称为 Actions。
+Actions 是可以共享的，开发者可以将 Actions 上传到 GitHub 的 Actions 市场。 一个 awesome actions 仓库，里面也有不少的 Action。如果需要某个 Action，直接引用他人写好的 Action 即可。 整个持续集成过程，就变成了一个 Actions 的组合。
+Action 其实是一个独立的脚本，可以将 Action 存放在 GitHub 代码仓库中，通过 <userName>/<repoName> 的语法引用 Action。例如， actions/checkout@v2 表示 https://github.com/actions/checkout 这个仓库，tag 是 v2。
+GitHub Actions 术语：
+workflow：一个 .yml 文件对应一个 workflow，也就是一次持续集成。一个 GitHub 仓库可以包含多个 workflow，只要是在 .github/workflow 目录下的 .yml 文件都会被 GitHub 执行。 job：一个 workflow 由一个或多个 job 构成，每个 job 代表一个持续集成任务。 step：每个 job 由多个 step 构成，一步步完成。 action：每个 step 可以依次执行一个或多个命令（action）。 on：一个 workflow 的触发条件，决定了当前的 workflow 在什么时候被执行。 workflow 文件 # GitHub Actions 配置文件存放在代码仓库的 ."><meta property="og:type" content="article"><meta property="og:url" content="https://shipengqi.github.io/golang-learn/docs/project/08_github_actions/"><meta property="article:section" content="docs"><meta property="article:modified_time" content="2023-11-28T18:04:41+08:00"><title>基于 GitHub Actions 的 CI/CD | Go Learning</title><link rel=manifest href=/golang-learn/manifest.json><link rel=icon href=/golang-learn/favicon.png><link rel=stylesheet href=/golang-learn/book.min.33a48f5432973b8ff9a82679d9e45d67f2c15d4399bd2829269455cfe390b5e8.css integrity="sha256-M6SPVDKXO4/5qCZ52eRdZ/LBXUOZvSgpJpRVz+OQteg=" crossorigin=anonymous><script defer src=/golang-learn/flexsearch.min.js></script>
+<script defer src=/golang-learn/en.search.min.ba0b0d3a0587c533dd25391aa4ba8d81cdb07d80534438536c6592a0da5c5caf.js integrity="sha256-ugsNOgWHxTPdJTkapLqNgc2wfYBTRDhTbGWSoNpcXK8=" crossorigin=anonymous></script></head><body dir=ltr><input type=checkbox class="hidden toggle" id=menu-control>
+<input type=checkbox class="hidden toggle" id=toc-control><main class="container flex"><aside class=book-menu><div class=book-menu-content><nav><h2 class=book-brand><a class="flex align-center" href=/golang-learn/><span>Go Learning</span></a></h2><div class=book-search><input type=text id=book-search-input placeholder=Search aria-label=Search maxlength=64 data-hotkeys=s/><div class="book-search-spinner hidden"></div><ul id=book-search-results></ul></div><ul><li><a href=https://shipengqi.github.io/ target=_blank rel=noopener>Blog</a></li><li><a href=https://github.com/shipengqi/golang-learn target=_blank rel=noopener>Github</a></li></ul><ul><li><span>🍚 语言基础</span><ul><li><a href=/golang-learn/docs/basic/01_basic_type/>基础数据类型</a></li><li><a href=/golang-learn/docs/basic/02_array/>数组</a></li><li><a href=/golang-learn/docs/basic/03_slice/>切片</a></li><li><a href=/golang-learn/docs/basic/04_map/>哈希表</a></li><li><a href=/golang-learn/docs/basic/05_function/>函数</a></li><li><a href=/golang-learn/docs/basic/09_pointer/>指针</a></li></ul></li><li><a href=/golang-learn/docs/concurrency/>⚡ 并发编程</a><ul><li><a href=/golang-learn/docs/concurrency/01_mutex/>互斥锁</a></li><li><a href=/golang-learn/docs/concurrency/02_rwmutex/>读写锁</a></li><li><a href=/golang-learn/docs/concurrency/03_waitgroup/>WaitGroup</a></li><li><a href=/golang-learn/docs/concurrency/04_cond/>条件变量</a></li><li><a href=/golang-learn/docs/concurrency/05_once/>Once</a></li><li><a href=/golang-learn/docs/concurrency/06_pool/>Pool</a></li><li><a href=/golang-learn/docs/concurrency/07_context/>Context</a></li><li><a href=/golang-learn/docs/concurrency/08_atomic/>原子操作</a></li><li><a href=/golang-learn/docs/concurrency/09_channel/>Channel</a></li><li><a href=/golang-learn/docs/concurrency/10_sema/>信号量</a></li><li><a href=/golang-learn/docs/concurrency/11_singleflight/>SingleFlight</a></li><li><a href=/golang-learn/docs/concurrency/12_errorgroup/>ErrGroup</a></li></ul></li><li><span>🛠️ 实践</span><ul><li><a href=/golang-learn/docs/practice/01_build/>Go 编译</a></li><li><a href=/golang-learn/docs/practice/02_go_race/>Go 数据竞争检测器</a></li><li><a href=/golang-learn/docs/practice/04_pprof/>Go 性能分析</a></li><li><a href=/golang-learn/docs/practice/05_performance/>Go 性能优化</a></li><li><a href=/golang-learn/docs/practice/06_trace/>Go Trace</a></li><li><a href=/golang-learn/docs/practice/07_coredump/>Go CoreDump 调试</a></li><li><a href=/golang-learn/docs/practice/08_mod/>Go Modules</a></li><li><a href=/golang-learn/docs/practice/09_gin/>Gin 静态服务器</a></li></ul></li><li><span>🛠️ Go 工程实践</span><ul><li><a href=/golang-learn/docs/project/01_structure/>项目的目录结构</a></li><li><a href=/golang-learn/docs/project/02_commitizen/>Commit 规范</a></li><li><a href=/golang-learn/docs/project/03_gsemver/>版本规范</a></li><li><a href=/golang-learn/docs/project/04_flow/>Git 工作流程</a></li><li><a href=/golang-learn/docs/project/05_api/>API 风格</a></li><li><a href=/golang-learn/docs/project/06_api_doc/>API 文档</a></li><li><a href=/golang-learn/docs/project/07_make/>make</a></li><li><a href=/golang-learn/docs/project/08_github_actions/ class=active>基于 GitHub Actions 的 CI/CD</a></li></ul></li><li><a href=/golang-learn/docs/advance/>🔍 底层原理</a><ul></ul></li></ul></nav><script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script></div></aside><div class=book-page><header class=book-header><div class="flex align-center justify-between"><label for=menu-control><img src=/golang-learn/svg/menu.svg class=book-icon alt=Menu></label>
+<strong>基于 GitHub Actions 的 CI/CD</strong>
+<label for=toc-control><img src=/golang-learn/svg/toc.svg class=book-icon alt="Table of Contents"></label></div><aside class="hidden clearfix"><nav id=TableOfContents><ul><li><a href=#基于-github-actions-的-cicd>基于 GitHub Actions 的 CI/CD</a><ul><li><ul><li><a href=#静态代码检查>静态代码检查</a></li></ul></li><li><a href=#workflow-文件>workflow 文件</a><ul><li><a href=#使用构建矩阵>使用构建矩阵</a></li><li><a href=#使用-secrets>使用 Secrets</a></li></ul></li><li><a href=#使用-artifact>使用 Artifact</a></li><li><a href=#使用缓存>使用缓存</a><ul><li><a href=#输入参数>输入参数</a></li><li><a href=#输出参数>输出参数</a></li><li><a href=#缓存匹配过程>缓存匹配过程</a></li><li><a href=#使用限制和收回政策>使用限制和收回政策</a></li></ul></li><li><a href=#自动打-label>自动打 Label</a><ul><li><a href=#使用>使用</a></li></ul></li><li><a href=#自动-assign>自动 Assign</a></li><li><a href=#close-stale-issues-and-prs>Close Stale Issues and PRs</a></li><li><a href=#示例>示例</a></li><li><a href=#gitleaks>Gitleaks</a></li><li><a href=#anchore-container-scan>Anchore Container Scan</a><ul><li><a href=#grype-configuration><code>grype</code> Configuration</a></li></ul></li><li><a href=#github-codeql-action>GitHub CodeQL Action</a></li><li><a href=#git-auto-commit>Git Auto Commit</a></li><li><a href=#dependency-review>Dependency Review</a></li><li><a href=#在-github-action-中配置-git-访问-github>在 Github Action 中配置 Git 访问 Github</a><ul><li><a href=#使用-github-access-token>使用 Github Access token</a></li><li><a href=#使用-ssh>使用 SSH</a></li></ul></li></ul></li></ul></nav></aside></header><article class=markdown><h1 id=基于-github-actions-的-cicd>基于 GitHub Actions 的 CI/CD
+<a class=anchor href=#%e5%9f%ba%e4%ba%8e-github-actions-%e7%9a%84-cicd>#</a></h1><h3 id=静态代码检查>静态代码检查
+<a class=anchor href=#%e9%9d%99%e6%80%81%e4%bb%a3%e7%a0%81%e6%a3%80%e6%9f%a5>#</a></h3><p>GitHub Actions 是 GitHub 为托管在 github.com 站点的项目提供的持续集成服务。</p><p>在构建持续集成任务时，我们会在任务中心完成各种操作，比如克隆代码、编译代码、运行单元测试、构建和发布镜像等。GitHub 把这些操作称为 Actions。</p><p>Actions 是可以共享的，开发者可以将 Actions 上传到 GitHub 的 <a href="https://github.com/marketplace?type=actions">Actions 市场</a>。
+一个 <a href=https://github.com/sdras/awesome-actions>awesome actions</a> 仓库，里面也有不少的 Action。如果需要某个 Action，直接引用他人写好的 Action 即可。
+整个持续集成过程，就变成了一个 Actions 的组合。</p><p>Action 其实是一个独立的脚本，可以将 Action 存放在 GitHub 代码仓库中，通过 <code>&lt;userName>/&lt;repoName></code> 的语法引用 Action。例如，
+<code>actions/checkout@v2</code> 表示 <code>https://github.com/actions/checkout</code> 这个仓库，<code>tag</code> 是 <code>v2</code>。</p><p>GitHub Actions 术语：</p><ul><li>workflow：一个 .yml 文件对应一个 workflow，也就是一次持续集成。一个 GitHub 仓库可以包含多个 workflow，只要是在 <code>.github/workflow</code> 目录下的
+<code>.yml</code> 文件都会被 GitHub 执行。</li><li>job：一个 workflow 由一个或多个 job 构成，每个 job 代表一个持续集成任务。</li><li>step：每个 job 由多个 step 构成，一步步完成。</li><li>action：每个 step 可以依次执行一个或多个命令（action）。</li><li>on：一个 workflow 的触发条件，决定了当前的 workflow 在什么时候被执行。</li></ul><h2 id=workflow-文件>workflow 文件
+<a class=anchor href=#workflow-%e6%96%87%e4%bb%b6>#</a></h2><p>GitHub Actions 配置文件存放在代码仓库的 <code>.github/workflows</code> 目录下，文件后缀为 <code>.yml</code>、<code>.yaml</code>。GitHub 只要发现 <code>.github/workflows</code> 目录里
+面有 <code>.yml</code> 文件，就会自动运行该文件。</p><p>workflow 文件的配置<a href=https://docs.github.com/cn/actions/using-workflows/workflow-syntax-for-github-actions>官方文档</a>。</p><ul><li><code>name</code> 是 workflow 的名称。如果省略该字段，默认为当前 workflow 的文件名。</li><li><code>on</code> 指定触发 workflow 的条件。<ul><li><code>on: push</code>，意思是，<code>push</code> 事件触发 workflow。也可以是事件的数组，例如: <code>on: [push, pull_request]</code>。<a href=https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows>所有的事件</a>。</li><li><code>on.&lt;push|pull_request>.&lt;tags|branches></code>，指定触发事件时，我们可以限定分支或标签。<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#75715e># 只有 master 分支发生 push 事件时，才会触发 workflow。</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>on</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>push</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>branches</span>:
+</span></span><span style=display:flex><span>      - <span style=color:#ae81ff>master</span>
+</span></span></code></pre></div></li></ul></li><li><code>jobs.&lt;job_id>.name</code> 表示要执行的一项或多项任务。<code>jobs</code> 字段里面，需要写出每一项任务的 <code>job_id</code>，具体名称自定义。<code>job_id</code> 里面的 <code>name</code> 字段是任务的说明。<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#75715e># jobs 字段包含两项任务，job_id 分别是 my_first_job 和 my_second_job。</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>jobs</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>my_first_job</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>name</span>: <span style=color:#ae81ff>My first job</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>my_second_job</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>name</span>: <span style=color:#ae81ff>My second job</span>
+</span></span></code></pre></div></li><li><code>jobs.&lt;job_id>.needs</code> <code>needs</code> 字段指定当前任务的依赖关系，即运行顺序。<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#75715e># job1 必须先于 job2 完成，而 job3 等待 job1 和 job2 完成后才能运行。</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>jobs</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>my_first_job</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>name</span>: <span style=color:#ae81ff>My first job</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>my_second_job</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>name</span>: <span style=color:#ae81ff>My second job</span>
+</span></span></code></pre></div></li><li><code>jobs.&lt;job_id>.runs-on</code> <code>runs-on</code> 字段指定运行所需要的虚拟机环境，它是必填字段。可用的虚拟：<ul><li>ubuntu-latest、ubuntu-18.04 或 ubuntu-16.04。</li><li>windows-latest、windows-2019 或 windows-2016。</li><li>macOS-latest 或 macOS-10.14。</li></ul></li><li><code>jobs.&lt;job_id>.steps</code> 指定每个 Job 的运行步骤，可以包含一个或多个步骤。每个步骤都可以指定下面三个字段。<ul><li><code>jobs.&lt;job_id>.steps.name</code>：步骤名称。</li><li><code>jobs.&lt;job_id>.steps.run</code>：该步骤运行的命令或者 action。</li><li><code>jobs.&lt;job_id>.steps.env</code>：该步骤所需的环境变量。</li></ul><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#f92672>name</span>: <span style=color:#ae81ff>Hello</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>on</span>: <span style=color:#ae81ff>push</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>jobs</span>:
+</span></span><span style=display:flex><span><span style=color:#f92672>my-job</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>name</span>: <span style=color:#ae81ff>My Job</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>runs-on</span>: <span style=color:#ae81ff>ubuntu-latest</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>steps</span>:
+</span></span><span style=display:flex><span>  - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>Print a greeting</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>env</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>GITHUB_TOKEN</span>: {{ <span style=color:#ae81ff>secrets.PAT }}</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>run</span>: |<span style=color:#e6db74>
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>      echo hello</span>      
+</span></span></code></pre></div></li><li><code>uses</code> 可以引用别人已经创建的 actions。引用格式为 <code>username/repo@verison</code>，例如 <code>uses: actions/setup-go@v3</code>。</li><li><code>with</code> actions 的参数。每个参数都是一个键/值对。参数被设置为环境变量，该变量的前缀为 <code>INPUT_</code>，并转换为大写。<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#f92672>jobs</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>my_first_job</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>steps</span>:
+</span></span><span style=display:flex><span>    - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>Create a Release</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>uses</span>: <span style=color:#ae81ff>goreleaser/goreleaser-action@v2</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>with</span>:
+</span></span><span style=display:flex><span>        <span style=color:#75715e># 这些参数将被 goreleaser-action 作为 INPUT_VERSION、INPUT_ARGS 环境变量使用。</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>version</span>: <span style=color:#ae81ff>latest</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>args</span>: <span style=color:#ae81ff>release --rm-dist</span>
+</span></span></code></pre></div></li><li><code>run</code> 执行的命令。可以有多个命令，例如：<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span>- <span style=color:#f92672>name</span>: <span style=color:#ae81ff>Build</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>run</span>: |<span style=color:#e6db74>
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>    go mod tidy
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>    go build -v -o crtctl .</span>    
+</span></span></code></pre></div></li><li><code>id</code> step 的唯一标识。</li></ul><h3 id=使用构建矩阵>使用构建矩阵
+<a class=anchor href=#%e4%bd%bf%e7%94%a8%e6%9e%84%e5%bb%ba%e7%9f%a9%e9%98%b5>#</a></h3><p>如果想在多个系统或者多个语言版本上测试构建，就需要设置构建矩阵。例如，在多个操作系统、多个 Go 版本下跑测试，可以使用如下 workflow 配置：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#f92672>name</span>: <span style=color:#ae81ff>Go Test</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>on</span>: [<span style=color:#ae81ff>push, pull_request]</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>jobs</span>:
+</span></span><span style=display:flex><span><span style=color:#f92672>build</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>name</span>: <span style=color:#ae81ff>Test with go ${{ matrix.go_version }} on ${{ matrix.os }}</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>runs-on</span>: <span style=color:#ae81ff>${{ matrix.os }}</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>strategy</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>matrix</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>go_version</span>: [<span style=color:#ae81ff>1.15</span>, <span style=color:#ae81ff>1.16</span>]
+</span></span><span style=display:flex><span>    <span style=color:#f92672>os</span>: [<span style=color:#ae81ff>ubuntu-latest, macOS-latest]</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>steps</span>:
+</span></span><span style=display:flex><span>  - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>Set up Go ${{ matrix.go_version }}</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>uses</span>: <span style=color:#ae81ff>actions/setup-go@v2</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>with</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>go-version</span>: <span style=color:#ae81ff>${{ matrix.go_version }}</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>id</span>: <span style=color:#ae81ff>go</span>
+</span></span></code></pre></div><p><code>strategy.matrix</code> 配置了该工作流程运行的环境矩阵，会在 4 台不同配置的服务器上执行该 workflow：<code>ubuntu-latest.1.15</code>、<code>ubuntu-latest.1.16</code>、
+<code>macOS-latest.1.15</code>、<code>macOS-latest.1.16</code>。</p><h3 id=使用-secrets>使用 Secrets
+<a class=anchor href=#%e4%bd%bf%e7%94%a8-secrets>#</a></h3><p>在构建过程中，如果有用到 token 等敏感数据，此时就可以使用 secrets。我们在对应项目中选择 <code>Settings-> Secrets</code>，就可以创建 secret。</p><p>配置文件中的使用方法如下：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#f92672>name</span>: <span style=color:#ae81ff>Go Test</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>on</span>: [<span style=color:#ae81ff>push, pull_request]</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>jobs</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>helloci-build</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>name</span>: <span style=color:#ae81ff>Test with go</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>runs-on</span>: [<span style=color:#ae81ff>ubuntu-latest]</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>environment</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>name</span>: <span style=color:#ae81ff>helloci</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>steps</span>:
+</span></span><span style=display:flex><span>      - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>use secrets</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>env</span>:
+</span></span><span style=display:flex><span>          <span style=color:#f92672>super_secret</span>: <span style=color:#ae81ff>${{ secrets.MySecrets }}</span>
+</span></span></code></pre></div><p>secret name 不区分大小写，所以如果新建 secret 的名字是 <code>name</code>，使用时用 <code>secrets.name</code> 或者 <code>secrets.Name</code> 都是可以的。</p><h2 id=使用-artifact>使用 Artifact
+<a class=anchor href=#%e4%bd%bf%e7%94%a8-artifact>#</a></h2><p>在构建过程中，可能会输出一些构建产物，比如日志文件、测试结果等。可以使用 Github Actions Artifact 来存储。使用 <a href=https://github.com/actions/upload-artifact>action/upload-artifact</a>
+和 <a href=https://github.com/actions/download-artifact>download-artifact</a> 进行构建参数的相关操作。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#f92672>steps</span>:
+</span></span><span style=display:flex><span>  - <span style=color:#f92672>run</span>: <span style=color:#ae81ff>npm ci</span>
+</span></span><span style=display:flex><span>  - <span style=color:#f92672>run</span>: <span style=color:#ae81ff>npm test</span>
+</span></span><span style=display:flex><span>  - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>Upload Test Coverage File</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>uses</span>: <span style=color:#ae81ff>actions/upload-artifact@v1.0.0</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>with</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>name</span>: <span style=color:#ae81ff>coverage-output</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>path</span>: <span style=color:#ae81ff>coverage</span>
+</span></span></code></pre></div><p>执行成功后，我们就能在对应 action 面板看到生成的 Artifact。</p><h2 id=使用缓存>使用缓存
+<a class=anchor href=#%e4%bd%bf%e7%94%a8%e7%bc%93%e5%ad%98>#</a></h2><p>为了使 workflow 更快、更高效，可以为依赖项及其他经常重复使用的文件创建和使用缓存。例如：npm，go mod。要缓存 job 的依赖项可以使用 <a href=https://github.com/actions/cache>cache</a> 。</p><p>cache 会根据 <code>key</code> 尝试还原缓存。当找到缓存时，会将缓存的文件还原到你配置的 <code>path</code>。</p><p>如果找到缓存，cache 会在 job 成功完成时会使用你提供的 <code>key</code> 自动创建一个新缓存。并包含 <code>path</code> 指定的文件。</p><p>可以选择提供在 <code>key</code> 与现有缓存不匹配时要使用的 <code>restore-keys</code> 列表。 从另一个分支还原缓存时，<code>restore-keys</code> 列表非常有用，因为 <code>restore-keys</code>
+可以部分匹配缓存 <code>key</code>。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#75715e># Look for a CLI that&#39;s made for this PR</span>
+</span></span><span style=display:flex><span>- <span style=color:#f92672>name</span>: <span style=color:#ae81ff>Fetch built CLI</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>id</span>: <span style=color:#ae81ff>cli-cache</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>uses</span>: <span style=color:#ae81ff>actions/cache@v2</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>with</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>path</span>: <span style=color:#ae81ff>./_output/linux/amd64/bin/crtctl</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># The cache key a combination of the current PR number and the commit SHA</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>key</span>: <span style=color:#ae81ff>crtctl-${{ github.event.pull_request.number }}-${{ github.sha }}</span>
+</span></span></code></pre></div><h3 id=输入参数>输入参数
+<a class=anchor href=#%e8%be%93%e5%85%a5%e5%8f%82%e6%95%b0>#</a></h3><ul><li><code>key</code>：必须。缓存的 key。 它可以是变量、上下文值、静态字符串和函数的任何组合。 密钥最大长度为 512 个字符，密钥长度超过最大长度将导致操作失败。</li><li><code>path</code>：必须。运行器上用于缓存或还原的路径。可以指定单个路径，也可以在单独的行上添加多个路径。 例如：<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span>- <span style=color:#f92672>name</span>: <span style=color:#ae81ff>Cache Gradle packages</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>uses</span>: <span style=color:#ae81ff>actions/cache@v3</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>with</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>path</span>: |<span style=color:#e6db74>
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>      ~/.gradle/caches
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>      ~/.gradle/wrapper</span>      
+</span></span></code></pre></div></li><li><code>restore-keys</code>：可选的。备用的缓存 key 字符串，每个 key 放置在一个新行上。如果 key 没有命中缓存，则按照提供的顺序依次使用这些还原键来查找和还原缓存。例如：<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#f92672>restore-keys</span>: |<span style=color:#e6db74>
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>  npm-feature-${{ hashFiles(&#39;package-lock.json&#39;) }}
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>  npm-feature-
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>  npm-</span>  
+</span></span></code></pre></div></li></ul><h3 id=输出参数>输出参数
+<a class=anchor href=#%e8%be%93%e5%87%ba%e5%8f%82%e6%95%b0>#</a></h3><ul><li><code>cache-hit</code>：布尔值，是否命中缓存。</li></ul><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span>- <span style=color:#f92672>if</span>: <span style=color:#ae81ff>${{ steps.cache-npm.outputs.cache-hit != &#39;true&#39; }}</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>name</span>: <span style=color:#ae81ff>List the state of node modules</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>continue-on-error</span>: <span style=color:#66d9ef>true</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>run</span>: <span style=color:#ae81ff>npm list</span>
+</span></span></code></pre></div><h3 id=缓存匹配过程>缓存匹配过程
+<a class=anchor href=#%e7%bc%93%e5%ad%98%e5%8c%b9%e9%85%8d%e8%bf%87%e7%a8%8b>#</a></h3><ol><li>当 <code>key</code> 匹配现有缓存时，被称为缓存命中，并且操作会将缓存的文件还原到 <code>path</code> 目录。</li><li>当 <code>key</code> 不匹配现有缓存时，则被称为缓存失误，在作业成功完成时会自动创建一个新缓存。发生缓存失误时，该操作还会搜索指定的 <code>restore-keys</code> 以查找任何匹配项：</li></ol><ul><li>如果提供 <code>restore-keys</code>，cache 操作将按顺序搜索与 <code>restore-keys</code> 列表匹配的任何缓存。<ul><li>当存在精确匹配时，该操作会将缓存中的文件还原到 <code>path</code> 目录。</li><li>如果没有精确匹配，操作将会搜索恢复键值的部分匹配。 当操作找到部分匹配时，最近的缓存将还原到 <code>path</code> 目录。</li></ul></li><li>cache 操作完成，作业中的下一个步骤运行。</li><li>如果作业成功完成，则操作将自动创建一个包含 <code>path</code> 目录内容的新缓存。</li></ul><p><a href=https://docs.github.com/cn/actions/using-workflows/caching-dependencies-to-speed-up-workflows#matching-a-cache-key>匹配缓存键详细过程</a> 。</p><h3 id=使用限制和收回政策>使用限制和收回政策
+<a class=anchor href=#%e4%bd%bf%e7%94%a8%e9%99%90%e5%88%b6%e5%92%8c%e6%94%b6%e5%9b%9e%e6%94%bf%e7%ad%96>#</a></h3><p>GitHub 将删除 7 天内未被访问的任何缓存条目。 可以存储的缓存数没有限制，但存储库中所有缓存的总大小限制为 10 GB。</p><p>如果超过此限制，GitHub 将保存新缓存，但会开始收回缓存，直到总大小小于存储库限制。</p><h2 id=自动打-label>自动打 Label
+<a class=anchor href=#%e8%87%aa%e5%8a%a8%e6%89%93-label>#</a></h2><p>使用 <a href=https://github.com/marketplace/actions/labeler>actions/labeler</a> 来实现自动打 Label。</p><h3 id=使用>使用
+<a class=anchor href=#%e4%bd%bf%e7%94%a8>#</a></h3><p>创建 <code>.github/labeler.yml</code> 文件，该文件包含标签列表和需要匹配的 <a href=https://github.com/isaacs/minimatch>minimatch</a> globs，以应用标签。</p><p><code>.github/labeler.yml</code> 文件中，key 就是 label 的名字，值是文件路径。</p><p>Workflow 示例：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#f92672>on</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>pull_request_target</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>types</span>: [<span style=color:#ae81ff>opened, reopened, synchronize, ready_for_review]</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>jobs</span>:
+</span></span><span style=display:flex><span>  <span style=color:#75715e># Automatically labels PRs based on file globs in the change.</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>triage</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>runs-on</span>: <span style=color:#ae81ff>ubuntu-latest</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>steps</span>:
+</span></span><span style=display:flex><span>      - <span style=color:#f92672>uses</span>: <span style=color:#ae81ff>actions/labeler@v3</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>with</span>:
+</span></span><span style=display:flex><span>          <span style=color:#f92672>repo-token</span>: <span style=color:#e6db74>&#34;${{ secrets.GITHUB_TOKEN }}&#34;</span>
+</span></span><span style=display:flex><span>          <span style=color:#f92672>configuration-path</span>: <span style=color:#ae81ff>.github/labels.yml</span>
+</span></span></code></pre></div><p>输入参数：</p><ul><li><code>repo-token</code>：GITHUB_TOKEN，需要 <code>contents:read</code> 和 <code>pull-requests:write</code> 权限。</li><li><code>configuration-path</code>：Label 配置文件路径。</li><li><code>sync-labels</code>：当匹配的文件被还原或不再被 PR 改变时，是否要删除标签。</li></ul><h2 id=自动-assign>自动 Assign
+<a class=anchor href=#%e8%87%aa%e5%8a%a8-assign>#</a></h2><p>使用 <a href=https://github.com/marketplace/actions/auto-assign-action>auto-assign-action</a> 来实现自动 assign。</p><p>创建配置文件，例如：<code>.github/auto_assign.yml</code>。在文件中添加 reviewers/assignees。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#75715e># Set to true to add reviewers to pull requests</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>addReviewers</span>: <span style=color:#66d9ef>true</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># Set to true to add assignees to pull requests</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>addAssignees</span>: <span style=color:#66d9ef>false</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># Set addAssignees to &#39;author&#39; to set the PR creator as the assignee.</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># addAssignees: author</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># A list of reviewers to be added to pull requests (GitHub user name)</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>reviewers</span>:
+</span></span><span style=display:flex><span>  - <span style=color:#ae81ff>reviewerA</span>
+</span></span><span style=display:flex><span>  - <span style=color:#ae81ff>reviewerB</span>
+</span></span><span style=display:flex><span>  - <span style=color:#ae81ff>reviewerC</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># A number of reviewers added to the pull request</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># Set 0 to add all the reviewers (default: 0)</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>numberOfReviewers</span>: <span style=color:#ae81ff>0</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># A list of assignees, overrides reviewers if set</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># assignees:</span>
+</span></span><span style=display:flex><span><span style=color:#75715e>#   - assigneeA</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># A number of assignees to add to the pull request</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># Set to 0 to add all of the assignees.</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># Uses numberOfReviewers if unset.</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># numberOfAssignees: 2</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># Set to true to add reviewers from different groups to pull requests</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>useReviewGroups</span>: <span style=color:#66d9ef>true</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># A list of reviewers, split into different groups, to be added to pull requests (GitHub user name)</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>reviewGroups</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>groupA</span>:
+</span></span><span style=display:flex><span>    - <span style=color:#ae81ff>reviewerA</span>
+</span></span><span style=display:flex><span>    - <span style=color:#ae81ff>reviewerB</span>
+</span></span><span style=display:flex><span>    - <span style=color:#ae81ff>reviewerC</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>groupB</span>:
+</span></span><span style=display:flex><span>    - <span style=color:#ae81ff>reviewerD</span>
+</span></span><span style=display:flex><span>    - <span style=color:#ae81ff>reviewerE</span>
+</span></span><span style=display:flex><span>    - <span style=color:#ae81ff>reviewerF</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># Set to true to add assignees from different groups to pull requests</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>useAssigneeGroups</span>: <span style=color:#66d9ef>false</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># A list of assignees, split into different froups, to be added to pull requests (GitHub user name)</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># assigneeGroups:</span>
+</span></span><span style=display:flex><span><span style=color:#75715e>#   groupA:</span>
+</span></span><span style=display:flex><span><span style=color:#75715e>#     - assigneeA</span>
+</span></span><span style=display:flex><span><span style=color:#75715e>#     - assigneeB</span>
+</span></span><span style=display:flex><span><span style=color:#75715e>#     - assigneeC</span>
+</span></span><span style=display:flex><span><span style=color:#75715e>#   groupB:</span>
+</span></span><span style=display:flex><span><span style=color:#75715e>#     - assigneeD</span>
+</span></span><span style=display:flex><span><span style=color:#75715e>#     - assigneeE</span>
+</span></span><span style=display:flex><span><span style=color:#75715e>#     - assigneeF</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># A list of keywords to be skipped the process that add reviewers if pull requests include it</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># skipKeywords:</span>
+</span></span><span style=display:flex><span><span style=color:#75715e>#   - wip</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># The action will only run for non-draft PRs. If you want to run for all PRs, you need to enable it to run on drafts.</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># runOnDraft: true</span>
+</span></span></code></pre></div><p>Workflow 示例：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#f92672>name</span>: <span style=color:#e6db74>&#34;Auto Assign Author&#34;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e># pull_request_target means that this will run on pull requests, but in</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># the context of the base repo. This should mean PRs from forks are supported.</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>on</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>pull_request_target</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>types</span>: [<span style=color:#ae81ff>opened, reopened, ready_for_review]</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>jobs</span>:
+</span></span><span style=display:flex><span>  <span style=color:#75715e># Automatically assigns reviewers and owner</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>add-reviews</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>runs-on</span>: <span style=color:#ae81ff>ubuntu-latest</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>steps</span>:
+</span></span><span style=display:flex><span>      - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>Set the author of a PR as the assignee</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>uses</span>: <span style=color:#ae81ff>kentaro-m/auto-assign-action@v1.2.4</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>with</span>:
+</span></span><span style=display:flex><span>          <span style=color:#f92672>configuration-path</span>: <span style=color:#e6db74>&#34;.github/auto_assignees.yml&#34;</span>
+</span></span><span style=display:flex><span>          <span style=color:#f92672>repo-token</span>: <span style=color:#e6db74>&#34;${{ secrets.GITHUB_TOKEN }}&#34;</span>
+</span></span></code></pre></div><h2 id=close-stale-issues-and-prs>Close Stale Issues and PRs
+<a class=anchor href=#close-stale-issues-and-prs>#</a></h2><p>使用 <a href=https://github.com/marketplace/actions/close-stale-issues>close-stale-issues</a> 来自动关闭长时间不活跃的 PR 和 issues。</p><p>配置必须在默认分支上，默认值将会：</p><ul><li>在 60 天没有活跃的 issue 和 PR 上添加一个 &ldquo;Stale&rdquo; 标签，并添加 comments。</li><li>添加 &ldquo;Stale&rdquo; 标签 7 天后关闭 issue 和 PR。</li><li>如果 issue 和 PR 发生更新/评论，&ldquo;Stale&rdquo; 标签将被删除，计时器会重启。</li></ul><p>需要的权限：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#f92672>permissions</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>contents</span>: <span style=color:#ae81ff>write</span> <span style=color:#75715e># only for delete-branch option</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>issues</span>: <span style=color:#ae81ff>write</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>pull-requests</span>: <span style=color:#ae81ff>write</span>
+</span></span></code></pre></div><h2 id=示例>示例
+<a class=anchor href=#%e7%a4%ba%e4%be%8b>#</a></h2><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#f92672>name</span>: <span style=color:#e6db74>&#34;Close stale issues and PRs&#34;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>on</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>schedule</span>:
+</span></span><span style=display:flex><span>    <span style=color:#75715e># First of every month</span>
+</span></span><span style=display:flex><span>    - <span style=color:#f92672>cron</span>: <span style=color:#e6db74>&#34;30 1 * * *&#34;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>jobs</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>stale</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>runs-on</span>: <span style=color:#ae81ff>ubuntu-latest</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>steps</span>:
+</span></span><span style=display:flex><span>      - <span style=color:#f92672>uses</span>: <span style=color:#ae81ff>actions/stale@v3</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>with</span>:
+</span></span><span style=display:flex><span>          <span style=color:#f92672>repo-token</span>: <span style=color:#ae81ff>${{ secrets.GITHUB_TOKEN }}</span>
+</span></span><span style=display:flex><span>          <span style=color:#f92672>stale-issue-message</span>: <span style=color:#e6db74>&#34;This issue is stale because it has been open 30 days with no activity. Remove stale label or comment or this will be closed in 5 days. If a Velero team member has requested log or more information, please provide the output of the shared commands.&#34;</span>
+</span></span><span style=display:flex><span>          <span style=color:#f92672>close-issue-message</span>: <span style=color:#e6db74>&#34;This issue was closed because it has been stalled for 5 days with no activity.&#34;</span>
+</span></span><span style=display:flex><span>          <span style=color:#f92672>days-before-issue-stale</span>: <span style=color:#ae81ff>30</span>
+</span></span><span style=display:flex><span>          <span style=color:#f92672>days-before-issue-close</span>: <span style=color:#ae81ff>5</span>
+</span></span><span style=display:flex><span>          <span style=color:#75715e># Disable stale PRs for now; they can remain open.</span>
+</span></span><span style=display:flex><span>          <span style=color:#f92672>days-before-pr-stale</span>: -<span style=color:#ae81ff>1</span>
+</span></span><span style=display:flex><span>          <span style=color:#f92672>days-before-pr-close</span>: -<span style=color:#ae81ff>1</span>
+</span></span><span style=display:flex><span>          <span style=color:#75715e># Only issues made after Oct 01 2022.</span>
+</span></span><span style=display:flex><span>          <span style=color:#f92672>start-date</span>: <span style=color:#e6db74>&#34;2022-10-01T00:00:00&#34;</span>
+</span></span><span style=display:flex><span>          <span style=color:#75715e># Only make issues stale if they have these labels. Comma separated.</span>
+</span></span><span style=display:flex><span>          <span style=color:#f92672>only-labels</span>: <span style=color:#e6db74>&#34;Needs info,Duplicate&#34;</span>
+</span></span></code></pre></div><h2 id=gitleaks>Gitleaks
+<a class=anchor href=#gitleaks>#</a></h2><p><a href=https://github.com/marketplace/actions/gitleaks>Gitleaks</a> 是一款 SAST 工具，用于检测和防止 git 仓库中的密码、API 密钥和令牌等硬编码秘密。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#f92672>name</span>: <span style=color:#ae81ff>gitleaks</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>on</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>pull_request</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>push</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>workflow_dispatch</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>schedule</span>:
+</span></span><span style=display:flex><span>    - <span style=color:#f92672>cron</span>: <span style=color:#e6db74>&#34;0 4 * * *&#34;</span> <span style=color:#75715e># run once a day at 4 AM</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>jobs</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>scan</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>name</span>: <span style=color:#ae81ff>gitleaks</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>runs-on</span>: <span style=color:#ae81ff>ubuntu-latest</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>steps</span>:
+</span></span><span style=display:flex><span>      - <span style=color:#f92672>uses</span>: <span style=color:#ae81ff>actions/checkout@v3</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>with</span>:
+</span></span><span style=display:flex><span>          <span style=color:#f92672>fetch-depth</span>: <span style=color:#ae81ff>0</span>
+</span></span><span style=display:flex><span>      - <span style=color:#f92672>uses</span>: <span style=color:#ae81ff>gitleaks/gitleaks-action@v2</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>env</span>:
+</span></span><span style=display:flex><span>          <span style=color:#f92672>GITHUB_TOKEN</span>: <span style=color:#ae81ff>${{ secrets.GITHUB_TOKEN }}</span>
+</span></span><span style=display:flex><span>          <span style=color:#f92672>GITLEAKS_LICENSE</span>: <span style=color:#ae81ff>${{ secrets.GITLEAKS_LICENSE}}</span> <span style=color:#75715e># Only required for Organizations, not personal accounts.</span>
+</span></span></code></pre></div><p>常用配置：</p><pre tabindex=0><code># 定义了如何检测 secrets
+[[rules]]
+# 规则 id
+id = &#34;ignore-testdata&#34;
+# 为单条规则加入一个允许列表，以减少误报，或忽略已知的 secret 的提交。
+[rules.allowlist]
+paths = [&#39;&#39;&#39;.*/testdata/*&#39;&#39;&#39;]
+# 全局的允许列表
+[allowlist]
+</code></pre><p>更多配置 <a href=https://github.com/gitleaks/gitleaks#configuration>Configuration</a>。</p><h2 id=anchore-container-scan>Anchore Container Scan
+<a class=anchor href=#anchore-container-scan>#</a></h2><p>用于调用 <a href=https://github.com/anchore/grype>Grype</a> 扫描仪并返回发现的漏洞，如果发现了漏洞，还可选择以可配置的严重程度失败。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#f92672>name</span>: <span style=color:#e6db74>&#34;grype&#34;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>on</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>push</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>branches</span>: [<span style=color:#e6db74>&#39;main&#39;</span>]
+</span></span><span style=display:flex><span>    <span style=color:#f92672>tags</span>: [<span style=color:#e6db74>&#39;v*&#39;</span>]
+</span></span><span style=display:flex><span>  <span style=color:#f92672>pull_request</span>:
+</span></span><span style=display:flex><span><span style=color:#f92672>jobs</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>scan-source</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>name</span>: <span style=color:#ae81ff>scan-source</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>runs-on</span>: <span style=color:#ae81ff>ubuntu-latest</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>permissions</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>security-events</span>: <span style=color:#ae81ff>write</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>actions</span>: <span style=color:#ae81ff>read</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>contents</span>: <span style=color:#ae81ff>read</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>steps</span>:
+</span></span><span style=display:flex><span>      - <span style=color:#f92672>uses</span>: <span style=color:#ae81ff>actions/checkout@v3</span>
+</span></span><span style=display:flex><span>      - <span style=color:#f92672>uses</span>: <span style=color:#ae81ff>anchore/scan-action@v3</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>with</span>:
+</span></span><span style=display:flex><span>          <span style=color:#f92672>path</span>: <span style=color:#e6db74>&#34;.&#34;</span>
+</span></span><span style=display:flex><span>          <span style=color:#f92672>fail-build</span>: <span style=color:#66d9ef>true</span>
+</span></span></code></pre></div><h3 id=grype-configuration><code>grype</code> Configuration
+<a class=anchor href=#grype-configuration>#</a></h3><p>默认配置文件的搜索路径:</p><ul><li><code>.grype.yaml</code></li><li><code>.grype/config.yaml</code></li><li><code>~/.grype.yaml</code></li><li><code>&lt;XDG_CONFIG_HOME>/grype/config.yaml</code></li></ul><p>也可以使用 <code>--config</code>/<code>-c</code> 来指定配置文件。</p><p>常用配置：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#75715e># 扫描时，如果发现严重性达到或超过设置的值，则返回代码为 1。默认为未设置</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>fail-on-severity</span>: <span style=color:#ae81ff>high</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># 如果使用 SBOM 输入，则在软件包没有 CPE 时自动生成 CPE</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>add-cpes-if-none</span>: <span style=color:#66d9ef>true</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># 输出格式 (允许的值: table, json, cyclonedx)</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>output</span>: <span style=color:#ae81ff>table</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># 要从扫描中排除的文件</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>exclude</span>:
+</span></span><span style=display:flex><span>  - <span style=color:#e6db74>&#34;**/testdata/**&#34;</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># 如果看到 Grype 报告误报或任何其他不想看到的漏洞匹配，可以配置 &#34;忽略规则&#34;，Grype 会忽略匹配结果</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>ignore</span>:
+</span></span><span style=display:flex><span>  - <span style=color:#f92672>fix-state: unknown # 允许的值</span>: <span style=color:#e6db74>&#34;fixed&#34;</span>, <span style=color:#e6db74>&#34;not-fixed&#34;</span>, <span style=color:#e6db74>&#34;wont-fix&#34;</span>, <span style=color:#ae81ff>or &#34;unknown&#34;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>vulnerability</span>: <span style=color:#e6db74>&#34;CVE-2008-4318&#34;</span> <span style=color:#75715e># vulnerability ID</span>
+</span></span></code></pre></div><p>更多配置 <a href=https://github.com/anchore/grype>Grype</a>。</p><h2 id=github-codeql-action>GitHub CodeQL Action
+<a class=anchor href=#github-codeql-action>#</a></h2><p>GitHub CodeQL Action 是一个用于安全性代码分析的 GitHub Actions，使用 CodeQL 查询语言来搜索项目中的代码漏洞和安全问题。
+询完成后，CodeQL Action 会生成报告，显示查询结果。</p><p>CodeQL 可以在 <code>Security -> Overview -> Code scanning alerts -> Set up code scanning</code> 找到官方给的 CodeQL Workflow Template。
+选择 <code>Set up this workflow</code> 就可以用 template 了。</p><p>也可以自己在 workflow 中加上 CodeQL Action。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#f92672>name</span>: <span style=color:#e6db74>&#34;codeql&#34;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>on</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>push</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>branches</span>: [ <span style=color:#ae81ff>main ]</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>jobs</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>analyze</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>name</span>: <span style=color:#ae81ff>analyze</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>runs-on</span>: <span style=color:#ae81ff>ubuntu-latest</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>permissions</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>actions</span>: <span style=color:#ae81ff>read</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>contents</span>: <span style=color:#ae81ff>read</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>security-events</span>: <span style=color:#ae81ff>write</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>steps</span>:
+</span></span><span style=display:flex><span>      - <span style=color:#f92672>uses</span>: <span style=color:#ae81ff>actions/checkout@v3</span>
+</span></span><span style=display:flex><span>      - <span style=color:#f92672>uses</span>: <span style=color:#ae81ff>actions/setup-go@v4</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>with</span>:
+</span></span><span style=display:flex><span>          <span style=color:#f92672>go-version</span>: <span style=color:#ae81ff>stable</span>
+</span></span><span style=display:flex><span>      - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>initialize codeql</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>uses</span>: <span style=color:#ae81ff>github/codeql-action/init@v2</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>with</span>:
+</span></span><span style=display:flex><span>          <span style=color:#f92672>languages</span>: <span style=color:#ae81ff>go</span> <span style=color:#75715e># javascript, csharp, python, cpp, java</span>
+</span></span><span style=display:flex><span>      - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>build package</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>run</span>: <span style=color:#ae81ff>go build ./cmd</span>
+</span></span><span style=display:flex><span>      <span style=color:#75715e># build package C/C++, C#, Java, Go, Swift  可以直接使用 CodeQL 的 autobuild 作替代</span>
+</span></span><span style=display:flex><span>      <span style=color:#75715e># - name: auto build package  </span>
+</span></span><span style=display:flex><span>      <span style=color:#75715e>#   uses: github/codeql-action/autobuild@v2</span>
+</span></span><span style=display:flex><span>      - <span style=color:#f92672>uses</span>: <span style=color:#ae81ff>github/codeql-action/analyze@v2</span>
+</span></span></code></pre></div><h2 id=git-auto-commit>Git Auto Commit
+<a class=anchor href=#git-auto-commit>#</a></h2><p>用于检测工作流运行期间更改的文件，并将其提交和推送回 GitHub 仓库。默认情况下，提交会以 &ldquo;GitHub Action"的名义进行，并由上次提交的用户共同撰写。</p><p><code>CONTRIBUTING.md</code>，ChangeLog 之类的改动可以使用该 action 来实现自动提交。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#f92672>name</span>: <span style=color:#ae81ff>Format</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>on</span>: <span style=color:#ae81ff>push</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>jobs</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>format-code</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>runs-on</span>: <span style=color:#ae81ff>ubuntu-latest</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>permissions</span>:
+</span></span><span style=display:flex><span>      <span style=color:#75715e># Give the default GITHUB_TOKEN write permission to commit and push the</span>
+</span></span><span style=display:flex><span>      <span style=color:#75715e># added or changed files to the repository.</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>contents</span>: <span style=color:#ae81ff>write</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>steps</span>:
+</span></span><span style=display:flex><span>      - <span style=color:#f92672>uses</span>: <span style=color:#ae81ff>actions/checkout@v3</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>      <span style=color:#75715e># Other steps that change files in the repository</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>      <span style=color:#75715e># Commit all changed files back to the repository</span>
+</span></span><span style=display:flex><span>      - <span style=color:#f92672>uses</span>: <span style=color:#ae81ff>stefanzweifel/git-auto-commit-action@v4</span>
+</span></span></code></pre></div><h2 id=dependency-review>Dependency Review
+<a class=anchor href=#dependency-review>#</a></h2><p>扫描拉取请求中的依赖关系更改，如果引入了任何漏洞或无效许可证，则会引发错误。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#f92672>name</span>: <span style=color:#e6db74>&#39;Dependency Review&#39;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>on</span>: [<span style=color:#ae81ff>pull_request]</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>permissions</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>contents</span>: <span style=color:#ae81ff>read</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>jobs</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>dependency-review</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>runs-on</span>: <span style=color:#ae81ff>ubuntu-latest</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>steps</span>:
+</span></span><span style=display:flex><span>      - <span style=color:#f92672>name</span>: <span style=color:#e6db74>&#39;Checkout Repository&#39;</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>uses</span>: <span style=color:#ae81ff>actions/checkout@v3</span>
+</span></span><span style=display:flex><span>      - <span style=color:#f92672>name</span>: <span style=color:#e6db74>&#39;Dependency Review&#39;</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>uses</span>: <span style=color:#ae81ff>actions/dependency-review-action@v3</span>
+</span></span></code></pre></div><h2 id=在-github-action-中配置-git-访问-github>在 Github Action 中配置 Git 访问 Github
+<a class=anchor href=#%e5%9c%a8-github-action-%e4%b8%ad%e9%85%8d%e7%bd%ae-git-%e8%ae%bf%e9%97%ae-github>#</a></h2><h3 id=使用-github-access-token>使用 Github Access token
+<a class=anchor href=#%e4%bd%bf%e7%94%a8-github-access-token>#</a></h3><ol><li>首先需要生成一个 Access Token，<a href=https://github.com/settings/tokens/new>创建 token</a>。</li><li>在 repo 的 Settings 页面中添加 Secret，例如，我的 secret 命名为 PAT。</li></ol><p>在 Action 中使用：</p><pre tabindex=0><code>    steps:
+      - name: release
+        run: |
+          GITHUB_TOKEN=${{ secrets.PAT }} make release
+</code></pre><p>通过 Access Token 的方式 clone repo：</p><pre tabindex=0><code>    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          repository: shipengqi/crtctl
+          token: ${{ secrets.PAT }}
+          path: crtctl
+</code></pre><p>上面的方式用的是 HTTPS 的方式。通过 <code>git remote -v</code> 查看可以看到 remote 的地址。</p><h3 id=使用-ssh>使用 SSH
+<a class=anchor href=#%e4%bd%bf%e7%94%a8-ssh>#</a></h3><ol><li>首先需要一个 Github 中已经配置好的 ssh 的 public key。</li><li>在 repo 的 Settings 页面中添加 Secret，例如，我的 secret 命名为 SSH_KEY。</li></ol><p>在 Action 中配置 ssh：</p><pre tabindex=0><code>- name: Install SSH Key
+  uses: shimataro/ssh-key-action@v2
+  with:
+    key: ${{ secrets.SSH_KEY }} 
+    known_hosts: &#39;just-a-placeholder-so-we-dont-get-errors&#39;
+</code></pre><p>之后就可以在 Action 的后续步骤中像在本地一样使用 SSH 的方式来 clone repo 和提交代码了。</p></article><footer class=book-footer><div class="flex flex-wrap justify-between"><div><a class="flex align-center" href=https://github.com/shipengqi/golang-learn/commit/0037464b07741439d1e7f17a266c9ea64c12058e title='Last modified by shipengqi | November 28, 2023' target=_blank rel=noopener><img src=/golang-learn/svg/calendar.svg class=book-icon alt=Calendar>
+<span>November 28, 2023</span></a></div><div><a class="flex align-center" href=https://github.com/shipengqi/golang-learn/edit/master/content/docs/project/08_github_actions.md target=_blank rel=noopener><img src=/golang-learn/svg/edit.svg class=book-icon alt=Edit>
+<span>Edit this page</span></a></div></div><script>(function(){function e(e){const t=window.getSelection(),n=document.createRange();n.selectNodeContents(e),t.removeAllRanges(),t.addRange(n)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script></footer><div class=book-comments></div><label for=menu-control class="hidden book-menu-overlay"></label></div><aside class=book-toc><div class=book-toc-content><nav id=TableOfContents><ul><li><a href=#基于-github-actions-的-cicd>基于 GitHub Actions 的 CI/CD</a><ul><li><ul><li><a href=#静态代码检查>静态代码检查</a></li></ul></li><li><a href=#workflow-文件>workflow 文件</a><ul><li><a href=#使用构建矩阵>使用构建矩阵</a></li><li><a href=#使用-secrets>使用 Secrets</a></li></ul></li><li><a href=#使用-artifact>使用 Artifact</a></li><li><a href=#使用缓存>使用缓存</a><ul><li><a href=#输入参数>输入参数</a></li><li><a href=#输出参数>输出参数</a></li><li><a href=#缓存匹配过程>缓存匹配过程</a></li><li><a href=#使用限制和收回政策>使用限制和收回政策</a></li></ul></li><li><a href=#自动打-label>自动打 Label</a><ul><li><a href=#使用>使用</a></li></ul></li><li><a href=#自动-assign>自动 Assign</a></li><li><a href=#close-stale-issues-and-prs>Close Stale Issues and PRs</a></li><li><a href=#示例>示例</a></li><li><a href=#gitleaks>Gitleaks</a></li><li><a href=#anchore-container-scan>Anchore Container Scan</a><ul><li><a href=#grype-configuration><code>grype</code> Configuration</a></li></ul></li><li><a href=#github-codeql-action>GitHub CodeQL Action</a></li><li><a href=#git-auto-commit>Git Auto Commit</a></li><li><a href=#dependency-review>Dependency Review</a></li><li><a href=#在-github-action-中配置-git-访问-github>在 Github Action 中配置 Git 访问 Github</a><ul><li><a href=#使用-github-access-token>使用 Github Access token</a></li><li><a href=#使用-ssh>使用 SSH</a></li></ul></li></ul></li></ul></nav></div></aside></main></body></html>
