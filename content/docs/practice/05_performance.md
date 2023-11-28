@@ -447,13 +447,15 @@ func main() {
 }
 ```
 
-### 第三方 goroutine pool
+### 使用第三方 goroutine pool
+
+常用的第三方 goroutine pool：
 
 - [ants](https://github.com/panjf2000/ants)
 - [conc](https://github.com/sourcegraph/conc)
 
 ## 零拷贝优化
 
-### 字符串与字节转换优化，减少内存分配
+### 优化字符串与字节转换，减少内存分配
 
 ## 设置 GOMAXPROCS
