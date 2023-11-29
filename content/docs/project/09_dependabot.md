@@ -1,12 +1,30 @@
 ---
-draft: true
+title: GitHub Dependabot
+weight: 9
 ---
 
-# Dependabot 配置
+# GitHub Dependabot
 
-Dependabot 配置文件 dependabot.yml 使用 YAML 语法。必须将此文件存储在存储库的 `.github` 目录中。 在添加或更新 `dependabot.yml` 文件时，这将立即触发版本更新检查。
+GitHub Dependabot 的配置文件 `dependabot.yml` 必须存放在代码仓库的 `.github` 目录下。在添加或更新 `dependabot.yml` 文件时，会立即触发版本更新检查。
 
-`dependabot.yml` 两个必须的字段：`version` 和 `updates`。该文件必须以 `version: 2` 开头。
+```yaml
+version: 2
+updates:
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "08:00"
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "feat"
+      include: "scope"
+```
+
+上面的示例，`interval: "daily" time: "08:00"` 表示每天八点会触发版本更新检查。
+
+`dependabot.yml` 文件中两个必须的字段：`version` 和 `updates`。该文件必须以 `version: 2` 开头。
 
 ## updates
 
@@ -26,4 +44,4 @@ Dependabot 配置文件 dependabot.yml 使用 YAML 语法。必须将此文件�
 
 更多配置：
 
-[dependabot.yml 文件的配置选项](https://docs.github.com/zh/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file)
+[dependabot.yml 文件的配置选项](https://docs.github.com/zh/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file)。

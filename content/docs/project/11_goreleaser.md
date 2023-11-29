@@ -1,8 +1,9 @@
 ---
-draft: true
+title: GoReleaser
+weight: 11
 ---
 
-# goreleaser
+# GoReleaser
 
 goreleaser 可以交叉编译你的项目代码，并且发布到 Github，Gitlab 和 Gitea。
 

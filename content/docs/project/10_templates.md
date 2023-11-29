@@ -1,10 +1,9 @@
 ---
-draft: true
+title: GitHub 模板
+weight: 10
 ---
 
-# 模板
-
-[Issue 和 PR 模板的官方文档](https://docs.github.com/cn/communities/using-templates-to-encourage-useful-issues-and-pull-requests/about-issue-and-pull-request-templates) 。
+# GitHub 模板
 
 通过 Issue 和 PR 模板可以自定义和标准化贡献者创建 issue 和 PR 的信息。
 
@@ -108,3 +107,6 @@ contact_links:
 
 为了给人们报告你项目中的安全漏洞的指示，你可以在你的 repo 的根目录、`docs` 或 `.github` 文件夹中添加一个 `SECURITY.md` 文件。当有人在
 你的 repo 中创建一个 issue 时，他们会看到一个指向你项目安全策略的链接。
+
+
+[Issue 和 PR 模板的官方文档](https://docs.github.com/cn/communities/using-templates-to-encourage-useful-issues-and-pull-requests/about-issue-and-pull-request-templates) 。
