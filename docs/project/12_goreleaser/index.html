@@ -1,0 +1,290 @@
+<!doctype html><html lang=en dir=ltr><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="GoReleaser # GoReleaser 是用 Go 编写项目的自动发布工具，支持交叉编译，并且支持发布到 Github，Gitlab 和 Gitea。
+安装 # go install github.com/goreleaser/goreleaser@latest 更多安装方式。
+使用 # 生成配置文件 .goreleaser.yaml，一般这个文件放在项目的根目录下：
+goreleaser init 下面的命令可以发布一个 &ldquo;仅限本地&rdquo; 的 release，一般用来测试 release 命令是否可以正常运行。
+goreleaser release --snapshot --rm-dist 修改 .goreleaser.yaml 配置后，可以用 check 命令检查配置：
+goreleaser check --single-target 只为特定的 GOOS/GOARCH 构建二进制文件，这对本地开发很有用：
+goreleaser build --single-target 发布一个 release # 如果要发布到 Github，需要导出一个环境变量 GITHUB_TOKEN，它应该包含一个有效的 GitHub token 与 repo 范围。它将被用来部署发布到你的 GitHub 仓库。创建一个新的 GitHub 令牌。
+write:packages 权限是 GITHUB_TOKEN 需要的最小权限。
+GoReleaser 会使用 repo 的最新 Git 标签。"><meta name=theme-color media="(prefers-color-scheme: light)" content="#ffffff"><meta name=theme-color media="(prefers-color-scheme: dark)" content="#343a40"><meta name=color-scheme content="light dark"><meta property="og:title" content="GoReleaser"><meta property="og:description" content="GoReleaser # GoReleaser 是用 Go 编写项目的自动发布工具，支持交叉编译，并且支持发布到 Github，Gitlab 和 Gitea。
+安装 # go install github.com/goreleaser/goreleaser@latest 更多安装方式。
+使用 # 生成配置文件 .goreleaser.yaml，一般这个文件放在项目的根目录下：
+goreleaser init 下面的命令可以发布一个 &ldquo;仅限本地&rdquo; 的 release，一般用来测试 release 命令是否可以正常运行。
+goreleaser release --snapshot --rm-dist 修改 .goreleaser.yaml 配置后，可以用 check 命令检查配置：
+goreleaser check --single-target 只为特定的 GOOS/GOARCH 构建二进制文件，这对本地开发很有用：
+goreleaser build --single-target 发布一个 release # 如果要发布到 Github，需要导出一个环境变量 GITHUB_TOKEN，它应该包含一个有效的 GitHub token 与 repo 范围。它将被用来部署发布到你的 GitHub 仓库。创建一个新的 GitHub 令牌。
+write:packages 权限是 GITHUB_TOKEN 需要的最小权限。
+GoReleaser 会使用 repo 的最新 Git 标签。"><meta property="og:type" content="article"><meta property="og:url" content="https://shipengqi.github.io/golang-learn/docs/project/12_goreleaser/"><meta property="article:section" content="docs"><meta property="article:modified_time" content="2023-12-03T21:59:10+08:00"><title>GoReleaser | Go Learning</title><link rel=manifest href=/golang-learn/manifest.json><link rel=icon href=/golang-learn/favicon.png><link rel=stylesheet href=/golang-learn/book.min.33a48f5432973b8ff9a82679d9e45d67f2c15d4399bd2829269455cfe390b5e8.css integrity="sha256-M6SPVDKXO4/5qCZ52eRdZ/LBXUOZvSgpJpRVz+OQteg=" crossorigin=anonymous><script defer src=/golang-learn/flexsearch.min.js></script>
+<script defer src=/golang-learn/en.search.min.490ae7a8a2b3b7db4b17d2b3a8881275fe320d42cb13bdd4aa51b024eb1dbd65.js integrity="sha256-SQrnqKKzt9tLF9KzqIgSdf4yDULLE73UqlGwJOsdvWU=" crossorigin=anonymous></script></head><body dir=ltr><input type=checkbox class="hidden toggle" id=menu-control>
+<input type=checkbox class="hidden toggle" id=toc-control><main class="container flex"><aside class=book-menu><div class=book-menu-content><nav><h2 class=book-brand><a class="flex align-center" href=/golang-learn/><span>Go Learning</span></a></h2><div class=book-search><input type=text id=book-search-input placeholder=Search aria-label=Search maxlength=64 data-hotkeys=s/><div class="book-search-spinner hidden"></div><ul id=book-search-results></ul></div><ul><li><a href=https://shipengqi.github.io/ target=_blank rel=noopener>Blog</a></li><li><a href=https://github.com/shipengqi/golang-learn target=_blank rel=noopener>Github</a></li></ul><ul><li><span>🍚 语言基础</span><ul><li><a href=/golang-learn/docs/basic/01_basic_type/>基础数据类型</a></li><li><a href=/golang-learn/docs/basic/02_array/>数组</a></li><li><a href=/golang-learn/docs/basic/03_slice/>切片</a></li><li><a href=/golang-learn/docs/basic/04_map/>哈希表</a></li><li><a href=/golang-learn/docs/basic/05_function/>函数</a></li><li><a href=/golang-learn/docs/basic/09_pointer/>指针</a></li></ul></li><li><a href=/golang-learn/docs/concurrency/>⚡ 并发编程</a><ul><li><a href=/golang-learn/docs/concurrency/01_mutex/>互斥锁</a></li><li><a href=/golang-learn/docs/concurrency/02_rwmutex/>读写锁</a></li><li><a href=/golang-learn/docs/concurrency/03_waitgroup/>WaitGroup</a></li><li><a href=/golang-learn/docs/concurrency/04_cond/>条件变量</a></li><li><a href=/golang-learn/docs/concurrency/05_once/>Once</a></li><li><a href=/golang-learn/docs/concurrency/06_pool/>Pool</a></li><li><a href=/golang-learn/docs/concurrency/07_context/>Context</a></li><li><a href=/golang-learn/docs/concurrency/08_atomic/>原子操作</a></li><li><a href=/golang-learn/docs/concurrency/09_channel/>Channel</a></li><li><a href=/golang-learn/docs/concurrency/10_sema/>信号量</a></li><li><a href=/golang-learn/docs/concurrency/11_singleflight/>SingleFlight</a></li><li><a href=/golang-learn/docs/concurrency/12_errorgroup/>ErrGroup</a></li></ul></li><li><span>🛠️ 实践</span><ul><li><a href=/golang-learn/docs/practice/01_build/>Go 编译</a></li><li><a href=/golang-learn/docs/practice/02_go_race/>Go 数据竞争检测器</a></li><li><a href=/golang-learn/docs/practice/05_performance/>Go 性能优化</a></li><li><a href=/golang-learn/docs/practice/07_coredump/>Go CoreDump 调试</a></li><li><a href=/golang-learn/docs/practice/08_mod/>Go Modules</a></li><li><a href=/golang-learn/docs/practice/09_gin/>Gin 静态服务器</a></li></ul></li><li><span>🛠️ Go 工程实践</span><ul><li><a href=/golang-learn/docs/project/01_specs/>项目规范</a></li><li><a href=/golang-learn/docs/project/02_structure/>项目的目录结构</a></li><li><a href=/golang-learn/docs/project/03_code/>代码规范</a></li><li><a href=/golang-learn/docs/project/04_commitizen/>Commit 规范</a></li><li><a href=/golang-learn/docs/project/05_version/>版本规范</a></li><li><a href=/golang-learn/docs/project/06_api_doc/>API 文档</a></li><li><a href=/golang-learn/docs/project/07_flow/>Git 工作流程</a></li><li><a href=/golang-learn/docs/project/08_make/>项目管理</a></li><li><a href=/golang-learn/docs/project/09_actions/>GitHub Actions</a></li><li><a href=/golang-learn/docs/project/10_dependabot/>GitHub Dependabot</a></li><li><a href=/golang-learn/docs/project/11_templates/>GitHub 模板</a></li><li><a href=/golang-learn/docs/project/12_goreleaser/ class=active>GoReleaser</a></li></ul></li><li><a href=/golang-learn/docs/advance/>🔍 底层原理</a><ul></ul></li></ul></nav><script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script></div></aside><div class=book-page><header class=book-header><div class="flex align-center justify-between"><label for=menu-control><img src=/golang-learn/svg/menu.svg class=book-icon alt=Menu></label>
+<strong>GoReleaser</strong>
+<label for=toc-control><img src=/golang-learn/svg/toc.svg class=book-icon alt="Table of Contents"></label></div><aside class="hidden clearfix"><nav id=TableOfContents><ul><li><a href=#goreleaser>GoReleaser</a><ul><li><a href=#安装>安装</a></li><li><a href=#使用>使用</a><ul><li><a href=#发布一个-release>发布一个 release</a></li><li><a href=#dry-run>Dry run</a></li></ul></li><li><a href=#build-配置>build 配置</a></li><li><a href=#设置自定义-tag>设置自定义 tag</a></li><li><a href=#changelog-配置>changelog 配置</a></li></ul></li></ul></nav></aside></header><article class=markdown><h1 id=goreleaser>GoReleaser
+<a class=anchor href=#goreleaser>#</a></h1><p>GoReleaser 是用 Go 编写项目的自动发布工具，支持交叉编译，并且支持发布到 Github，Gitlab 和 Gitea。</p><h2 id=安装>安装
+<a class=anchor href=#%e5%ae%89%e8%a3%85>#</a></h2><pre tabindex=0><code>go install github.com/goreleaser/goreleaser@latest
+</code></pre><p><a href=https://goreleaser.com/install/>更多安装方式</a>。</p><h2 id=使用>使用
+<a class=anchor href=#%e4%bd%bf%e7%94%a8>#</a></h2><p>生成配置文件 <code>.goreleaser.yaml</code>，一般这个文件放在项目的根目录下：</p><pre tabindex=0><code>goreleaser init
+</code></pre><p>下面的命令可以发布一个 &ldquo;仅限本地&rdquo; 的 release，一般用来测试 <code>release</code> 命令是否可以正常运行。</p><pre tabindex=0><code>goreleaser release --snapshot --rm-dist
+</code></pre><p>修改 <code>.goreleaser.yaml</code> 配置后，可以用 <code>check</code> 命令检查配置：</p><pre tabindex=0><code>goreleaser check
+</code></pre><p><code>--single-target</code> 只为特定的 <code>GOOS/GOARCH</code> 构建二进制文件，这对本地开发很有用：</p><pre tabindex=0><code>goreleaser build --single-target
+</code></pre><h3 id=发布一个-release>发布一个 release
+<a class=anchor href=#%e5%8f%91%e5%b8%83%e4%b8%80%e4%b8%aa-release>#</a></h3><p>如果要发布到 Github，需要导出一个环境变量 <code>GITHUB_TOKEN</code>，它应该包含一个有效的 GitHub token 与 repo 范围。它将被用来部署发布到你的 GitHub 仓库。<a href=https://github.com/settings/tokens/new>创建一个新的 GitHub 令牌</a>。</p><blockquote><p><code>write:packages</code> 权限是 <code>GITHUB_TOKEN</code> 需要的最小权限。</p></blockquote><p>GoReleaser 会使用 repo 的最新 <a href=https://git-scm.com/book/en/v2/Git-Basics-Tagging>Git 标签</a>。</p><p>首先需要创建一个 tag 并 push 到 Github：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#ae81ff>git tag -a v0.1.0 -m &#34;First release&#34;</span>
+</span></span><span style=display:flex><span><span style=color:#ae81ff>git push origin v0.1.0</span>
+</span></span></code></pre></div><blockquote><p>注意 tag 必须是一个有效的 <a href=https://semver.org/>semantic version</a></p></blockquote><p>然后运行：<code>goreleaser release</code>。</p><p>如果暂时不想创建 tag，可以运行 <code>goreleaser release --snapshot</code>，这个命令会不会发布到 Github。</p><h3 id=dry-run>Dry run
+<a class=anchor href=#dry-run>#</a></h3><p>如果想在进行发布之前测试一下，可以通过下面的方式。</p><h4 id=build-only-mode>Build-only Mode
+<a class=anchor href=#build-only-mode>#</a></h4><p>构建项目代码，可以用来验证项目的构建对所有构建目标有没有错误。</p><pre tabindex=0><code>goreleaser build
+</code></pre><h4 id=release-flags>Release Flags
+<a class=anchor href=#release-flags>#</a></h4><p><code>--skip-publish</code> 参数可以跳过发布：</p><pre tabindex=0><code>goreleaser release --skip-publish
+</code></pre><h2 id=build-配置>build 配置
+<a class=anchor href=#build-%e9%85%8d%e7%bd%ae>#</a></h2><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#75715e># .goreleaser.yaml</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>builds</span>:
+</span></span><span style=display:flex><span>  <span style=color:#75715e># You can have multiple builds defined as a yaml list</span>
+</span></span><span style=display:flex><span>  -
+</span></span><span style=display:flex><span>    <span style=color:#75715e># ID of the build.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Defaults to the binary name.</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>id</span>: <span style=color:#e6db74>&#34;my-build&#34;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Path to main.go file or main package.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Notice: when used with `gomod.proxy`, this must be a package.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>#</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Default is `.`.</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>main</span>: <span style=color:#ae81ff>./cmd/my-app</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Binary name.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Can be a path (e.g. `bin/app`) to wrap the binary in a directory.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Default is the name of the project directory.</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>binary</span>: <span style=color:#ae81ff>program</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Custom flags templates.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Default is empty.</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>flags</span>:
+</span></span><span style=display:flex><span>      - -<span style=color:#ae81ff>tags=dev</span>
+</span></span><span style=display:flex><span>      - -<span style=color:#ae81ff>v</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Custom asmflags templates.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Default is empty.</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>asmflags</span>:
+</span></span><span style=display:flex><span>      - -<span style=color:#ae81ff>D mysymbol</span>
+</span></span><span style=display:flex><span>      - <span style=color:#ae81ff>all=-trimpath={{.Env.GOPATH}}</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Custom gcflags templates.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Default is empty.</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>gcflags</span>:
+</span></span><span style=display:flex><span>      - <span style=color:#ae81ff>all=-trimpath={{.Env.GOPATH}}</span>
+</span></span><span style=display:flex><span>      - <span style=color:#ae81ff>./dontoptimizeme=-N</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Custom ldflags templates.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Default is `-s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.builtBy=goreleaser`.</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>ldflags</span>:
+</span></span><span style=display:flex><span>      - -<span style=color:#ae81ff>s -w -X main.build={{.Version}}</span>
+</span></span><span style=display:flex><span>      - <span style=color:#ae81ff>./usemsan=-msan</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Custom build tags templates.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Default is empty.</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>tags</span>:
+</span></span><span style=display:flex><span>      - <span style=color:#ae81ff>osusergo</span>
+</span></span><span style=display:flex><span>      - <span style=color:#ae81ff>netgo</span>
+</span></span><span style=display:flex><span>      - <span style=color:#ae81ff>static_build</span>
+</span></span><span style=display:flex><span>      - <span style=color:#ae81ff>feature</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Custom environment variables to be set during the builds.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>#</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Default: `os.Environ()` merged with what you set the root `env` section.</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>env</span>:
+</span></span><span style=display:flex><span>      - <span style=color:#ae81ff>CGO_ENABLED=0</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># GOOS list to build for.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># For more info refer to: https://golang.org/doc/install/source#environment</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Defaults are darwin and linux.</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>goos</span>:
+</span></span><span style=display:flex><span>      - <span style=color:#ae81ff>freebsd</span>
+</span></span><span style=display:flex><span>      - <span style=color:#ae81ff>windows</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># GOARCH to build for.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># For more info refer to: https://golang.org/doc/install/source#environment</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Defaults are 386, amd64 and arm64.</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>goarch</span>:
+</span></span><span style=display:flex><span>      - <span style=color:#ae81ff>amd64</span>
+</span></span><span style=display:flex><span>      - <span style=color:#ae81ff>arm</span>
+</span></span><span style=display:flex><span>      - <span style=color:#ae81ff>arm64</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># GOARM to build for when GOARCH is arm.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># For more info refer to: https://golang.org/doc/install/source#environment</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Default is only 6.</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>goarm</span>:
+</span></span><span style=display:flex><span>      - <span style=color:#ae81ff>6</span>
+</span></span><span style=display:flex><span>      - <span style=color:#ae81ff>7</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># GOAMD64 to build when GOARCH is amd64.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># For more info refer to: https://golang.org/doc/install/source#environment</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Default is only v1.</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>goamd64</span>:
+</span></span><span style=display:flex><span>      - <span style=color:#ae81ff>v2</span>
+</span></span><span style=display:flex><span>      - <span style=color:#ae81ff>v3</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># GOMIPS and GOMIPS64 to build when GOARCH is mips, mips64, mipsle or mips64le.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># For more info refer to: https://golang.org/doc/install/source#environment</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Default is only hardfloat.</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>gomips</span>:
+</span></span><span style=display:flex><span>      - <span style=color:#ae81ff>hardfloat</span>
+</span></span><span style=display:flex><span>      - <span style=color:#ae81ff>softfloat</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># List of combinations of GOOS + GOARCH + GOARM to ignore.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Default is empty.</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>ignore</span>:
+</span></span><span style=display:flex><span>      - <span style=color:#f92672>goos</span>: <span style=color:#ae81ff>darwin</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>goarch</span>: <span style=color:#ae81ff>386</span>
+</span></span><span style=display:flex><span>      - <span style=color:#f92672>goos</span>: <span style=color:#ae81ff>linux</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>goarch</span>: <span style=color:#ae81ff>arm</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>goarm</span>: <span style=color:#ae81ff>7</span>
+</span></span><span style=display:flex><span>      - <span style=color:#f92672>goarm</span>: <span style=color:#ae81ff>mips64</span>
+</span></span><span style=display:flex><span>      - <span style=color:#f92672>gomips</span>: <span style=color:#ae81ff>hardfloat</span>
+</span></span><span style=display:flex><span>      - <span style=color:#f92672>goamd64</span>: <span style=color:#ae81ff>v4</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Optionally override the matrix generation and specify only the final list</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># of targets.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>#</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Format is `{goos}_{goarch}` with their respective suffixes when</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># applicable: `_{goarm}`, `_{goamd64}`, `_{gomips}`.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>#</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Special values:</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># - go_118_first_class: evaluates to the first-class targets of go1.18.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>#   Since GoReleaser v1.9.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># - go_first_class: evaluates to latest stable go first-class targets,</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>#   currently same as 1.18. Since GoReleaser v1.9.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>#</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># This overrides `goos`, `goarch`, `goarm`, `gomips`, `goamd64` and</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># `ignores`.</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>targets</span>:
+</span></span><span style=display:flex><span>      - <span style=color:#ae81ff>go_first_class</span>
+</span></span><span style=display:flex><span>      - <span style=color:#ae81ff>go_118_first_class</span>
+</span></span><span style=display:flex><span>      - <span style=color:#ae81ff>linux_amd64_v1</span>
+</span></span><span style=display:flex><span>      - <span style=color:#ae81ff>darwin_arm64</span>
+</span></span><span style=display:flex><span>      - <span style=color:#ae81ff>linux_arm_6</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Set a specific go binary to use when building.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># It is safe to ignore this option in most cases.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>#</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Default is &#34;go&#34;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>gobinary</span>: <span style=color:#e6db74>&#34;go1.13.4&#34;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Sets the command to run to build.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Can be useful if you want to build tests, for example,</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># in which case you can set this to &#34;test&#34;.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># It is safe to ignore this option in most cases.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>#</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Default: build.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Since: v1.9.</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>command</span>: <span style=color:#ae81ff>test</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Set the modified timestamp on the output binary, typically</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># you would do this to ensure a build was reproducible. Pass</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># empty string to skip modifying the output.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Default is empty string.</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>mod_timestamp</span>: <span style=color:#e6db74>&#39;{{ .CommitTimestamp }}&#39;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Hooks can be used to customize the final binary,</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># for example, to run generators.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Those fields allow templates.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Default is both hooks empty.</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>hooks</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>pre</span>: <span style=color:#ae81ff>rice embed-go</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>post</span>: <span style=color:#ae81ff>./script.sh {{ .Path }}</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># If true, skip the build.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Useful for library projects.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Default is false</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>skip</span>: <span style=color:#66d9ef>false</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># By default, GoReleaser will create your binaries inside</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># `dist/${BuildID}_${BuildTarget}`, which is an unique directory per build</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># target in the matrix.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># You can set subdirs within that folder using the `binary` property.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>#</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># However, if for some reason you don&#39;t want that unique directory to be</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># created, you can set this property.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># If you do, you are responsible for keeping different builds from</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># overriding each other.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>#</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Defaults to `false`.</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>no_unique_dist_dir</span>: <span style=color:#66d9ef>true</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># By default, GoReleaser will check if the main filepath has a main</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># function.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># This can be used to skip that check, in case you&#39;re building tests, for</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># example.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>#</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Default: false.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Since: v1.9.</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>no_main_check</span>: <span style=color:#66d9ef>true</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Path to project&#39;s (sub)directory containing Go code.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># This is the working directory for the Go build command(s).</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># If dir does not contain a `go.mod` file, and you are using `gomod.proxy`,</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># produced binaries will be invalid.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># You would likely want to use `main` instead of this.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Default is `.`.</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>dir</span>: <span style=color:#ae81ff>go</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Builder allows you to use a different build implementation.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># This is a GoReleaser Pro feature.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Valid options are: `go` and `prebuilt`.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Defaults to `go`.</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>builder</span>: <span style=color:#ae81ff>prebuilt</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Overrides allows to override some fields for specific targets.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># This can be specially useful when using CGO.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Note: it&#39;ll only match if the full target matches.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>#</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Default: empty.</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Since: v1.5.</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>overrides</span>:
+</span></span><span style=display:flex><span>      - <span style=color:#f92672>goos</span>: <span style=color:#ae81ff>darwin</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>goarch</span>: <span style=color:#ae81ff>arm64</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>goamd64</span>: <span style=color:#ae81ff>v1</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>goarm</span>: <span style=color:#e6db74>&#39;&#39;</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>gomips</span>: <span style=color:#e6db74>&#39;&#39;</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>ldflags</span>:
+</span></span><span style=display:flex><span>          - <span style=color:#ae81ff>foo</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>tags</span>:
+</span></span><span style=display:flex><span>          - <span style=color:#ae81ff>bar</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>asmflags</span>:
+</span></span><span style=display:flex><span>          - <span style=color:#ae81ff>foobar</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>gcflags</span>:
+</span></span><span style=display:flex><span>          - <span style=color:#ae81ff>foobaz</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>env</span>:
+</span></span><span style=display:flex><span>          - <span style=color:#ae81ff>CGO_ENABLED=1</span>
+</span></span></code></pre></div><h2 id=设置自定义-tag>设置自定义 tag
+<a class=anchor href=#%e8%ae%be%e7%bd%ae%e8%87%aa%e5%ae%9a%e4%b9%89-tag>#</a></h2><p>可以使用环境变量强制 build tag 和 previous tag。这在一个 git 提交被多个 git tag 引用的情况下很有用。</p><pre tabindex=0><code>export GORELEASER_CURRENT_TAG=v1.2.3
+export GORELEASER_PREVIOUS_TAG=v1.1.0
+goreleaser release
+</code></pre><h2 id=changelog-配置>changelog 配置
+<a class=anchor href=#changelog-%e9%85%8d%e7%bd%ae>#</a></h2><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#f92672>changelog</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>sort</span>: <span style=color:#ae81ff>asc</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>use</span>: <span style=color:#ae81ff>github</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>filters</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>exclude</span>:
+</span></span><span style=display:flex><span>      - <span style=color:#e6db74>&#39;^test:&#39;</span>
+</span></span><span style=display:flex><span>      - <span style=color:#e6db74>&#39;^chore&#39;</span>
+</span></span><span style=display:flex><span>      - <span style=color:#e6db74>&#39;merge conflict&#39;</span>
+</span></span><span style=display:flex><span>      - <span style=color:#ae81ff>Merge pull request</span>
+</span></span><span style=display:flex><span>      - <span style=color:#ae81ff>Merge remote-tracking branch</span>
+</span></span><span style=display:flex><span>      - <span style=color:#ae81ff>Merge branch</span>
+</span></span><span style=display:flex><span>      - <span style=color:#ae81ff>go mod tidy</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>groups</span>:
+</span></span><span style=display:flex><span>    - <span style=color:#f92672>title</span>: <span style=color:#e6db74>&#39;Dependency Updates&#39;</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>regexp</span>: <span style=color:#e6db74>&#34;^.*(feat|fix)\\(deps\\)*:+.*$&#34;</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>order</span>: <span style=color:#ae81ff>300</span>
+</span></span><span style=display:flex><span>    - <span style=color:#f92672>title</span>: <span style=color:#e6db74>&#39;New Features&#39;</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>regexp</span>: <span style=color:#e6db74>&#34;^.*feat[(\\w)]*:+.*$&#34;</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>order</span>: <span style=color:#ae81ff>100</span>
+</span></span><span style=display:flex><span>    - <span style=color:#f92672>title</span>: <span style=color:#e6db74>&#39;Bug Fixes&#39;</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>regexp</span>: <span style=color:#e6db74>&#34;^.*fix[(\\w)]*:+.*$&#34;</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>order</span>: <span style=color:#ae81ff>200</span>
+</span></span><span style=display:flex><span>    - <span style=color:#f92672>title</span>: <span style=color:#e6db74>&#39;Documentation Updates&#39;</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>regexp</span>: <span style=color:#e6db74>&#34;^.*docs[(\\w)]*:+.*$&#34;</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>order</span>: <span style=color:#ae81ff>400</span>
+</span></span><span style=display:flex><span>    - <span style=color:#f92672>title</span>: <span style=color:#ae81ff>Other work</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>order</span>: <span style=color:#ae81ff>9999</span>
+</span></span></code></pre></div><ul><li><code>exclude</code> 下匹配到的文本不会被添加到 CHANGELOG 中。</li><li><code>groups</code> 根据 Commit Message 的 type 分组。</li></ul><p>生成的 CHANGELOG 如下图：</p><p><img src=https://raw.githubusercontent.com/shipengqi/illustrations/f30c629498b577f1cb6b84a60e98fca4ad1da984/go/changlog.png alt=changlog></p></article><footer class=book-footer><div class="flex flex-wrap justify-between"><div><a class="flex align-center" href=https://github.com/shipengqi/golang-learn/commit/2693fbeb9296c498083681526ce91c2a5190c392 title='Last modified by PengQi Shi | December 3, 2023' target=_blank rel=noopener><img src=/golang-learn/svg/calendar.svg class=book-icon alt=Calendar>
+<span>December 3, 2023</span></a></div><div><a class="flex align-center" href=https://github.com/shipengqi/golang-learn/edit/master/content/docs/project/12_goreleaser.md target=_blank rel=noopener><img src=/golang-learn/svg/edit.svg class=book-icon alt=Edit>
+<span>Edit this page</span></a></div></div><script>(function(){function e(e){const t=window.getSelection(),n=document.createRange();n.selectNodeContents(e),t.removeAllRanges(),t.addRange(n)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script></footer><div class=book-comments></div><label for=menu-control class="hidden book-menu-overlay"></label></div><aside class=book-toc><div class=book-toc-content><nav id=TableOfContents><ul><li><a href=#goreleaser>GoReleaser</a><ul><li><a href=#安装>安装</a></li><li><a href=#使用>使用</a><ul><li><a href=#发布一个-release>发布一个 release</a></li><li><a href=#dry-run>Dry run</a></li></ul></li><li><a href=#build-配置>build 配置</a></li><li><a href=#设置自定义-tag>设置自定义 tag</a></li><li><a href=#changelog-配置>changelog 配置</a></li></ul></li></ul></nav></div></aside></main></body></html>

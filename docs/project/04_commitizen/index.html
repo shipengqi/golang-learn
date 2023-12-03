@@ -1,0 +1,141 @@
+<!doctype html><html lang=en dir=ltr><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="Commit 规范 # 多人协作开发一个项目时，每个开发的 Commit Message 五花八门，时间久了，提交的历史变得很难看，而且有的 Commit Message 可能过于简单，可读性较差。
+一个好的 Commit 规范可以使 Commit Message 的可读性更好，并且可以实现自动化。
+一个好的 Commit Message 应该满足以下要求：
+清晰地描述 commit 的变更内容。 可以基于这些 Commit Message 进行过滤查找，比如只查找某个版本新增的功能：git log --oneline --grep &#34;^feat|^fix&#34;。 可以基于规范化的 Commit Message 生成 Change Log。 可以依据某些类型的 Commit Message 触发构建或者发布流程，比如当类型为 feat、fix 时触发 CI 流程。 确定语义化版本的版本号。比如 fix 类型可以映射为 PATCH 版本，feat 类型可以映射为 MINOR 版本。带有 BREAKING CHANGE 的 commit，可以映射为 MAJOR 版本。 目前，开源社区有多种 Commit 规范，例如 jQuery、Angular 等。Angular 规范是使用最广泛的，格式清晰易读。
+Angular 规范 # Angular 规范中，Commit Message 包含三个部分：Header、Body 和 Footer。格式如下："><meta name=theme-color media="(prefers-color-scheme: light)" content="#ffffff"><meta name=theme-color media="(prefers-color-scheme: dark)" content="#343a40"><meta name=color-scheme content="light dark"><meta property="og:title" content="Commit 规范"><meta property="og:description" content="Commit 规范 # 多人协作开发一个项目时，每个开发的 Commit Message 五花八门，时间久了，提交的历史变得很难看，而且有的 Commit Message 可能过于简单，可读性较差。
+一个好的 Commit 规范可以使 Commit Message 的可读性更好，并且可以实现自动化。
+一个好的 Commit Message 应该满足以下要求：
+清晰地描述 commit 的变更内容。 可以基于这些 Commit Message 进行过滤查找，比如只查找某个版本新增的功能：git log --oneline --grep &#34;^feat|^fix&#34;。 可以基于规范化的 Commit Message 生成 Change Log。 可以依据某些类型的 Commit Message 触发构建或者发布流程，比如当类型为 feat、fix 时触发 CI 流程。 确定语义化版本的版本号。比如 fix 类型可以映射为 PATCH 版本，feat 类型可以映射为 MINOR 版本。带有 BREAKING CHANGE 的 commit，可以映射为 MAJOR 版本。 目前，开源社区有多种 Commit 规范，例如 jQuery、Angular 等。Angular 规范是使用最广泛的，格式清晰易读。
+Angular 规范 # Angular 规范中，Commit Message 包含三个部分：Header、Body 和 Footer。格式如下："><meta property="og:type" content="article"><meta property="og:url" content="https://shipengqi.github.io/golang-learn/docs/project/04_commitizen/"><meta property="article:section" content="docs"><meta property="article:modified_time" content="2023-12-03T21:59:10+08:00"><title>Commit 规范 | Go Learning</title><link rel=manifest href=/golang-learn/manifest.json><link rel=icon href=/golang-learn/favicon.png><link rel=stylesheet href=/golang-learn/book.min.33a48f5432973b8ff9a82679d9e45d67f2c15d4399bd2829269455cfe390b5e8.css integrity="sha256-M6SPVDKXO4/5qCZ52eRdZ/LBXUOZvSgpJpRVz+OQteg=" crossorigin=anonymous><script defer src=/golang-learn/flexsearch.min.js></script>
+<script defer src=/golang-learn/en.search.min.490ae7a8a2b3b7db4b17d2b3a8881275fe320d42cb13bdd4aa51b024eb1dbd65.js integrity="sha256-SQrnqKKzt9tLF9KzqIgSdf4yDULLE73UqlGwJOsdvWU=" crossorigin=anonymous></script></head><body dir=ltr><input type=checkbox class="hidden toggle" id=menu-control>
+<input type=checkbox class="hidden toggle" id=toc-control><main class="container flex"><aside class=book-menu><div class=book-menu-content><nav><h2 class=book-brand><a class="flex align-center" href=/golang-learn/><span>Go Learning</span></a></h2><div class=book-search><input type=text id=book-search-input placeholder=Search aria-label=Search maxlength=64 data-hotkeys=s/><div class="book-search-spinner hidden"></div><ul id=book-search-results></ul></div><ul><li><a href=https://shipengqi.github.io/ target=_blank rel=noopener>Blog</a></li><li><a href=https://github.com/shipengqi/golang-learn target=_blank rel=noopener>Github</a></li></ul><ul><li><span>🍚 语言基础</span><ul><li><a href=/golang-learn/docs/basic/01_basic_type/>基础数据类型</a></li><li><a href=/golang-learn/docs/basic/02_array/>数组</a></li><li><a href=/golang-learn/docs/basic/03_slice/>切片</a></li><li><a href=/golang-learn/docs/basic/04_map/>哈希表</a></li><li><a href=/golang-learn/docs/basic/05_function/>函数</a></li><li><a href=/golang-learn/docs/basic/09_pointer/>指针</a></li></ul></li><li><a href=/golang-learn/docs/concurrency/>⚡ 并发编程</a><ul><li><a href=/golang-learn/docs/concurrency/01_mutex/>互斥锁</a></li><li><a href=/golang-learn/docs/concurrency/02_rwmutex/>读写锁</a></li><li><a href=/golang-learn/docs/concurrency/03_waitgroup/>WaitGroup</a></li><li><a href=/golang-learn/docs/concurrency/04_cond/>条件变量</a></li><li><a href=/golang-learn/docs/concurrency/05_once/>Once</a></li><li><a href=/golang-learn/docs/concurrency/06_pool/>Pool</a></li><li><a href=/golang-learn/docs/concurrency/07_context/>Context</a></li><li><a href=/golang-learn/docs/concurrency/08_atomic/>原子操作</a></li><li><a href=/golang-learn/docs/concurrency/09_channel/>Channel</a></li><li><a href=/golang-learn/docs/concurrency/10_sema/>信号量</a></li><li><a href=/golang-learn/docs/concurrency/11_singleflight/>SingleFlight</a></li><li><a href=/golang-learn/docs/concurrency/12_errorgroup/>ErrGroup</a></li></ul></li><li><span>🛠️ 实践</span><ul><li><a href=/golang-learn/docs/practice/01_build/>Go 编译</a></li><li><a href=/golang-learn/docs/practice/02_go_race/>Go 数据竞争检测器</a></li><li><a href=/golang-learn/docs/practice/05_performance/>Go 性能优化</a></li><li><a href=/golang-learn/docs/practice/07_coredump/>Go CoreDump 调试</a></li><li><a href=/golang-learn/docs/practice/08_mod/>Go Modules</a></li><li><a href=/golang-learn/docs/practice/09_gin/>Gin 静态服务器</a></li></ul></li><li><span>🛠️ Go 工程实践</span><ul><li><a href=/golang-learn/docs/project/01_specs/>项目规范</a></li><li><a href=/golang-learn/docs/project/02_structure/>项目的目录结构</a></li><li><a href=/golang-learn/docs/project/03_code/>代码规范</a></li><li><a href=/golang-learn/docs/project/04_commitizen/ class=active>Commit 规范</a></li><li><a href=/golang-learn/docs/project/05_version/>版本规范</a></li><li><a href=/golang-learn/docs/project/06_api_doc/>API 文档</a></li><li><a href=/golang-learn/docs/project/07_flow/>Git 工作流程</a></li><li><a href=/golang-learn/docs/project/08_make/>项目管理</a></li><li><a href=/golang-learn/docs/project/09_actions/>GitHub Actions</a></li><li><a href=/golang-learn/docs/project/10_dependabot/>GitHub Dependabot</a></li><li><a href=/golang-learn/docs/project/11_templates/>GitHub 模板</a></li><li><a href=/golang-learn/docs/project/12_goreleaser/>GoReleaser</a></li></ul></li><li><a href=/golang-learn/docs/advance/>🔍 底层原理</a><ul></ul></li></ul></nav><script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script></div></aside><div class=book-page><header class=book-header><div class="flex align-center justify-between"><label for=menu-control><img src=/golang-learn/svg/menu.svg class=book-icon alt=Menu></label>
+<strong>Commit 规范</strong>
+<label for=toc-control><img src=/golang-learn/svg/toc.svg class=book-icon alt="Table of Contents"></label></div><aside class="hidden clearfix"><nav id=TableOfContents><ul><li><a href=#commit-规范>Commit 规范</a><ul><li><a href=#angular-规范>Angular 规范</a><ul><li><a href=#header>Header</a></li><li><a href=#body>Body</a></li><li><a href=#footer>Footer</a></li></ul></li><li><a href=#自动生成规范化的-commit-message>自动生成规范化的 Commit Message</a><ul><li><a href=#commitizen>commitizen</a></li></ul></li><li><a href=#自动生成-changelog>自动生成 CHANGELOG</a><ul><li><a href=#goreleaserchglog>goreleaser/chglog</a></li><li><a href=#git-chglog>git-chglog</a></li></ul></li></ul></li></ul></nav></aside></header><article class=markdown><h1 id=commit-规范>Commit 规范
+<a class=anchor href=#commit-%e8%a7%84%e8%8c%83>#</a></h1><p>多人协作开发一个项目时，每个开发的 Commit Message 五花八门，时间久了，提交的历史变得很难看，而且有的 Commit Message 可能过于简单，可读性较差。</p><p>一个好的 Commit 规范可以使 Commit Message 的可读性更好，并且可以实现自动化。</p><p>一个好的 Commit Message 应该满足以下要求：</p><ul><li>清晰地描述 commit 的变更内容。</li><li>可以基于这些 Commit Message 进行过滤查找，比如只查找某个版本新增的功能：<code>git log --oneline --grep "^feat|^fix"</code>。</li><li>可以基于规范化的 Commit Message 生成 Change Log。</li><li>可以依据某些类型的 Commit Message 触发构建或者发布流程，比如当类型为 feat、fix 时触发 CI 流程。</li><li>确定语义化版本的版本号。比如 fix 类型可以映射为 PATCH 版本，feat 类型可以映射为 MINOR 版本。带有 BREAKING CHANGE 的 commit，可以映射为 MAJOR 版本。</li></ul><p>目前，开源社区有多种 Commit 规范，例如 jQuery、Angular 等。<a href="https://docs.google.com/document/d/1QrDFcIiPjSLDn3EL15IJygNPiHORgU1_OOAqWjiDU5Y/edit?pli=1#heading=h.uyo6cb12dt6w">Angular 规范</a>是使用最广泛的，格式清晰易读。</p><h2 id=angular-规范>Angular 规范
+<a class=anchor href=#angular-%e8%a7%84%e8%8c%83>#</a></h2><p>Angular 规范中，Commit Message 包含三个部分：Header、Body 和 Footer。格式如下：</p><pre tabindex=0><code>&lt;type&gt;(&lt;scope&gt;): &lt;subject&gt;
+&lt;BLANK LINE&gt;
+&lt;body&gt;
+&lt;BLANK LINE&gt;
+&lt;footer&gt;
+</code></pre><h3 id=header>Header
+<a class=anchor href=#header>#</a></h3><p>Header 包括提价类型（type，必需的）、作用域（scope，可选的）和主题（subject）。Header 是必需的。</p><p><strong>type</strong>包括：</p><ul><li><code>feat</code>：增加了新功能</li><li><code>fix</code>：修复问题</li><li><code>pref</code>：优化性能</li><li><code>test</code>：测试代码修改</li><li><code>refactor</code>：代码重构</li><li><code>style</code>：不影响代码含义的修改，比如空格、格式化、缺失的分号等</li><li><code>docs</code>：对文档进行了修改</li><li><code>build</code>：对构建系统或者外部依赖项进行了修改</li><li><code>ci</code>：对 CI/CD 配置文件或脚本进行了修改</li><li><code>chore</code>：其他类型</li></ul><p><strong>scope</strong>：</p><p>用来说明 commit 的影响范围的，不同项目会有不同的 scope，项目初期，可以设置一些粒度比较大的 scope，比如可以按组件名或者功能来设置 scope。后续，如果项目有变动或者有新功能，
+可以再用追加的方式添加新的 scope。</p><p>scope 不适合设置太具体的值。太具体的话，一方面会导致项目有太多的 scope，难以维护。另一方面，开发者也难以确定 commit 属于哪个具体的 scope，导致错放 scope。</p><p><strong>subject</strong>：</p><p>对本次 commit 的简短描述。</p><ul><li>必须以动词开头、使用现在时。</li><li>第一个字母必须是小写。</li><li>末尾不能添加句号。</li></ul><h3 id=body>Body
+<a class=anchor href=#body>#</a></h3><p>对本次 commit 的更详细的描述。Body 的要求和 Header 的 subject 是一样的。Body 是可选的。</p><ul><li>应该包含本次 commit 的动机以及和之前行为的对比。</li></ul><h3 id=footer>Footer
+<a class=anchor href=#footer>#</a></h3><p>Footer 也是可选的。通常用来说明不兼容的改动和关闭的 Issue 列表。格式如下：</p><pre tabindex=0><code>BREAKING CHANGE: &lt;breaking change summary&gt;
+&lt;BLANK LINE&gt;
+&lt;breaking change description + migration instructions&gt;
+&lt;BLANK LINE&gt;
+&lt;BLANK LINE&gt;
+Closes #&lt;issue number&gt;
+</code></pre><p>示例：</p><pre tabindex=0><code>BREAKING CHANGE: isolate scope bindings definition has changed and
+    the inject option for the directive controller injection was removed.
+    
+    To migrate the code follow the example below:
+    
+    Before:
+    
+    scope: {
+      myAttr: &#39;attribute&#39;,
+      myBind: &#39;bind&#39;,
+      myExpression: &#39;expression&#39;,
+      myEval: &#39;evaluate&#39;,
+      myAccessor: &#39;accessor&#39;
+    }
+    
+    After:
+    
+    scope: {
+      myAttr: &#39;@&#39;,
+      myBind: &#39;@&#39;,
+      myExpression: &#39;&amp;&#39;,
+      // myEval - usually not useful, but in cases where the expression is assignable, you can use &#39;=&#39;
+      myAccessor: &#39;=&#39; // in directive&#39;s template change myAccessor() to myAccessor
+    }
+    
+    The removed `inject` wasn&#39;t generaly useful for directives so there should be no code using it.
+    
+    
+Closes #123, #245, #992    
+</code></pre><h2 id=自动生成规范化的-commit-message>自动生成规范化的 Commit Message
+<a class=anchor href=#%e8%87%aa%e5%8a%a8%e7%94%9f%e6%88%90%e8%a7%84%e8%8c%83%e5%8c%96%e7%9a%84-commit-message>#</a></h2><p>可以使用一些开源的工具，来自动化地生成规范化的 Commit Message：</p><ul><li><a href=https://github.com/commitizen/cz-cli>commitizen</a>，Javascript 实现，需要安装 Node.js。</li><li><a href=https://github.com/lintingzhen/commitizen-go>commitizen-go</a>，Go 版本的简化版的 commitizen，下载二进制文件就可以直接使用。</li></ul><p>上面两个命令都可以进入交互模式，并根据提示生成 Commit Message，然后提交。</p><h3 id=commitizen>commitizen
+<a class=anchor href=#commitizen>#</a></h3><h4 id=安装>安装
+<a class=anchor href=#%e5%ae%89%e8%a3%85>#</a></h4><pre tabindex=0><code>$ npm install -g commitizen
+</code></pre><h4 id=使用>使用
+<a class=anchor href=#%e4%bd%bf%e7%94%a8>#</a></h4><p>初始化项目，使用 cz-conventional-changelog 适配器：</p><pre tabindex=0><code># npm
+$ commitizen init cz-conventional-changelog --save-dev --save-exact
+
+# yarn
+$ commitizen init cz-conventional-changelog --yarn --dev --exact
+
+# pnpm
+$ commitizen init cz-conventional-changelog --pnpm --save-dev --save-exact
+</code></pre><p>提交代码：</p><pre tabindex=0><code>$ git add .
+# 进入交互模式
+$ git cz
+</code></pre><p><img src=https://raw.githubusercontent.com/shipengqi/illustrations/a6542076c06fd7a2d74ddfcb41ac8d9acf56e405/go/commitizen.gif alt=commitizen></p><blockquote><p><code>git cz</code> 支持 <code>git commit</code> 的所有参数。</p></blockquote><p>git log:</p><p><img src=https://raw.githubusercontent.com/shipengqi/illustrations/643142bf64ec66adf5cd0bed1fbbe7f67bbcfb45/go/git-commit-log.png alt=git-commit-log></p><h2 id=自动生成-changelog>自动生成 CHANGELOG
+<a class=anchor href=#%e8%87%aa%e5%8a%a8%e7%94%9f%e6%88%90-changelog>#</a></h2><h3 id=goreleaserchglog>goreleaser/chglog
+<a class=anchor href=#goreleaserchglog>#</a></h3><p><a href=https://github.com/goreleaser/chglog>chglog</a> 是 goreleaser 开源的一个 CHANGELOG 生成器。</p><h4 id=安装-1>安装
+<a class=anchor href=#%e5%ae%89%e8%a3%85-1>#</a></h4><pre tabindex=0><code>$ go get github.com/goreleaser/chglog/cmd/chglog@latest
+</code></pre><h4 id=使用-1>使用
+<a class=anchor href=#%e4%bd%bf%e7%94%a8-1>#</a></h4><p>第一步，初始化一个配置文件 <code>.chglog.yml</code>，一般放在项目的根目录下：</p><pre tabindex=0><code>$ chglog config
+</code></pre><p>根据需要修改配置文件：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#f92672>conventional-commits</span>: <span style=color:#66d9ef>false</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>deb</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>distribution</span>: []
+</span></span><span style=display:flex><span>  <span style=color:#f92672>urgency</span>: <span style=color:#e6db74>&#34;&#34;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>debug</span>: <span style=color:#66d9ef>false</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>owner</span>: <span style=color:#e6db74>&#34;&#34;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>package-name</span>: <span style=color:#e6db74>&#34;&#34;</span>
+</span></span></code></pre></div><p>下一步，执行 <code>chglog init</code>：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span>- <span style=color:#f92672>semver</span>: <span style=color:#ae81ff>0.0.1</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>date</span>: <span style=color:#e6db74>2019-10-18T16:05:33</span><span style=color:#ae81ff>-07</span>:<span style=color:#ae81ff>00</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>packager</span>: <span style=color:#ae81ff>dj gilcrease &lt;example@example.com&gt;</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>changes</span>:
+</span></span><span style=display:flex><span>    - <span style=color:#f92672>commit</span>: <span style=color:#ae81ff>2c499787328348f09ae1e8f03757c6483b9a938a</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>note</span>: |-<span style=color:#e6db74>
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>        oops i forgot to use Conventional Commits style message
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>        This should NOT break anything even if I am asking to build the changelog using Conventional Commits style message</span>        
+</span></span><span style=display:flex><span>    - <span style=color:#f92672>commit</span>: <span style=color:#ae81ff>3ec1e9a60d07cc060cee727c97ffc8aac5713943</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>note</span>: |-<span style=color:#e6db74>
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>        feat: added file two feature
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>        BREAKING CHANGE: this is a backwards incompatible change</span>        
+</span></span><span style=display:flex><span>    - <span style=color:#f92672>commit</span>: <span style=color:#ae81ff>2cc00abc77d401a541d18c26e5c7fbef1effd3ed</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>note</span>: |-<span style=color:#e6db74>
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>        feat: added the fileone feature
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>        * This is a test repo
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>        * so ya!</span>        
+</span></span></code></pre></div><p>然后执行 <code>chglog format --template repo > CHANGELOG.md</code> 来生成 <code>CHANGELOG.md</code> 文件。</p><p>现在，每当要发布另一个版本时，只需执行 <code>chglog add --version v#.#.#</code>（版本必须是 <code>semver</code> 格式）。</p><h3 id=git-chglog>git-chglog
+<a class=anchor href=#git-chglog>#</a></h3><p><a href=https://github.com/git-chglog/git-chglog>git-chglog</a> 也是一个 CHANGELOG 生成器。</p><h4 id=安装-2>安装
+<a class=anchor href=#%e5%ae%89%e8%a3%85-2>#</a></h4><pre tabindex=0><code>$ go install github.com/git-chglog/git-chglog/cmd/git-chglog@latest
+</code></pre><h4 id=创建配置文件>创建配置文件
+<a class=anchor href=#%e5%88%9b%e5%bb%ba%e9%85%8d%e7%bd%ae%e6%96%87%e4%bb%b6>#</a></h4><pre tabindex=0><code>$ git-chglog --init
+</code></pre><p>选项：</p><ul><li>What is the URL of your repository?: <repo address></li><li>What is your favorite style?: github</li><li>Choose the format of your favorite commit message: <type>: <subject>&ndash; feat: Add new feature</li><li>What is your favorite template style?: standard</li><li>Do you include Merge Commit in CHANGELOG?: n</li><li>Do you include Revert Commit in CHANGELOG?: y</li><li>In which directory do you output configuration files and templates?: .chglog</li></ul><p>git-chglog 的配置文件是一个 yaml 文件，默认路径为 <code>.chglog/config.yml</code>。<a href=https://github.com/git-chglog/git-chglog#configuration>更多配置</a>。</p><h4 id=使用-2>使用
+<a class=anchor href=#%e4%bd%bf%e7%94%a8-2>#</a></h4><p>使用 <code>-o</code>（<code>--output</code>）输出 changelog 文件：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>$ git-chglog -o CHANGELOG/CHANGELOG-v0.1.0.md
+</span></span></code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>$ git-chglog
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>  If &lt;tag query&gt; is not specified, it corresponds to all tags.
+</span></span><span style=display:flex><span>  This is the simplest example.
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>$ git-chglog 1.0.0..2.0.0
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>  The above is a command to generate CHANGELOG including commit of 1.0.0 to 2.0.0.
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>$ git-chglog 1.0.0
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>  The above is a command to generate CHANGELOG including commit of only 1.0.0.
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>$ git-chglog <span style=color:#66d9ef>$(</span>git describe --tags <span style=color:#66d9ef>$(</span>git rev-list --tags --max-count<span style=color:#f92672>=</span>1<span style=color:#66d9ef>))</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>  The above is a command to generate CHANGELOG with the commit included in the latest tag.
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>$ git-chglog --output CHANGELOG.md
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>  The above is a command to output to CHANGELOG.md instead of standard output.
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>$ git-chglog --config custom/dir/config.yml
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>  The above is a command that uses a configuration file placed other than <span style=color:#e6db74>&#34;.chglog/config.yml&#34;</span>.
+</span></span></code></pre></div></article><footer class=book-footer><div class="flex flex-wrap justify-between"><div><a class="flex align-center" href=https://github.com/shipengqi/golang-learn/commit/2693fbeb9296c498083681526ce91c2a5190c392 title='Last modified by PengQi Shi | December 3, 2023' target=_blank rel=noopener><img src=/golang-learn/svg/calendar.svg class=book-icon alt=Calendar>
+<span>December 3, 2023</span></a></div><div><a class="flex align-center" href=https://github.com/shipengqi/golang-learn/edit/master/content/docs/project/04_commitizen.md target=_blank rel=noopener><img src=/golang-learn/svg/edit.svg class=book-icon alt=Edit>
+<span>Edit this page</span></a></div></div><script>(function(){function e(e){const t=window.getSelection(),n=document.createRange();n.selectNodeContents(e),t.removeAllRanges(),t.addRange(n)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script></footer><div class=book-comments></div><label for=menu-control class="hidden book-menu-overlay"></label></div><aside class=book-toc><div class=book-toc-content><nav id=TableOfContents><ul><li><a href=#commit-规范>Commit 规范</a><ul><li><a href=#angular-规范>Angular 规范</a><ul><li><a href=#header>Header</a></li><li><a href=#body>Body</a></li><li><a href=#footer>Footer</a></li></ul></li><li><a href=#自动生成规范化的-commit-message>自动生成规范化的 Commit Message</a><ul><li><a href=#commitizen>commitizen</a></li></ul></li><li><a href=#自动生成-changelog>自动生成 CHANGELOG</a><ul><li><a href=#goreleaserchglog>goreleaser/chglog</a></li><li><a href=#git-chglog>git-chglog</a></li></ul></li></ul></li></ul></nav></div></aside></main></body></html>

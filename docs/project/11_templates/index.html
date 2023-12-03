@@ -1,0 +1,139 @@
+<!doctype html><html lang=en dir=ltr><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="GitHub 模板 # 通过 Issue 和 PR 模板可以自定义和标准化贡献者创建 issue 和 PR 的信息。
+PR Template # PR 模板可以在任意的目录下，如果有多个 PR 模板，需要创建一个 PULL_REQUEST_TEMPLATE 目录。
+例如，可以在 repo 的根目录下创建 pull_request_template.md，也可以在放在 .github 目录中 .github/pull_request_template.md。
+pull_request_template.md:
+Thank you for contributing to crtctl! # Please add a summary of your change # Does your change fix a particular issue? Fixes #(issue) Issue Template # Issue 模板存储在 repo 的 .github/ISSUE_TEMPLATE 目录中。文件名不区分大小写，扩展名为 .md。
+ISSUE_TEMPLATE/bug_report.md
+--- name: Bug Report about: Tell us about a problem you are experiencing --- **What steps did you take and what happened:** [A clear and concise description of what the bug is, and what commands you ran."><meta name=theme-color media="(prefers-color-scheme: light)" content="#ffffff"><meta name=theme-color media="(prefers-color-scheme: dark)" content="#343a40"><meta name=color-scheme content="light dark"><meta property="og:title" content="GitHub 模板"><meta property="og:description" content="GitHub 模板 # 通过 Issue 和 PR 模板可以自定义和标准化贡献者创建 issue 和 PR 的信息。
+PR Template # PR 模板可以在任意的目录下，如果有多个 PR 模板，需要创建一个 PULL_REQUEST_TEMPLATE 目录。
+例如，可以在 repo 的根目录下创建 pull_request_template.md，也可以在放在 .github 目录中 .github/pull_request_template.md。
+pull_request_template.md:
+Thank you for contributing to crtctl! # Please add a summary of your change # Does your change fix a particular issue? Fixes #(issue) Issue Template # Issue 模板存储在 repo 的 .github/ISSUE_TEMPLATE 目录中。文件名不区分大小写，扩展名为 .md。
+ISSUE_TEMPLATE/bug_report.md
+--- name: Bug Report about: Tell us about a problem you are experiencing --- **What steps did you take and what happened:** [A clear and concise description of what the bug is, and what commands you ran."><meta property="og:type" content="article"><meta property="og:url" content="https://shipengqi.github.io/golang-learn/docs/project/11_templates/"><meta property="article:section" content="docs"><meta property="article:modified_time" content="2023-12-03T21:59:10+08:00"><title>GitHub 模板 | Go Learning</title><link rel=manifest href=/golang-learn/manifest.json><link rel=icon href=/golang-learn/favicon.png><link rel=stylesheet href=/golang-learn/book.min.33a48f5432973b8ff9a82679d9e45d67f2c15d4399bd2829269455cfe390b5e8.css integrity="sha256-M6SPVDKXO4/5qCZ52eRdZ/LBXUOZvSgpJpRVz+OQteg=" crossorigin=anonymous><script defer src=/golang-learn/flexsearch.min.js></script>
+<script defer src=/golang-learn/en.search.min.490ae7a8a2b3b7db4b17d2b3a8881275fe320d42cb13bdd4aa51b024eb1dbd65.js integrity="sha256-SQrnqKKzt9tLF9KzqIgSdf4yDULLE73UqlGwJOsdvWU=" crossorigin=anonymous></script></head><body dir=ltr><input type=checkbox class="hidden toggle" id=menu-control>
+<input type=checkbox class="hidden toggle" id=toc-control><main class="container flex"><aside class=book-menu><div class=book-menu-content><nav><h2 class=book-brand><a class="flex align-center" href=/golang-learn/><span>Go Learning</span></a></h2><div class=book-search><input type=text id=book-search-input placeholder=Search aria-label=Search maxlength=64 data-hotkeys=s/><div class="book-search-spinner hidden"></div><ul id=book-search-results></ul></div><ul><li><a href=https://shipengqi.github.io/ target=_blank rel=noopener>Blog</a></li><li><a href=https://github.com/shipengqi/golang-learn target=_blank rel=noopener>Github</a></li></ul><ul><li><span>🍚 语言基础</span><ul><li><a href=/golang-learn/docs/basic/01_basic_type/>基础数据类型</a></li><li><a href=/golang-learn/docs/basic/02_array/>数组</a></li><li><a href=/golang-learn/docs/basic/03_slice/>切片</a></li><li><a href=/golang-learn/docs/basic/04_map/>哈希表</a></li><li><a href=/golang-learn/docs/basic/05_function/>函数</a></li><li><a href=/golang-learn/docs/basic/09_pointer/>指针</a></li></ul></li><li><a href=/golang-learn/docs/concurrency/>⚡ 并发编程</a><ul><li><a href=/golang-learn/docs/concurrency/01_mutex/>互斥锁</a></li><li><a href=/golang-learn/docs/concurrency/02_rwmutex/>读写锁</a></li><li><a href=/golang-learn/docs/concurrency/03_waitgroup/>WaitGroup</a></li><li><a href=/golang-learn/docs/concurrency/04_cond/>条件变量</a></li><li><a href=/golang-learn/docs/concurrency/05_once/>Once</a></li><li><a href=/golang-learn/docs/concurrency/06_pool/>Pool</a></li><li><a href=/golang-learn/docs/concurrency/07_context/>Context</a></li><li><a href=/golang-learn/docs/concurrency/08_atomic/>原子操作</a></li><li><a href=/golang-learn/docs/concurrency/09_channel/>Channel</a></li><li><a href=/golang-learn/docs/concurrency/10_sema/>信号量</a></li><li><a href=/golang-learn/docs/concurrency/11_singleflight/>SingleFlight</a></li><li><a href=/golang-learn/docs/concurrency/12_errorgroup/>ErrGroup</a></li></ul></li><li><span>🛠️ 实践</span><ul><li><a href=/golang-learn/docs/practice/01_build/>Go 编译</a></li><li><a href=/golang-learn/docs/practice/02_go_race/>Go 数据竞争检测器</a></li><li><a href=/golang-learn/docs/practice/05_performance/>Go 性能优化</a></li><li><a href=/golang-learn/docs/practice/07_coredump/>Go CoreDump 调试</a></li><li><a href=/golang-learn/docs/practice/08_mod/>Go Modules</a></li><li><a href=/golang-learn/docs/practice/09_gin/>Gin 静态服务器</a></li></ul></li><li><span>🛠️ Go 工程实践</span><ul><li><a href=/golang-learn/docs/project/01_specs/>项目规范</a></li><li><a href=/golang-learn/docs/project/02_structure/>项目的目录结构</a></li><li><a href=/golang-learn/docs/project/03_code/>代码规范</a></li><li><a href=/golang-learn/docs/project/04_commitizen/>Commit 规范</a></li><li><a href=/golang-learn/docs/project/05_version/>版本规范</a></li><li><a href=/golang-learn/docs/project/06_api_doc/>API 文档</a></li><li><a href=/golang-learn/docs/project/07_flow/>Git 工作流程</a></li><li><a href=/golang-learn/docs/project/08_make/>项目管理</a></li><li><a href=/golang-learn/docs/project/09_actions/>GitHub Actions</a></li><li><a href=/golang-learn/docs/project/10_dependabot/>GitHub Dependabot</a></li><li><a href=/golang-learn/docs/project/11_templates/ class=active>GitHub 模板</a></li><li><a href=/golang-learn/docs/project/12_goreleaser/>GoReleaser</a></li></ul></li><li><a href=/golang-learn/docs/advance/>🔍 底层原理</a><ul></ul></li></ul></nav><script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script></div></aside><div class=book-page><header class=book-header><div class="flex align-center justify-between"><label for=menu-control><img src=/golang-learn/svg/menu.svg class=book-icon alt=Menu></label>
+<strong>GitHub 模板</strong>
+<label for=toc-control><img src=/golang-learn/svg/toc.svg class=book-icon alt="Table of Contents"></label></div><aside class="hidden clearfix"><nav id=TableOfContents><ul><li><a href=#github-模板>GitHub 模板</a><ul><li><a href=#pr-template>PR Template</a></li><li><a href=#issue-template>Issue Template</a></li><li><a href=#issue-表单>Issue 表单</a></li><li><a href=#添加安全策略>添加安全策略</a></li></ul></li></ul></nav></aside></header><article class=markdown><h1 id=github-模板>GitHub 模板
+<a class=anchor href=#github-%e6%a8%a1%e6%9d%bf>#</a></h1><p>通过 Issue 和 PR 模板可以自定义和标准化贡献者创建 issue 和 PR 的信息。</p><h2 id=pr-template>PR Template
+<a class=anchor href=#pr-template>#</a></h2><p>PR 模板可以在任意的目录下，如果有多个 PR 模板，需要创建一个 <code>PULL_REQUEST_TEMPLATE</code> 目录。</p><p>例如，可以在 repo 的根目录下创建 <code>pull_request_template.md</code>，也可以在放在 <code>.github</code> 目录中 <code>.github/pull_request_template.md</code>。</p><p><code>pull_request_template.md</code>:</p><pre tabindex=0><code>Thank you for contributing to crtctl!
+
+# Please add a summary of your change
+
+# Does your change fix a particular issue?
+
+Fixes #(issue)
+</code></pre><h2 id=issue-template>Issue Template
+<a class=anchor href=#issue-template>#</a></h2><p>Issue 模板存储在 repo 的 <code>.github/ISSUE_TEMPLATE</code> 目录中。文件名不区分大小写，扩展名为 <code>.md</code>。</p><p><code>ISSUE_TEMPLATE/bug_report.md</code></p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-markdown data-lang=markdown><span style=display:flex><span>---
+</span></span><span style=display:flex><span>name: Bug Report
+</span></span><span style=display:flex><span>about: Tell us about a problem you are experiencing
+</span></span><span style=display:flex><span>---
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>**What steps did you take and what happened:**</span>
+</span></span><span style=display:flex><span>[<span style=color:#f92672>A clear and concise description of what the bug is, and what commands you ran.)
+</span></span></span><span style=display:flex><span><span style=color:#f92672>
+</span></span></span><span style=display:flex><span><span style=color:#f92672>
+</span></span></span><span style=display:flex><span><span style=color:#f92672>**What did you expect to happen:**
+</span></span></span><span style=display:flex><span><span style=color:#f92672>
+</span></span></span><span style=display:flex><span><span style=color:#f92672>**The following information will help us better understand what&#39;s going on**:
+</span></span></span><span style=display:flex><span><span style=color:#f92672>
+</span></span></span><span style=display:flex><span><span style=color:#f92672>- Please provide the output and log content of your commands (Pasting long output into a [GitHub gist</span>](<span style=color:#a6e22e>https://gist.github.com</span>) or other pastebin is fine.)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>**Anything else you would like to add:**</span>
+</span></span><span style=display:flex><span>[Miscellaneous information that will assist in solving the issue.]
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>**Environment:**</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>-</span> crtctl version (use <span style=color:#e6db74>`crtctl -v`</span>):
+</span></span><span style=display:flex><span><span style=color:#66d9ef>-</span> Kubernetes version (use <span style=color:#e6db74>`kubectl version`</span>):
+</span></span><span style=display:flex><span><span style=color:#66d9ef>-</span> OS (e.g. from <span style=color:#e6db74>`/etc/os-release`</span>):
+</span></span></code></pre></div><p><code>ISSUE_TEMPLATE/feature-request.md</code>:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-markdown data-lang=markdown><span style=display:flex><span>---
+</span></span><span style=display:flex><span>name: Feature Request
+</span></span><span style=display:flex><span>about: Suggest an idea for this project
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>---
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>**Describe the problem/challenge you have**</span>
+</span></span><span style=display:flex><span>[A description of the current limitation/problem/challenge that you are experiencing.]
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>**Describe the solution you&#39;d like**</span>
+</span></span><span style=display:flex><span>[A clear and concise description of what you want to happen.]
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>**Anything else you would like to add:**</span>
+</span></span><span style=display:flex><span>[Miscellaneous information that will assist in solving the issue.]
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=font-weight:700>**Environment:**</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>-</span> crtctl version (use <span style=color:#e6db74>`crtctl -v`</span>):
+</span></span><span style=display:flex><span><span style=color:#66d9ef>-</span> Kubernetes version (use <span style=color:#e6db74>`kubectl version`</span>):
+</span></span><span style=display:flex><span><span style=color:#66d9ef>-</span> OS (e.g. from <span style=color:#e6db74>`/etc/os-release`</span>):
+</span></span></code></pre></div><p><code>.github/ISSUE_TEMPLATE</code> 目录下可以添加配置文件 <code>config.yml</code>，这个文件用来定义用户在 repo 中创建 issue 时可以看到哪些 issue 模板。</p><p><code>ISSUE_TEMPLATE/config.yml</code>:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#75715e># blank_issues_enabled 设置为 true，则用户可以选择打开空白 issue，不适用 issue 模板。</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>blank_issues_enabled</span>: <span style=color:#66d9ef>false</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># contact_links 将用户引导到外部网站</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>contact_links</span>:
+</span></span><span style=display:flex><span>  - <span style=color:#f92672>name</span>: <span style=color:#ae81ff>GitHub Community Support</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>url</span>: <span style=color:#ae81ff>https://github.com/orgs/community/discussions</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>about</span>: <span style=color:#ae81ff>Please ask and answer questions here.</span>
+</span></span></code></pre></div><p>更多配置可以查看<a href=https://docs.github.com/cn/communities/using-templates-to-encourage-useful-issues-and-pull-requests/about-issue-and-pull-request-templates>官方文档</a>。</p><h2 id=issue-表单>Issue 表单
+<a class=anchor href=#issue-%e8%a1%a8%e5%8d%95>#</a></h2><p>Issue 表单比 Issue 模板的功能更加丰富，可以定义不同的输入类型、验证、默认标签等。Issue 表单使用 <code>yaml</code> 文件定义，也是存放在 <code>.github/ISSUE_TEMPLATE</code> 目录下。</p><p>示例：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#f92672>name</span>: <span style=color:#ae81ff>Bug Report</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>description</span>: <span style=color:#ae81ff>Tell us about a problem you are experiencing</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>labels</span>: [<span style=color:#ae81ff>bug, triage]</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>assignees</span>:
+</span></span><span style=display:flex><span>  - <span style=color:#ae81ff>shipengqi</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>body</span>:
+</span></span><span style=display:flex><span>  - <span style=color:#f92672>type</span>: <span style=color:#ae81ff>markdown</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>attributes</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>value</span>: |<span style=color:#e6db74>
+</span></span></span><span style=display:flex><span><span style=color:#e6db74>        Thanks for taking the time to fill out this bug report! Please fill the form below.</span>        
+</span></span><span style=display:flex><span>  - <span style=color:#f92672>type</span>: <span style=color:#ae81ff>textarea</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>id</span>: <span style=color:#ae81ff>what-happened</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>attributes</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>label</span>: <span style=color:#ae81ff>What happened?</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>description</span>: <span style=color:#ae81ff>Also tell us, what did you expect to happen?</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>validations</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>required</span>: <span style=color:#66d9ef>true</span>
+</span></span><span style=display:flex><span>  - <span style=color:#f92672>type</span>: <span style=color:#ae81ff>textarea</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>id</span>: <span style=color:#ae81ff>reproducible</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>attributes</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>label</span>: <span style=color:#ae81ff>How can we reproduce this?</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>description</span>: <span style=color:#ae81ff>Please share a public repository that reproduces the issue, or an example config file.</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>validations</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>required</span>: <span style=color:#66d9ef>true</span>
+</span></span><span style=display:flex><span>  - <span style=color:#f92672>type</span>: <span style=color:#ae81ff>textarea</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>id</span>: <span style=color:#ae81ff>jaguar-version</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>attributes</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>label</span>: <span style=color:#ae81ff>jaguar version</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>description</span>: <span style=color:#e6db74>&#34;`jaguar --version` output&#34;</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>render</span>: <span style=color:#ae81ff>bash</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>validations</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>required</span>: <span style=color:#66d9ef>true</span>
+</span></span><span style=display:flex><span>  - <span style=color:#f92672>type</span>: <span style=color:#ae81ff>textarea</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>id</span>: <span style=color:#ae81ff>os</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>attributes</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>label</span>: <span style=color:#ae81ff>OS</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>description</span>: <span style=color:#e6db74>&#34;e.g. from `/etc/os-release`&#34;</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>render</span>: <span style=color:#ae81ff>bash</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>validations</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>required</span>: <span style=color:#66d9ef>true</span>
+</span></span><span style=display:flex><span>  - <span style=color:#f92672>type</span>: <span style=color:#ae81ff>checkboxes</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>id</span>: <span style=color:#ae81ff>search</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>attributes</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>label</span>: <span style=color:#ae81ff>Search</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>options</span>:
+</span></span><span style=display:flex><span>        - <span style=color:#f92672>label</span>: <span style=color:#ae81ff>I did search for other open and closed issues before opening this</span>
+</span></span><span style=display:flex><span>          <span style=color:#f92672>required</span>: <span style=color:#66d9ef>true</span>
+</span></span><span style=display:flex><span>  - <span style=color:#f92672>type</span>: <span style=color:#ae81ff>textarea</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>id</span>: <span style=color:#ae81ff>ctx</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>attributes</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>label</span>: <span style=color:#ae81ff>Additional context</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>description</span>: <span style=color:#ae81ff>Anything else you would like to add</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>validations</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>required</span>: <span style=color:#66d9ef>false</span>
+</span></span></code></pre></div><p>更多配置可以查看<a href=https://docs.github.com/zh/communities/using-templates-to-encourage-useful-issues-and-pull-requests/syntax-for-issue-forms>官方文档</a>。</p><h2 id=添加安全策略>添加安全策略
+<a class=anchor href=#%e6%b7%bb%e5%8a%a0%e5%ae%89%e5%85%a8%e7%ad%96%e7%95%a5>#</a></h2><p>在 repo 的根目录、<code>docs</code> 或 <code>.github</code> 文件夹中可以添加一个 <code>SECURITY.md</code> 文件。当用户在 repo 中创建一个 issue 时，可以会看到一个指向你项目安全策略的链接。</p><p>更多配置可以查看<a href=https://docs.github.com/cn/code-security/getting-started/adding-a-security-policy-to-your-repository>官方文档</a>。</p></article><footer class=book-footer><div class="flex flex-wrap justify-between"><div><a class="flex align-center" href=https://github.com/shipengqi/golang-learn/commit/2693fbeb9296c498083681526ce91c2a5190c392 title='Last modified by PengQi Shi | December 3, 2023' target=_blank rel=noopener><img src=/golang-learn/svg/calendar.svg class=book-icon alt=Calendar>
+<span>December 3, 2023</span></a></div><div><a class="flex align-center" href=https://github.com/shipengqi/golang-learn/edit/master/content/docs/project/11_templates.md target=_blank rel=noopener><img src=/golang-learn/svg/edit.svg class=book-icon alt=Edit>
+<span>Edit this page</span></a></div></div><script>(function(){function e(e){const t=window.getSelection(),n=document.createRange();n.selectNodeContents(e),t.removeAllRanges(),t.addRange(n)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script></footer><div class=book-comments></div><label for=menu-control class="hidden book-menu-overlay"></label></div><aside class=book-toc><div class=book-toc-content><nav id=TableOfContents><ul><li><a href=#github-模板>GitHub 模板</a><ul><li><a href=#pr-template>PR Template</a></li><li><a href=#issue-template>Issue Template</a></li><li><a href=#issue-表单>Issue 表单</a></li><li><a href=#添加安全策略>添加安全策略</a></li></ul></li></ul></nav></div></aside></main></body></html>
