@@ -1,61 +1,65 @@
 ---
 title: Go 性能分析
 weight: 4
+draft: true
 ---
 
 # Go 性能分析
 
-PProf 是 Go 提供的用于可视化和分析性能分析数据的工具。
+PProf 是 Go 提供的用于数据采样和性能分析的工具，数据采样的方式有三种：
 
-- `runtime/pprof`：采集程序（非 Server）的运行数据进行分析
-- `net/http/pprof`：采集 HTTP Server 的运行时数据进行分析
+- `runtime/pprof`：采集程序（非 Server）的运行数据
+- `net/http/pprof`：采集 HTTP Server 的运行时数据
+- `go test -bench`：运行基准测试，并指定所需标识来进行数据采集。
 
-主要可以用于：
+PProf 可以用于：
 
-- CPU Profiling：CPU 分析，按照一定的频率采集所监听的应用程序 CPU（含寄存器）的使用情况，可确定应用程序在主动消耗 CPU 周期
+- CPU 分析（CPU Profiling）：按照一定的频率采集所监听的应用程序 CPU（含寄存器）的使用情况，可确定应用程序在主动消耗 CPU 周期
 时花费时间的位置。
-- Memory Profiling：内存分析，在应用程序进行堆分配时记录堆栈跟踪，用于监视当前和历史内存使用情况，以及检查内存泄漏。
-- Block Profiling：阻塞分析，记录 goroutine 阻塞等待同步（包括定时器通道）的位置。
-- Mutex Profiling：互斥锁分析，报告互斥锁的竞争情况。
+- 内存分析（Memory Profiling）：在应用程序进行堆分配时记录堆栈跟踪，用于监视当前和历史内存使用情况，以及检查内存泄漏。
+- 阻塞分析（Block Profiling）：记录 goroutine 阻塞等待同步（包括定时器通道）的位置。
+- 互斥锁分析（Mutex Profiling）：报告互斥锁的竞争情况。
 
 ## 性能分析
 
-### 分析 HTTP Server
+### net/http/pprof
 
-#### Web
+#### 获取 HTTP Server 的运行时数据
 
 ```go
+package main
+
 import (
- "log"
- "net/http"
- _ "net/http/pprof"
+	"log"
+	"net/http"
+	_ "net/http/pprof"
 )
 
 var datas []string
 
 func Add(str string) string {
- data := []byte(str)
- sData := string(data)
- datas = append(datas, sData)
+	data := []byte(str)
+	sData := string(data)
+	datas = append(datas, sData)
 
- return sData
+	return sData
 }
 
 func main() {
- go func() {
-  for {
-   log.Println(Add("https://github.com/shipengqi"))
-  }
- }()
+	go func() {
+		for {
+			log.Println(Add("https://github.com/shipengqi"))
+		}
+	}()
 
- _ = http.ListenAndServe("0.0.0.0:8080", nil)
+	_ = http.ListenAndServe("0.0.0.0:8080", nil)
 }
+
 ```
 
-注意要引入 `_ "net/http/pprof"`，这样程序运行以后，就会自动添加 `/debug/pprof` 的路由，可以
-访问 `ttp://127.0.0.1:8080/debug/pprof/`。
+`_ "net/http/pprof"` 这行代码会自动添加 `/debug/pprof` 的路由，程序运行后，可以访问 http://127.0.0.1:8080/debug/pprof 。
 
-![profile](../imgs/profile1.png)
+![profile](../../../static/images/profile1.png)
 
 - alloc: 查看所有内存分配的情况
 - block（Block Profiling）：`$HOST/debug/pprof/block`，查看导致阻塞同步的堆栈跟踪
@@ -139,12 +143,13 @@ package pdata
 var datas []string
 
 func Add(str string) string {
- data := []byte(str)
- sData := string(data)
- datas = append(datas, sData)
+	data := []byte(str)
+	sData := string(data)
+	datas = append(datas, sData)
 
- return sData
+	return sData
 }
+
 ```
 
 `data_test.go`：
@@ -157,17 +162,18 @@ import "testing"
 const url = "https://github.com/"
 
 func TestAdd(t *testing.T) {
- s := Add(url)
- if s == "" {
-  t.Errorf("Test.Add error!")
- }
+	s := Add(url)
+	if s == "" {
+		t.Errorf("Test.Add error!")
+	}
 }
 
 func BenchmarkAdd(b *testing.B) {
- for i := 0; i < b.N; i++ {
-  Add(url)
- }
+	for i := 0; i < b.N; i++ {
+		Add(url)
+	}
 }
+
 ```
 
 运行基准测试：
@@ -195,31 +201,16 @@ $ (pprof) web
 
 如果出现 `Could not execute dot; may need to install graphviz.`，参考 "安裝 Graphviz"
 
-![](../imgs/profile2.png)
+![](../../../static/images/profile2.png)
 
 上图中的框越大，线越粗代表它消耗的时间越长。
 
-![](../imgs/profile3.png)
+![](../../../static/images/profile3.png)
 
-![](../imgs/profile4.png)
+![](../../../static/images/profile4.png)
 
 PProf 的可视化界面能够更方便、更直观的看到 Go 应用程序的调用链、使用情况等。
 
 火焰图：
-![](../imgs/profile5.png)
 
-### 安裝 Graphviz
-
-官网 [下载地址](http://www.graphviz.org/download/)
-
-### 配置环境变量
-
-将 bin 目录添加到 Path 环境变量中，如 `C:\Program Files (x86)\Graphviz2.38\bin`。
-
-### 验证
-
-```sh
-dot -version
-```
-
-**部分内容来自** [Go 大杀器之性能剖析 PProf](https://github.com/EDDYCJY/blog/blob/7b021d0dee/tools/go-tool-pprof.md)
+![](../../../static/images/profile5.png)

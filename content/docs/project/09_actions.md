@@ -1,42 +1,37 @@
 ---
-title: 基于 GitHub Actions 的 CI/CD
-weight: 8
+title: GitHub Actions
+weight: 9
 ---
 
 # 基于 GitHub Actions 的 CI/CD
 
-### 静态代码检查
-
 GitHub Actions 是 GitHub 为托管在 github.com 站点的项目提供的持续集成服务。
 
-在构建持续集成任务时，我们会在任务中心完成各种操作，比如克隆代码、编译代码、运行单元测试、构建和发布镜像等。GitHub 把这些操作称为 Actions。
+在构建持续集成任务时，需要完成很多操作，比如克隆代码、编译代码、运行单元测试、构建和发布镜像等。GitHub 把这些操作称为 Actions。
 
-Actions 是可以共享的，开发者可以将 Actions 上传到 GitHub 的 [Actions 市场](https://github.com/marketplace?type=actions)。
-一个 [awesome actions](https://github.com/sdras/awesome-actions) 仓库，里面也有不少的 Action。如果需要某个 Action，直接引用他人写好的 Action 即可。
+Actions 是可以共享的，开发者可以将 Actions 上传到 GitHub 的 [Actions 市场](https://github.com/marketplace?type=actions)。如果需要某个 Action，直接引用即可。
 整个持续集成过程，就变成了一个 Actions 的组合。
 
-Action 其实是一个独立的脚本，可以将 Action 存放在 GitHub 代码仓库中，通过 `<userName>/<repoName>` 的语法引用 Action。例如，
-`actions/checkout@v2` 表示 `https://github.com/actions/checkout` 这个仓库，`tag` 是 `v2`。
+Action 其实是一个独立的脚本，可以将 Action 存放在 GitHub 代码仓库中，通过 `<userName>/<repoName>` 的语法引用 Action。例如，`actions/checkout@v2` 表示 `https://github.com/actions/checkout` 这个仓库，`tag` 是 `v2`。
 
-GitHub Actions 术语：
+## GitHub Actions 术语
 
-- workflow：一个 .yml 文件对应一个 workflow，也就是一次持续集成。一个 GitHub 仓库可以包含多个 workflow，只要是在 `.github/workflow` 目录下的
+- `workflow`：一个 `.yml` 文件对应一个 workflow，也就是一次持续集成。一个 GitHub 仓库可以包含多个 workflow，只要是在 `.github/workflow` 目录下的
   `.yml` 文件都会被 GitHub 执行。
-- job：一个 workflow 由一个或多个 job 构成，每个 job 代表一个持续集成任务。
-- step：每个 job 由多个 step 构成，一步步完成。
-- action：每个 step 可以依次执行一个或多个命令（action）。
-- on：一个 workflow 的触发条件，决定了当前的 workflow 在什么时候被执行。
+- `job`：一个 workflow 由一个或多个 `job` 构成，每个 `job` 代表一个持续集成任务。
+- `step`：每个 `job` 由多个 `step` 构成，一步步完成。
+- `action`：每个 `step` 可以依次执行一个或多个命令（action）。
+- `on`：一个 workflow 的触发条件，决定了当前的 workflow 在什么时候被执行。
 
-## workflow 文件
+## workflow 
 
-GitHub Actions 配置文件存放在代码仓库的 `.github/workflows` 目录下，文件后缀为 `.yml`、`.yaml`。GitHub 只要发现 `.github/workflows` 目录里
-面有 `.yml` 文件，就会自动运行该文件。
+GitHub Actions 配置文件存放在代码仓库的 `.github/workflows` 目录下，文件后缀为 `.yml`、`.yaml`。GitHub 只要发现 `.github/workflows` 目录里面有 `.yml` 文件，就会自动运行该文件。
 
-workflow 文件的配置[官方文档](https://docs.github.com/cn/actions/using-workflows/workflow-syntax-for-github-actions)。
+### 基础配置
 
 - `name` 是 workflow 的名称。如果省略该字段，默认为当前 workflow 的文件名。
 - `on` 指定触发 workflow 的条件。
-  - `on: push`，意思是，`push` 事件触发 workflow。也可以是事件的数组，例如: `on: [push, pull_request]`。[所有的事件](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows)。
+  - `on: push`，意思是，`push` 事件触发 workflow。也可以是事件的数组，例如: `on: [push, pull_request]`。[更多触发事件](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows)。
   - `on.<push|pull_request>.<tags|branches>`，指定触发事件时，我们可以限定分支或标签。
     ```yaml
     # 只有 master 分支发生 push 事件时，才会触发 workflow。
@@ -54,15 +49,6 @@ workflow 文件的配置[官方文档](https://docs.github.com/cn/actions/using-
     my_second_job:
       name: My second job
   ```
-- `jobs.<job_id>.needs` `needs` 字段指定当前任务的依赖关系，即运行顺序。
-  ```yaml
-  # job1 必须先于 job2 完成，而 job3 等待 job1 和 job2 完成后才能运行。
-  jobs:
-    my_first_job:
-      name: My first job
-    my_second_job:
-      name: My second job
-  ```  
 - `jobs.<job_id>.runs-on` `runs-on` 字段指定运行所需要的虚拟机环境，它是必填字段。可用的虚拟：
   - ubuntu-latest、ubuntu-18.04 或 ubuntu-16.04。
   - windows-latest、windows-2019 或 windows-2016。
@@ -85,27 +71,53 @@ workflow 文件的配置[官方文档](https://docs.github.com/cn/actions/using-
       run: |
         echo hello
   ```
-- `uses` 可以引用别人已经创建的 actions。引用格式为 `username/repo@verison`，例如 `uses: actions/setup-go@v3`。
-- `with` actions 的参数。每个参数都是一个键/值对。参数被设置为环境变量，该变量的前缀为 `INPUT_`，并转换为大写。
+- `jobs.<job_id>.uses` 可以引用别人已经创建的 actions。引用格式为 `username/repo@verison`，例如 `uses: actions/setup-go@v3`。
+- `jobs.<job_id>.with` 设置 action 的参数。每个参数都是一个 `key/value`。
   ```yaml
   jobs:
     my_first_job:
     steps:
-      - name: Create a Release
-        uses: goreleaser/goreleaser-action@v2
+      - name: Set up Node
+      - uses: actions/setup-node@v3
         with:
-          # 这些参数将被 goreleaser-action 作为 INPUT_VERSION、INPUT_ARGS 环境变量使用。
-          version: latest
-          args: release --rm-dist
+          node-version: '14'
   ```
-- `run` 执行的命令。可以有多个命令，例如：
+- `jobs.<job_id>.run` 执行的命令。可以有多个命令，例如：
   ```yaml
   - name: Build
     run: |
       go mod tidy
       go build -v -o crtctl .
   ```
-- `id` step 的唯一标识。
+
+### 设置 job 的依赖关系
+
+`needs` 字段可以指定当前任务的依赖关系，即运行顺序。
+
+```yaml
+jobs:
+  job1:
+  job2:
+    needs: job1
+  job3:
+    needs: [job1, job2]
+```
+
+上面的示例，job1 必须先于 job2 成功完成，而 job3 等待 job1 和 job2 成功完成后才能运行。
+
+不要求依赖的 job 是否成功：
+
+```yaml
+jobs:
+  job1:
+  job2:
+    needs: job1
+  job3:
+    if: ${{ always() }}
+    needs: [job1, job2]
+```
+
+上面的示例，job3 使用 `always()` 条件表达式，确保始终在 job1 和 job2 完成（无论是否成功）后运行。
 
 ### 使用构建矩阵
 
@@ -138,7 +150,7 @@ steps:
 
 在构建过程中，如果有用到 token 等敏感数据，此时就可以使用 secrets。我们在对应项目中选择 `Settings-> Secrets`，就可以创建 secret。
 
-配置文件中的使用方法如下：
+例如在 Secrets 中创建一个名为 `MySecrets` 的 secret，然后在 workflow 中引用：
 
 ```yaml
 name: Go Test
@@ -157,9 +169,99 @@ jobs:
 
 secret name 不区分大小写，所以如果新建 secret 的名字是 `name`，使用时用 `secrets.name` 或者 `secrets.Name` 都是可以的。
 
-## 使用 Artifact
+[更过 workflow 配置](https://docs.github.com/cn/actions/using-workflows/workflow-syntax-for-github-actions)。
 
-在构建过程中，可能会输出一些构建产物，比如日志文件、测试结果等。可以使用 Github Actions Artifact 来存储。使用 [action/upload-artifact](https://github.com/actions/upload-artifact)
+## 常用 actions
+
+### 静态代码检查
+
+[golangci-lint-action](https://github.com/golangci/golangci-lint-action) 是 golangci-lint 官方提供的 action。
+
+action 默认会读取项目根目录下的 `.golangci.yml` 配置文件。可以使用 `--config` 指定配置文件： `args: --config=/my/path/.golangci.yml`。
+
+```yaml
+name: golangci-lint
+on:
+  push:
+    tags:
+      - v*
+    branches:
+      - main
+    paths-ignore:
+      - 'docs/**'
+      - 'README.md'
+  pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - 'README.md'
+permissions:
+  contents: read
+
+jobs:
+  golangci:
+    strategy:
+      matrix:
+        go: [ '1.20', '1.21' ]
+        os: [ ubuntu-latest, windows-latest ]
+    permissions:
+      contents: read  # for actions/checkout to fetch code
+      pull-requests: read  # for golangci/golangci-lint-action to fetch pull requests
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version: stable # get the latest stable version from the go-versions repository manifest.
+          cache: false
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          args: --timeout=10m
+```
+
+### 自动发布
+
+[goreleaser-action](https://github.com/goreleaser/goreleaser-action) GoReleaser 官方提供和的 action。
+
+action 默认读取项目根目录下的 `.goreleaser.yaml` 配置文件。可以使用 `--config` 指定配置文件： `args: --config=/my/path/.goreleaser.yml`。
+
+```yaml
+name: goreleaser
+
+on:
+  pull_request:
+  push:
+
+permissions:
+  contents: write
+
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Go
+        uses: actions/setup-go@v4
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v5
+        with:
+          # either 'goreleaser' (default) or 'goreleaser-pro'
+          distribution: goreleaser
+          version: latest
+          args: release --clean --rm-dist --debug
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
+          # Your GoReleaser Pro key, if you are using the 'goreleaser-pro' distribution
+          # GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
+```
+
+### 使用 Artifact 存储文件
+
+在构建过程中，可能会输出一些构建产物，比如日志文件、测试结果等。可以使用 GitHub Actions Artifact 来存储。使用 [action/upload-artifact](https://github.com/actions/upload-artifact)
 和 [download-artifact](https://github.com/actions/download-artifact) 进行构建参数的相关操作。
 
 ```yaml
@@ -175,7 +277,7 @@ steps:
 
 执行成功后，我们就能在对应 action 面板看到生成的 Artifact。
 
-## 使用缓存
+### 使用缓存加快 workflow
 
 为了使 workflow 更快、更高效，可以为依赖项及其他经常重复使用的文件创建和使用缓存。例如：npm，go mod。要缓存 job 的依赖项可以使用 [cache](https://github.com/actions/cache) 。
 
@@ -197,7 +299,7 @@ cache 会根据 `key` 尝试还原缓存。当找到缓存时，会将缓存的�
     key: crtctl-${{ github.event.pull_request.number }}-${{ github.sha }}
 ```
 
-### 输入参数
+#### 输入参数
 
 - `key`：必须。缓存的 key。 它可以是变量、上下文值、静态字符串和函数的任何组合。 密钥最大长度为 512 个字符，密钥长度超过最大长度将导致操作失败。
 - `path`：必须。运行器上用于缓存或还原的路径。可以指定单个路径，也可以在单独的行上添加多个路径。 例如：
@@ -217,7 +319,7 @@ cache 会根据 `key` 尝试还原缓存。当找到缓存时，会将缓存的�
     npm-
   ```
 
-### 输出参数
+#### 输出参数
 
 - `cache-hit`：布尔值，是否命中缓存。
 
@@ -227,7 +329,8 @@ cache 会根据 `key` 尝试还原缓存。当找到缓存时，会将缓存的�
   continue-on-error: true
   run: npm list
 ```
-### 缓存匹配过程
+
+#### 缓存匹配过程
 
 1. 当 `key` 匹配现有缓存时，被称为缓存命中，并且操作会将缓存的文件还原到 `path` 目录。
 2. 当 `key` 不匹配现有缓存时，则被称为缓存失误，在作业成功完成时会自动创建一个新缓存。发生缓存失误时，该操作还会搜索指定的 `restore-keys` 以查找任何匹配项： 
@@ -237,19 +340,19 @@ cache 会根据 `key` 尝试还原缓存。当找到缓存时，会将缓存的�
   - cache 操作完成，作业中的下一个步骤运行。
   - 如果作业成功完成，则操作将自动创建一个包含 `path` 目录内容的新缓存。
 
-[匹配缓存键详细过程](https://docs.github.com/cn/actions/using-workflows/caching-dependencies-to-speed-up-workflows#matching-a-cache-key) 。
+[匹配缓存键的详细过程](https://docs.github.com/cn/actions/using-workflows/caching-dependencies-to-speed-up-workflows#matching-a-cache-key) 。
 
-### 使用限制和收回政策
+#### 使用限制和收回政策
 
 GitHub 将删除 7 天内未被访问的任何缓存条目。 可以存储的缓存数没有限制，但存储库中所有缓存的总大小限制为 10 GB。
 
 如果超过此限制，GitHub 将保存新缓存，但会开始收回缓存，直到总大小小于存储库限制。
 
-## 自动打 Label
+### 自动打 Label
 
 使用 [actions/labeler](https://github.com/marketplace/actions/labeler) 来实现自动打 Label。
 
-### 使用
+#### 使用
 
 创建 `.github/labeler.yml` 文件，该文件包含标签列表和需要匹配的 [minimatch](https://github.com/isaacs/minimatch) globs，以应用标签。
 
@@ -279,7 +382,7 @@ jobs:
 - `configuration-path`：Label 配置文件路径。
 - `sync-labels`：当匹配的文件被还原或不再被 PR 改变时，是否要删除标签。
 
-## 自动 Assign
+### 在一个 PR 创建或打开时为自动 assign reviewer
 
 使用 [auto-assign-action](https://github.com/marketplace/actions/auto-assign-action) 来实现自动 assign。
 
@@ -372,7 +475,7 @@ jobs:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
 ```
 
-## Close Stale Issues and PRs
+### 关闭不活跃的 Issue 和 PR
 
 使用 [close-stale-issues](https://github.com/marketplace/actions/close-stale-issues) 来自动关闭长时间不活跃的 PR 和 issues。
 
@@ -391,7 +494,7 @@ permissions:
   pull-requests: write
 ```
 
-## 示例
+#### 示例
 
 ```yaml
 name: "Close stale issues and PRs"
@@ -420,7 +523,7 @@ jobs:
           only-labels: "Needs info,Duplicate"
 ```
 
-## Gitleaks
+### 使用 Gitleaks 进行静态代码分析
 
 [Gitleaks](https://github.com/marketplace/actions/gitleaks) 是一款 SAST 工具，用于检测和防止 git 仓库中的密码、API 密钥和令牌等硬编码秘密。
 
@@ -462,9 +565,9 @@ paths = ['''.*/testdata/*''']
 
 更多配置 [Configuration](https://github.com/gitleaks/gitleaks#configuration)。
 
-## Anchore Container Scan
+### 使用 Grype 扫描容器镜像和文件系统漏洞
 
-用于调用 [Grype](https://github.com/anchore/grype) 扫描仪并返回发现的漏洞，如果发现了漏洞，还可选择以可配置的严重程度失败。
+[Grype](https://github.com/anchore/grype) 是一款针对容器镜像和文件系统的漏洞扫描程序。如果发现了漏洞，还可选择以可配置的严重程度失败。
 
 ```yaml
 name: "grype"
@@ -489,7 +592,7 @@ jobs:
           fail-build: true
 ```
 
-### `grype` Configuration
+#### `grype` Configuration
 
 默认配置文件的搜索路径:
 
@@ -518,17 +621,15 @@ ignore:
     vulnerability: "CVE-2008-4318" # vulnerability ID
 ```
 
-更多配置 [Grype](https://github.com/anchore/grype)。
+[更多 Grype 配置](https://github.com/anchore/grype)。
 
-## GitHub CodeQL Action
+### 使用 CodeQL 进行安全性代码分析
 
-GitHub CodeQL Action 是一个用于安全性代码分析的 GitHub Actions，使用 CodeQL 查询语言来搜索项目中的代码漏洞和安全问题。
-询完成后，CodeQL Action 会生成报告，显示查询结果。
+GitHub CodeQL Action 是一个用于安全性代码分析的 GitHub Actions，使用 CodeQL 查询语言来搜索项目中的代码漏洞和安全问题。扫描完成后，CodeQL Action 会生成报告，扫描查询结果。
 
-CodeQL 可以在 `Security -> Overview -> Code scanning alerts -> Set up code scanning` 找到官方给的 CodeQL Workflow Template。
-选择 `Set up this workflow` 就可以用 template 了。
+CodeQL 可以在 `Security -> Overview -> Code scanning alerts -> Set up code scanning` 找到官方给的 CodeQL Workflow Template。选择 `Set up this workflow` 就可以用 template 了。
 
-也可以自己在 workflow 中加上 CodeQL Action。
+也可以自己在 workflow 中加上 CodeQL Action：
 
 ```yaml
 name: "codeql"
@@ -560,9 +661,9 @@ jobs:
       - uses: github/codeql-action/analyze@v2
 ```
 
-## Git Auto Commit
+### 自动提交 action 运行期间产生的文件
 
-用于检测工作流运行期间更改的文件，并将其提交和推送回 GitHub 仓库。默认情况下，提交会以 "GitHub Action"的名义进行，并由上次提交的用户共同撰写。
+[git-auto-commit-action](https://github.com/stefanzweifel/git-auto-commit-action) 用于检测工作流运行期间更改的文件，并将其提交和推送回 GitHub 仓库。默认情况下，提交会以 "GitHub Action" 的名义进行，并由上次提交的用户共同撰写。
 
 `CONTRIBUTING.md`，ChangeLog 之类的改动可以使用该 action 来实现自动提交。
 
@@ -589,9 +690,9 @@ jobs:
       - uses: stefanzweifel/git-auto-commit-action@v4
 ```
 
-## Dependency Review
+### 扫描 PR 中的依赖关系
 
-扫描拉取请求中的依赖关系更改，如果引入了任何漏洞或无效许可证，则会引发错误。
+[dependency-review-action](https://github.com/actions/dependency-review-action) 可以用来扫描 PR 中的依赖关系更改，如果引入了任何漏洞或无效许可证，则会引发错误。
 
 ```yaml
 name: 'Dependency Review'
@@ -610,9 +711,9 @@ jobs:
         uses: actions/dependency-review-action@v3
 ```
 
-## 在 Github Action 中配置 Git 访问 Github
+### 如何在 Action 中访问 GitHub
 
-### 使用 Github Access token
+#### 使用 GitHub Access token
 
 1. 首先需要生成一个 Access Token，[创建 token](https://github.com/settings/tokens/new)。
 2. 在 repo 的 Settings 页面中添加 Secret，例如，我的 secret 命名为 PAT。
@@ -640,9 +741,9 @@ jobs:
 
 上面的方式用的是 HTTPS 的方式。通过 `git remote -v` 查看可以看到 remote 的地址。
 
-### 使用 SSH
+#### 使用 SSH
 
-1. 首先需要一个 Github 中已经配置好的 ssh 的 public key。
+1. 首先需要一个 GitHub 中已经配置好的 ssh 的 public key。
 2. 在 repo 的 Settings 页面中添加 Secret，例如，我的 secret 命名为 SSH_KEY。
 
 在 Action 中配置 ssh：

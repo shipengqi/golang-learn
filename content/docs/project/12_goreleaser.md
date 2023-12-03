@@ -1,73 +1,62 @@
 ---
-draft: true
+title: GoReleaser
+weight: 12
 ---
 
-# goreleaser
+# GoReleaser
 
-goreleaser 可以交叉编译你的项目代码，并且发布到 Github，Gitlab 和 Gitea。
+GoReleaser 是用 Go 编写项目的自动发布工具，支持交叉编译，并且支持发布到 Github，Gitlab 和 Gitea。
 
 ## 安装
 
-### go install
 ```
 go install github.com/goreleaser/goreleaser@latest
 ```
 
-### yum
+[更多安装方式](https://goreleaser.com/install/)。
 
-```yaml
-echo '[goreleaser]
-name=GoReleaser
-baseurl=https://repo.goreleaser.com/yum/
-enabled=1
-gpgcheck=0' | sudo tee /etc/yum.repos.d/goreleaser.repo
-sudo yum install goreleaser
-```
+## 使用
 
-### apt
-```
-echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | sudo tee /etc/apt/sources.list.d/goreleaser.list
-sudo apt update
-sudo apt install goreleaser
-```
+生成配置文件 `.goreleaser.yaml`，一般这个文件放在项目的根目录下：
 
-## Quick Start
-
-运行下面的命令可以生成配置文件 `.goreleaser.yaml`：
 ```
 goreleaser init
 ```
 
-下面的命令发布一个 "仅限本地" 的 release，查看 `release` 命令是否可以正常运行。
+下面的命令可以发布一个 "仅限本地" 的 release，一般用来测试 `release` 命令是否可以正常运行。
+
 ```
 goreleaser release --snapshot --rm-dist
 ```
 
-可以自定义 `.goreleaser.yaml`，运行下面的命令检查配置：
+修改 `.goreleaser.yaml` 配置后，可以用 `check` 命令检查配置：
+
 ```
 goreleaser check
 ```
 
-只为特定的 GOOS/GOARCH 构建二进制文件，这对本地开发很有用。
+`--single-target` 只为特定的 `GOOS/GOARCH` 构建二进制文件，这对本地开发很有用：
+
 ```
 goreleaser build --single-target
 ```
 
-如果要发布到 Github，需要导出一个环境变量 `GITHUB_TOKEN`，它应该包含一个有效的 GitHub token 与 repo 范围。它将被用来部署发布
-到你的 GitHub 仓库。[创建一个新的 GitHub 令牌](https://github.com/settings/tokens/new)。
+### 发布一个 release
+
+如果要发布到 Github，需要导出一个环境变量 `GITHUB_TOKEN`，它应该包含一个有效的 GitHub token 与 repo 范围。它将被用来部署发布到你的 GitHub 仓库。[创建一个新的 GitHub 令牌](https://github.com/settings/tokens/new)。
 
 > `write:packages` 权限是 `GITHUB_TOKEN` 需要的最小权限。
 
 GoReleaser 会使用 repo 的最新 [Git 标签](https://git-scm.com/book/en/v2/Git-Basics-Tagging)。
 
-创建一个 tag 并 push 到 Github：
+首先需要创建一个 tag 并 push 到 Github：
 
 ```yaml
 git tag -a v0.1.0 -m "First release"
 git push origin v0.1.0
 ```
 
-> 注意你的 tag 应该是一个有效的 [semantic version](https://semver.org/)
+> 注意 tag 必须是一个有效的 [semantic version](https://semver.org/)
 
 然后运行：`goreleaser release`。
 
@@ -75,11 +64,12 @@ git push origin v0.1.0
 
 ### Dry run
 
-如果想在进行发布之前测试一下，你可以通过下面的方式。
+如果想在进行发布之前测试一下，可以通过下面的方式。
 
 #### Build-only Mode
 
 构建项目代码，可以用来验证项目的构建对所有构建目标有没有错误。
+
 ```
 goreleaser build
 ```
@@ -92,11 +82,7 @@ goreleaser build
 goreleaser release --skip-publish
 ```
 
-## 更多配置
-
-[更多配置](https://goreleaser.com/customization/)。
-
-### build 配置
+## build 配置
 
 ```yaml
 # .goreleaser.yaml
@@ -317,12 +303,11 @@ builds:
           - foobaz
         env:
           - CGO_ENABLED=1
-
 ```
 
-### 设置自定义 tag
+## 设置自定义 tag
 
-你可以使用环境变量强制 build tag 和 previous tag。这在一个 git 提交被多个 git tag 引用的情况下可能很有用。
+可以使用环境变量强制 build tag 和 previous tag。这在一个 git 提交被多个 git tag 引用的情况下很有用。
 
 ```
 export GORELEASER_CURRENT_TAG=v1.2.3
@@ -330,7 +315,7 @@ export GORELEASER_PREVIOUS_TAG=v1.1.0
 goreleaser release
 ```
 
-### changelog 配置
+## changelog 配置
 
 ```yaml
 changelog:
@@ -362,47 +347,9 @@ changelog:
       order: 9999
 ```
 
-## 使用 goreleaser Action
+- `exclude` 下匹配到的文本不会被添加到 CHANGELOG 中。
+- `groups` 根据 Commit Message 的 type 分组。 
 
-```yaml
-name: goreleaser
+生成的 CHANGELOG 如下图：
 
-on:
-  push:
-    # run only against tags
-    tags:
-      - '*'
-
-permissions:
-  contents: write
-  # packages: write
-  # issues: write
-
-jobs:
-  goreleaser:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - run: git fetch --force --tags
-      - uses: actions/setup-go@v3
-        with:
-          go-version: '>=1.19.2'
-          cache: true
-      # More assembly might be required: Docker logins, GPG, etc. It all depends
-      # on your needs.
-      - uses: goreleaser/goreleaser-action@v2
-        with:
-          # either 'goreleaser' (default) or 'goreleaser-pro'
-          distribution: goreleaser
-          version: latest
-          args: release --rm-dist
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Your GoReleaser Pro key, if you are using the 'goreleaser-pro' distribution
-          # GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
-
-```
-
-更多配置：https://goreleaser.com/ci/
+![changlog](https://raw.githubusercontent.com/shipengqi/illustrations/f30c629498b577f1cb6b84a60e98fca4ad1da984/go/changlog.png)
