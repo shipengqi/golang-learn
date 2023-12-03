@@ -133,6 +133,39 @@ Closes #123, #245, #992
 $ npm install -g commitizen
 ```
 
+#### 使用
+
+
+初始化项目，使用 cz-conventional-changelog 适配器：
+
+```
+# npm
+$ commitizen init cz-conventional-changelog --save-dev --save-exact
+
+# yarn
+$ commitizen init cz-conventional-changelog --yarn --dev --exact
+
+# pnpm
+$ commitizen init cz-conventional-changelog --pnpm --save-dev --save-exact
+```
+
+提交代码：
+
+```
+$ git add .
+# 进入交互模式
+$ git cz
+```
+
+![commitizen](https://raw.githubusercontent.com/shipengqi/illustrations/a6542076c06fd7a2d74ddfcb41ac8d9acf56e405/go/commitizen.gif)
+
+> `git cz` 支持 `git commit` 的所有参数。
+
+git log:
+
+![git-commit-log](https://raw.githubusercontent.com/shipengqi/illustrations/643142bf64ec66adf5cd0bed1fbbe7f67bbcfb45/go/git-commit-log.png)
+
+
 ## 自动生成 CHANGELOG
 
 ### goreleaser/chglog

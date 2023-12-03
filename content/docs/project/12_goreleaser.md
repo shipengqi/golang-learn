@@ -5,7 +5,7 @@ weight: 12
 
 # GoReleaser
 
-goreleaser 支持交叉编译，并且支持发布到 Github，Gitlab 和 Gitea。
+GoReleaser 是用 Go 编写项目的自动发布工具，支持交叉编译，并且支持发布到 Github，Gitlab 和 Gitea。
 
 ## 安装
 

@@ -456,6 +456,65 @@ func main() {
 
 ## 零拷贝优化
 
-### 优化字符串与字节转换，减少内存分配
+### 优化字符串与 []byte 转换，减少内存分配
+
+在开发中，字符串与 `[]byte` 相互转换是经常用到的。直接通过类型转换 `string(bytes)` 或者 `[]byte(str)` 会带来数据的复制，性能不佳。
+
+在 Go 1.20 之前的版本可以采用下面的方式来优化：
+
+```go
+// B2S convert []byte to string.
+func B2S(b []byte) string {
+	return *(*string)(unsafe.Pointer(&b))
+}
+
+// S2B convert string to []byte.
+func S2B(s string) (b []byte) {
+	bh := (*reflect.SliceHeader)(unsafe.Pointer(&b))
+	sh := (*reflect.StringHeader)(unsafe.Pointer(&s))
+
+	bh.Data = sh.Data
+	bh.Cap = sh.Len
+	bh.Len = sh.Len
+
+	return b
+}
+```
+
+
+Go 1.20 提供了新的方式：
+
+```go
+// B2S convert []byte to string.
+func B2S(b []byte) string {
+	return unsafe.String(unsafe.SliceData(b), len(b))
+}
+
+// S2B convert string to []byte.
+func S2B(s string) []byte {
+	return unsafe.Slice(unsafe.StringData(s), len(s))
+}
+```
 
 ## 设置 GOMAXPROCS
+
+`GOMAXPROCS` 是 Go 提供的一个非常重要的环境变量。设置它的值可以调整调度器 Processor 的数量，每个 Processor 都会绑定一个系统线程。所以 Processor 的数量，会影响 Go 的并发性能。
+
+Go 1.5 版本以后，`GOMAXPROCS` 的默认值是机器的 CPU 核数（`runtime.NumCPU()` 的返回值）。
+
+但是 `runtime.NumCPU()` 在容器中是无法获取正确的 CPU 核数的，因为容器是使用 `cgroup` 技术对 CPU 资源进行隔离限制的，但 `runtime.NumCPU()` 获取的却是**宿主机的 CPU 核数**。
+例如一个 Kubernetes 集群中 Node 核数是 36，然后创建一个 Pod，并且限制 Pod 的 CPU 核数是 1。Pod 中的进程在设置 `GOMAXPROCS` 后，线程数量是 36。导致线程过多，线程频繁切换，增加上线文切换的负担。
+
+Uber 提供了一个库 `go.uber.org/automaxprocs` 可以解决这个问题：
+
+```go
+package main
+
+import (
+	_ "go.uber.org/automaxprocs"
+)
+
+func main() {
+	// ...
+}
+```
