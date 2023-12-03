@@ -1,6 +1,6 @@
 ---
 title: GitHub Dependabot
-weight: 9
+weight: 10
 ---
 
 # GitHub Dependabot

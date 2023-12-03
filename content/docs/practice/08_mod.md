@@ -224,7 +224,8 @@ go mod tidy
 
 接下来就可以运行 `go run main.go` 了。
 
-## 迁移到 vendor
+## 迁移回 vendor 模式
+
 如果不想使用 go mod 的缓存方式，可以使用 `go mod vendor` 回到使用的 vendor 目录进行包管理的方式。
 
 这个命令并只是单纯地把 `go.sum` 中的所有依赖下载到 vendor 目录里。
@@ -234,6 +235,7 @@ go mod tidy
 发布时需要带上 vendor 目录。
 
 ## 添加新依赖包
+
 添加新依赖包有下面几种方式：
 1. 直接修改 `go.mod` 文件，然后执行 `go mod download`。
 2. 使用 `go get packagename@vx.x.x`，会自动更新 `go.mod` 文件的。
@@ -337,7 +339,9 @@ $ go get github.com/pooky/demomodules/module/codec@v0.0.1
 ```
 
 ## 发布 module
+
 ### 语义化版本
+
 Golang 官方推荐的最佳实践叫做 semver（Semantic Versioning），也就是语义化版本。
 
 就是一种清晰可读的，明确反应版本信息的版本格式。
@@ -367,6 +371,7 @@ go module 的谦容性规则：**如果旧软件包和新软件包具有相同�
 | v2.0.0 | github.com/pooky/demomodules/v2 |
 
 `v2.x` 表示发生了重大变化，无法保证向后兼容，这时就需要在包的导入路径的末尾附加版本信息：
+
 ```go
 module my-module/v2
 
@@ -376,6 +381,7 @@ require (
   my/pkg/v3 v3.0.1
 )
 ```
+
 格式总结为 `pkgpath/vN`，其中 N 是大于 1 的主要版本号。代码里导入时也需要附带上这个版本信息，如 `import "some/my-module/v2"`。
 
 #### 为什么忽略 v0 和 v1 的主版本号

@@ -5,28 +5,24 @@ weight: 6
 
 # API 文档
 
-# 使用 Swagger 生成 API 文档
+## 使用 Swagger 生成 API 文档
 
-主要的 Swagger 工具：
+Swagger 是居于 OpenAPI 规范的 API 文档工具。
 
-- **Swagger 编辑器**：基于浏览器的[编辑器](https://editor.swagger.io)，可以在其中编写 OpenAPI 规范，并实时预览 API 文档。
-- **Swagger UI**：将 OpenAPI 规范呈现为交互式 API 文档，并可以在浏览器中尝试 API 调用。
-- **Swagger Codegen**：根据 OpenAPI 规范，生成服务器存根和客户端代码库，目前已涵盖了 40 多种语言。
+> OpenAPI 是一个 API 规范，它的前身叫 Swagger 规范，目前最新的 OpenAPI 规范是 [OpenAPI 3.0](https://swagger.io/docs/specification/about/)（也就是 Swagger 2.0 规范）。
 
-> OpenAPI 是一个 API 规范，它的前身叫 Swagger 规范，目前最新的OpenAPI规范是 [OpenAPI 3.0](https://swagger.io/docs/specification/about/)（也就是 Swagger 2.0 规范）。
+## Swagger 编辑器
 
-## go-swagger
+Swagger 编辑是一个在线的 API 文档[编辑器](https://editor.swagger.io)，可以在其中编写 OpenAPI 规范，并实时预览 API 文档。
 
-生成 API 文档一般有两种方式：
+## 基于代码自动生成 Swagger 文档
 
-1. 如果熟悉 Swagger 语法的话，可以直接编写 JSON/YAML 格式的 Swagger 文档。
-2. 通过工具 [swag](https://github.com/swaggo/swag) 或者 [go-swagger](https://github.com/go-swagger/go-swagger) 工具来生成。
+Go 生成 Swagger 文档常用的工具有两个，分别是 [swag](https://github.com/swaggo/swag) 和 [go-swagger](https://github.com/go-swagger/go-swagger)。
 
-使用 go-swagger 的原因：
+推荐使用 go-swagger：
 
-1. go-swagger 提供了更灵活、更多的功能来描述 API。
-2. 使用 swag，每一个 API 都需要有一个冗长的注释，有时候代码注释比代码还要长，但是通过 go-swagger 可以将代码和注释分开编写，一方面可以使代码保持简洁，
-   清晰易读，另一方面可以在另外一个包中，统一管理这些 Swagger API 文档定义。
+1. go-swagger 提供了更灵活、更多的功能来描述 API，可以生成客户端和服务器端代码。
+2. 使用 swag 的话，每一个 API 都需要有一个冗长的注释，有时候代码注释比代码还要长，但是通过 go-swagger 可以将代码和注释分开编写，可以使代码保持简洁，清晰易读，而且可以把 API 定义放在一个目录中，方便管理。
 
 ### 安装 go-swagger
 
@@ -37,7 +33,9 @@ version: v0.30.3
 commit: ecf6f05b6ecc1b1725c8569534f133fa27e9de6b
 ```
 
-### 常用命令
+命令格式为 `swagger [OPTIONS] <command>`。
+
+`swagger` 提供的子命令：
 
 |  子命令   | 描述  |
 |  ----  | ----  |
@@ -52,17 +50,19 @@ commit: ecf6f05b6ecc1b1725c8569534f133fa27e9de6b
 
 ### 使用
 
-go-swagger 通过解析源码中的注释来生成 Swagger 文档，go-swagger 的详细注释语法可参考[官方文档](https://goswagger.io/)。常用的注释语法：
+go-swagger 通过解析源码中的注释来生成 Swagger 文档。
 
-|  注释语法   | 描述  |
-|  ----  | ----  |
-| swagger:meta  | 定义 API 接口全局基本信息 |
-| swagger:route  | 定义路由信息 |
+注释语法：
+
+|  注释语法   | 描述       |
+|  ----  |----------|
+| swagger:meta  | 定义全局基本信息 |
+| swagger:route  | 定义路由信息   |
 | swagger:parameters  | API 请求参数 |
 | swagger:response  | API 响应参数 |
-| swagger:model  | 可以服用的 Go 数据结构 |
+| swagger:model  | 可以复用的 Go 数据结构 |
 | swagger:allOf  | 嵌入其他 Go 结构体 |
-| swagger:strfmt  | 格式化的字符串 |
+| swagger:strfmt  | 格式化的字符串  |
 | swagger:ignore  | 需要忽略的结构体 |
 
 
@@ -90,10 +90,10 @@ func main() {
 	r.POST("/users", Create)
 	r.GET("/users/:name", Get)
 
-	log.Fatal(r.Run(":5555"))
+	log.Fatal(r.Run(":8081"))
 }
 
-// Create create a user in memory.
+// Create create a user.
 func Create(c *gin.Context) {
 	var user api.User
 	if err := c.ShouldBindJSON(&user); err != nil {
@@ -112,7 +112,7 @@ func Create(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
-// Get return the detail information for a user.
+// Get return user details.
 func Get(c *gin.Context) {
 	username := c.Param("name")
 	for _, u := range users {
@@ -126,7 +126,7 @@ func Get(c *gin.Context) {
 }
 ```
 
-`user.go`：
+`swagger/api/user.go`：
 
 ```go
 package api
@@ -151,7 +151,7 @@ type User struct {
 
 `Required: true` 说明字段是必须的。
 
-另外一个Go包中编写带go-swagger注释的API文档。 先创建一个目录 `swagger/docs`。在 `swagger/docs` 创建 `doc.go` 文件，提供基本的 API 信息：
+另外一个 Go 包中编写带 go-swagger 注释的 API 文档。 先创建一个目录 `swagger/docs`。在 `swagger/docs` 创建 `doc.go` 文件，提供基本的 API 信息：
 
 ```go
 // Package docs awesome.
@@ -179,27 +179,10 @@ type User struct {
 // swagger:meta
 package docs
 ```
-[swagger](..%2F..%2Fswagger)
-注意最后以 `swagger:meta` 注释结束。[swagger](..%2F..%2Fswagger)
 
-编写完 `doc.go` 文件后，进入 `swagger` 目录，执行如下命令，生成 Swagger API 文档，并启动 HTTP 服务，在浏览器查看 Swagger：
+注意最后以 `swagger:meta` 注释结束。
 
-```
-$ swagger generate spec -o swagger.yaml
-$ swagger serve --no-open -F=redoc --port 36666 swagger.yaml
-```
-
-- `-o`：指定要输出的文件名。swagger 会根据文件名后缀 `.yaml` 或者 `.json`，决定生成的文件格式为 YAML 或 JSON。
-- `–no-open`：`-–no-open` 禁止调用浏览器打开 URL。
-- `-F`：指定文档的风格，可选 swagger 和 redoc。redoc 格式更加易读和清晰。
-- `–port`：指定启动的 HTTP 服务监听端口。
-
-生成的 `swagger.yaml` 转换为 `swagger.json`：
-```
-$ swagger generate spec -i ./swagger.yaml -o ./swagger.json
-```
-
-编写 API 接口的定义文件 `swagger/docs/user.go`：
+编写完 `doc.go` 文件后， 编写 API 的定义文件 `swagger/docs/user.go`：
 
 ```go
 package docs
@@ -277,60 +260,38 @@ type errResponseWrapper struct {
 type okResponseWrapper struct{}
 ```
 
-- `swagger:route`：代表一个 API 接口描述的开始，后面的字符串格式为 HTTP 方法，URL，Tag，ID。可以填写多个 tag，相同 tag 的 API 接口在 Swagger 文档中会被分为一组。ID 是一个标识符，
-  `swagger:parameters` 是具有相同 ID 的 `swagger:route` 的请求参数。`swagger:route` 下面的一行是该 API 接口的描述，需要以英文点号为结尾。`responses:` 定义了API接口的返回参数，
-  例如当 HTTP 状态码是 200 时，返回 `createUserResponse`，`createUserResponse` 会跟 `swagger:response` 进行匹配，匹配成功的 `swagger:response` 就是该API接口返回200状态码时的返回。
-- `swagger:response`：定义了 API 接口的返回，例如 `getUserResponseWrapper`，关于名字，我们可以根据需要自由命名，并不会带来任何不同。`getUserResponseWrapper` 中有一个 `Body` 字段，
-  其注释为 `// in:body`，说明该参数是在 HTTP Body 中返回。`swagger:response` 之上的注释会被解析为返回参数的描述。`api.User` 自动被 go-swagger 解析为 Example Value 和 Model。我们不用
-  再去编写重复的返回字段，只需要引用已有的 Go 结构体即可。
-- `swagger:parameters`：定义了 API 接口的请求参数，例如 `userParamsWrapper`。`userParamsWrapper` 之上的注释会被解析为请求参数的描述，`// in:body` 代表该参数是位于 HTTP Body 中。
-  同样，`userParamsWrapper` 结构体名我们也可以随意命名。`swagger:parameters` 之后的 `createUserReques` t会跟 `swagger:route` 的 ID 进行匹配，匹配成功则说明是该 ID 所在 API 接口的请求参数。
+- `swagger:route`：描述一个 API，格式为 `swagger:route [method] [url path pattern] [?tag1 tag2 tag3] [operation id]`，tag 可以是多个，相同 tag 的 API 在 Swagger 文档中会被分为一组。operation id 会和 
+  `swagger:parameters` 的定义进行匹配，就是该 API 的请求参数。
+  `swagger:route` 下面的一行是该 API 的描述，需要以 `.` 为结尾。`responses:` 定义了 API 的返回参数，例如当 HTTP 状态码是 200 时，返回 `createUserResponse`，`createUserResponse` 会和 `swagger:response` 
+  的定义进行匹配，匹配成功的 `swagger:response` 就是该 API 返回 200 状态码时的返回。
+- `swagger:response`：定义了 API 的返回，格式为 `swagger:response [?response name]`.例如 `getUserResponseWrapper` 中有一个 `Body` 字段，其注释为 `// in:body`，说明该参数是在 HTTP Body 中返回。
+  `swagger:response` 上的注释是 response 的描述。`api.User` 会被 go-swagger 解析为 Example Value 和 Model，不需要重复编写。
+- `swagger:parameters`：定义了 API 的请求参数，格式为 `swagger:parameters [operationid1 operationid2]`。例如 `userRequestParamsWrapper`。`userRequestParamsWrapper` 上的注释是请求参数的描述。
 
+进入 `swagger` 目录，执行如下命令，生成 Swagger API 文档：
 
-
-## 使用 swag
-
-Download swag:
-```bash
-go get -u github.com/swaggo/swag/cmd/swag
-
-$ swag -v
-swag version v1.6.5
+```
+$ swagger generate spec -o swagger.yaml
 ```
 
-Install gin-swagger:
-```bash
-go get -u github.com/swaggo/gin-swagger@v1.2.0 
-go get -u github.com/swaggo/files
-go get -u github.com/alecthomas/template
+- `-o`：指定要输出的文件名。swagger 会根据文件名后缀 `.yaml` 或者 `.json`，决定生成的文件格式为 YAML 或 JSON。
+
+启动 HTTP 服务：
+
+```
+$ swagger serve --no-open -F=redoc --port 36666 swagger.yaml
 ```
 
-```go
-package router
+- `–no-open`：`-–no-open` 禁止调用浏览器打开 URL。
+- `-F`：指定文档的风格，可选 `swagger` 和 `redoc`。`redoc` 格式更加易读和清晰。
+- `–port`：指定启动的 HTTP 服务监听端口。
 
-import (
-    "github.com/gin-gonic/gin"
-    _ "github.com/shipengqi/idm/docs"
-	ginSwagger "github.com/swaggo/gin-swagger"
-    "github.com/swaggo/gin-swagger/swaggerFiles"
-)
+在浏览器查看 API 文档：
 
-func Init() *gin.Engine {
-	r := gin.New()
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-}
+![swagger-redoc](https://raw.githubusercontent.com/shipengqi/illustrations/0dad40be58e3b5959e8a9093a92ce49a9e280c6d/go/swagger-redoc.png)
+
+还可以使用下面的命令将生成的 `swagger.yaml` 转换为 `swagger.json`：
+
 ```
-
-Run `swag init` in the project's root folder which contains the `main.go` file.
-This will parse your comments and generate the required files (`docs` folder and `docs/docs.go`).
-
-Generate:
-```bash
-docs/
-├── docs.go
-└── swagger
-    ├── swagger.json
-    └── swagger.yaml
+$ swagger generate spec -i ./swagger.yaml -o ./swagger.json
 ```
-
-Run your app, and browse to `http://localhost:<port>/swagger/index.html`. 

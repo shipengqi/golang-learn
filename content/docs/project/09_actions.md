@@ -1,6 +1,6 @@
 ---
 title: GitHub Actions
-weight: 8
+weight: 9
 ---
 
 # 基于 GitHub Actions 的 CI/CD
