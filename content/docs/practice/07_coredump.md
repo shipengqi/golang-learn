@@ -1,11 +1,11 @@
 ---
-title: Go CoreDump 调试
+title: Go Core Dump 调试
 weight: 7
 ---
 
 # Go Core Dump 调试
 
-Go 也可以开启类似 C++ CoreDump 功能，CoreDump 是程序崩溃时的内存快照。程序崩溃时，可以帮助定位 crash 发生的原因。
+Go 也可以开启类似 C++ Core Dump 功能，Core Dump 是程序崩溃时的内存快照。程序崩溃时，可以帮助定位 crash 发生的原因。
 
 ## 开启 Core Dump 功能
 
