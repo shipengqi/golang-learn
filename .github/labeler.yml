@@ -3,5 +3,7 @@
 
 concurrency: content/docs/concurrency/*
 basic: content/docs/basic/*
-practice: content/docs/practice/*
+practice:
+  - content/docs/practice/*
+  - content/docs/project/*
 advance: content/docs/advance/*

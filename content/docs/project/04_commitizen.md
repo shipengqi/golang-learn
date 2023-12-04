@@ -121,7 +121,7 @@ Closes #123, #245, #992
 可以使用一些开源的工具，来自动化地生成规范化的 Commit Message：
 
 - [commitizen](https://github.com/commitizen/cz-cli)，Javascript 实现，需要安装 Node.js。
-- [commitizen-go](https://github.com/lintingzhen/commitizen-go)，Go 版本的简化版的 commitizen，下载二进制文件就可以直接使用。
+- [commitizen-go](https://github.com/lintingzhen/commitizen-go)，Go 版本的 commitizen，下载二进制文件就可以直接使用。
 
 上面两个命令都可以进入交互模式，并根据提示生成 Commit Message，然后提交。
 
