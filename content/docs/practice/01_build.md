@@ -17,7 +17,7 @@ Go 支持两种条件编译方式：
 编译标签的规则：
 
 1. 空格表示：AND
-2. 逗号表示：OR
+2. 逗号表示：OR`
 3. `!` 表示：NOT
 4. 换行表示：AND
 
@@ -60,41 +60,40 @@ go build -tags=!hello
 
 ### 文件后缀
 
-这个方法通过改变文件名的后缀来提供条件编译，如果你的源文件包含后缀：`_GOOS.go`，那么这个源文件只会在这个平台下编译，`_GOARCH.go` 也是如此。这两个后缀可以结合在一起使用，但是要注意顺序：`_GOOS_GOARCH.go`， 不能反过来用。
-例如：
+通过改变文件名的后缀来实现条件编译，如果源文件名包含后缀：`_<GOOS>.go`，那么这个源文件只会在这个平台下编译，`_<GOARCH>.go` 也是如此。这两个后缀可以结合在一起使用，但是要注意顺序：`_<GOOS>_<GOARCH>.go`， 不能反过来用。例如：
 
 ```bash
 mypkg_freebsd_arm.go // only builds on freebsd/arm systems
 mypkg_plan9.go       // only builds on plan9
 ```
 
-文件名必须提供，如果只由后缀的文件名会被编译器忽略：
+如果使用文件后缀，那么文件名就是必须的，否则会被编译器忽略，例如：
 
 ```
 # 这个文件会被编译器忽略
 _linux.go
 ```
 
-### 如何选择编译标签和文件后缀
+### 选择编译标签还是文件后缀？
 
-编译标签和文件后缀的功能上有重叠，例如一个文件名：`mypkg_linux.go` 包含了 `//go:build linux` 将会出现冗余
+编译标签和文件后缀的功能上有重叠，例如一个文件 `mypkg_linux.go` 代码中又包含了 `//go:build linux`，既有编译标签又有文件后缀，那就有些多余了。
 
-通常情况下，如果源文件与平台或者 cpu 架构完全匹配，那么使用文件后缀就可以满足，例如：
+通常情况下，如果源文件仅适配一个平台或者 CPU 架构，那么只使用文件后缀就可以满足，例如：
 
 ```bash
 mypkg_linux.go         // only builds on linux systems
 mypkg_windows_amd64.go // only builds on windows 64bit platforms
 ```
 
-下面的情况，就可以使用编译标签：
+像下面稍微复杂的场景，就需要使用编译标签：
 
-- 这个源文件可以在超过一个平台或者超过一个 cpu 架构
+- 这个源文件可以在超过一个平台或者超过一个 CPU 架构
 - 需要排除某个平台或架构
 - 有一些自定义的编译条件
 
 ### +build
 
-`// +build` 功能和 `//go:build` 一样。只不过 `//go:build` 是在 go 1.17 才引入的。与其他现有 Go 指令保持一致，例如 `//go:generate`。
+`// +build` 功能和 `//go:build` 一样。只不过 `//go:build` 是在 go 1.17 才引入的。目的是为了与其他现有的 Go 指令保持一致，例如 `//go:generate`。
 
 ## 交叉编译
 

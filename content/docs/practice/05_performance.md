@@ -7,7 +7,7 @@ weight: 5
 
 ## JSON 优化
 
-Go 官方的 `encoding/json` 是通过反射来实现的。性能相对有些慢。 可以使用第三方库来替代标准库：
+Go 的标准库 `encoding/json` 是通过反射来实现的。性能相对有些慢。 可以使用第三方库来替代标准库：
 
 - [json-iterator/go](https://github.com/json-iterator/go)，完全兼容标准库，性能有很大提升。
 - [go-json](https://github.com/goccy/go-json)，完全兼容标准库，性能强于 `json-iterator/go`。
