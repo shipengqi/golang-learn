@@ -7,9 +7,9 @@ weight: 6
 
 ## 使用 Swagger 生成 API 文档
 
-Swagger 是居于 OpenAPI 规范的 API 文档工具。
+Swagger 是基于 OpenAPI 规范的 API 文档工具。
 
-> OpenAPI 是一个 API 规范，它的前身叫 Swagger 规范，目前最新的 OpenAPI 规范是 [OpenAPI 3.0](https://swagger.io/docs/specification/about/)（也就是 Swagger 2.0 规范）。
+> OpenAPI 是一个 API 规范，它的前身就是 Swagger 规范，目前最新的 OpenAPI 规范是 [OpenAPI 3.0](https://swagger.io/docs/specification/about/)（也就是 Swagger 2.0 规范）。
 
 ## Swagger 编辑器
 

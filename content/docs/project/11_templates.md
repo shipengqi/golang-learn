@@ -5,7 +5,7 @@ weight: 11
 
 # GitHub 模板
 
-通过 Issue 和 PR 模板可以自定义和标准化贡献者创建 issue 和 PR 的信息。
+使用 Issue 和 PR 模板可以让贡献者有针对性的提供某类问题的准确信息。
 
 ## PR Template
 
