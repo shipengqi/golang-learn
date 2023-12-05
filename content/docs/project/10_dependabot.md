@@ -5,6 +5,8 @@ weight: 10
 
 # GitHub Dependabot
 
+GitHub Dependabot 是 GitHub 提供的一个工具，它可以帮助检测项目所使用的 dependency 中是否有可以更新的版本，如果有，它可以自动创建 PR 实现自动更新。
+
 GitHub Dependabot 的配置文件 `dependabot.yml` 必须存放在代码仓库的 `.github` 目录下。在添加或更新 `dependabot.yml` 文件时，会立即触发版本更新检查。
 
 ```yaml

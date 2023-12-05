@@ -1,36 +1,56 @@
-# Summary
+# 书单
 
-- Go 并发编程实战
-- Go 语言学习笔记
-- 极客时间 Go 语言核心三十六讲
-- 小册 Go 搭建企业级 Web
-- [Go 语言高性能编程](https://github.com/geektutu/high-performance-go)
-- [Go Questions](https://github.com/qcrao/Go-Questions)
-- [Go 语言调度器源代码情景分析](http://mp.weixin.qq.com/mp/homepage?__biz=MzU1OTg5NDkzOA==&hid=1&sn=8fc2b63f53559bc0cee292ce629c4788&scene=18#wechat_redirect)
-- [调度系列 深度解密 历史文章](http://mp.weixin.qq.com/mp/homepage?__biz=MjM5MDUwNTQwMQ==&hid=1&sn=e47afe02b972f5296e1e3073982cf1b6&scene=18#wechat_redirect)
-- [Go 语言原本](https://changkun.de/golang/)
-- [Go 夜读](https://github.com/developer-learning/reading-go)
-- [over-golang](https://github.com/overnote/over-golang)
-- [golang-notes](https://github.com/cch123/golang-notes)
-- [Scheduling In Go](https://www.jianshu.com/p/c38a22d8f913)
-- [gotraining](https://github.com/ardanlabs/gotraining/tree/master/topics/go)
-- [Go 语言机制](https://studygolang.com/subject/74)
-- [Go 系列教程](https://studygolang.com/subject/2)
-- [Golang 煎鱼](https://github.com/EDDYCJY/blog)
-- [高性能 Go 代码工坊 中译](https://www.yuque.com/ksco/uiondt)
-- [GO 入门指南](https://github.com/Unknwon/the-way-to-go_ZH_CN)
-- [Go 42](https://github.com/ffhelicopter/Go42)
-- [Go example](https://github.com/polaris1119/The-Golang-Standard-Library-by-Example)
+## 入门
+
+- [GO 入门指南](https://github.com/Unknwon/the-way-to-go_ZH_CN) 33.7k
+- [Go 42](https://github.com/ffhelicopter/Go42) 4.9k
+- [Go 语言入门](https://eddycjy.com/go-categories/)
+
+## 高级编程
+
+- [Go 语言设计哲学](https://golang3.eddycjy.com/)
+- [Go 语言编程之旅](https://golang2.eddycjy.com/)
 - [Go 语言高级编程](https://chai2010.gitbooks.io/advanced-go-programming-book/content/)
-- [build-web-application-with-golang](https://github.com/astaxie/build-web-application-with-golang)
-- [Go pkg demo](https://github.com/astaxie/gopkg)
-- [Go 语言圣经](https://docs.hacknode.org/gopl-zh/index.html)
-- [learning-golang-awesome](https://github.com/yangwenmai/learning-golang)
-- [client-go 访问 k8s 示例](https://github.com/owenliang/k8s-client-go)
-- [k8s-audit-webhook](https://github.com/gosoon/k8s-audit-webhook)
-- [Learn Go with tests](https://github.com/quii/learn-go-with-tests)
-- [Go 实战开发](https://github.com/astaxie/go-best-practice)
-- [go-internals](https://github.com/go-internals-cn/go-internals)
-- [Learning Go](https://github.com/mikespook/Learning-Go-zh-cn)
+- [Go 夜读](https://github.com/developer-learning/reading-go) 11.6k
+
+## 高性能编程
+
+- [高性能 Go 代码工坊 中译](https://www.yuque.com/ksco/uiondt)
+- [Go 语言高性能编程](https://github.com/geektutu/high-performance-go)
+
+## 实践
+
+- [Go example](https://github.com/polaris1119/The-Golang-Standard-Library-by-Example) 9.3k
+  - Go 标准库的使用示例
+- [build-web-application-with-golang](https://github.com/astaxie/build-web-application-with-golang) 42.5k
+  - 工程实践
+- [Go pkg demo](https://github.com/astaxie/gopkg) 2k
+  - Go 标准库的使用示例
+- [client-go 使用](https://github.com/owenliang/k8s-client-go) 370
+- [Learn Go with tests](https://github.com/quii/learn-go-with-tests) 20.6k
+  - 各种测试用例
 - [Golang kancloud](https://www.kancloud.cn/uvohp5na133/golang/933968)
-- [Uber style guide](https://github.com/xxjwxc/uber_go_guide_cn)
+  - beego，gin 等框架的使用
+  - MySQL，Redis，ETCD，Kafka，ES 等数据库操作
+  - 一些常用标准库，第三方库的使用
+  - 面试题
+
+## 底层原理
+
+- [Go Questions](https://github.com/golang-design/go-questions) 5.3k
+  - 源码分析
+  - 面试题
+- [Go 语言进阶之旅](https://golang1.eddycjy.com/)
+- [Go 语言调度器源码分析 - 源码游记](http://mp.weixin.qq.com/mp/homepage?__biz=MzU1OTg5NDkzOA==&hid=1&sn=8fc2b63f53559bc0cee292ce629c4788&scene=18#wechat_redirect)
+- [Go 语言原本](https://changkun.de/golang/)
+  - 底层原理
+- [over-golang](https://github.com/overnote/over-golang) 4.2k
+  - Go web 开发、Go 微服务、常用框架、并发编程、标准库、底层原理
+- [golang-notes](https://github.com/cch123/golang-notes) 3.8k
+  - 源码分析
+- [Go 调度器系列](https://www.jianshu.com/p/c38a22d8f913)
+
+## 其他资料
+
+- [learning-golang-awesome](https://github.com/yangwenmai/learning-golang) 2.5k
+    - Go 的学习资料
