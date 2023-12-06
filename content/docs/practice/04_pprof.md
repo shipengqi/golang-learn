@@ -1,30 +1,30 @@
 ---
 title: Go 性能分析
 weight: 4
-draft: true
 ---
 
 # Go 性能分析
 
-PProf 是 Go 提供的用于数据采样和性能分析的工具，数据采样的方式有三种：
+Go 提供的 pprof 工具可以用来做性能分析。pprof 可以读取分析样本的集合，并生成报告以可视化并帮助分析数据。
 
-- `runtime/pprof`：采集程序（非 Server）的运行数据
-- `net/http/pprof`：采集 HTTP Server 的运行时数据
-- `go test -bench`：运行基准测试，并指定所需标识来进行数据采集。
-
-PProf 可以用于：
+pprof 可以用于：
 
 - CPU 分析（CPU Profiling）：按照一定的频率采集所监听的应用程序 CPU（含寄存器）的使用情况，可确定应用程序在主动消耗 CPU 周期
-时花费时间的位置。
+  时花费时间的位置。
 - 内存分析（Memory Profiling）：在应用程序进行堆分配时记录堆栈跟踪，用于监视当前和历史内存使用情况，以及检查内存泄漏。
 - 阻塞分析（Block Profiling）：记录 goroutine 阻塞等待同步（包括定时器通道）的位置。
 - 互斥锁分析（Mutex Profiling）：报告互斥锁的竞争情况。
 
-## 性能分析
+## 如何生成分析样本
 
-### net/http/pprof
+生成分析样本的方式有三种：
 
-#### 获取 HTTP Server 的运行时数据
+- `runtime/pprof`：采集程序（非 Server）的运行数据。通过调用如 `runtime.StartCPUProfile`, `runtime.StopCPUProfile` 方法生成分析样本。主要用于**本地测试**。
+  - [pkg/profile](https://github.com/pkg/profile) 封装了 `runtime/pprof`，使用起来更加简便。
+- `net/http/pprof`：采集 HTTP Server 的运行时数据，通过 HTTP 服务获取 Profile 分析样本，底层还是调用的 `runtime/pprof`。主要用于**服务器端测试**。
+- `go test -bench`：使用 `go test -bench=. -cpuprofile cpuprofile.out ...` 运行基准测试来生成分析样本，可以指定所需标识来进行数据采集。
+
+以 `net/http/pprof` 为例：
 
 ```go
 package main
@@ -32,7 +32,7 @@ package main
 import (
 	"log"
 	"net/http"
-	_ "net/http/pprof"
+	_ "net/http/pprof" // net/http/pprof 注册的是默认的 mux
 )
 
 var datas []string
@@ -51,41 +51,90 @@ func main() {
 			log.Println(Add("https://github.com/shipengqi"))
 		}
 	}()
-
 	_ = http.ListenAndServe("0.0.0.0:8080", nil)
 }
-
 ```
 
-`_ "net/http/pprof"` 这行代码会自动添加 `/debug/pprof` 的路由，程序运行后，可以访问 http://127.0.0.1:8080/debug/pprof 。
+`_ "net/http/pprof"` 这行代码会自动添加 `/debug/pprof` 的路由。程序运行后，访问 http://localhost:8080/debug/pprof 就可以查看分析样本。
 
-![profile](../../../static/images/profile1.png)
+
+## 如何查看分析报告
+
+打开 http://localhost:8080/debug/pprof 后会看到下面页面：
+
+![pprof-home](https://raw.githubusercontent.com/shipengqi/illustrations/810cbdff82baab7279ec4504d20e5b7bd88b6b33/go/pprof-home.png)
+
+pprof 包括了几个子页面：
 
 - alloc: 查看所有内存分配的情况
-- block（Block Profiling）：`$HOST/debug/pprof/block`，查看导致阻塞同步的堆栈跟踪
+- block（Block Profiling）：`<ip:port>/debug/pprof/block`，查看导致阻塞同步的堆栈跟踪
 - cmdline : 当前程序的命令行调用
-- goroutine：`$HOST/debug/pprof/goroutine`，查看当前所有运行的 goroutines 堆栈跟踪
-- heap（Memory Profiling）: `$HOST/debug/pprof/heap`，查看活动对象的内存分配情况，在获取堆样本之前，可以指定 gc GET 参数来运行 gc。
-- mutex（Mutex Profiling）: `$HOST/debug/pprof/mutex`，查看导致互斥锁的竞争持有者的堆栈跟踪
-- profile: `$HOST/debug/pprof/profile`， 默认进行 30s 的 CPU Profiling，可以 GET 参数 `seconds` 中指定持续时间。
-获得 profile 文件之后，使用 `go tool pprof` 命令分析 profile 文件。
-- threadcreate：`$HOST/debug/pprof/threadcreat`e，查看创建新 OS 线程的堆栈跟踪
-- trace: 当前程序的执行轨迹。可以在 GET 参数 `seconds` 中指定持续时间。获取跟踪文件之后，使用 `go tool trace` 命令来分析。
+- goroutine：`<ip:port>/debug/pprof/goroutine`，查看当前所有运行的 goroutines 堆栈跟踪。
+- heap（Memory Profiling）: `<ip:port>/debug/pprof/heap`，查看活动对象的内存分配情况，在获取堆样本之前，可以指定 gc GET 参数来运行 gc。
+- mutex（Mutex Profiling）: `<ip:port>/debug/pprof/mutex`，查看导致互斥锁竞争的持有者的堆栈跟踪。
+- profile（CPU Profiling）: `<ip:port>/debug/pprof/profile`， 默认进行 `30s` 的 CPU Profiling，可以设置 GET 参数 `seconds` 来指定持续时间。获取跟踪文件之后，使用 `go tool trace` 命令来分析。
+- threadcreate：`<ip:port>/debug/pprof/threadcreate`，查看创建新 OS 线程的堆栈跟踪。
+- trace: 当前程序的执行轨迹。可以设置 GET 参数 `seconds` 来指定持续时间。获取跟踪文件之后，使用 `go tool trace` 命令来分析。
 
-#### 交互式终端
+### 在 Web 查看分析报告
+
+点击 profile，等待 30s 后会下载 CPU profile 文件，或者执行命令 `go tool pprof http://localhost:8080/debug/pprof/profile` ，得到的输出中有一行
+
+```shell
+Saved profile in C:\Users\shipeng.CORPDOM\pprof\pprof.samples.cpu.002.pb.gz`
+```
+
+表示生成的 profile 文件路径。
+
+执行 `go tool pprof -http=<port> <profile 文件>` 启动 web server，然后就可以访问 `http://localhost:8081` 来查看：
 
 ```sh
-# seconds 可以调整等待的时间，当前命令设置等待 60 秒后会进行 CPU Profiling
-go tool pprof http://localhost:8080/debug/pprof/profile?seconds=60
+$ go tool pprof -http=:8081 profile
+Serving web UI on http://localhost:8081
+```
 
+或者输入 `web`，会在浏览器打开一个 svg 图片：
+```shell
+$ go tool pprof profile
+$ (pprof) web
+```
+
+> 如果出现 `Could not execute dot; may need to install graphviz.`，那么需要安裝 Graphviz。
+
+![profile-graph](https://raw.githubusercontent.com/shipengqi/illustrations/810cbdff82baab7279ec4504d20e5b7bd88b6b33/go/profile-graph.png)
+
+图中框越大，线越粗代表它占用 CPU 的时间越长。
+
+点击 `View -> Flame Graph` 可以查看火焰图：
+
+![profile-flame-graph](https://raw.githubusercontent.com/shipengqi/illustrations/810cbdff82baab7279ec4504d20e5b7bd88b6b33/go/profile-flame-graph.png)
+
+图中调用顺序由上到下，每一块代表一个函数，越大代表占用 CPU 的时间越长。
+
+还可以查看 Top，Peek，Source 等。能够更方便、更直观的看到 Go 应用程序的调用链、使用情况等。
+
+### 在终端查看分析报告
+
+使用 `go tool pprof` 命令可以在交互式终端查看分析报告。
+
+#### CPU Profiling
+
+执行 60s 的 CPU Profiling：
+
+```sh
+$ go tool pprof http://localhost:8080/debug/pprof/profile?seconds=60
 Fetching profile over HTTP from http://localhost:6060/debug/pprof/profile?seconds=10
 Saved profile in C:\Users\shipeng.CORPDOM\pprof\pprof.samples.cpu.001.pb.gz
 Type: cpu
 Time: Nov 18, 2019 at 11:08am (CST)
 Duration: 10.20s, Total samples = 10.03s (98.38%)
 Entering interactive mode (type "help" for commands, "o" for options)
+(pprof)
+```
 
-# 进入交互式命令模式
+输入 `top 10`：
+
+```sh
 (pprof) top 10
 Showing nodes accounting for 9.54s, 95.11% of 10.03s total
 Dropped 73 nodes (cum <= 0.05s)
@@ -103,114 +152,149 @@ Showing top 10 nodes out of 14
          0     0% 95.11%      9.69s 96.61%  internal/poll.(*FD).Write
 ```
 
-上面的输出：
-
-- `flat`：给定函数上运行耗时
-- `flat%`：同上的 CPU 运行耗时总比例
-- `sum%`：给定函数累积使用 CPU 总比例
+- `flat`：当前函数上的运行耗时
+- `flat%`：当前函数上的 CPU 运行耗时总比例
+- `sum%`：当前函数上累积使用 CPU 总比例
 - `cum`：当前函数加上它之上的调用运行总耗时
-- `cum%`：同上的 CPU 运行耗时总比例
+- `cum%`：当前函数加上它之上的调用的 CPU 运行耗时总比例
 - 最后一列为函数名称
 
-```sh
-go tool pprof http://localhost:6060/debug/pprof/heap
+#### Heap Profiling
 
-Fetching profile over HTTP from http://localhost:6060/debug/pprof/heap
-Saved profile in C:\Users\shipeng.CORPDOM\pprof\pprof.alloc_objects.alloc_space.inuse_objects.inuse_space.008.pb.gz
+Heap Profiling 支持四种内存概况的分析：
+
+- `inuse_space`：分析程序常驻内存的占用
+- `alloc_objects`：分析程序临时分配的内存
+- `inuse_objects`：查看函数对应的对象的数量
+- `alloc_space`：查看函数分配的内存空间大小
+
+默认就是 `inuse_space`：
+
+```shell
+# 默认就是 inuse_space，-inuse_space 可以忽略
+$ go tool pprof -inuse_space http://localhost:8080/debug/pprof/heap
+Saved profile in C:\Users\shipeng\pprof\pprof.___go_build_github_com_shipengqi_example_v1_advance_go_pprof.exe.alloc_objects.alloc_space.inuse_objects.inuse_space.002.pb.gz
 Type: inuse_space
+Time: Dec 6, 2023 at 2:05pm (CST)
 Entering interactive mode (type "help" for commands, "o" for options)
+(pprof)
+```
+
+输入 `top`：
+
+```sh
 (pprof) top
-Showing nodes accounting for 837.48MB, 100% of 837.48MB total
+Showing nodes accounting for 42464.20kB, 100% of 42464.20kB total
       flat  flat%   sum%        cum   cum%
-  837.48MB   100%   100%   837.48MB   100%  main.main.func1
-
-# 其他分析
-go tool pprof http://localhost:6060/debug/pprof/block
-
-go tool pprof http://localhost:6060/debug/pprof/mutex
+41952.16kB 98.79% 98.79% 41952.16kB 98.79%  main.Add (inline)
+  512.04kB  1.21%   100%   512.04kB  1.21%  unicode/utf16.Encode
+         0     0%   100%   512.04kB  1.21%  internal/poll.(*FD).Write
+         0     0%   100%   512.04kB  1.21%  internal/poll.(*FD).writeConsole
+         0     0%   100%   512.04kB  1.21%  log.(*Logger).output
+         0     0%   100%   512.04kB  1.21%  log.Println (inline)
+         0     0%   100% 42464.20kB   100%  main.main.func1
+         0     0%   100%   512.04kB  1.21%  os.(*File).Write
+         0     0%   100%   512.04kB  1.21%  os.(*File).write (inline)
 ```
 
-- `-inuse_space`：分析应用程序的常驻内存占用情况
-- `-alloc_objects`：分析应用程序的内存临时分配情况
-
-## PProf 可视化界面
-
-`data.go`：
-
-```go
-package pdata
-
-var datas []string
-
-func Add(str string) string {
-	data := []byte(str)
-	sData := string(data)
-	datas = append(datas, sData)
-
-	return sData
-}
-
-```
-
-`data_test.go`：
-
-```go
-package pdata
-
-import "testing"
-
-const url = "https://github.com/"
-
-func TestAdd(t *testing.T) {
-	s := Add(url)
-	if s == "" {
-		t.Errorf("Test.Add error!")
-	}
-}
-
-func BenchmarkAdd(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		Add(url)
-	}
-}
-
-```
-
-运行基准测试：
+输入 `traces` 查看 goroutines 占用内存的大小：
 
 ```sh
-# 下面的命令会生成 cprof 文件, 使用 go tool pprof 分析
-go test -bench . -cpuprofile=cprof
-goos: windows
-goarch: amd64
-pkg: github.com/shipengqi/golang-learn/demos/pprof/pdata
-BenchmarkAdd-8          10084636               143 ns/op
-PASS
-ok      github.com/shipengqi/golang-learn/demos/pprof/pdata     2.960s
+(pprof) traces
+...
+Type: inuse_space
+Time: Dec 6, 2023 at 2:45pm (CST)
+-----------+-------------------------------------------------------
+         0   main.Add (inline)
+             main.main.func1
+-----------+-------------------------------------------------------
+     bytes:  2.25MB
+    2.28MB   main.Add (inline)
+             main.main.func1
+-----------+-------------------------------------------------------
+     bytes:  1.80MB
+    1.85MB   main.Add (inline)
+             main.main.func1
+-----------+-------------------------------------------------------
+     bytes:  1.43MB
+         0   main.Add (inline)
+             main.main.func1
+-----------+-------------------------------------------------------
+     bytes:  1.14MB
+         0   main.Add (inline)
+             main.main.func1
+-----------+-------------------------------------------------------
+
 ```
 
-启动可视化界面：
+#### Goroutine Profiling
 
 ```sh
-$ go tool pprof -http=:8080 cpu.prof
-
-# 或者
-$ go tool pprof cpu.prof
-$ (pprof) web
+$ go tool pprof http://localhost:8080/debug/pprof/goroutine
+Saved profile in C:\Users\shipeng\pprof\pprof.___go_build_github_com_shipengqi_example_v1_advance_go_pprof.exe.goroutine.001.pb.gz
+...
+(pprof)
 ```
 
-如果出现 `Could not execute dot; may need to install graphviz.`，参考 "安裝 Graphviz"
+输入 `traces` 会输出所有 goroutines 的调用栈信息，可以很方便的查看整个调用链。
 
-![](../../../static/images/profile2.png)
+```sh
+(pprof) traces
+...
+-----------+-------------------------------------------------------
+         1   runtime.cgocall
+             syscall.SyscallN
+             syscall.Syscall6
+             syscall.WriteConsole
+             internal/poll.(*FD).writeConsole
+             internal/poll.(*FD).Write
+             os.(*File).write (inline)
+             os.(*File).Write
+             log.(*Logger).output
+             log.Println (inline)
+             main.main.func1
+-----------+-------------------------------------------------------
+         1   runtime.goroutineProfileWithLabels
+             runtime/pprof.runtime_goroutineProfileWithLabels
+             runtime/pprof.writeRuntimeProfile
+             runtime/pprof.writeGoroutine
+             runtime/pprof.(*Profile).WriteTo
+             net/http/pprof.handler.ServeHTTP
+             net/http/pprof.Index
+             net/http.HandlerFunc.ServeHTTP
+             net/http.(*ServeMux).ServeHTTP
+             net/http.serverHandler.ServeHTTP
+             net/http.(*conn).serve
+```
 
-上图中的框越大，线越粗代表它消耗的时间越长。
+调用栈的顺序是**自下而上**的。
 
-![](../../../static/images/profile3.png)
+#### Block 和 Mutex Profiling
 
-![](../../../static/images/profile4.png)
+Block 和 Mutex Profiling 都需要在代码中调用 `runtime` 包的方法进行设置：
 
-PProf 的可视化界面能够更方便、更直观的看到 Go 应用程序的调用链、使用情况等。
+```go
+package main
 
-火焰图：
+import "runtime"
 
-![](../../../static/images/profile5.png)
+func main() {
+	// Rate 小于 0，则不采集
+    runtime.SetBlockProfileRate(1)
+	// Fraction 小于 0，则不采集
+    runtime.SetMutexProfileFraction(1)
+    // ...
+}
+```
+
+然后使用 `go tool pprof` 分析，输入 `top` 查看排名，`list <func>` 可以查看具体的信息。
+
+#### 对比
+
+当需要查看不同时间段的差异时，可以使用 `-base` 参数来对比两个 profile 文件。
+
+```shell
+$ go tool pprof -base <profile1> <profile2>
+```
+
+
