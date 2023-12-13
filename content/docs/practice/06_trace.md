@@ -6,50 +6,60 @@ draft: true
 
 # Go Trace
 
-Go PProf 很难完成 Goroutine 的分析。这就需要使用 `go tool trace` 命令。
+Go 提供了完善的性能分析工具：`pprof` 和 `trace`。
 
-`go tool pprof` 可以跟踪运行缓慢的函数，或者找到大部分 CPU 时间花费在哪里。
-`go tool trace` 更适合于找出程序在一段时间内正在做什么，而不是总体上的开销。
+- `pprof` 主要适用于 CPU 占用、内存分配等资源的分析。
+- `trace` 记录了程序运行中的行为，更适合于找出程序在一段时间内正在做什么。例如指定的 goroutine 在何时执行、执行了多长时间、什么时候陷入了堵塞、什么时候解除了堵塞、GC 如何影响了 goroutine 的执行。
+
+## 如何生成分析样本
+
+生成 Trace 分析样本的方式主要有两种：
+
+**1. 使用 `runtime/trace` 标准库来生成**：
 
 ```go
 package main
 
 import (
-    "os"
-    "runtime/trace"
+	"os"
+	"runtime/trace"
 )
 
 func main() {
- f, err := os.Create("trace.out")
- if err != nil {
-  panic(err)
- }
- defer f.Close()
+	f, err := os.Create("trace.out")
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
 
- err = trace.Start(f)
- if err != nil {
-  panic(err)
- }
- defer trace.Stop()
+	err = trace.Start(f)
+	if err != nil {
+		panic(err)
+	}
+	defer trace.Stop()
 
-    ch := make(chan string)
+	ch := make(chan string)
 
-    go func() {
-        ch <- "hello"
-    }()
-    // read from channel
-    <-ch
-
+	go func() {
+		ch <- "hello"
+	}()
+	// read from channel
+	<-ch
 }
+
 ```
 
-生成跟踪文件：
+执行程序就可以生成跟踪文件 `trace.out`：
 
 ```
 go run main.go
 ```
 
-启动可视化界面：
+**2. 使用 `net/http/pprof` 来生成**，查看 [Go 性能分析](../04_pprof)。
+
+## 如何查看分析报告
+
+使用上面例子生成的 `trace.out` 文件，运行下面的命令：
 
 ```
 $ go tool trace trace.out
@@ -58,7 +68,7 @@ $ go tool trace trace.out
 2019/11/18 15:17:28 Opening browser. Trace viewer is listening on http://127.0.0.1:59181
 ```
 
-查看可视化界面：
+访问 http://127.0.0.1:59181，可以看到类似的界面：
 
 ```
 View trace
@@ -72,21 +82,21 @@ User-defined regions
 Minimum mutator utilization
 ```
 
-- View trace：最复杂、最强大和交互式的可视化显示了整个程序执行的时间轴。这个视图显示了在每个虚拟处理器上运行着什么，
+- `View trace`：最复杂、最强大和交互式的可视化显示了整个程序执行的时间轴。这个视图显示了在每个虚拟处理器上运行着什么，
 以及什么是被阻塞等待运行的。
-- Goroutine analysis：显示了在整个执行过程中，每种类型的 goroutines 是如何创建的。在选择一种类型之后就可以看到关于这种
+- `Goroutine analysis`：显示了在整个执行过程中，每种类型的 goroutines 是如何创建的。在选择一种类型之后就可以看到关于这种
 类型的 goroutine 的信息。例如，在试图从 mutex 获取锁、从网络读取、运行等等每个 goroutine 被阻塞的时间。
-- Network blocking profile：网络阻塞概况
-- Synchronization blocking profile：同步阻塞概况
-- Syscall blocking profile：系统调用阻塞概况
-- Scheduler latency profile：为调度器级别的信息提供计时功能，显示调度在哪里最耗费时间。
-- User defined tasks：用户自定义任务
-- User defined regions：用户自定义区域
-- Minimum mutator utilization：最低 Mutator 利用率
+- `Network blocking profile`：网络阻塞概况
+- `Synchronization blocking profile`：同步阻塞概况
+- `Syscall blocking profile`：系统调用阻塞概况
+- `Scheduler latency profile`：为调度器级别的信息提供计时功能，显示调度在哪里最耗费时间。
+- `User defined tasks`：用户自定义任务
+- `User defined regions`：用户自定义区域
+- `Minimum mutator utilization`：最低 Mutator 利用率
 
 Network/Sync/Syscall blocking profile 是分析锁竞争的最佳选择。
 
-## Scheduler latency profile
+### Scheduler latency profile
 
 查看问题时，除非是很明显的现象，否则先查看 “Scheduler latency profile”，能通过 Graph 看到整体的调用开销情况，如下：
 
@@ -94,7 +104,7 @@ Network/Sync/Syscall blocking profile 是分析锁竞争的最佳选择。
 
 这里只有两块，一个是 `trace` 本身，另外一个是 `channel` 的收发。
 
-## Goroutine analysis
+### Goroutine analysis
 
 通过 “Goroutine analysis” 这个功能看到整个运行过程中，每个函数块有多少个有 Goroutine 在跑，并且观察每个的 Goroutine 的运行
 开销都花费在哪个阶段。如下：
@@ -119,7 +129,7 @@ Network/Sync/Syscall blocking profile 是分析锁竞争的最佳选择。
 | GC Sweeping | GC 清扫 | 0ns
 | GC Pause | GC 暂停 | 0ns
 
-## View trace
+### View trace
 
 ![image](../imgs/trace4.png)
 
@@ -146,7 +156,7 @@ Network/Sync/Syscall blocking profile 是分析锁竞争的最佳选择。
 - Following events：之后的事件
 - All connected：所有连接的事件
 
-## View Events
+### View Events
 
 可以通过点击 View Options-Flow events、Following events 等方式，查看应用运行中的事件流情况。如下：
 
@@ -160,27 +170,6 @@ Network/Sync/Syscall blocking profile 是分析锁竞争的最佳选择。
 ![image](../imgs/trace7.png)
 
 结合开头的代码去看的话，很明显就是 `ch` 的输入输出的过程了。
-
-## 收集 trace
-
-1. 使用 `runtime/trace` 包  
-
-调用 `trace.Start` 和 `trace.Stop`。
-
-2. 使用 `-trace=<file>` 测试标志  
-
-用来收集关于被测试代码的 trace 时比较有用。
-
-3. 使用 `debug/pprof/trace` handler
-
-用来收集运行中的 web 应用的 trace。
-
-### 跟踪一个 web 应用
-
-如果早已埋好 `_ "net/http/pprof"` 这个工具，就可以执行：
-
-- `curl http://127.0.0.1:6060/debug/pprof/trace\?seconds\=20 > trace.out`
-- `go tool trace trace.out`
 
 #### View trace
 
