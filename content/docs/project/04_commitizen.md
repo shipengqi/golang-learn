@@ -35,7 +35,7 @@ Angular 规范中，Commit Message 包含三个部分：Header、Body 和 Footer
 
 Header 包括提价类型（type，必需的）、作用域（scope，可选的）和主题（subject）。Header 是必需的。
 
-**type**包括：
+**type** 包括：
 
 - `feat`：增加了新功能
 - `fix`：修复问题

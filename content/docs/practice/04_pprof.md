@@ -17,7 +17,7 @@ pprof 可以用于：
 
 ## 如何生成分析样本
 
-生成分析样本的方式有三种：
+生成分析样本的三种方式：
 
 - `runtime/pprof`：采集程序（非 Server）的运行数据。通过调用如 `runtime.StartCPUProfile`, `runtime.StopCPUProfile` 方法生成分析样本。主要用于**本地测试**。
   - [pkg/profile](https://github.com/pkg/profile) 封装了 `runtime/pprof`，使用起来更加简便。
