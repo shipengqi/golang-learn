@@ -12,7 +12,7 @@ Go 提供了完善的性能分析工具：`pprof` 和 `trace`。
 
 ## 如何生成分析样本
 
-生成 Trace 分析样本的方式主要有两种：
+生成 Trace 分析样本的方式主要有三种：
 
 **1. 使用 `runtime/trace` 标准库来生成**：
 
@@ -55,6 +55,7 @@ go run main.go
 ```
 
 **2. 使用 `net/http/pprof` 来生成**，查看 [Go 性能分析](../04_pprof)。
+**3. 使用 `go test -trace` 来生成**，例如 `go test -trace trace.out demo_test.go`。
 
 ## 如何查看分析报告
 
@@ -81,52 +82,17 @@ User-defined regions
 Minimum mutator utilization
 ```
 
-- `View trace`：最复杂、最强大和交互式的可视化显示了整个程序执行的时间轴。这个视图显示了在每个虚拟处理器上运行着什么，
-以及什么是被阻塞等待运行的。
-- `Goroutine analysis`：显示了在整个执行过程中，每种类型的 goroutines 是如何创建的。在选择一种类型之后就可以看到关于这种
-类型的 goroutine 的信息。例如，在试图从 mutex 获取锁、从网络读取、运行等等每个 goroutine 被阻塞的时间。
-- `Network blocking profile`：网络阻塞概况
-- `Synchronization blocking profile`：同步阻塞概况
-- `Syscall blocking profile`：系统调用阻塞概况
-- `Scheduler latency profile`：为调度器级别的信息提供计时功能，显示调度在哪里最耗费时间。
-- `User defined tasks`：用户自定义任务
-- `User defined regions`：用户自定义区域
-- `Minimum mutator utilization`：最低 Mutator 利用率
+- `View trace`：查看所有 goroutines 的执行过程。
+- `Goroutine analysis`：goroutines 分析，查看具体的 goroutine 的信息。
+- `Network blocking profile`：网络阻塞概况。
+- `Synchronization blocking profile`：同步阻塞概况。
+- `Syscall blocking profile`：系统调用阻塞概况。
+- `Scheduler latency profile`：调度延迟的概况，可以调度在哪里最耗费时间。
+- `User defined tasks`：用户自定义任务。
+- `User defined regions`：用户自定义区域。
+- `Minimum mutator utilization`：最低 Mutator 利用率。
 
-Network/Sync/Syscall blocking profile 是分析锁竞争的最佳选择。
-
-### Scheduler latency profile
-
-查看问题时，除非是很明显的现象，否则先查看 “Scheduler latency profile”，能通过 Graph 看到整体的调用开销情况，如下：
-
-![image](../imgs/trace1.png)
-
-这里只有两块，一个是 `trace` 本身，另外一个是 `channel` 的收发。
-
-### Goroutine analysis
-
-通过 “Goroutine analysis” 这个功能看到整个运行过程中，每个函数块有多少个有 Goroutine 在跑，并且观察每个的 Goroutine 的运行
-开销都花费在哪个阶段。如下：
-
-![image](../imgs/trace2.png)
-
-上图有 3 个 goroutine，分别是 `runtime.main`、`runtime/trace.Start.func1`、`main.main.func1`：
-
-![image](../imgs/trace3.jpg)
-
-同时也可以看到当前 Goroutine 在整个调用耗时中的占比，以及 GC 清扫和 GC 暂停等待的一些开销。可以把图表下载下来分析，相当于把
-整个 Goroutine 运行时掰开来看了，这块能够很好的帮助**对 Goroutine 运行阶段做一个的剖析，可以得知到底慢哪，然后再决定
-下一步的排查方向**。如下：
-
-| 名称 | 含义 | 耗时
-| ---|---|---
-| Execution Time | 执行时间 | 3140ns
-| Network Wait Time | 网络等待时间 | 0ns
-| Sync Block Time | 同步阻塞时间 | 0ns
-| Blocking Syscall Time | 调用阻塞时间 | 0ns
-| Scheduler Wait Time | 调度等待时间 | 14ns
-| GC Sweeping | GC 清扫 | 0ns
-| GC Pause | GC 暂停 | 0ns
+> Network/Sync/Syscall blocking profile 是分析锁竞争的最佳选择。
 
 ### View trace
 
@@ -154,6 +120,43 @@ Network/Sync/Syscall blocking profile 是分析锁竞争的最佳选择。
 - Preceding events：之前的事件
 - Following events：之后的事件
 - All connected：所有连接的事件
+
+
+
+### Scheduler latency profile
+
+查看问题时，除非是很明显的现象，否则先查看 `Scheduler latency profile`，能通过 Graph 看到整体的调用开销情况，如下：
+
+![image](../imgs/trace1.png)
+
+这里只有两块，一个是 `trace` 本身，另外一个是 `channel` 的收发。
+
+### Goroutine analysis
+
+进入 `Goroutine analysis` 可查看整个运行过程中，每个函数块有多少 goroutine 在跑，并且观察每个的 Goroutine 的运行
+开销都花费在哪个阶段。如下：
+
+![image](../imgs/trace2.png)
+
+上图有 3 个 goroutine，分别是 `runtime.main`、`runtime/trace.Start.func1`、`main.main.func1`：
+
+![image](../imgs/trace3.jpg)
+
+同时也可以看到当前 Goroutine 在整个调用耗时中的占比，以及 GC 清扫和 GC 暂停等待的一些开销。可以把图表下载下来分析，相当于把
+整个 Goroutine 运行时掰开来看了，这块能够很好的帮助**对 Goroutine 运行阶段做一个的剖析，可以得知到底慢哪，然后再决定
+下一步的排查方向**。如下：
+
+| 名称 | 含义 | 耗时
+| ---|---|---
+| Execution Time | 执行时间 | 3140ns
+| Network Wait Time | 网络等待时间 | 0ns
+| Sync Block Time | 同步阻塞时间 | 0ns
+| Blocking Syscall Time | 调用阻塞时间 | 0ns
+| Scheduler Wait Time | 调度等待时间 | 14ns
+| GC Sweeping | GC 清扫 | 0ns
+| GC Pause | GC 暂停 | 0ns
+
+
 
 ### View Events
 
