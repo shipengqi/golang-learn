@@ -1,6 +1,6 @@
 ---
 title: Go 性能优化
-weight: 5
+weight: 6
 ---
 
 # Go 性能优化
