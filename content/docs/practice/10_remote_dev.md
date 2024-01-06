@@ -69,7 +69,7 @@ Host shccdfrh75vm7.hpeswlab.net
     IdentityFile <absolute-path>/.ssh/id_rsa
 ```
 
-如果没有秘钥使用 `ssh-keygen -t rsa` 命令生成。
+如果没有秘钥，可以使用 `ssh-keygen -t rsa` 命令生成。
 
 将 SSH 公钥添加到远程机器：
 
@@ -77,7 +77,7 @@ Host shccdfrh75vm7.hpeswlab.net
 $ ssh-copy-id username@remote-host
 ```
 
-如果 `ssh-copy-id` 不存在，就手动将 `<absolute-path>/.ssh/id_rsa.pub` 的内容，追加到远程机器的 `~/.ssh/authorized_keys` 文件后面。
+如果 `ssh-copy-id` 命令不存在，就手动将 `<absolute-path>/.ssh/id_rsa.pub` 的内容，追加到远程机器的 `~/.ssh/authorized_keys` 文件后面。
 
 ## 远程开发
 
