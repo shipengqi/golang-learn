@@ -32,7 +32,7 @@ SSH 模式的原理：
 
 点击 `Add New SSH Host` 配置你的远程机器，或者选择已经配置好的 Hosts。
 
-也可以使用快捷键 `ctrl+shift+p` 打开 commands，输入 `Open SSH Configuration File` 直接编辑配置文件：
+也可以使用快捷键 `F1` 或者 `ctrl+shift+p` 打开 commands，输入 `Open SSH Configuration File` 直接编辑配置文件：
 
 ```
 # Read more about SSH config files: https://linux.die.net/man/5/ssh_config
@@ -60,7 +60,7 @@ Host shccdfrh75vm7.hpeswlab.net
 
 ### 配置免密登录
 
-使用快捷键 `ctrl+shift+p` 打开 commands，输入 `Open SSH Configuration File` 编辑配置文件：
+使用快捷键 `F1` 或者 `ctrl+shift+p` 打开 commands，输入 `Open SSH Configuration File` 编辑配置文件：
 
 ```
 Host shccdfrh75vm7.hpeswlab.net
