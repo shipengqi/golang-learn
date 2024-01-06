@@ -160,7 +160,16 @@ GitHub Dependabot 的配置文件 dependabot.yml 必须存放在代码仓库的 
 version: 2 updates: - package-ecosystem: &amp;#34;gomod&amp;#34; directory: &amp;#34;/&amp;#34; schedule: interval: &amp;#34;daily&amp;#34; time: &amp;#34;08:00&amp;#34; labels: - &amp;#34;dependencies&amp;#34; commit-message: prefix: &amp;#34;feat&amp;#34; include: &amp;#34;scope&amp;#34; 上面的示例，interval: &amp;quot;daily&amp;quot; time: &amp;quot;08:00&amp;quot; 表示每天八点会触发版本更新检查。
 dependabot.yml 文件中两个必须的字段：version 和 updates。该文件必须以 version: 2 开头。
 updates # updates 用来配置 Dependabot 如何更新版本或项目的依赖项，常用的选项：
-选项 required 安全更新 版本更新 说明 package-ecosystem yes no yes 要使用的包管理器 directory yes yes yes package manifests 位置 schedule.</description></item><item><title>信号量</title><link>https://shipengqi.github.io/golang-learn/docs/concurrency/10_sema/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/concurrency/10_sema/</guid><description>信号量 # 信号量（Semaphore）是一种用于实现多进程或多线程之间同步和互斥的机制。
+选项 required 安全更新 版本更新 说明 package-ecosystem yes no yes 要使用的包管理器 directory yes yes yes package manifests 位置 schedule.</description></item><item><title>Go 远程开发调试</title><link>https://shipengqi.github.io/golang-learn/docs/practice/10_remote_dev/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/practice/10_remote_dev/</guid><description>Go 远程开发调试 # VS Code 是一款开源的代码编辑器，功能强大，支持远程开发调试。
+搭建环境 # 要实现 Go 远程开发调试，需要先安装 Go for Visual Studio Code 插件。
+VS Code 的 Remote 功能由三个插件组成，分别适用于三种不同的场景：
+Remote - SSH：利用 SSH 连接远程主机进行开发。 Remote - Container：连接当前机器上的容器进行开发。 Remote - WSL：连接子系统（Windows Subsystem for Linux）进行开发。 SSH 模式的原理：
+图片来自于 Visual Studio Code 官网
+连接远程机器 # 安装插件 Remote SSH。
+服务器需要支持 SSH 连接。
+安装后，点击左下角的 Open a Remote Window，选择 Connect to Host。
+点击 Add New SSH Host 配置你的远程机器，或者选择已经配置好的 Hosts。
+也可以使用快捷键 F1 或者 ctrl+shift+p 打开 commands，输入 Open SSH Configuration File 直接编辑配置文件：</description></item><item><title>信号量</title><link>https://shipengqi.github.io/golang-learn/docs/concurrency/10_sema/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/concurrency/10_sema/</guid><description>信号量 # 信号量（Semaphore）是一种用于实现多进程或多线程之间同步和互斥的机制。
 信号量可以简单理解为一个整型数，包含两种操作：P（Proberen，测试）操作和 V（Verhogen，增加）操作。其中，P 操作会尝试获取一个信号量，如果信号量的值大于 0，则将信号量的值减 1 并 继续执行。否则，当前进程或线程就会被阻塞，直到有其他进程或线程释放这个信号量为止。V 操作则是释放一个信号量，将信号量的值加 1。
 P 操作和 V 操作可以看做是对资源的获取和释放。
 Go 的 WaitGroup 和 Metux 都是通过信号量来控制 goroutine 的阻塞和唤醒，例如 Mutex 结构体中的 sema：

@@ -31,4 +31,13 @@ Go Modules 机制 # Go Modules 将依赖缓存放在 $GOPATH/pkg/mod 目录，�
 on 启用 Go Modules off 禁用 Go Modules auto，在 GOPATH 下的项目，使用 GOPATH，否则启用 Go Modules。 Go 1.16 之前 GO111MODULE 的默认值是 auto，Go 1.16 起 GO111MODULE 的默认值为 on。
 初始化 # 初始化 Go Modules 项目，首先要开启 Go Modules，然后在项目目录下运行：</description></item><item><title>Gin 静态服务器</title><link>https://shipengqi.github.io/golang-learn/docs/practice/09_gin/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/practice/09_gin/</guid><description>Gin 如何实现前端网页的静态服务器 # Gin 作为 Web 框架提供 API 非常方便，但是在同一个项目中，既提供 API，又要作为前端网页的静态服务器，就比较麻烦。通常 Angular (React/Vue) 项目需要在 Nginx 或者 Tomcat 转发才可以。有些小项目并不需要前后端分离，如何解决？
 利用 embed 标签 # Go 1.16 增加了 embed 的标签，可以利用这个标签将静态资源打包到二进制文件中。
-. ├── config ├── controller ├── model ├── options ├── pkg │ └── response │ └── response.go ├── resources │ ├── dist │ └── html.go ├── html.go ├── resource.go ├── router.go ├── server.go └── store ├── audited.go ├── groups.go ├── mysql.go ├── settings.go ├── store.</description></item></channel></rss>
+. ├── config ├── controller ├── model ├── options ├── pkg │ └── response │ └── response.go ├── resources │ ├── dist │ └── html.go ├── html.go ├── resource.go ├── router.go ├── server.go └── store ├── audited.go ├── groups.go ├── mysql.go ├── settings.go ├── store.</description></item><item><title>Go 远程开发调试</title><link>https://shipengqi.github.io/golang-learn/docs/practice/10_remote_dev/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/practice/10_remote_dev/</guid><description>Go 远程开发调试 # VS Code 是一款开源的代码编辑器，功能强大，支持远程开发调试。
+搭建环境 # 要实现 Go 远程开发调试，需要先安装 Go for Visual Studio Code 插件。
+VS Code 的 Remote 功能由三个插件组成，分别适用于三种不同的场景：
+Remote - SSH：利用 SSH 连接远程主机进行开发。 Remote - Container：连接当前机器上的容器进行开发。 Remote - WSL：连接子系统（Windows Subsystem for Linux）进行开发。 SSH 模式的原理：
+图片来自于 Visual Studio Code 官网
+连接远程机器 # 安装插件 Remote SSH。
+服务器需要支持 SSH 连接。
+安装后，点击左下角的 Open a Remote Window，选择 Connect to Host。
+点击 Add New SSH Host 配置你的远程机器，或者选择已经配置好的 Hosts。
+也可以使用快捷键 F1 或者 ctrl+shift+p 打开 commands，输入 Open SSH Configuration File 直接编辑配置文件：</description></item></channel></rss>
