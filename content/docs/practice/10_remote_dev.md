@@ -11,7 +11,7 @@ VS Code 是一款开源的代码编辑器，功能强大，支持远程开发调
 
 要实现 Go 远程开发调试，需要先安装 [Go for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=golang.Go) 插件。
 
-VS Code Remote 功能有三个插件组成，分别适用于三种不同的场景：
+VS Code 的 Remote 功能由三个插件组成，分别适用于三种不同的场景：
 
 - [Remote - SSH](https://code.visualstudio.com/docs/remote/ssh)：利用 SSH 连接远程主机进行开发。
 - [Remote - Container](https://code.visualstudio.com/docs/devcontainers/containers)：连接当前机器上的容器进行开发。
