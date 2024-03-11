@@ -12,6 +12,7 @@
 - [Go 语言编程之旅](https://golang2.eddycjy.com/)
 - [Go 语言高级编程](https://chai2010.gitbooks.io/advanced-go-programming-book/content/)
 - [Go 夜读](https://github.com/developer-learning/reading-go) 11.6k
+- [Go Tutorial](https://github.com/jincheng9/go-tutorial)
 
 ## 高性能编程
 
