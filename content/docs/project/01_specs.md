@@ -51,11 +51,8 @@ weight: 1
     
     <!-- 如何提交代码 -->
 
-    ## License
-    
-    <!-- 开源许可证 -->
 
-也可以使用 [readme.so](https://readme.so/)，这是一个快速生成 README 文档的在线工具。
+也可以使用快速生成 README 文档的在线工具 [readme.so](https://readme.so/)。
 
 ### 项目文档
 
@@ -67,6 +64,7 @@ weight: 1
 文档最好包含英文和中文 2 个版本。
 
 文档目录结构示例：
+
 ```
 docs
 ├── dev                              # 开发文档

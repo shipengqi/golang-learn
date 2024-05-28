@@ -101,7 +101,7 @@ mypkg_windows_amd64.go // only builds on windows 64bit platforms
 
 ## 交叉编译
 
-Go 可以通过设置环境变量来实现交叉编译，用来在一个平台上生成另一个平台的可执行程序。：
+Go 可以通过设置环境变量来实现交叉编译，用来在一个平台上生成另一个平台的可执行程序：
 
 ```
 #  linux amd64

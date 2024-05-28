@@ -5,7 +5,7 @@ weight: 4
 
 # Commit 规范
 
-多人协作开发一个项目时，每个开发的 Commit Message 五花八门，时间久了，提交的历史变得很难看，而且有的 Commit Message 可能过于简单，可读性较差。
+多人协作开发一个项目时，如果 Commit Message 五花八门，时间久了，提交的历史变得很难看，而且过于简单的 Commit Message，可读性较差。
 
 一个好的 Commit 规范可以使 Commit Message 的可读性更好，并且可以实现自动化。
 
@@ -121,50 +121,7 @@ Closes #123, #245, #992
 可以使用一些开源的工具，来自动生成规范化的 Commit Message：
 
 - [commitizen](https://github.com/commitizen/cz-cli)，Javascript 实现，需要安装 Node.js。
-- [commitizen-go](https://github.com/lintingzhen/commitizen-go)，Go 版本的 commitizen，下载二进制文件就可以直接使用。
-
-上面两个命令都可以进入交互模式，并根据提示生成 Commit Message，然后提交。
-
-### commitizen
-
-#### 安装
-
-```
-$ npm install -g commitizen
-```
-
-#### 使用
-
-
-初始化项目，使用 cz-conventional-changelog 适配器：
-
-```
-# npm
-$ commitizen init cz-conventional-changelog --save-dev --save-exact
-
-# yarn
-$ commitizen init cz-conventional-changelog --yarn --dev --exact
-
-# pnpm
-$ commitizen init cz-conventional-changelog --pnpm --save-dev --save-exact
-```
-
-提交代码：
-
-```
-$ git add .
-# 进入交互模式
-$ git cz
-```
-
-![commitizen](https://raw.githubusercontent.com/shipengqi/illustrations/a6542076c06fd7a2d74ddfcb41ac8d9acf56e405/go/commitizen.gif)
-
-> `git cz` 支持 `git commit` 的所有参数。
-
-git log:
-
-![git-commit-log](https://raw.githubusercontent.com/shipengqi/illustrations/643142bf64ec66adf5cd0bed1fbbe7f67bbcfb45/go/git-commit-log.png)
-
+- Go 版本的 [commitizen](https://github.com/shipegnqi/commitizen)，下载二进制文件就可以直接使用。
 
 ## 自动生成 CHANGELOG
 

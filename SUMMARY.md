@@ -55,3 +55,4 @@
 
 - [learning-golang-awesome](https://github.com/yangwenmai/learning-golang) 2.5k
     - Go 的学习资料
+- [Go 学习面试指南](https://github.com/mao888/golang-guide) 1.5k
