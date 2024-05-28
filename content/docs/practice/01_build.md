@@ -14,10 +14,10 @@ Go 支持两种条件编译方式：
 
 ### 编译标签
 
-编译标签的规则：
+编译标签是以 `// +build` 开头的注释，编译标签的规则：
 
-1. 空格表示：AND
-2. 逗号表示：OR`
+1. 空格表示：OR
+2. 逗号表示：AND
 3. `!` 表示：NOT
 4. 换行表示：AND
 
@@ -26,14 +26,14 @@ Go 支持两种条件编译方式：
 - 操作系统，例如：`windows`、`linux` 等，对应 `runtime.GOOS` 的值。
 - 计算机架构，例如：`amd64`、`386`，对应 `runtime.GOARCH` 的值。
 - 编译器，例如：`gccgo`、`gc`，是否开启 CGO,cgo。
-- Go 版本，例如：`go1.19`、`go1.20` 等。
+- Go 版本，例如：`go1.19` 表示从 从 Go 版本 1.19 起，`go1.20` 表示从 从 Go 版本 1.20 起。
 - 自定义的标签，例如：编译时通过指定 `-tags` 传入的值。
-- `//go:build ignore`，编译时自动忽略该文件
+- `// +build ignore`，表示编译时自动忽略该文件
 
-`go:build` 之后必须有空行，否则会被编译器当做普通注释。
+编译标签之后必须有空行，否则会被编译器当做普通注释。
 
 ```go
-//go:build linux,386 darwin,!cgo
+// +build linux,386 darwin,!cgo
 
 package testpkg
 ```
@@ -51,7 +51,7 @@ go build -tags mytag1 mytag2
 `-tags` 也有 `!` 规则，它表示的是没有这个标签。
 
 ```go
-//go:build !hello
+// +build !hello
 ```
 
 ```bash
@@ -91,13 +91,17 @@ mypkg_windows_amd64.go // only builds on windows 64bit platforms
 - 需要排除某个平台或架构
 - 有一些自定义的编译条件
 
-### +build
+### go:build
 
-`// +build` 功能和 `//go:build` 一样。只不过 `//go:build` 是在 go 1.17 才引入的。目的是为了与其他现有的 Go 指令保持一致，例如 `//go:generate`。
+`//go:build` 功能和 `// +build` 一样。只不过 `//go:build` 是在 go 1.17 才引入的。目的是为了与其他现有的 Go 指令保持一致，例如 `//go:generate`。
+
+规则： 由 `||`、`&&`、`!` 运算符（或、与、非）和括号组成的表达式，`//go:build ignore`，表示编译时自动忽略该文件。
+
+例如 `//go:build (linux && 386) || (darwin && !cgo)`，表示目标系统是 386 的 linux 或者没有启用 cgo 的 darwin 时，当前文件会被编译进来。
 
 ## 交叉编译
 
-Go 可以通过设置环境变量来实现交叉编译，用来在一个平台上生成另一个平台的可执行程序。：
+Go 可以通过设置环境变量来实现交叉编译，用来在一个平台上生成另一个平台的可执行程序：
 
 ```
 #  linux amd64
