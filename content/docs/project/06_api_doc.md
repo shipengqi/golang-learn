@@ -216,43 +216,43 @@ import (
 // List users request.
 // swagger:parameters listUserRequest
 type listUserRequestParamsWrapper struct {
-  // in:query
-  metav1.ListOptions
+    // in:query
+    metav1.ListOptions
 }
 
 // List users response.
 // swagger:response listUserResponse
 type listUserResponseWrapper struct {
-  // in:body
-  Body v1.UserList
+    // in:body
+    Body v1.UserList
 }
 
 // User response.
 // swagger:response getUserResponse
 type getUserResponseWrapper struct {
-  // in:body
-  Body v1.User
+    // in:body
+    Body v1.User
 }
 
 // swagger:parameters createUserRequest updateUserRequest
 type userRequestParamsWrapper struct {
-  // User information.
-  // in:body
-  Body v1.User
+    // User information.
+    // in:body
+    Body v1.User
 }
 
 // swagger:parameters deleteUserRequest getUserRequest updateUserRequest
 type userNameParamsWrapper struct {
-  // Username.
-  // in:path
-  Name string `json:"name"`
+    // Username.
+    // in:path
+    Name string `json:"name"`
 }
 
 // ErrResponse defines the return messages when an error occurred.
 // swagger:response errResponse
 type errResponseWrapper struct {
-  // in:body
-  Body response.Response
+    // in:body
+    Body response.Response
 }
 
 // Return nil json object.
