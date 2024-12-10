@@ -73,4 +73,4 @@ goreleaser release --snapshot --rm-dist 修改 .goreleaser.yaml 配置后，可�
 goreleaser check --single-target 只为特定的 GOOS/GOARCH 构建二进制文件，这对本地开发很有用：
 goreleaser build --single-target 发布一个 release # 如果要发布到 Github，需要导出一个环境变量 GITHUB_TOKEN，它应该包含一个有效的 GitHub token 与 repo 范围。它将被用来部署发布到你的 GitHub 仓库。创建一个新的 GitHub 令牌。
 write:packages 权限是 GITHUB_TOKEN 需要的最小权限。
-GoReleaser 会使用 repo 的最新 Git 标签。</description></item></channel></rss>
+GoReleaser 会使用 repo 的最新 Git 标签。</description></item><item><title>错误处理</title><link>https://shipengqi.github.io/golang-learn/docs/project/14_error/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/project/14_error/</guid><description> 错误处理 #</description></item></channel></rss>
