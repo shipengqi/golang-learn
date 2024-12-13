@@ -1,0 +1,342 @@
+<!doctype html><html lang=en dir=ltr><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="Casbin 是基于 Go 语言的开源权限控制库。支持 ACL，RBAC，ABAC 等常用的访问控制模型。
+Casbin 只负责访问控制，不负责验证用户的用户名、密码，应该有专门的组件负责身份认证，再配合 Casbin 进行访问控制。 Casbin 只存储用户和角色之间的映射关系，不存储用户、角色等信息。 Casbin 的访问控制模型核心叫做 PERM（Policy、Effect、Request、Matcher） 元模型。
+PERM 元模型 # PERM（Policy、Effect、Request、Matcher）可以简单理解为，当一个请求（Request）进来，需要通过策略匹配器（Matcher）去匹配存储在数据库中或者 csv 文件中的策略规则，拿到所有匹配的策略规则的结果（eft）之后，在使用 Effect 定义中的表达式进行计算，最终返回一个 true （通过）或 false（拒绝）。
+Request # Request 代表请求。
+请求的定义，这个定义的是 e.Enforce(...) 函数中的参数：
+[request_definition] r = sub, obj, act sub：代表访问资源的实体，一般就是指用户。 obj：要访问的资源。 act：对资源执行的操作。 这里是定义你的请求格式。如果你不需要指定资源，你可以定义：
+[request_definition] r = sub, act 或者如果你有两个访问实体，你可以定义：
+[request_definition] r = sub, sub2, obj, act Policy # Policy 代表策略。
+定义访问策略模型，这个定义的是数据库中或者 csv 文件中策略规则的格式：
+[policy_definition] p = sub, obj, act, eft p2 = sub, act eft：表示策略的结果，一般为空，默认是 allow。eft 只接受两个值是 allow 或 deny。 策略规则，策略规则一般存储在数据库中，也可以在 csv 文件中："><meta name=theme-color media="(prefers-color-scheme: light)" content="#ffffff"><meta name=theme-color media="(prefers-color-scheme: dark)" content="#343a40"><meta name=color-scheme content="light dark"><meta property="og:title" content="Casbin"><meta property="og:description" content="Casbin 是基于 Go 语言的开源权限控制库。支持 ACL，RBAC，ABAC 等常用的访问控制模型。
+Casbin 只负责访问控制，不负责验证用户的用户名、密码，应该有专门的组件负责身份认证，再配合 Casbin 进行访问控制。 Casbin 只存储用户和角色之间的映射关系，不存储用户、角色等信息。 Casbin 的访问控制模型核心叫做 PERM（Policy、Effect、Request、Matcher） 元模型。
+PERM 元模型 # PERM（Policy、Effect、Request、Matcher）可以简单理解为，当一个请求（Request）进来，需要通过策略匹配器（Matcher）去匹配存储在数据库中或者 csv 文件中的策略规则，拿到所有匹配的策略规则的结果（eft）之后，在使用 Effect 定义中的表达式进行计算，最终返回一个 true （通过）或 false（拒绝）。
+Request # Request 代表请求。
+请求的定义，这个定义的是 e.Enforce(...) 函数中的参数：
+[request_definition] r = sub, obj, act sub：代表访问资源的实体，一般就是指用户。 obj：要访问的资源。 act：对资源执行的操作。 这里是定义你的请求格式。如果你不需要指定资源，你可以定义：
+[request_definition] r = sub, act 或者如果你有两个访问实体，你可以定义：
+[request_definition] r = sub, sub2, obj, act Policy # Policy 代表策略。
+定义访问策略模型，这个定义的是数据库中或者 csv 文件中策略规则的格式：
+[policy_definition] p = sub, obj, act, eft p2 = sub, act eft：表示策略的结果，一般为空，默认是 allow。eft 只接受两个值是 allow 或 deny。 策略规则，策略规则一般存储在数据库中，也可以在 csv 文件中："><meta property="og:type" content="article"><meta property="og:url" content="https://shipengqi.github.io/golang-learn/docs/project/16_casbin/"><meta property="article:section" content="docs"><meta property="article:modified_time" content="2024-12-13T11:07:35+08:00"><title>Casbin | Go Learning</title><link rel=manifest href=/golang-learn/manifest.json><link rel=icon href=/golang-learn/favicon.png><link rel=stylesheet href=/golang-learn/book.min.33a48f5432973b8ff9a82679d9e45d67f2c15d4399bd2829269455cfe390b5e8.css integrity="sha256-M6SPVDKXO4/5qCZ52eRdZ/LBXUOZvSgpJpRVz+OQteg=" crossorigin=anonymous><script defer src=/golang-learn/flexsearch.min.js></script>
+<script defer src=/golang-learn/en.search.min.615485de8d6610abd70ef04878dc149de209befa1eb24d891649b5d2d93d76c9.js integrity="sha256-YVSF3o1mEKvXDvBIeNwUneIJvvoesk2JFkm10tk9dsk=" crossorigin=anonymous></script></head><body dir=ltr><input type=checkbox class="hidden toggle" id=menu-control>
+<input type=checkbox class="hidden toggle" id=toc-control><main class="container flex"><aside class=book-menu><div class=book-menu-content><nav><h2 class=book-brand><a class="flex align-center" href=/golang-learn/><span>Go Learning</span></a></h2><div class=book-search><input type=text id=book-search-input placeholder=Search aria-label=Search maxlength=64 data-hotkeys=s/><div class="book-search-spinner hidden"></div><ul id=book-search-results></ul></div><ul><li><a href=https://shipengqi.github.io/ target=_blank rel=noopener>Blog</a></li><li><a href=https://github.com/shipengqi/golang-learn target=_blank rel=noopener>Github</a></li></ul><ul><li><span>🍚 语言基础</span><ul><li><a href=/golang-learn/docs/basic/01_basic_type/>基础数据类型</a></li><li><a href=/golang-learn/docs/basic/02_array/>数组</a></li><li><a href=/golang-learn/docs/basic/03_slice/>切片</a></li><li><a href=/golang-learn/docs/basic/04_map/>哈希表</a></li><li><a href=/golang-learn/docs/basic/05_function/>函数</a></li><li><a href=/golang-learn/docs/basic/09_pointer/>指针</a></li></ul></li><li><a href=/golang-learn/docs/concurrency/>⚡ 并发编程</a><ul><li><a href=/golang-learn/docs/concurrency/01_mutex/>互斥锁</a></li><li><a href=/golang-learn/docs/concurrency/02_rwmutex/>读写锁</a></li><li><a href=/golang-learn/docs/concurrency/03_waitgroup/>WaitGroup</a></li><li><a href=/golang-learn/docs/concurrency/04_cond/>条件变量</a></li><li><a href=/golang-learn/docs/concurrency/05_once/>Once</a></li><li><a href=/golang-learn/docs/concurrency/06_pool/>Pool</a></li><li><a href=/golang-learn/docs/concurrency/07_context/>Context</a></li><li><a href=/golang-learn/docs/concurrency/08_atomic/>原子操作</a></li><li><a href=/golang-learn/docs/concurrency/09_channel/>Channel</a></li><li><a href=/golang-learn/docs/concurrency/10_sema/>信号量</a></li><li><a href=/golang-learn/docs/concurrency/11_singleflight/>SingleFlight</a></li><li><a href=/golang-learn/docs/concurrency/12_errorgroup/>ErrGroup</a></li></ul></li><li><span>🛠️ 实践</span><ul><li><a href=/golang-learn/docs/practice/01_build/>Go 编译</a></li><li><a href=/golang-learn/docs/practice/02_go_race/>Go 数据竞争检测器</a></li><li><a href=/golang-learn/docs/practice/04_pprof/>Go 性能分析（上）</a></li><li><a href=/golang-learn/docs/practice/05_trace/>Go 性能分析（下）</a></li><li><a href=/golang-learn/docs/practice/06_performance/>Go 性能优化</a></li><li><a href=/golang-learn/docs/practice/07_coredump/>Go Core Dump 调试</a></li><li><a href=/golang-learn/docs/practice/08_mod/>Go Modules</a></li><li><a href=/golang-learn/docs/practice/09_gin/>Gin 静态服务器</a></li><li><a href=/golang-learn/docs/practice/10_remote_dev/>Go 远程开发调试</a></li></ul></li><li><span>🛠️ Go 工程实践</span><ul><li><a href=/golang-learn/docs/project/01_specs/>项目规范</a></li><li><a href=/golang-learn/docs/project/02_structure/>项目的目录结构</a></li><li><a href=/golang-learn/docs/project/03_code/>代码规范</a></li><li><a href=/golang-learn/docs/project/04_commitizen/>Commit 规范</a></li><li><a href=/golang-learn/docs/project/05_version/>版本规范</a></li><li><a href=/golang-learn/docs/project/06_api_doc/>API 文档</a></li><li><a href=/golang-learn/docs/project/07_flow/>Git 工作流程</a></li><li><a href=/golang-learn/docs/project/08_make/>项目管理</a></li><li><a href=/golang-learn/docs/project/09_actions/>GitHub Actions</a></li><li><a href=/golang-learn/docs/project/10_dependabot/>GitHub Dependabot</a></li><li><a href=/golang-learn/docs/project/11_templates/>GitHub 模板</a></li><li><a href=/golang-learn/docs/project/12_goreleaser/>GoReleaser</a></li><li><a href=/golang-learn/docs/project/14_error/>错误处理</a></li><li><a href=/golang-learn/docs/project/16_casbin/ class=active>Casbin</a></li></ul></li><li><a href=/golang-learn/docs/advance/>🔍 底层原理</a><ul></ul></li></ul></nav><script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script></div></aside><div class=book-page><header class=book-header><div class="flex align-center justify-between"><label for=menu-control><img src=/golang-learn/svg/menu.svg class=book-icon alt=Menu></label>
+<strong>Casbin</strong>
+<label for=toc-control><img src=/golang-learn/svg/toc.svg class=book-icon alt="Table of Contents"></label></div><aside class="hidden clearfix"><nav id=TableOfContents><ul><li><a href=#perm-元模型>PERM 元模型</a><ul><li><a href=#request>Request</a></li><li><a href=#policy>Policy</a></li><li><a href=#matcher>Matcher</a></li><li><a href=#effect>Effect</a></li></ul></li><li><a href=#acl-model>ACL Model</a></li><li><a href=#rbac-model>RBAC Model</a><ul><li><a href=#角色层次>角色层次</a></li><li><a href=#区分角色和用户>区分角色和用户</a></li><li><a href=#查询隐式角色或权限>查询隐式角色或权限</a></li><li><a href=#菜单权限>菜单权限</a></li><li><a href=#菜单权限继承的两个重要规则>菜单权限继承的两个重要规则</a></li></ul></li><li><a href=#rbac-with-domains>RBAC with Domains</a></li><li><a href=#abac>ABAC</a><ul><li><a href=#使用-abac>使用 ABAC</a></li><li><a href=#abac-with-policy>ABAC with Policy</a></li></ul></li><li><a href=#super-admin>Super Admin</a></li><li><a href=#函数>函数</a><ul><li><a href=#keymatch>keyMatch</a></li><li><a href=#keymatch2>keyMatch2</a></li><li><a href=#自定义函数>自定义函数</a></li></ul></li><li><a href=#性能优化>性能优化</a><ul><li><a href=#优化匹配器>优化匹配器</a></li><li><a href=#尽量减少角色继承层级>尽量减少角色继承层级</a></li><li><a href=#分片>分片</a></li></ul></li></ul></nav></aside></header><article class=markdown><p><a href=https://github.com/casbin/casbin>Casbin</a> 是基于 Go 语言的开源权限控制库。支持 ACL，RBAC，ABAC 等常用的访问控制模型。</p><ul><li>Casbin <strong>只负责访问控制</strong>，不负责验证用户的用户名、密码，应该有专门的组件负责身份认证，再配合 Casbin 进行访问控制。</li><li>Casbin <strong>只存储用户和角色之间的映射关系</strong>，不存储用户、角色等信息。</li></ul><p>Casbin 的访问控制模型核心叫做 PERM（Policy、Effect、Request、Matcher） 元模型。</p><h1 id=perm-元模型>PERM 元模型
+<a class=anchor href=#perm-%e5%85%83%e6%a8%a1%e5%9e%8b>#</a></h1><p>PERM（Policy、Effect、Request、Matcher）可以简单理解为，当一个请求（Request）进来，需要通过策略匹配器（Matcher）去匹配存储在数据库中或者
+csv 文件中的策略规则，拿到所有匹配的策略规则的结果（<code>eft</code>）之后，在使用 <code>Effect</code> 定义中的表达式进行计算，最终返回一个 <code>true</code>
+（通过）或 <code>false</code>（拒绝）。</p><h2 id=request>Request
+<a class=anchor href=#request>#</a></h2><p>Request 代表请求。</p><p>请求的定义，这个定义的是 <code>e.Enforce(...)</code> 函数中的参数：</p><pre tabindex=0><code>[request_definition]        
+r = sub, obj, act
+</code></pre><ul><li><code>sub</code>：代表访问资源的实体，一般就是指用户。</li><li><code>obj</code>：要访问的资源。</li><li><code>act</code>：对资源执行的操作。</li></ul><p>这里是定义你的请求格式。如果你不需要指定资源，你可以定义：</p><pre tabindex=0><code>[request_definition]        
+r = sub, act
+</code></pre><p>或者如果你有两个访问实体，你可以定义：</p><pre tabindex=0><code>[request_definition]        
+r = sub, sub2, obj, act
+</code></pre><h2 id=policy>Policy
+<a class=anchor href=#policy>#</a></h2><p>Policy 代表策略。</p><p><strong>定义访问策略模型</strong>，这个定义的是数据库中或者 csv 文件中策略规则的格式：</p><pre tabindex=0><code>[policy_definition]
+p = sub, obj, act, eft
+p2 = sub, act
+</code></pre><ul><li><code>eft</code>：表示策略的结果，一般为空，默认是 <code>allow</code>。<code>eft</code> <strong>只接受两个值是 <code>allow</code> 或 <code>deny</code></strong>。</li></ul><p><strong>策略规则</strong>，策略规则一般存储在数据库中，也可以在 csv 文件中：</p><pre tabindex=0><code>p, alice, data1, read
+p2, bob, write-all-objects
+</code></pre><p>策略中的每一行都被称为<strong>策略规则</strong>。 每个策略规则都以策略类型（Policy type）开始，如 <code>p</code> 或 <code>p2</code>。用于匹配策略定义中的 <code>p</code>、
+<code>p2</code>。匹配器中使用时：</p><pre tabindex=0><code>e = some(where (p2.eft == allow))
+</code></pre><h2 id=matcher>Matcher
+<a class=anchor href=#matcher>#</a></h2><p>Matcher 代表策略匹配器。用来验证一个请求是否匹配某个策略规则。</p><p>定义匹配规则：</p><pre tabindex=0><code>[matchers]
+m = r.sub == p.sub &amp;&amp; r.obj == p.obj &amp;&amp; r.act == p.act
+</code></pre><p>上面定义的匹配规则表示一个请求如果满足下面的三个条件，匹配器就会认为匹配到了该策略规则，并返回策略结果 <code>p.eft</code>：</p><ul><li><code>r.sub == p.sub</code>：请求的 <code>sub</code> 和策略的 <code>sub</code> 相等</li><li><code>r.obj == p.obj</code>：请求的 <code>obj</code> 和策略的 <code>obj</code> 相等</li><li><code>r.act == p.act</code>：请求的 <code>act</code> 和策略的 <code>act</code> 相等</li></ul><blockquote><p>匹配器中可以使用算术运算符如 <code>+</code>、<code>-</code>、<code>*</code>、<code>/</code> 和逻辑运算符如 <code>&&</code>、<code>||</code>、<code>!</code>。</p></blockquote><h2 id=effect>Effect
+<a class=anchor href=#effect>#</a></h2><p>Effect 代表策略效果。它可以被理解为一种模型，在这种模型中，对匹配结果再次作出逻辑组合判断。</p><p>例如一个请求匹配到了两条策略规则，一条规则允许，另一条规则拒绝。</p><p>策略效果的定义为：</p><pre tabindex=0><code>[policy_effect]
+e = some(where (p.eft == allow))
+</code></pre><p>这意味着，如果匹配的策略规则有一条的策略结果为 <code>allow</code>，那么最终结果为 <code>allow</code>。</p><p>策略效果的另一个例子：</p><pre tabindex=0><code>[policy_effect]
+e = !some(where (p.eft == deny))
+</code></pre><p>这意味着，如果匹配的策略规则有一条的策略结果为 <code>deny</code>，那么最终结果为 <code>deny</code>。否则就是 <code>allow</code>。</p><p>策略效果甚至可以用逻辑表达式连接：</p><pre tabindex=0><code>[policy_effect]
+e = some(where (p.eft == allow)) &amp;&amp; !some(where (p.eft == deny))
+</code></pre><p>这意味着必须至少有一个匹配的 <code>allow</code> 策略规则，并且不能有任何匹配的 <code>deny</code> 策略规则。</p><p>目前 Casbin <strong>只支持下面的内置策略效果</strong>：</p><ul><li><code>some(where (p.eft == allow))</code></li><li><code>!some(where (p.eft == deny))</code></li><li><code>some(where (p.eft == allow)) && !some(where (p.eft == deny))</code></li><li><code>priority(p.eft) || deny</code></li><li><code>subjectPriority(p.eft)</code></li></ul><h1 id=acl-model>ACL Model
+<a class=anchor href=#acl-model>#</a></h1><p>Casbin 提供了一个在线的<a href=https://casbin.org/editor/>编辑器</a>，可以用来验证你的 PERM 模型和策略规则。</p><p>一个简单的 ACL Model：</p><pre tabindex=0><code>[request_definition]
+r = sub, obj, act
+
+[policy_definition]
+p = sub, obj, act
+
+[policy_effect]
+e = some(where (p.eft == allow))
+
+[matchers]
+m = r.sub == p.sub &amp;&amp; r.obj == p.obj &amp;&amp; r.act == p.act
+</code></pre><p>策略规则（Policy）：</p><pre tabindex=0><code>p, alice, data1, read
+p, bob, data2, write
+p, bob, data1, write, deny
+</code></pre><p>请求（Request）：</p><pre tabindex=0><code>alice, data1, read
+</code></pre><p>上面的请求，可以匹配到策略 <code>p, alice, data1, read</code>，并且默认的 <code>eft</code> 是 <code>allow</code>，经过 Effect 表达式
+<code>some(where (p.eft == allow))</code>，得到执行结果：</p><pre tabindex=0><code>true Reason: [alice, data1, read]
+</code></pre><p>接着修改请求：</p><pre tabindex=0><code>alice, data1, write
+bob, data1, read
+</code></pre><p>上面的两个请求得到执行结果：</p><pre tabindex=0><code>false
+false
+</code></pre><p>修改请求：</p><pre tabindex=0><code>bob, data1, write
+</code></pre><p>会匹配到策略 <code>p, bob, data1, write</code> 得到结果 <code>deny</code>，所以执行结果是 <code>false</code>。</p><p>如果策略中有两条相同的策略，但是 <code>eft</code> 不同，例如：</p><pre tabindex=0><code>p, bob, data1, write, allow
+p, bob, data1, write, deny
+</code></pre><p>请求 <code>bob, data1, write</code> 得到的执行结果是 <code>true Reason: [bob, data1, write]</code>，因为 Effect 的表达式只要有一条 <code>allow</code> 就返回
+<code>true</code>。</p><p>如果想要它不通过就修改 Effect 为：</p><pre tabindex=0><code>[policy_effect]
+some(where (p.eft == allow)) &amp;&amp; !some(where (p.eft == deny))
+</code></pre><p>表示必须至少有一个匹配的 <code>allow</code> 策略规则，并且不能有任何匹配的 <code>deny</code> 策略规则。</p><h1 id=rbac-model>RBAC Model
+<a class=anchor href=#rbac-model>#</a></h1><p>RBAC 有一个新的概念角色域 <code>role_definition</code>，<code>[role_definition]</code> 用于表示 <code>sub</code> 与角色的关系，角色的继承关系。</p><pre tabindex=0><code>[request_definition]
+r = sub, obj, act
+
+[policy_definition]
+p = sub, obj, act
+
+[role_definition]
+g = _, _
+
+[policy_effect]
+e = some(where (p.eft == allow))
+
+[matchers]
+m = g(r.sub, p.sub) &amp;&amp; r.obj == p.obj &amp;&amp; r.act == p.act
+</code></pre><ul><li><code>g = _, _</code> 中的第一个参数 <code>_</code> 表示<strong>用户</strong>，第二个 <code>_</code> 表示<strong>角色</strong>。</li><li><code>g(r.sub, p.sub)</code> 表示请求中的 <code>sub</code> 是否与策略规则中的（<code>p.sub</code>）存在角色关系。</li></ul><blockquote><p><code>g</code> 函数：是 Casbin 中用于检查角色关系的函数。例如 alice 是 admin，策略规则中定义了 <code>p.sub = admin</code>，那么
+<code>g(alice, admin)</code> 返回 <code>true</code>。</p></blockquote><p>策略文件：</p><pre tabindex=0><code>// 角色 admin 可以对 data1 资源执行 read 和 write 操作
+p, admin, data1, read
+p, admin, data1, write
+// 角色 user 可以对 data2 资源执行 read 操作
+p, user, data2, read
+
+// alice 被分配为 admin 角色，bob 被分配为 user 角色。
+g, alice, admin
+g, bob, user
+</code></pre><p>请求：</p><pre tabindex=0><code>alice, data1, write
+bob, data1, read
+</code></pre><p>上面的两个请求得到执行结果：</p><pre tabindex=0><code>true Reason: [admin, data1, write]
+false
+</code></pre><ul><li>alice 是 admin 角色，可以对 data1 资源执行 read 和 write 操作，所以第一个请求结果为 <code>true</code>。</li><li>bob 是 user 角色，只有 data2 资源的 read 权限，没有 data1 的任何权限，所以请求结果为 <code>false</code>。</li></ul><blockquote><p>请求 <code>alice, data1, write</code> 经过 <code>g(alice, admin)</code> 处理，用户 alice 和角色 admin 都会用来去匹配策略规则中的 <code>sub</code>。</p></blockquote><h2 id=角色层次>角色层次
+<a class=anchor href=#%e8%a7%92%e8%89%b2%e5%b1%82%e6%ac%a1>#</a></h2><p>Casbin 的 RBAC 支持 RBAC1 的角色层次结构特性，这意味着如果 alice 用有角色 role1，并且角色 role1 拥有角色 role2，那么 alice
+也将拥有 role2 的所有权限。</p><p>Casbin 中的内置角色管理器，可以指定<strong>最大层次级别</strong>。默认值是 <code>10</code>。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#75715e>// NewRoleManager is the constructor for creating an instance of the
+</span></span></span><span style=display:flex><span><span style=color:#75715e>// default RoleManager implementation.
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>NewRoleManager</span>(<span style=color:#a6e22e>maxHierarchyLevel</span> <span style=color:#66d9ef>int</span>) <span style=color:#a6e22e>rbac</span>.<span style=color:#a6e22e>RoleManager</span> {
+</span></span><span style=display:flex><span><span style=color:#a6e22e>rm</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>RoleManager</span>{}
+</span></span><span style=display:flex><span><span style=color:#a6e22e>rm</span>.<span style=color:#a6e22e>allRoles</span> = <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>sync</span>.<span style=color:#a6e22e>Map</span>{}
+</span></span><span style=display:flex><span><span style=color:#a6e22e>rm</span>.<span style=color:#a6e22e>maxHierarchyLevel</span> = <span style=color:#a6e22e>maxHierarchyLevel</span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>rm</span>.<span style=color:#a6e22e>hasPattern</span> = <span style=color:#66d9ef>false</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>return</span> <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>rm</span>
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><h2 id=区分角色和用户>区分角色和用户
+<a class=anchor href=#%e5%8c%ba%e5%88%86%e8%a7%92%e8%89%b2%e5%92%8c%e7%94%a8%e6%88%b7>#</a></h2><p>在 RBAC 系统内<strong>用户和角色不能使用相同的名称</strong>，因为对于 Casbin 来说，不管是用户还是角色都只是一个<strong>字符串</strong>，Casbin
+是没有办法知道你指定的是用户 alice 还是角色 alice。可以通过使用前缀来解决这个问题，例如 <code>role::alice</code> 表示角色 alice。</p><h2 id=查询隐式角色或权限>查询隐式角色或权限
+<a class=anchor href=#%e6%9f%a5%e8%af%a2%e9%9a%90%e5%bc%8f%e8%a7%92%e8%89%b2%e6%88%96%e6%9d%83%e9%99%90>#</a></h2><p>当用户通过 RBAC 层次结构继承角色或权限，而不是在策略规则中直接分配它们时，这种类型的分配为<strong>隐式</strong>。 要查询此类隐式关系，需要使用这两个
+API：<code>GetImplicitRolesForUser()</code> 和 <code>GetImplicitPermissionsForUser()</code>，而不是 <code>GetRolesForUser()</code> 和
+<code>GetPermissionsForUser()</code>。</p><h2 id=菜单权限>菜单权限
+<a class=anchor href=#%e8%8f%9c%e5%8d%95%e6%9d%83%e9%99%90>#</a></h2><p>RBAC 通常只需要用户的角色，只使用 <code>g</code> 就可以了。但是当你需要为资源定义继承关系时，可以同时使用 <code>g</code> 和 <code>g2</code>，下面的例子是定义菜单权限的模型：</p><pre tabindex=0><code>[request_definition]
+r = sub, obj, act
+
+[policy_definition]
+p = sub, obj, act, eft
+
+[role_definition]
+g = _, _
+g2 = _, _
+
+[policy_effect]
+e = some(where (p_eft == allow)) &amp;&amp; !some(where (p_eft == deny))
+
+[matchers]
+m = g(r.sub, p.sub) &amp;&amp; r.act == p.act &amp;&amp; (g2(r.obj, p.obj) || r.obj == p.obj)
+</code></pre><p><code>g2</code> 是为了定义菜单项的层次结构。</p><p>策略规则：</p><pre tabindex=0><code>p, ROLE_ROOT, SystemMenu, read, allow
+p, ROLE_ROOT, AdminMenu, read, allow
+p, ROLE_ROOT, UserMenu, read, deny
+p, ROLE_ADMIN, UserMenu, read, allow
+p, ROLE_ADMIN, AdminMenu, read, allow
+p, ROLE_ADMIN, AdminSubMenu_deny, read, deny
+p, ROLE_USER, UserSubMenu_allow, read, allow
+
+g, user, ROLE_USER
+g, admin, ROLE_ADMIN
+g, root, ROLE_ROOT
+g, ROLE_ADMIN, ROLE_USER
+
+g2, UserSubMenu_allow, UserMenu
+g2, UserSubMenu_deny, UserMenu
+g2, UserSubSubMenu, UserSubMenu_allow
+g2, AdminSubMenu_allow, AdminMenu
+g2, AdminSubMenu_deny, AdminMenu
+g2, (NULL), SystemMenu
+</code></pre><ul><li><code>g2, UserSubMenu_allow, UserMenu</code> 表示 <code>UserSubMenu_allow</code> 是 <code>UserMenu</code> 的子菜单。</li><li><code>g2, (NULL), SystemMenu</code> 表示 <code>SystemMenu</code> 没有子菜单项，意味着它是顶级菜单项。</li></ul><table><thead><tr><th>菜单名称</th><th>ROLE_ROOT</th><th>ROLE_ADMIN</th><th>ROLE_USER</th></tr></thead><tbody><tr><td>SystemMenu</td><td>✅</td><td>❌</td><td>❌</td></tr><tr><td>UserMenu</td><td>❌</td><td>✅</td><td>❌</td></tr><tr><td>UserSubMenu_allow</td><td>❌</td><td>✅</td><td>✅</td></tr><tr><td>UserSubSubMenu</td><td>❌</td><td>✅</td><td>✅</td></tr><tr><td>UserSubMenu_deny</td><td>❌</td><td>✅</td><td>❌</td></tr><tr><td>AdminMenu</td><td>✅</td><td>✅</td><td>❌</td></tr><tr><td>AdminSubMenu_allow</td><td>✅</td><td>✅</td><td>❌</td></tr><tr><td>AdminSubMenu_deny</td><td>✅</td><td>❌</td><td>❌</td></tr></tbody></table><h2 id=菜单权限继承的两个重要规则>菜单权限继承的两个重要规则
+<a class=anchor href=#%e8%8f%9c%e5%8d%95%e6%9d%83%e9%99%90%e7%bb%a7%e6%89%bf%e7%9a%84%e4%b8%a4%e4%b8%aa%e9%87%8d%e8%a6%81%e8%a7%84%e5%88%99>#</a></h2><p><strong>父菜单权限的继承</strong>：</p><p>如果一个父菜单明确地被授予 <code>allow</code> 权限，那么它的所有子菜单也默认为 <code>allow</code> 权限，除非特别标记为 <code>deny</code>
+。这意味着一旦一个父菜单是可访问的，它的子菜单默认也是可访问的。</p><p><strong>没有直接设置权限的父菜单</strong>：</p><p>如果一个父菜单没有直接设置权限（既没有明确允许也没有明确拒绝），但<strong>如果有一个子菜单明确被授予 <code>allow</code> 权限，那么父菜单被隐式地认为具有 <code>allow</code> 权限</strong>。这<strong>确保了用户可以导航到这些子菜单</strong>。</p><h1 id=rbac-with-domains>RBAC with Domains
+<a class=anchor href=#rbac-with-domains>#</a></h1><p>Casbin 中的 RBAC 是可以支持多租户的。</p><p>多租户的 Model 定义：</p><pre tabindex=0><code>[request_definition]
+// 这里的 dom 参数就表示域/租户。
+r = sub, dom, obj, act
+
+[policy_definition]
+// 这里的 dom 参数就表示域/租户。
+p = sub, dom, obj, act
+
+[role_definition]
+// 这里的但三个参数 `_` 就表示域/租户。
+g = _, _, _
+
+[policy_effect]
+e = some(where (p.eft == allow))
+
+[matchers]
+m = g(r.sub, p.sub, r.dom) &amp;&amp; r.dom == p.dom &amp;&amp; r.obj == p.obj &amp;&amp; r.act == p.act
+</code></pre><p>对应的策略规则是：</p><pre tabindex=0><code>// 域 dom/租户 在第二个参数的位置
+p, admin, tenant1, data1, read
+p, admin, tenant2, data2, read
+
+g, alice, admin, tenant1
+g, alice, user, tenant2
+</code></pre><ul><li>tenant1 中的 admin 角色可以读取 data1。</li><li>alice 在 tenant1 中拥有 admin 角色，在 tenant2 中拥有 user 角色。</li></ul><p>请求 <code>alice, tenant1, data1, read</code> 的执行结果为 <code>true Reason: [admin, tenant1, data1, read]</code>，因为 alice 在 tenant1 中拥有
+admin 角色。</p><p>请求 <code>alice, tenant2, data2, read</code> 的执行结果为 <code>false</code>，因为 alice 在 tenant2 中不是 admin，所以她无法读取 data2。</p><p>匹配器：</p><pre tabindex=0><code>[matchers]
+m = g(r.sub, p.sub, r.dom) &amp;&amp; r.dom == p.dom &amp;&amp; r.obj == p.obj &amp;&amp; r.act == p.act
+</code></pre><ul><li><code>g(r.sub, p.sub, r.dom)</code>：验证请求中的 <code>r.sub</code> 是否与策略规则中的 <code>p.sub</code> 在特定域（<code>r.dom</code>）中存在角色关系。</li><li><code>r.dom == p.dom</code>：确保请求中的域（<code>r.dom</code>）与策略规则中的域（<code>p.dom</code>）一致。在 RBAC with domains 模型中，*
+<em>不同的域可能有相同的角色或用户，需要明确区分所属域</em>*。</li></ul><h1 id=abac>ABAC
+<a class=anchor href=#abac>#</a></h1><p>ABAC (Attribute-Based Access Control) 模型，是基于如用户、资源、环境等属性来控制权限。</p><p><strong>ABAC 模型核心概念</strong>：</p><ul><li><strong>属性</strong>（Attributes）：描述请求主体（用户）、对象（资源）和环境的相关信息。<ul><li><strong>用户属性</strong>：如用户名、年龄、部门、角色等。</li><li><strong>资源属性</strong>：如资源类型、标签、创建者等。</li><li><strong>环境属性</strong>：如时间、地点、设备类型等。</li></ul></li></ul><p>官方的 ABAC 示例：</p><pre tabindex=0><code>[request_definition]
+r = sub, obj, act
+
+[policy_definition]
+p = sub, obj, act
+
+[policy_effect]
+e = some(where (p.eft == allow))
+
+[matchers]
+m = r.sub == r.obj.Owner
+</code></pre><p>在匹配器中，使用 <code>r.obj.Owner</code> 代替 <code>r.obj</code>。传递给 <code>Enforce()</code> 函数的 <code>r.obj</code> 将是一个结构体或类实例，而不是一个字符串。
+Casbin 将使用反射来检索该结构体或类中的 <code>obj</code> 成员变量。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>testResource</span> <span style=color:#66d9ef>struct</span> {
+</span></span><span style=display:flex><span><span style=color:#a6e22e>Name</span>  <span style=color:#66d9ef>string</span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>Owner</span> <span style=color:#66d9ef>string</span>
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>e</span>, <span style=color:#a6e22e>_</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>NewEnforcer</span>(<span style=color:#e6db74>&#34;examples/abac_model.conf&#34;</span>)
+</span></span><span style=display:flex><span><span style=color:#a6e22e>e</span>.<span style=color:#a6e22e>EnableAcceptJsonRequest</span>(<span style=color:#66d9ef>true</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>data1</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>testResource</span>{<span style=color:#a6e22e>Name</span>: <span style=color:#e6db74>&#34;data1&#34;</span>, <span style=color:#a6e22e>Owner</span>: <span style=color:#e6db74>&#34;bob&#34;</span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>ok</span>, <span style=color:#a6e22e>_</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>e</span>.<span style=color:#a6e22e>Enforce</span>(<span style=color:#e6db74>&#34;alice&#34;</span>, <span style=color:#a6e22e>data1</span>, <span style=color:#e6db74>&#34;read&#34;</span>)
+</span></span></code></pre></div><p>可以使用 <code>e.EnableAcceptJsonRequest(true)</code> 启用向 <code>enforcer</code> 传递 JSON 参数的功能。但是注意<strong>启用接受 JSON 参数的功能可能会导致性能下降
+1.1 到 1.5 倍</strong>。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#a6e22e>e</span>, <span style=color:#a6e22e>_</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>NewEnforcer</span>(<span style=color:#e6db74>&#34;examples/abac_model.conf&#34;</span>)
+</span></span><span style=display:flex><span><span style=color:#a6e22e>e</span>.<span style=color:#a6e22e>EnableAcceptJsonRequest</span>(<span style=color:#66d9ef>true</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>data1Json</span> <span style=color:#f92672>:=</span> <span style=color:#e6db74>`{ &#34;Name&#34;: &#34;data1&#34;, &#34;Owner&#34;: &#34;bob&#34;}`</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>ok</span>, <span style=color:#a6e22e>_</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>e</span>.<span style=color:#a6e22e>Enforce</span>(<span style=color:#e6db74>&#34;alice&#34;</span>, <span style=color:#a6e22e>data1Json</span>, <span style=color:#e6db74>&#34;read&#34;</span>)
+</span></span></code></pre></div><h2 id=使用-abac>使用 ABAC
+<a class=anchor href=#%e4%bd%bf%e7%94%a8-abac>#</a></h2><p>要使用 ABAC，需要做两件事：</p><ul><li>在模型匹配器中指定属性。</li><li>将结构体或类实例作为参数传递给 <code>Enforce()</code> 函数。</li></ul><blockquote><p><strong>只有请求元素支持 ABAC（<code>r.sub</code>、<code>r.obj</code>、<code>r.act</code> 等）</strong>，<code>p.sub</code> 这样的策略元素是不支持的，因为在策略规则中没有办法定义一个结构体或类，只支持字符串。</p></blockquote><h2 id=abac-with-policy>ABAC with Policy
+<a class=anchor href=#abac-with-policy>#</a></h2><p>在许多情况下，授权系统需要复杂和大量的 ABAC 规则，所以上面修改匹配器的方式是满足不了需求的。</p><p>Casbin 提供了 <code>eval()</code> 函数，用于动态执行字符串形式的表达式。这个函数可以实现在策略中添加规则，而不是在模型中。</p><pre tabindex=0><code>[request_definition]
+r = sub, obj, act
+
+[policy_definition]
+p = sub_rule, obj, act
+
+[policy_effect]
+e = some(where (p.eft == allow))
+
+[matchers]
+m = eval(p.sub_rule) &amp;&amp; r.obj == p.obj &amp;&amp; r.act == p.act
+</code></pre><p>策略规则：</p><pre tabindex=0><code>p, r.sub.Age &gt; 18, /data1, read
+p, r.sub.Age &lt; 60, /data2, write
+</code></pre><p>请求 <code>{Age: 30}, /data1, read</code> 的执行结果为 <code>true Reason [r.sub.Age > 18, /data1, read]</code>。 因为匹配器通过
+<code>eval(p.sub_rule)</code> 执行策略中的条件逻辑 <code>r.sub.Age > 18</code>。</p><h1 id=super-admin>Super Admin
+<a class=anchor href=#super-admin>#</a></h1><p>超级管理员是整个系统的管理员。可以用于 RBAC、ABAC 等模型中。</p><pre tabindex=0><code>[request_definition]
+r = sub, obj, act
+
+[policy_definition]
+p = sub, obj, act
+
+[policy_effect]
+e = some(where (p.eft == allow))
+
+[matchers]
+m = r.sub == p.sub &amp;&amp; r.obj == p.obj &amp;&amp; r.act == p.act || r.sub == &#34;root&#34;
+</code></pre><p><code>r.sub == "root"</code> 检查 <code>sub</code> 是否为 <code>root</code>，如果是，返回 <code>allow</code>。</p><h1 id=函数>函数
+<a class=anchor href=#%e5%87%bd%e6%95%b0>#</a></h1><p>Casbin 提供了一系列内置函数，用于<strong>扩展和简化匹配器的逻辑处理</strong>。这些函数可以支持字符串匹配、路径匹配、正则表达式匹配等功能。</p><p><code>keyMatch/keyMatch2/keyMatch3/keyMatch4/keyMatch5</code> 都是匹配 URL 路径的，<code>regexMatch</code> 使用正则匹配，`ipMatch 匹配 IP 地址。参见 <a href=https://casbin.org/zh/docs/function/>Functions</a>。</p><h2 id=keymatch>keyMatch
+<a class=anchor href=#keymatch>#</a></h2><p>用于字符串通配符匹配，<code>*</code> 表示通配。当需要对路径规则进行通配时使用，例如 <code>/data/*</code> 可以匹配 <code>/data/1</code> 和 <code>/data/2</code>。</p><pre tabindex=0><code>m = g(r.sub, p.sub) &amp;&amp; keyMatch(r.obj, p.obj) &amp;&amp; r.act == p.act
+</code></pre><p>策略文件：</p><pre tabindex=0><code>p, alice, /data/*, read
+</code></pre><p>请求校验：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#a6e22e>e</span>.<span style=color:#a6e22e>Enforce</span>(<span style=color:#e6db74>&#34;alice&#34;</span>, <span style=color:#e6db74>&#34;/data/123&#34;</span>, <span style=color:#e6db74>&#34;read&#34;</span>)  <span style=color:#75715e>// 返回 True
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#a6e22e>e</span>.<span style=color:#a6e22e>Enforce</span>(<span style=color:#e6db74>&#34;alice&#34;</span>, <span style=color:#e6db74>&#34;/data&#34;</span>, <span style=color:#e6db74>&#34;read&#34;</span>)     <span style=color:#75715e>// 返回 False
+</span></span></span></code></pre></div><h2 id=keymatch2>keyMatch2
+<a class=anchor href=#keymatch2>#</a></h2><p>支持更复杂的路径匹配规则，<code>:parameter</code> 表示路径变量。当需要匹配 RESTful 风格的 URL 时使用，例如 <code>/data/:id</code> 可以匹配 <code>/data/1</code>。</p><pre tabindex=0><code>m = g(r.sub, p.sub) &amp;&amp; keyMatch2(r.obj, p.obj) &amp;&amp; r.act == p.act
+</code></pre><p>策略文件：</p><pre tabindex=0><code>p, alice, /data/:id, read
+</code></pre><p>请求校验：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#a6e22e>e</span>.<span style=color:#a6e22e>Enforce</span>(<span style=color:#e6db74>&#34;alice&#34;</span>, <span style=color:#e6db74>&#34;/data/123&#34;</span>, <span style=color:#e6db74>&#34;read&#34;</span>)  <span style=color:#75715e>// 返回 True
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#a6e22e>e</span>.<span style=color:#a6e22e>Enforce</span>(<span style=color:#e6db74>&#34;alice&#34;</span>, <span style=color:#e6db74>&#34;/data/abc&#34;</span>, <span style=color:#e6db74>&#34;read&#34;</span>) <span style=color:#75715e>// 返回 True
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#a6e22e>e</span>.<span style=color:#a6e22e>Enforce</span>(<span style=color:#e6db74>&#34;alice&#34;</span>, <span style=color:#e6db74>&#34;/data/&#34;</span>, <span style=color:#e6db74>&#34;read&#34;</span>)    <span style=color:#75715e>// 返回 False
+</span></span></span></code></pre></div><h2 id=自定义函数>自定义函数
+<a class=anchor href=#%e8%87%aa%e5%ae%9a%e4%b9%89%e5%87%bd%e6%95%b0>#</a></h2><p>例如定义一个函数，判断两个字符串是否是反向（回文）关系：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#f92672>package</span> <span style=color:#a6e22e>main</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> (
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;errors&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;strings&#34;</span>
+</span></span><span style=display:flex><span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// 自定义函数：判断两个字符串是否为反向字符串
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>ReverseMatch</span>(<span style=color:#a6e22e>args</span> <span style=color:#f92672>...</span><span style=color:#66d9ef>interface</span>{}) (<span style=color:#66d9ef>interface</span>{}, <span style=color:#66d9ef>error</span>) {
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> len(<span style=color:#a6e22e>args</span>) <span style=color:#f92672>!=</span> <span style=color:#ae81ff>2</span> {
+</span></span><span style=display:flex><span>		<span style=color:#66d9ef>return</span> <span style=color:#66d9ef>nil</span>, <span style=color:#a6e22e>errors</span>.<span style=color:#a6e22e>New</span>(<span style=color:#e6db74>&#34;ReverseMatch requires exactly 2 arguments&#34;</span>)
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>str1</span>, <span style=color:#a6e22e>ok1</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>args</span>[<span style=color:#ae81ff>0</span>].(<span style=color:#66d9ef>string</span>)
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>str2</span>, <span style=color:#a6e22e>ok2</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>args</span>[<span style=color:#ae81ff>1</span>].(<span style=color:#66d9ef>string</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>if</span> !<span style=color:#a6e22e>ok1</span> <span style=color:#f92672>||</span> !<span style=color:#a6e22e>ok2</span> {
+</span></span><span style=display:flex><span>		<span style=color:#66d9ef>return</span> <span style=color:#66d9ef>nil</span>, <span style=color:#a6e22e>errors</span>.<span style=color:#a6e22e>New</span>(<span style=color:#e6db74>&#34;arguments must be strings&#34;</span>)
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>// 判断 str1 是否为 str2 的反向
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>str1</span> <span style=color:#f92672>==</span> <span style=color:#a6e22e>ReverseString</span>(<span style=color:#a6e22e>str2</span>), <span style=color:#66d9ef>nil</span>
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// 辅助函数：反转字符串
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>ReverseString</span>(<span style=color:#a6e22e>s</span> <span style=color:#66d9ef>string</span>) <span style=color:#66d9ef>string</span> {
+</span></span><span style=display:flex><span>	<span style=color:#a6e22e>runes</span> <span style=color:#f92672>:=</span> []rune(<span style=color:#a6e22e>s</span>)
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>for</span> <span style=color:#a6e22e>i</span>, <span style=color:#a6e22e>j</span> <span style=color:#f92672>:=</span> <span style=color:#ae81ff>0</span>, len(<span style=color:#a6e22e>runes</span>)<span style=color:#f92672>-</span><span style=color:#ae81ff>1</span>; <span style=color:#a6e22e>i</span> &lt; <span style=color:#a6e22e>j</span>; <span style=color:#a6e22e>i</span>, <span style=color:#a6e22e>j</span> = <span style=color:#a6e22e>i</span><span style=color:#f92672>+</span><span style=color:#ae81ff>1</span>, <span style=color:#a6e22e>j</span><span style=color:#f92672>-</span><span style=color:#ae81ff>1</span> {
+</span></span><span style=display:flex><span>		<span style=color:#a6e22e>runes</span>[<span style=color:#a6e22e>i</span>], <span style=color:#a6e22e>runes</span>[<span style=color:#a6e22e>j</span>] = <span style=color:#a6e22e>runes</span>[<span style=color:#a6e22e>j</span>], <span style=color:#a6e22e>runes</span>[<span style=color:#a6e22e>i</span>]
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>return</span> string(<span style=color:#a6e22e>runes</span>)
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>通过 <code>e.AddFunction</code> 将自定义函数注册到 Casbin 的模型中：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#f92672>package</span> <span style=color:#a6e22e>main</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> (
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;fmt&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#e6db74>&#34;github.com/casbin/casbin/v2&#34;</span>
+</span></span><span style=display:flex><span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>main</span>() {
+</span></span><span style=display:flex><span>	<span style=color:#75715e>// 加载模型和策略
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#a6e22e>e</span>, <span style=color:#a6e22e>_</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>casbin</span>.<span style=color:#a6e22e>NewEnforcer</span>(<span style=color:#e6db74>&#34;model.conf&#34;</span>, <span style=color:#e6db74>&#34;policy.csv&#34;</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>// 注册自定义函数
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#a6e22e>e</span>.<span style=color:#a6e22e>AddFunction</span>(<span style=color:#e6db74>&#34;ReverseMatch&#34;</span>, <span style=color:#a6e22e>ReverseMatch</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#75715e>// 测试权限校验
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	<span style=color:#a6e22e>testCases</span> <span style=color:#f92672>:=</span> []<span style=color:#66d9ef>struct</span> {
+</span></span><span style=display:flex><span>		<span style=color:#a6e22e>sub</span> <span style=color:#66d9ef>string</span>
+</span></span><span style=display:flex><span>		<span style=color:#a6e22e>obj</span> <span style=color:#66d9ef>string</span>
+</span></span><span style=display:flex><span>		<span style=color:#a6e22e>act</span> <span style=color:#66d9ef>string</span>
+</span></span><span style=display:flex><span>	}{
+</span></span><span style=display:flex><span>		{<span style=color:#e6db74>&#34;alice&#34;</span>, <span style=color:#e6db74>&#34;ecila&#34;</span>, <span style=color:#e6db74>&#34;read&#34;</span>}, <span style=color:#75715e>// 匹配反向字符串
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>		{<span style=color:#e6db74>&#34;bob&#34;</span>, <span style=color:#e6db74>&#34;bob&#34;</span>, <span style=color:#e6db74>&#34;read&#34;</span>},    <span style=color:#75715e>// 不匹配
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>	}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>for</span> <span style=color:#a6e22e>_</span>, <span style=color:#a6e22e>tc</span> <span style=color:#f92672>:=</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>testCases</span> {
+</span></span><span style=display:flex><span>		<span style=color:#a6e22e>result</span>, <span style=color:#a6e22e>_</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>e</span>.<span style=color:#a6e22e>Enforce</span>(<span style=color:#a6e22e>tc</span>.<span style=color:#a6e22e>sub</span>, <span style=color:#a6e22e>tc</span>.<span style=color:#a6e22e>obj</span>, <span style=color:#a6e22e>tc</span>.<span style=color:#a6e22e>act</span>)
+</span></span><span style=display:flex><span>		<span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Printf</span>(<span style=color:#e6db74>&#34;Enforce(%s, %s, %s) = %v\n&#34;</span>, <span style=color:#a6e22e>tc</span>.<span style=color:#a6e22e>sub</span>, <span style=color:#a6e22e>tc</span>.<span style=color:#a6e22e>obj</span>, <span style=color:#a6e22e>tc</span>.<span style=color:#a6e22e>act</span>, <span style=color:#a6e22e>result</span>)
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>在模型中使用函数：</p><pre tabindex=0><code>[matchers]
+m = r.sub == p.sub &amp;&amp; ReverseMatch(r.obj, p.obj) &amp;&amp; r.act == p.act
+</code></pre><h1 id=性能优化>性能优化
+<a class=anchor href=#%e6%80%a7%e8%83%bd%e4%bc%98%e5%8c%96>#</a></h1><h2 id=优化匹配器>优化匹配器
+<a class=anchor href=#%e4%bc%98%e5%8c%96%e5%8c%b9%e9%85%8d%e5%99%a8>#</a></h2><p>匹配器是 Casbin 权限检查的核心，优化匹配器可以显著提升性能。</p><p><strong>通过合并或简化条件减少计算开销</strong>：</p><pre tabindex=0><code>// 优化前
+m = g(r.sub, p.sub) &amp;&amp; r.obj == p.obj &amp;&amp; r.act == p.act &amp;&amp; r.dom == p.dom
+
+// 优化后
+// 将多个条件合并为字符串比较
+m = g(r.sub, p.sub) &amp;&amp; r.dom == p.dom &amp;&amp; r.obj + &#34;:&#34; + r.act == p.obj + &#34;:&#34; + p.act
+</code></pre><ul><li>字符串拼接的计算成本通常低于多次逻辑比较。</li><li>合并后匹配器计算次数减少。</li></ul><p>如果匹配器的条件多且顺序不当，可能会导致不必要的计算。<strong>将匹配概率较高的条件放在前面</strong>：</p><pre tabindex=0><code># 优化前
+m = r.obj == p.obj &amp;&amp; g(r.sub, p.sub) &amp;&amp; r.act == p.act
+
+# 优化后（更高概率条件在前）
+m = g(r.sub, p.sub) &amp;&amp; r.obj == p.obj &amp;&amp; r.act == p.act
+</code></pre><h2 id=尽量减少角色继承层级>尽量减少角色继承层级
+<a class=anchor href=#%e5%b0%bd%e9%87%8f%e5%87%8f%e5%b0%91%e8%a7%92%e8%89%b2%e7%bb%a7%e6%89%bf%e5%b1%82%e7%ba%a7>#</a></h2><p>角色继承关系会影响匹配器的效率。深度过大的继承链会增加计算成本。</p><h2 id=分片>分片
+<a class=anchor href=#%e5%88%86%e7%89%87>#</a></h2><p>进行分片，让 Casbin 执行器只加载一小部分策略规则。例如，<code>执行器_0</code> 可以服务于 <code>租户_0</code> 到 <code>租户_99</code>，而 <code>执行器_1</code> 可以服务于 <code>租户_100</code> 到 <code>租户_199</code>。</p></article><footer class=book-footer><div class="flex flex-wrap justify-between"><div><a class="flex align-center" href=https://github.com/shipengqi/golang-learn/commit/3d4d1f1274943c25b463c56e53c009de955e8b37 title='Last modified by shipengqi | December 13, 2024' target=_blank rel=noopener><img src=/golang-learn/svg/calendar.svg class=book-icon alt=Calendar>
+<span>December 13, 2024</span></a></div><div><a class="flex align-center" href=https://github.com/shipengqi/golang-learn/edit/master/content/docs/project/16_casbin.md target=_blank rel=noopener><img src=/golang-learn/svg/edit.svg class=book-icon alt=Edit>
+<span>Edit this page</span></a></div></div><script>(function(){function e(e){const t=window.getSelection(),n=document.createRange();n.selectNodeContents(e),t.removeAllRanges(),t.addRange(n)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script></footer><div class=book-comments></div><label for=menu-control class="hidden book-menu-overlay"></label></div><aside class=book-toc><div class=book-toc-content><nav id=TableOfContents><ul><li><a href=#perm-元模型>PERM 元模型</a><ul><li><a href=#request>Request</a></li><li><a href=#policy>Policy</a></li><li><a href=#matcher>Matcher</a></li><li><a href=#effect>Effect</a></li></ul></li><li><a href=#acl-model>ACL Model</a></li><li><a href=#rbac-model>RBAC Model</a><ul><li><a href=#角色层次>角色层次</a></li><li><a href=#区分角色和用户>区分角色和用户</a></li><li><a href=#查询隐式角色或权限>查询隐式角色或权限</a></li><li><a href=#菜单权限>菜单权限</a></li><li><a href=#菜单权限继承的两个重要规则>菜单权限继承的两个重要规则</a></li></ul></li><li><a href=#rbac-with-domains>RBAC with Domains</a></li><li><a href=#abac>ABAC</a><ul><li><a href=#使用-abac>使用 ABAC</a></li><li><a href=#abac-with-policy>ABAC with Policy</a></li></ul></li><li><a href=#super-admin>Super Admin</a></li><li><a href=#函数>函数</a><ul><li><a href=#keymatch>keyMatch</a></li><li><a href=#keymatch2>keyMatch2</a></li><li><a href=#自定义函数>自定义函数</a></li></ul></li><li><a href=#性能优化>性能优化</a><ul><li><a href=#优化匹配器>优化匹配器</a></li><li><a href=#尽量减少角色继承层级>尽量减少角色继承层级</a></li><li><a href=#分片>分片</a></li></ul></li></ul></nav></div></aside></main></body></html>
