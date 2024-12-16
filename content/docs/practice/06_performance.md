@@ -3,8 +3,6 @@ title: Go 性能优化
 weight: 6
 ---
 
-# Go 性能优化
-
 ## JSON 优化
 
 Go 的标准库 `encoding/json` 是通过反射来实现的。性能相对有些慢。 可以使用第三方库来替代标准库：

@@ -3,8 +3,6 @@ title: 版本规范
 weight: 5
 ---
 
-# 版本规范
-
 Go 官方推荐的版本规范是 [semver](https://semver.org/lang/zh-CN/)（Semantic Versioning），也就是语义化版本。这个规范是 GitHub 起草的一个具有指导意义的、统一的版本号表示规范。
 
 semver 是一种清晰可读的，明确反应版本信息的版本格式：

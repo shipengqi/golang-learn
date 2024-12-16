@@ -3,8 +3,6 @@ title: Go Modules
 weight: 8
 ---
 
-# Go Modules
-
 Go 在 1.11 推出了 Go Modules，这是一个新的包管理器，解决了 `GOPATH` 存在的问题。并且 Go 1.13 起不再推荐使用 GOPATH。
 
 ## Go Modules 机制

@@ -3,8 +3,6 @@ title: Pool
 weight: 6
 ---
 
-# Pool
-
 Go 从 1.3 版本开始提供了对象重用的机制，即 `sync.Pool`。`sync.Pool` 用来保存可以被重复使用的**临时**对象，避免了重复创建和销毁临时对象带来的消耗，降低 GC 压力，提高性能。
 
 **`sync.Pool` 是可伸缩的，也是并发安全的**。可以在多个 goroutine 中并发调用 `sync.Pool` 存取对象。

@@ -3,9 +3,6 @@ title: WaitGroup
 weight: 3
 ---
 
-# WaitGroup
-
-
 `sync.WaitGroup` 可以等待一组 goroutine 的返回，常用于处理批量的并发任务。它是并发安全的。
 
 ## 使用

@@ -4,8 +4,6 @@ weight: 13
 draft: true
 ---
 
-# panic
-
 ## Panic 异常
 Go 运行时错误会引起 `painc` 异常。
 一般而言，当 `panic` 异常发生时，程序会中断运行，并立即执行在该 goroutine 中被延迟的函数（`defer` 机制）。随后，程序崩溃

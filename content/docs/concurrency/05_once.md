@@ -3,8 +3,6 @@ title: Once
 weight: 5
 ---
 
-# Once
-
 Go 标准库中 `sync.Once` 可以保证 Go 程序运行期间的某段代码只会执行一次。常常用于单例对象的初始化场景。
 
 ## 使用

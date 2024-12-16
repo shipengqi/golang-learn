@@ -3,8 +3,6 @@ title: Context
 weight: 7
 ---
 
-# Context
-
 Go 1.7 版本中正式引入新标准库 `context`。主要的作用是在在一组 goroutine 之间传递共享的值、取消信号、deadline 等。
 
 ```go

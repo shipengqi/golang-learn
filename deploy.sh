@@ -9,7 +9,7 @@ cd public
 
 git init
 git config user.name 'shipengqi'
-git config user.email 'pooky.shipengqi@gmail.com'
+git config user.email 'pooky.shi@gmail.com'
 git add -A
 
 # Commit changes.

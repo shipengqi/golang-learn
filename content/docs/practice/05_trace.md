@@ -3,8 +3,6 @@ title: Go 性能分析（下）
 weight: 5
 ---
 
-# Go 性能分析（下）
-
 Go 提供了完善的性能分析工具：`pprof` 和 `trace`。
 
 - `pprof` 主要适用于 CPU 占用、内存分配等资源的分析。
