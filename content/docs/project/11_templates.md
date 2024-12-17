@@ -3,8 +3,6 @@ title: GitHub 模板
 weight: 11
 ---
 
-# GitHub 模板
-
 使用 Issue 和 PR 模板可以让贡献者有针对性的提供某类问题的准确信息。
 
 ## PR Template

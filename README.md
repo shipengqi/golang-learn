@@ -4,22 +4,27 @@ Go language learning ...
 
 ## Usage
 
-Development:
+Initialize project as a Hugo Module using the `hugo mod init` command:
 
 ```sh
-# init submodule, set the URLs and paths of the submodules based on the information in the .gitmodules file, 
-# but will not download the submodule's content
-# after cloning a repository containing submodules, run this command to initialize the submodules.
-git submodule init
+hugo mod init github.com/shipengqi/golang-learn
+```
 
-# Update the submodule's content to the latest commit in the branch specified in the .gitmodules file
-# Run this command after initializing a submodule, or when you need to update the contents of a submodule.
-git submodule update
+Adding the [Hextra](https://github.com/imfing/hextra) theme:
 
-# git submodule add git@github.com:alex-shpak/hugo-book.git themes/book
+```yaml
+baseURL: "https://shipengqi.github.io/golang-learn"
+title: "Golang Learning"
 
-# start server
-hugo server --minify --theme book
+module:
+  imports:
+    - path: github.com/imfing/hextra
+```
+
+Start server:
+
+```sh
+hugo server -D
 ```
 
 Manually deploy:
@@ -30,7 +35,16 @@ Manually deploy:
 
 > Any changes in the `content` directory will automatically trigger a deployment.
 
-## Menu
+## Update Theme
 
-By default, the [hugo-book](https://github.com/alex-shpak/hugo-book) theme will render pages from the `content/docs` section as a menu in a tree structure.
-You can set `title` and `weight` in the front matter of pages to adjust the order and titles in the menu.
+To update all Hugo modules in your project to their latest versions, run the following command:
+
+```
+hugo mod get -u
+```
+
+To update Hextra to the latest released version, run the following command:
+
+```
+hugo mod get -u github.com/imfing/hextra
+```

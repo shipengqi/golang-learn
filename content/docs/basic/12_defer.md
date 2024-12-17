@@ -4,8 +4,6 @@ weight: 12
 draft: true
 ---
 
-# defer
-
 #### 堆上分配
 
 编译器不仅将 defer 关键字都转换成 runtime.deferproc 函数，它还会通过以下三个步骤为所有调用 defer 的函数末尾插入 runtime.deferreturn 的函数调用

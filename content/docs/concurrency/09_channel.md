@@ -3,8 +3,6 @@ title: Channel
 weight: 9
 ---
 
-# Channel
-
 ```
 Don’t communicate by sharing memory; share memory by communicating.
 不要通过共享内存来通信，通过通信来共享内存。

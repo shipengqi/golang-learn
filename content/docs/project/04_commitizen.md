@@ -3,8 +3,6 @@ title: Commit 规范
 weight: 4
 ---
 
-# Commit 规范
-
 多人协作开发一个项目时，如果 Commit Message 五花八门，时间久了，提交的历史变得很难看，而且过于简单的 Commit Message，可读性较差。
 
 一个好的 Commit 规范可以使 Commit Message 的可读性更好，并且可以实现自动化。

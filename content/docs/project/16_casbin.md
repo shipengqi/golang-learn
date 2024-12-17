@@ -10,13 +10,13 @@ weight: 16
 
 Casbin 的访问控制模型核心叫做 PERM（Policy、Effect、Request、Matcher） 元模型。
 
-# PERM 元模型
+## PERM 元模型
 
 PERM（Policy、Effect、Request、Matcher）可以简单理解为，当一个请求（Request）进来，需要通过策略匹配器（Matcher）去匹配存储在数据库中或者
 csv 文件中的策略规则，拿到所有匹配的策略规则的结果（`eft`）之后，在使用 `Effect` 定义中的表达式进行计算，最终返回一个 `true`
 （通过）或 `false`（拒绝）。
 
-## Request
+### Request
 
 Request 代表请求。
 
@@ -45,7 +45,7 @@ r = sub, act
 r = sub, sub2, obj, act
 ```
 
-## Policy
+### Policy
 
 Policy 代表策略。
 
@@ -73,7 +73,7 @@ p2, bob, write-all-objects
 e = some(where (p2.eft == allow))
 ```
 
-## Matcher
+### Matcher
 
 Matcher 代表策略匹配器。用来验证一个请求是否匹配某个策略规则。
 
@@ -92,7 +92,7 @@ m = r.sub == p.sub && r.obj == p.obj && r.act == p.act
 
 > 匹配器中可以使用算术运算符如 `+`、`-`、`*`、`/` 和逻辑运算符如 `&&`、`||`、`!`。
 
-## Effect
+### Effect
 
 Effect 代表策略效果。它可以被理解为一种模型，在这种模型中，对匹配结果再次作出逻辑组合判断。
 
@@ -133,7 +133,7 @@ e = some(where (p.eft == allow)) && !some(where (p.eft == deny))
 - `priority(p.eft) || deny`
 - `subjectPriority(p.eft)`
 
-# ACL Model
+## ACL Model
 
 Casbin 提供了一个在线的[编辑器](https://casbin.org/editor/)，可以用来验证你的 PERM 模型和策略规则。
 
@@ -215,7 +215,7 @@ some(where (p.eft == allow)) && !some(where (p.eft == deny))
 
 表示必须至少有一个匹配的 `allow` 策略规则，并且不能有任何匹配的 `deny` 策略规则。
 
-# RBAC Model
+## RBAC Model
 
 RBAC 有一个新的概念角色域 `role_definition`，`[role_definition]` 用于表示 `sub` 与角色的关系，角色的继承关系。
 
@@ -275,7 +275,7 @@ false
 
 > 请求 `alice, data1, write` 经过 `g(alice, admin)` 处理，用户 alice 和角色 admin 都会用来去匹配策略规则中的 `sub`。
 
-## 角色层次
+### 角色层次
 
 Casbin 的 RBAC 支持 RBAC1 的角色层次结构特性，这意味着如果 alice 用有角色 role1，并且角色 role1 拥有角色 role2，那么 alice
 也将拥有 role2 的所有权限。
@@ -286,27 +286,27 @@ Casbin 中的内置角色管理器，可以指定**最大层次级别**。默认
 // NewRoleManager is the constructor for creating an instance of the
 // default RoleManager implementation.
 func NewRoleManager(maxHierarchyLevel int) rbac.RoleManager {
-rm := RoleManager{}
-rm.allRoles = &sync.Map{}
-rm.maxHierarchyLevel = maxHierarchyLevel
-rm.hasPattern = false
+    rm := RoleManager{}
+    rm.allRoles = &sync.Map{}
+    rm.maxHierarchyLevel = maxHierarchyLevel
+    rm.hasPattern = false
 
-return &rm
+    return &rm
 }
 ```
 
-## 区分角色和用户
+### 区分角色和用户
 
 在 RBAC 系统内**用户和角色不能使用相同的名称**，因为对于 Casbin 来说，不管是用户还是角色都只是一个**字符串**，Casbin
 是没有办法知道你指定的是用户 alice 还是角色 alice。可以通过使用前缀来解决这个问题，例如 `role::alice` 表示角色 alice。
 
-## 查询隐式角色或权限
+### 查询隐式角色或权限
 
 当用户通过 RBAC 层次结构继承角色或权限，而不是在策略规则中直接分配它们时，这种类型的分配为**隐式**。 要查询此类隐式关系，需要使用这两个
 API：`GetImplicitRolesForUser()` 和 `GetImplicitPermissionsForUser()`，而不是 `GetRolesForUser()` 和
 `GetPermissionsForUser()`。
 
-## 菜单权限
+### 菜单权限
 
 RBAC 通常只需要用户的角色，只使用 `g` 就可以了。但是当你需要为资源定义继承关系时，可以同时使用 `g` 和 `g2`，下面的例子是定义菜单权限的模型：
 
@@ -368,7 +368,7 @@ g2, (NULL), SystemMenu
 | AdminSubMenu_allow | ✅ | ✅ | ❌ |
 | AdminSubMenu_deny | ✅ | ❌ | ❌ |
 
-## 菜单权限继承的两个重要规则
+### 菜单权限继承的两个重要规则
 
 **父菜单权限的继承**：
 
@@ -379,7 +379,7 @@ g2, (NULL), SystemMenu
 
 如果一个父菜单没有直接设置权限（既没有明确允许也没有明确拒绝），但**如果有一个子菜单明确被授予 `allow` 权限，那么父菜单被隐式地认为具有 `allow` 权限**。这**确保了用户可以导航到这些子菜单**。
 
-# RBAC with Domains
+## RBAC with Domains
 
 Casbin 中的 RBAC 是可以支持多租户的。
 
@@ -435,7 +435,7 @@ m = g(r.sub, p.sub, r.dom) && r.dom == p.dom && r.obj == p.obj && r.act == p.act
 - `r.dom == p.dom`：确保请求中的域（`r.dom`）与策略规则中的域（`p.dom`）一致。在 RBAC with domains 模型中，*
   *不同的域可能有相同的角色或用户，需要明确区分所属域**。
 
-# ABAC
+## ABAC
 
 ABAC (Attribute-Based Access Control) 模型，是基于如用户、资源、环境等属性来控制权限。
 
@@ -491,7 +491,7 @@ data1Json := `{ "Name": "data1", "Owner": "bob"}`
 ok, _ := e.Enforce("alice", data1Json, "read")
 ```
 
-## 使用 ABAC
+### 使用 ABAC
 
 要使用 ABAC，需要做两件事：
 
@@ -500,7 +500,7 @@ ok, _ := e.Enforce("alice", data1Json, "read")
 
 > **只有请求元素支持 ABAC（`r.sub`、`r.obj`、`r.act` 等）**，`p.sub` 这样的策略元素是不支持的，因为在策略规则中没有办法定义一个结构体或类，只支持字符串。
 
-## ABAC with Policy
+### ABAC with Policy
 
 在许多情况下，授权系统需要复杂和大量的 ABAC 规则，所以上面修改匹配器的方式是满足不了需求的。
 
@@ -530,7 +530,7 @@ p, r.sub.Age < 60, /data2, write
 请求 `{Age: 30}, /data1, read` 的执行结果为 `true Reason [r.sub.Age > 18, /data1, read]`。 因为匹配器通过
 `eval(p.sub_rule)` 执行策略中的条件逻辑 `r.sub.Age > 18`。
 
-# Super Admin
+## Super Admin
 
 超级管理员是整个系统的管理员。可以用于 RBAC、ABAC 等模型中。
 
@@ -550,13 +550,13 @@ m = r.sub == p.sub && r.obj == p.obj && r.act == p.act || r.sub == "root"
 
 `r.sub == "root"` 检查 `sub` 是否为 `root`，如果是，返回 `allow`。
 
-# 函数
+## 函数
 
 Casbin 提供了一系列内置函数，用于**扩展和简化匹配器的逻辑处理**。这些函数可以支持字符串匹配、路径匹配、正则表达式匹配等功能。
 
 `keyMatch/keyMatch2/keyMatch3/keyMatch4/keyMatch5` 都是匹配 URL 路径的，`regexMatch` 使用正则匹配，`ipMatch 匹配 IP 地址。参见 [Functions](https://casbin.org/zh/docs/function/)。
 
-## keyMatch
+### keyMatch
 
 用于字符串通配符匹配，`*` 表示通配。当需要对路径规则进行通配时使用，例如 `/data/*` 可以匹配 `/data/1` 和 `/data/2`。
 
@@ -577,7 +577,7 @@ e.Enforce("alice", "/data/123", "read")  // 返回 True
 e.Enforce("alice", "/data", "read")     // 返回 False
 ```
 
-## keyMatch2
+### keyMatch2
 
 支持更复杂的路径匹配规则，`:parameter` 表示路径变量。当需要匹配 RESTful 风格的 URL 时使用，例如 `/data/:id` 可以匹配 `/data/1`。
 
@@ -599,7 +599,7 @@ e.Enforce("alice", "/data/abc", "read") // 返回 True
 e.Enforce("alice", "/data/", "read")    // 返回 False
 ```
 
-## 自定义函数
+### 自定义函数
 
 例如定义一个函数，判断两个字符串是否是反向（回文）关系：
 
@@ -680,9 +680,9 @@ func main() {
 m = r.sub == p.sub && ReverseMatch(r.obj, p.obj) && r.act == p.act
 ```
 
-# 性能优化
+## 性能优化
 
-## 优化匹配器
+### 优化匹配器
 
 匹配器是 Casbin 权限检查的核心，优化匹配器可以显著提升性能。
 
@@ -710,10 +710,10 @@ m = r.obj == p.obj && g(r.sub, p.sub) && r.act == p.act
 m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act
 ```
 
-## 尽量减少角色继承层级
+### 尽量减少角色继承层级
 
 角色继承关系会影响匹配器的效率。深度过大的继承链会增加计算成本。
 
-## 分片
+### 分片
 
 进行分片，让 Casbin 执行器只加载一小部分策略规则。例如，`执行器_0` 可以服务于 `租户_0` 到 `租户_99`，而 `执行器_1` 可以服务于 `租户_100` 到 `租户_199`。

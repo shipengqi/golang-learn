@@ -3,8 +3,6 @@ title: API 文档
 weight: 6
 ---
 
-# API 文档
-
 ## 使用 Swagger 生成 API 文档
 
 Swagger 是基于 OpenAPI 规范的 API 文档工具。

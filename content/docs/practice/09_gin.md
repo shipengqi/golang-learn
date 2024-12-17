@@ -3,8 +3,6 @@ title: Gin 静态服务器
 weight: 9
 ---
 
-# Gin 如何实现前端网页的静态服务器
-
 Gin 作为 Web 框架提供 API 非常方便，但是在同一个项目中，既提供 API，又要作为前端网页的静态服务器，就比较麻烦。通常 Angular (React/Vue) 
 项目需要在 Nginx 或者 Tomcat 转发才可以。有些小项目并不需要前后端分离，如何解决？
 

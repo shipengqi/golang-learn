@@ -4,8 +4,6 @@ weight: 11
 draft: true
 ---
 
-# select
-
 `select` 类似于用于通信的 `switch` 语句。每个 `case` 必须是一个通信操作，要么是发送要么是接收。
 
 当条件满足时，`select` 会去通信并执行 `case` 之后的语句，这时候其它通信是不会执行的。

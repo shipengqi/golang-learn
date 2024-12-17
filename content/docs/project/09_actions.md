@@ -3,8 +3,6 @@ title: GitHub Actions
 weight: 9
 ---
 
-# 基于 GitHub Actions 的 CI/CD
-
 GitHub Actions 是 GitHub 为托管在 github.com 站点的项目提供的持续集成服务。
 
 在构建持续集成任务时，需要完成很多操作，比如克隆代码、编译代码、运行单元测试、构建和发布镜像等。GitHub 把这些操作称为 Actions。
