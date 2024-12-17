@@ -1,31 +1,908 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>🍚 语言基础 on Go Learning</title><link>https://shipengqi.github.io/golang-learn/docs/basic/</link><description>Recent content in 🍚 语言基础 on Go Learning</description><generator>Hugo -- gohugo.io</generator><language>en</language><atom:link href="https://shipengqi.github.io/golang-learn/docs/basic/index.xml" rel="self" type="application/rss+xml"/><item><title>基础数据类型</title><link>https://shipengqi.github.io/golang-learn/docs/basic/01_basic_type/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/basic/01_basic_type/</guid><description>数值类型 # 整型 # uint，无符号 32 或 64 位整型 uint8，无符号 8 位整型 (0 到 255) uint16，无符号 16 位整型 (0 到 65535) uint32，无符号 32 位整型 (0 到 4294967295) uint64，无符号 64 位整型 (0 到 18446744073709551615) int，有符号 32 或 64 位整型 int8，有符号 8 位整型 (-128 到 127) int16，有符号 16 位整型 (-32768 到 32767) int32，有符号 32 位整型 (-2147483648 到 2147483647) int64，有符号 64 位整型 (-9223372036854775808 到 9223372036854775807) int 和 uint 对应的是 CPU 平台机器的字大小。
-浮点数 # float32 和 float64 的算术规范由 IEEE-754 浮点数国际标准定义。</description></item><item><title>数组</title><link>https://shipengqi.github.io/golang-learn/docs/basic/02_array/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/basic/02_array/</guid><description> 数组 # 数组是一个由固定长度，相同类型的元素组成的数据结构。计算机会为数组分配一块连续的内存来保存其中的元素，并且可以利用索引快速访问数组中的元素。
-初始化 # arr1 := [3]int{1, 2, 3} arr2 := [...]int{1, 2, 3} // `...` 省略号，表示数组的长度是根据初始化值的个数来计算 数组的长度在编译阶段确定，初始化之后大小就无法改变。
-数组是否应该在堆栈中初始化在编译期就确定了。
-根据数组大小：
-当元素数量小于或者等于 4 个时，会直接将数组中的元素放置在栈上。 当元素数量大于 4 个时，会将数组中的元素放置到静态区，并在运行时取出。</description></item><item><title>切片</title><link>https://shipengqi.github.io/golang-learn/docs/basic/03_slice/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/basic/03_slice/</guid><description>切片 # 切片 (slice) 在使用上和数组差不多，区别是切片是可变长的，定义的时候不需要指定 size。
-切片可以看做是对数组的一层简单的封装，切片的底层数据结构中，包含了一个数组。
-切片的结构体：
-// src/reflect/value.go type SliceHeader struct { Data uintptr // 指向底层数组 Len int // 当前切片长度 Cap int // 当前切片容量 } 注意 Cap 也是底层数组的长度。Data 是一块连续的内存，可以存储切片 Cap 大小的所有元素。
-如图，虽然 slice 的 Len 是 5，但是底层数组的长度是 10，也就是 Cap。
-初始化 # 初始化切片有三种方式：
-使用 make // len 是切片的初始长度 // capacity 为可选参数, 指定容量 s := make([]int, len, capacity) 使用字面量 arr :=[]int{1,2,3} 使用下标截取数组或者切片的一部分，这里可以传入三个参数 [low:high:max]，max - low 是新的切片的容量 cap。 numbers := []int{0,1,2,3,4,5,6,7,8} s := numbers[1:4] // [1 2 3] s := numbers[4:] // [4 5 6 7 8] s := numbers[:3]) // [0 1 2] 《Go 学习笔记》 第四版 中的示例：</description></item><item><title>哈希表</title><link>https://shipengqi.github.io/golang-learn/docs/basic/04_map/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/basic/04_map/</guid><description>哈希表 # map 是一个无序的 key/value 对的集合，同一个 key 只会出现一次。
-哈希表的设计原理 # 哈希表其实是数组的扩展。哈希表是利用数组可以根据下标随机访问（时间复杂度是 O(1)）这一特性来实现快速查找的。
-哈希函数 # 哈希表是通过哈希函数将 key 转化为数组的下标，然后将数据存储在数组下标对应的位置。查询时，也是同样的使用哈希函数计算出数组下标，从下标对应的位置取出数据。
-哈希函数的基本要求：
-哈希函数计算出来的值是一个非负整数。 如果 key1 == key2 那么 hash(key1) == hash(key2) 如果 key1 != key2 那么 hash(key1) != hash(key2) 第三点，想要实现一个不同的 key 对应的哈希值绝对不一样的哈希函数，几乎是不可能的，也就说无法避免哈希冲突。
-常用的处理哈希冲突的方法有两种：开放寻址法和链表法。
-开放寻址法 # 开放寻址法核心思想是，如果出现了哈希冲突，就重新探测一个空闲位置，将其插入。
-上图蓝色表示已经插入的元素，key9 哈希后得到的数组下标为 6，但是已经有数据了，产生了冲突。那么就按顺序向后查找直到找到一个空闲的位置，如果到数组的尾部都没有找到空闲的位置，就从头开始继续找。 上图最终找到位置 1 并插入元素。
-查找的逻辑和插入类似，从哈希函数计算出来的下标位置开始查找，比较数组中下标位置的元素和要查找的元素。如果相等，则说明就是要找的元素；否则就顺序往后依次查找。直到找到数组中的空闲位置，还没有找到，就说明要查找的元素并没有在哈希表中。
-可以看出当数组中空闲位置不多的时候，哈希冲突的概率就会大大提高。装载因子（load factor）就是用来表示空位的多少。
-装载因子=已插入的元素个数/哈希表的长度 装载因子越大，说明空闲位置越少，冲突越多，哈希表的性能会下降。
-链表法 # 链表法是最常见的哈希冲突的解决办法。在哈希表中，每个桶（bucket）会对应一条链表，所有哈希值相同的元素都放到相同桶对应的链表中。
-插入时，哈希函数计算后得出存放在几号桶，然后遍历桶中的链表了：
-找到键相同的键值对，则更新键对应的值； 没有找到键相同的键值对，则在链表的末尾追加新的键值对 链表法实现的哈希表的装载因子：
-装载因子=已插入的元素个数/桶数量 Go map 原理 # 表示 map 的结构体是 hmap：</description></item><item><title>函数</title><link>https://shipengqi.github.io/golang-learn/docs/basic/05_function/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/basic/05_function/</guid><description>函数 # 参数传递 # 函数的参数传递有两种方式：
-值传递：当传一个参数值到被调用的函数里面时，实际上是传了这个值的副本，被调用方和调用方两者持有不相关的两份数据。 引用传递：当传一个参数值到被调用的函数里面时，实际是传了参数的指针，被调用方和调用方两者持有相同的数据，任意一方做出的修改都会影响另一方。 Go 使用的是值传递，不管参数是基本类型，结构体还是指针，都会对传递的参数进行拷贝，区别无非是拷贝的目标对象还是拷贝指针。拷贝指针，也就是会同时出现两个指针指向原有的内存空间。
-package main import &amp;#34;fmt&amp;#34; type foo struct { i int } func printFunc(a foo, b, c *foo) { a.i = 31 b.i = 41 c = &amp;amp;foo{i: 60} fmt.Printf(&amp;#34;print function - a=(%d, %p) b=(%v, %p) c=(%v, %p)\n&amp;#34;, a, &amp;amp;a, b, &amp;amp;b, c, &amp;amp;c) } func main() { a := foo{i: 30} b := &amp;amp;foo{i: 40} c := &amp;amp;foo{i: 50} fmt.Printf(&amp;#34;before calling - a=(%d, %p) b=(%v, %p) c=(%v, %p)\n&amp;#34;, a, &amp;amp;a, b, &amp;amp;b, c, &amp;amp;c) printFunc(a, b, c) fmt.</description></item><item><title>指针</title><link>https://shipengqi.github.io/golang-learn/docs/basic/09_pointer/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/basic/09_pointer/</guid><description>指针 # 指针和内存地址不能混为一谈。内存地址是内存中每个字节单元的唯一编号，而指针是一个实体。指针也会分配内存空间，相当于一个保存内存地址的整形变量。
-指针的限制 # 指针不能参与运算 # package main import &amp;#34;fmt&amp;#34; func main() { a := 1 b := a fmt.Println(b) b = &amp;amp;a + 1 } 上面的代码编译时会报错：Invalid operation: &amp;amp;a + 1 (mismatched types *int and untyped int)。
-说明 Go 是不允许对指针进行运算的。
-不同类型的指针不允许相互转换 # package main func main() { var a int = 100 var f *float64 f = &amp;amp;a } 上面的代码编译时会报错：Cannot use '&amp;amp;a' (type *int) as the type *float64。</description></item></channel></rss>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Go Learning – 🍚 语言基础</title><link>https://shipengqi.github.io/golang-learn/docs/basic/</link><description>Recent content in 🍚 语言基础 on Go Learning</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><atom:link href="https://shipengqi.github.io/golang-learn/docs/basic/index.xml" rel="self" type="application/rss+xml"/><item><title>基础数据类型</title><link>https://shipengqi.github.io/golang-learn/docs/basic/01_basic_type/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/basic/01_basic_type/</guid><description>
+&lt;h2>数值类型&lt;span class="hx-absolute -hx-mt-20" id="数值类型">&lt;/span>
+&lt;a href="#%e6%95%b0%e5%80%bc%e7%b1%bb%e5%9e%8b" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;h3>整型&lt;span class="hx-absolute -hx-mt-20" id="整型">&lt;/span>
+&lt;a href="#%e6%95%b4%e5%9e%8b" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;ul>
+&lt;li>&lt;code>uint&lt;/code>，无符号 32 或 64 位整型&lt;/li>
+&lt;li>&lt;code>uint8&lt;/code>，无符号 8 位整型 (0 到 255)&lt;/li>
+&lt;li>&lt;code>uint16&lt;/code>，无符号 16 位整型 (0 到 65535)&lt;/li>
+&lt;li>&lt;code>uint32&lt;/code>，无符号 32 位整型 (0 到 4294967295)&lt;/li>
+&lt;li>&lt;code>uint64&lt;/code>，无符号 64 位整型 (0 到 18446744073709551615)&lt;/li>
+&lt;li>&lt;code>int&lt;/code>，有符号 32 或 64 位整型&lt;/li>
+&lt;li>&lt;code>int8&lt;/code>，有符号 8 位整型 (-128 到 127)&lt;/li>
+&lt;li>&lt;code>int16&lt;/code>，有符号 16 位整型 (-32768 到 32767)&lt;/li>
+&lt;li>&lt;code>int32&lt;/code>，有符号 32 位整型 (-2147483648 到 2147483647)&lt;/li>
+&lt;li>&lt;code>int64&lt;/code>，有符号 64 位整型 (-9223372036854775808 到 9223372036854775807)&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>int&lt;/code> 和 &lt;code>uint&lt;/code> 对应的是 CPU 平台机器的字大小。&lt;/p>
+&lt;h3>浮点数&lt;span class="hx-absolute -hx-mt-20" id="浮点数">&lt;/span>
+&lt;a href="#%e6%b5%ae%e7%82%b9%e6%95%b0" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>float32&lt;/code> 和 &lt;code>float64&lt;/code> 的算术规范由 IEEE-754 浮点数国际标准定义。&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>float32&lt;/code>，32 位浮点型数，&lt;code>math.MaxFloat32&lt;/code> 表示 &lt;code>float32&lt;/code> 能表示的最大数值，大约是 &lt;code>3.4e38&lt;/code>。&lt;/li>
+&lt;li>&lt;code>float64&lt;/code>，64 位浮点型数，&lt;code>math.MaxFloat64&lt;/code> 表示 &lt;code>float64&lt;/code> 能表示的最大数值，大约是 &lt;code>1.8e308&lt;/code>。&lt;/li>
+&lt;/ul>
+&lt;h3>复数&lt;span class="hx-absolute -hx-mt-20" id="复数">&lt;/span>
+&lt;a href="#%e5%a4%8d%e6%95%b0" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;ul>
+&lt;li>&lt;code>complex64&lt;/code>，对应 &lt;code>float32&lt;/code> 浮点数精度。&lt;/li>
+&lt;li>&lt;code>complex128&lt;/code>，对应 &lt;code>float64&lt;/code> 浮点数精度。&lt;/li>
+&lt;/ul>
+&lt;p>内置 &lt;code>complex&lt;/code> 函数创建复数。标准库 &lt;code>math/cmplx&lt;/code> 提供了处理复数的函数。&lt;/p>
+&lt;h3>其他数值类型&lt;span class="hx-absolute -hx-mt-20" id="其他数值类型">&lt;/span>
+&lt;a href="#%e5%85%b6%e4%bb%96%e6%95%b0%e5%80%bc%e7%b1%bb%e5%9e%8b" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;ul>
+&lt;li>&lt;strong>&lt;code>byte&lt;/code>，&lt;code>uint8&lt;/code>的别名&lt;/strong>，一般用于强调数值是一个原始的数据而不是一个小的整数。&lt;/li>
+&lt;li>&lt;strong>&lt;code>rune&lt;/code>，&lt;code>int32&lt;/code>的别名&lt;/strong>，通常用于表示一个 &lt;code>Unicode&lt;/code> 码点。&lt;/li>
+&lt;li>&lt;code>uintptr&lt;/code>，无符号整型，没有指定具体的 &lt;code>bit&lt;/code> 大小，用于存放一个指针。&lt;/li>
+&lt;/ul>
+&lt;h2>布尔类型&lt;span class="hx-absolute -hx-mt-20" id="布尔类型">&lt;/span>
+&lt;a href="#%e5%b8%83%e5%b0%94%e7%b1%bb%e5%9e%8b" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>布尔类型的值只有两种：&lt;code>true&lt;/code> 和 &lt;code>false&lt;/code>。&lt;/p>
+&lt;h2>字符串&lt;span class="hx-absolute -hx-mt-20" id="字符串">&lt;/span>
+&lt;a href="#%e5%ad%97%e7%ac%a6%e4%b8%b2" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>字符串实际上是由&lt;strong>字符组成的数组&lt;/strong>，C 语言中的字符串使用字符数组 &lt;code>char[]&lt;/code> 表示。数组会占用一片连续的内存空间，而内存空间存储的字节共同组成了字符串，Go 中的字符串只是一个&lt;strong>只读的字节数组&lt;/strong>。&lt;/p>
+&lt;p>字符串的结构体：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// src/reflect/value.go#L1983
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="kd">type&lt;/span> &lt;span class="nx">StringHeader&lt;/span> &lt;span class="kd">struct&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">Data&lt;/span> &lt;span class="kt">uintptr&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">Len&lt;/span> &lt;span class="kt">int&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>与切片的结构体很像，只不过少了一个容量 &lt;code>Cap&lt;/code>。&lt;/p>
+&lt;p>因为字符串是一个只读的类型，不可以直接向字符串直接追加元素改变其本身的内存空间，所有在&lt;strong>字符串上的写入操作都是通过拷贝实现的&lt;/strong>。&lt;/p>
+&lt;h3>字符串拼接&lt;span class="hx-absolute -hx-mt-20" id="字符串拼接">&lt;/span>
+&lt;a href="#%e5%ad%97%e7%ac%a6%e4%b8%b2%e6%8b%bc%e6%8e%a5" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>拼接字符串的几种方式：&lt;/p>
+&lt;h4>&lt;code>+&lt;/code> 拼接字符串&lt;span class="hx-absolute -hx-mt-20" id="-拼接字符串">&lt;/span>
+&lt;a href="#-%e6%8b%bc%e6%8e%a5%e5%ad%97%e7%ac%a6%e4%b8%b2" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>例如 &lt;code>fmt.Println(&amp;quot;hello&amp;quot; + s[5:])&lt;/code> 输出 &lt;code>&amp;quot;hello, world&amp;quot;&lt;/code>。使用 &lt;code>+&lt;/code> 来拼接两个字符串时，它会申请一块新的内存空间，大小是两个字符串的大小之和。拼接第三个字符串时，再申请一块新的内存空间，大小是三个字符串大小之和。这种方式每次运算都需要重新分配内存，会给内存分配和 GC 带来额外的负担，所以性能比较差。&lt;/p>
+&lt;h4>fmt.Sprintf&lt;span class="hx-absolute -hx-mt-20" id="fmtsprintf">&lt;/span>
+&lt;a href="#fmtsprintf" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>&lt;code>fmt.Sprintf()&lt;/code> 拼接字符串，内部使用 &lt;code>[]byte&lt;/code> 实现，不像直接运算符这种会产生很多临时的字符串，但是内部的逻辑比较复杂，有很多额外的判断，还用到了 &lt;code>interface&lt;/code>，所以性能一般。&lt;/p>
+&lt;h4>bytes.Buffer&lt;span class="hx-absolute -hx-mt-20" id="bytesbuffer">&lt;/span>
+&lt;a href="#bytesbuffer" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>利用 &lt;code>bytes.Buffer&lt;/code> 拼接字符串，是比较理想的一种方式。对内存的增长有优化，如果能预估字符串的长度，还可以用 &lt;code>buffer.Grow&lt;/code> 接口来设置 &lt;code>capacity&lt;/code>。&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">var&lt;/span> &lt;span class="nx">buffer&lt;/span> &lt;span class="nx">bytes&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Buffer&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nx">buffer&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">WriteString&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;hello&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nx">buffer&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">WriteString&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;, &amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nx">buffer&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">WriteString&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;world&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Print&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">buffer&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">String&lt;/span>&lt;span class="p">())&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h4>strings.Builder&lt;span class="hx-absolute -hx-mt-20" id="stringsbuilder">&lt;/span>
+&lt;a href="#stringsbuilder" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>&lt;code>strings.Builder&lt;/code> 内部通过 &lt;code>slice&lt;/code> 来保存和管理内容。&lt;code>strings.Builder&lt;/code> 是非线程安全，性能上和 &lt;code>bytes.Buffer&lt;/code> 相差无几。&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">var&lt;/span> &lt;span class="nx">b1&lt;/span> &lt;span class="nx">strings&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Builder&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nx">b1&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">WriteString&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;ABC&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nx">b1&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">WriteString&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;DEF&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Print&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">b1&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">String&lt;/span>&lt;span class="p">())&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;code>Builder.Grow&lt;/code> 方法可以预分配内存。&lt;/p>
+&lt;p>推荐使用 &lt;code>strings.Builder&lt;/code> 来拼接字符串。&lt;/p>
+&lt;p>&lt;code>strings.Builder&lt;/code> 性能上比 &lt;code>bytes.Buffer&lt;/code> 略快，一个比较重要的区别在于，&lt;code>bytes.Buffer&lt;/code> 转化为字符串时重新申请了一块空间，存放生成的字符串变量，而 &lt;code>strings.Builder&lt;/code> 直接将底层的 &lt;code>[]byte&lt;/code> 转换成了字符串类型并返回。&lt;/p>
+&lt;p>&lt;code>bytes.Buffer&lt;/code>：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="nx">b&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">Buffer&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="nf">String&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="kt">string&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">b&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="kc">nil&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// Special case, useful in debugging.
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">return&lt;/span> &lt;span class="s">&amp;#34;&amp;lt;nil&amp;gt;&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="nb">string&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">b&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">buf&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="nx">b&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">off&lt;/span>&lt;span class="p">:])&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;code>strings.Builder&lt;/code>：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="nx">b&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">Builder&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="nf">String&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="kt">string&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="nx">unsafe&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">String&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">unsafe&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">SliceData&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">b&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">buf&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="nb">len&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">b&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">buf&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h3>类型转换&lt;span class="hx-absolute -hx-mt-20" id="类型转换">&lt;/span>
+&lt;a href="#%e7%b1%bb%e5%9e%8b%e8%bd%ac%e6%8d%a2" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>在日常开发中，&lt;code>string&lt;/code> 和 &lt;code>[]byte&lt;/code> 之间的转换是很常见的，不管是 &lt;code>string&lt;/code> 转 &lt;code>[]byte&lt;/code> 还是 &lt;code>[]byte&lt;/code> 转 &lt;code>string&lt;/code> 都需要拷贝数据，而内存拷贝带来的性能损耗会随着字符串和 &lt;code>[]byte&lt;/code> 长度的增长而增长。&lt;/p></description></item><item><title>数组</title><link>https://shipengqi.github.io/golang-learn/docs/basic/02_array/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/basic/02_array/</guid><description>
+&lt;p>数组是一个由&lt;strong>固定长度&lt;/strong>，&lt;strong>相同类型的元素&lt;/strong>组成的数据结构。计算机会为数组分配一块&lt;strong>连续的内存&lt;/strong>来保存其中的元素，并且可以利用&lt;strong>索引&lt;/strong>快速访问数组中的元素。&lt;/p>
+&lt;h2>初始化&lt;span class="hx-absolute -hx-mt-20" id="初始化">&lt;/span>
+&lt;a href="#%e5%88%9d%e5%a7%8b%e5%8c%96" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="nx">arr1&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="p">[&lt;/span>&lt;span class="mi">3&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="kt">int&lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">2&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">3&lt;/span>&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nx">arr2&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="p">[&lt;/span>&lt;span class="o">...&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="kt">int&lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">2&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">3&lt;/span>&lt;span class="p">}&lt;/span> &lt;span class="c1">// `...` 省略号，表示数组的长度是根据初始化值的个数来计算
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>数组的长度在编译阶段确定，初始化之后大小就无法改变。&lt;/p>
+&lt;p>&lt;strong>数组是否应该在堆栈中初始化在编译期就确定了&lt;/strong>。&lt;/p>
+&lt;p>根据数组大小：&lt;/p>
+&lt;ul>
+&lt;li>当元素数量小于或者等于 4 个时，会直接将数组中的元素放置在栈上。&lt;/li>
+&lt;li>当元素数量大于 4 个时，会将数组中的元素放置到静态区，并在运行时取出。&lt;/li>
+&lt;/ul></description></item><item><title>切片</title><link>https://shipengqi.github.io/golang-learn/docs/basic/03_slice/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/basic/03_slice/</guid><description>
+&lt;p>切片 (slice) 在使用上和数组差不多，区别是切片是&lt;strong>可变长&lt;/strong>的，定义的时候不需要指定 size。&lt;/p>
+&lt;p>切片可以看做是对数组的一层简单的封装，切片的底层数据结构中，包含了一个数组。&lt;/p>
+&lt;p>切片的结构体：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// src/reflect/value.go
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="kd">type&lt;/span> &lt;span class="nx">SliceHeader&lt;/span> &lt;span class="kd">struct&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">Data&lt;/span> &lt;span class="kt">uintptr&lt;/span> &lt;span class="c1">// 指向底层数组
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">Len&lt;/span> &lt;span class="kt">int&lt;/span> &lt;span class="c1">// 当前切片长度
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">Cap&lt;/span> &lt;span class="kt">int&lt;/span> &lt;span class="c1">// 当前切片容量
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>注意 &lt;code>Cap&lt;/code> 也是底层数组的长度。&lt;code>Data&lt;/code> 是一块连续的内存，可以存储切片 &lt;code>Cap&lt;/code> 大小的所有元素。&lt;/p>
+&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/76c579125ad122d2f1a4d9e605139af61da3a7c5/go/slice-struct.png" alt="slice-struct" loading="lazy" />&lt;/p>
+&lt;p>如图，虽然 slice 的 &lt;code>Len&lt;/code> 是 5，但是底层数组的长度是 10，也就是 &lt;code>Cap&lt;/code>。&lt;/p>
+&lt;h2>初始化&lt;span class="hx-absolute -hx-mt-20" id="初始化">&lt;/span>
+&lt;a href="#%e5%88%9d%e5%a7%8b%e5%8c%96" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>初始化切片有三种方式：&lt;/p>
+&lt;ol>
+&lt;li>使用 &lt;code>make&lt;/code>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// len 是切片的初始长度
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// capacity 为可选参数, 指定容量
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">s&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">make&lt;/span>&lt;span class="p">([]&lt;/span>&lt;span class="kt">int&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">len&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">capacity&lt;/span>&lt;span class="p">)&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;/li>
+&lt;li>使用字面量
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="nx">arr&lt;/span> &lt;span class="o">:=&lt;/span>&lt;span class="p">[]&lt;/span>&lt;span class="kt">int&lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">3&lt;/span>&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;/li>
+&lt;li>使用下标截取数组或者切片的一部分，这里可以传入三个参数 &lt;code>[low:high:max]&lt;/code>，&lt;code>max - low&lt;/code> 是新的切片的容量 cap。
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="nx">numbers&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="p">[]&lt;/span>&lt;span class="kt">int&lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">3&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">4&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">5&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">6&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">7&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">8&lt;/span>&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nx">s&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">numbers&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="mi">4&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="c1">// [1 2 3]
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="nx">s&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">numbers&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">4&lt;/span>&lt;span class="p">:]&lt;/span> &lt;span class="c1">// [4 5 6 7 8]
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="nx">s&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">numbers&lt;/span>&lt;span class="p">[:&lt;/span>&lt;span class="mi">3&lt;/span>&lt;span class="p">])&lt;/span> &lt;span class="c1">// [0 1 2]
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;/li>
+&lt;/ol>
+&lt;p>《Go 学习笔记》 第四版 中的示例：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">package&lt;/span> &lt;span class="nx">main&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="s">&amp;#34;fmt&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">main&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">slice&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="p">[]&lt;/span>&lt;span class="kt">int&lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">2&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">3&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">4&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">5&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">6&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">7&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">8&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">9&lt;/span>&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">s1&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">slice&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="mi">5&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">s2&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">s1&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="mi">6&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="mi">7&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">s2&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nb">append&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">s2&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">100&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">s2&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nb">append&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">s2&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">200&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">s1&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="mi">20&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">s1&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">s2&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">slice&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>输出：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>[2 3 20]
+[4 5 6 7 100 200]
+[0 1 2 3 20 5 6 7 100 9]&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>示例中：&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>s1 := slice[2:5]&lt;/code> 得到的 &lt;code>s1&lt;/code> 的容量为 8，因为没有传入 &lt;code>max&lt;/code>，容量默认是到底层数组的结尾。&lt;/li>
+&lt;li>&lt;code>s2 := s1[2:6:7]&lt;/code> 得到的 &lt;code>s2&lt;/code> 的容量为 5（&lt;code>max - low&lt;/code>）。&lt;code>s2&lt;/code>，&lt;code>s1&lt;/code> 和 &lt;code>slice&lt;/code> 底层数组是同一个，所以 &lt;code>s2&lt;/code> 中的元素是 &lt;code>[4,5,6,7]&lt;/code>。&lt;/li>
+&lt;/ul>
+&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/d28ded522afae7c5fec7cd9a38d6ba3e4287c52d/go/slice-cut.png" alt="slice-cut" loading="lazy" />&lt;/p>
+&lt;p>下面的 &lt;code>s2 = append(s2, 100)&lt;/code> 追加一个元素，容量够用，不需要扩容，但是这个修改会影响所有指向这个底层数组的切片。&lt;/p>
+&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/d28ded522afae7c5fec7cd9a38d6ba3e4287c52d/go/slice-cut-append.png" alt="slice-cut-append" loading="lazy" />&lt;/p>
+&lt;p>再次追加一个元素 &lt;code>s2 = append(s2, 200)&lt;/code>，&lt;code>s2&lt;/code> 的容量不够了，需要扩容，于是 &lt;code>s2&lt;/code> 申请一块新的连续内存，并将数据拷贝过去，扩容后的容量是原来的 2 倍。
+这时候 &lt;code>s2&lt;/code> 的 &lt;code>Data&lt;/code> 指向了新的底层数组，已经和 &lt;code>s1&lt;/code> &lt;code>slice&lt;/code> 没有关系了，对 &lt;code>s2&lt;/code> 的修改不会再影响 &lt;code>s1&lt;/code> &lt;code>slice&lt;/code>。&lt;/p>
+&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/d28ded522afae7c5fec7cd9a38d6ba3e4287c52d/go/slice-cut-append2.png" alt="slice-cut-append2" loading="lazy" />&lt;/p>
+&lt;p>最后 &lt;code>s1[2] = 20&lt;/code> 也不会再影响 &lt;code>s2&lt;/code>。&lt;/p>
+&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/d28ded522afae7c5fec7cd9a38d6ba3e4287c52d/go/slice-cut-append3.png" alt="slice-cut-append3" loading="lazy" />&lt;/p>
+&lt;h2>切片是如何扩容的？&lt;span class="hx-absolute -hx-mt-20" id="切片是如何扩容的">&lt;/span>
+&lt;a href="#%e5%88%87%e7%89%87%e6%98%af%e5%a6%82%e4%bd%95%e6%89%a9%e5%ae%b9%e7%9a%84" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>append&lt;/code> 是用来向 slice 追加元素的，并&lt;strong>返回一个新的 slice&lt;/strong>。&lt;/p>
+&lt;p>&lt;code>append&lt;/code> 实际上就是向底层数组添加元素，但是数组的长度是固定的：&lt;/p>
+&lt;p>当追加元素后切片的大小大于容量，runtime 会对切片进行扩容，这时会申请一块新的连续的内存空间，然后将原数据拷贝到新的内存空间，并且将 &lt;code>append&lt;/code> 的元素添加到新的底层数组中，并返回这个新的切片。&lt;/p>
+&lt;p>Go 1.18 后切片的扩容策略：&lt;/p>
+&lt;ul>
+&lt;li>如果当前切片的容量（&lt;code>oldcap&lt;/code>）小于 256，新切片的容量（&lt;code>newcap&lt;/code>）为原来的 2 倍.&lt;/li>
+&lt;li>如果当前切片的容量大于 256，计算新切片的容量的公式 &lt;code>newcap = oldcap+(oldcap+3*256)/4&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;h2>切片传入函数&lt;span class="hx-absolute -hx-mt-20" id="切片传入函数">&lt;/span>
+&lt;a href="#%e5%88%87%e7%89%87%e4%bc%a0%e5%85%a5%e5%87%bd%e6%95%b0" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Go 是值传递。那么传入一个切片，切片会不会被函数中的操作改变？&lt;/p>
+&lt;p>&lt;strong>不管传入的是切片还是切片指针，如果改变了底层数组，原切片的底层数组也会被改变&lt;/strong>。&lt;/p>
+&lt;p>示例：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">package&lt;/span> &lt;span class="nx">main&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="s">&amp;#34;fmt&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">appendFunc&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">s&lt;/span> &lt;span class="p">[]&lt;/span>&lt;span class="kt">int&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">s&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nb">append&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">s&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">10&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">20&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">30&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">appendPtrFunc&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">s&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="p">[]&lt;/span>&lt;span class="kt">int&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="o">*&lt;/span>&lt;span class="nx">s&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nb">append&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="nx">s&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">10&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">20&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">30&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">main&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">sl&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">make&lt;/span>&lt;span class="p">([]&lt;/span>&lt;span class="kt">int&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">10&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">appendFunc&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">sl&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// appendFunc 修改的是 sl 的副本，len 和 cap 并没有被修改，下面的输出是 []
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">sl&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="c1">// []
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// appendFunc，虽然没有修改 len 和 cap，但是底层数组是被修改了的，所以下面的输出会包含 10 20 30
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">sl&lt;/span>&lt;span class="p">[:&lt;/span>&lt;span class="mi">10&lt;/span>&lt;span class="p">])&lt;/span> &lt;span class="c1">// [10 20 30 0 0 0 0 0 0 0]
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 为什么 sl[:10] 和 sl[:] 的输出不同，是因为 go 的切片的一个优化
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// slice[low:high] 中的 high，最大的取值范围对应着切片的容量（cap），不是单纯的长度（len）。
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// sl[:10] 可以输出容量范围内的值，并且没有越界。
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// sl[:] 由于 len 为 0，并且没有指定最大索引。high 则会取 len 的值，所以输出为 []
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">sl&lt;/span>&lt;span class="p">[:])&lt;/span> &lt;span class="c1">// []
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">slptr&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">make&lt;/span>&lt;span class="p">([]&lt;/span>&lt;span class="kt">int&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">10&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">appendPtrFunc&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">slptr&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 这里传入的是切片的指针，会改变外层的 slptr
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">slptr&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="c1">// [10 20 30]
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div></description></item><item><title>哈希表</title><link>https://shipengqi.github.io/golang-learn/docs/basic/04_map/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/basic/04_map/</guid><description>
+&lt;p>&lt;code>map&lt;/code> 是一个无序的 &lt;code>key/value&lt;/code> 对的集合，同一个 key 只会出现一次。&lt;/p>
+&lt;h2>哈希表的设计原理&lt;span class="hx-absolute -hx-mt-20" id="哈希表的设计原理">&lt;/span>
+&lt;a href="#%e5%93%88%e5%b8%8c%e8%a1%a8%e7%9a%84%e8%ae%be%e8%ae%a1%e5%8e%9f%e7%90%86" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>哈希表其实是数组的扩展。哈希表是利用数组可以根据下标随机访问（时间复杂度是 &lt;code>O(1)&lt;/code>）这一特性来实现快速查找的。&lt;/p>
+&lt;h3>哈希函数&lt;span class="hx-absolute -hx-mt-20" id="哈希函数">&lt;/span>
+&lt;a href="#%e5%93%88%e5%b8%8c%e5%87%bd%e6%95%b0" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>哈希表是通过&lt;strong>哈希函数&lt;/strong>将 key 转化为数组的下标，然后将数据存储在数组下标对应的位置。查询时，也是同样的使用哈希函数计算出数组下标，从下标对应的位置取出数据。&lt;/p>
+&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/c532a70c015ab877e64c7fec6382cf1791597cbc/go/hash-func.png" alt="map-seek-addr" loading="lazy" />&lt;/p>
+&lt;p>哈希函数的基本要求：&lt;/p>
+&lt;ol>
+&lt;li>哈希函数计算出来的值是一个非负整数。&lt;/li>
+&lt;li>如果 &lt;code>key1 == key2&lt;/code> 那么 &lt;code>hash(key1) == hash(key2)&lt;/code>&lt;/li>
+&lt;li>如果 &lt;code>key1 != key2&lt;/code> 那么 &lt;code>hash(key1) != hash(key2)&lt;/code>&lt;/li>
+&lt;/ol>
+&lt;p>第三点，想要实现一个不同的 key 对应的哈希值绝对不一样的哈希函数，几乎是不可能的，也就说无法避免&lt;strong>哈希冲突&lt;/strong>。&lt;/p>
+&lt;p>常用的处理哈希冲突的方法有两种：&lt;strong>开放寻址法&lt;/strong>和&lt;strong>链表法&lt;/strong>。&lt;/p>
+&lt;h3>开放寻址法&lt;span class="hx-absolute -hx-mt-20" id="开放寻址法">&lt;/span>
+&lt;a href="#%e5%bc%80%e6%94%be%e5%af%bb%e5%9d%80%e6%b3%95" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>开放寻址法核心思想是，如果出现了哈希冲突，就重新探测一个空闲位置，将其插入。&lt;/p>
+&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/1e5051b9e3f0f681565b1737802ae7e15e075fc5/go/map-seek-addr.png" alt="map-seek-addr" loading="lazy" />&lt;/p>
+&lt;p>上图蓝色表示已经插入的元素，&lt;code>key9&lt;/code> 哈希后得到的数组下标为 6，但是已经有数据了，产生了冲突。那么就按顺序向后查找直到找到一个空闲的位置，如果到数组的尾部都没有找到空闲的位置，就从头开始继续找。
+上图最终找到位置 1 并插入元素。&lt;/p>
+&lt;p>查找的逻辑和插入类似，从哈希函数计算出来的下标位置开始查找，比较数组中下标位置的元素和要查找的元素。如果相等，则说明就是要找的元素；否则就顺序往后依次查找。直到找到数组中的空闲位置，还没有找到，就说明要查找的元素并没有在哈希表中。&lt;/p>
+&lt;p>可以看出当数组中空闲位置不多的时候，哈希冲突的概率就会大大提高。&lt;strong>装载因子&lt;/strong>（load factor）就是用来表示空位的多少。&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>装载因子=已插入的元素个数/哈希表的长度&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>装载因子越大，说明空闲位置越少，冲突越多，哈希表的性能会下降。&lt;/p>
+&lt;h3>链表法&lt;span class="hx-absolute -hx-mt-20" id="链表法">&lt;/span>
+&lt;a href="#%e9%93%be%e8%a1%a8%e6%b3%95" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>链表法是最常见的哈希冲突的解决办法。在哈希表中，每个桶（bucket）会对应一条链表，所有哈希值相同的元素都放到相同桶对应的链表中。&lt;/p>
+&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/c532a70c015ab877e64c7fec6382cf1791597cbc/go/map-link.png" alt="map-link" loading="lazy" />&lt;/p>
+&lt;p>插入时，哈希函数计算后得出存放在几号桶，然后遍历桶中的链表了：&lt;/p>
+&lt;ul>
+&lt;li>找到键相同的键值对，则更新键对应的值；&lt;/li>
+&lt;li>没有找到键相同的键值对，则在链表的末尾追加新的键值对&lt;/li>
+&lt;/ul>
+&lt;p>链表法实现的哈希表的装载因子：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>装载因子=已插入的元素个数/桶数量&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h2>Go map 原理&lt;span class="hx-absolute -hx-mt-20" id="go-map-原理">&lt;/span>
+&lt;a href="#go-map-%e5%8e%9f%e7%90%86" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>表示 map 的结构体是 &lt;code>hmap&lt;/code>：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// src/runtime/map.go
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="kd">type&lt;/span> &lt;span class="nx">hmap&lt;/span> &lt;span class="kd">struct&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 哈希表中的元素数量
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">count&lt;/span> &lt;span class="kt">int&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 状态标识，主要是 goroutine 写入和扩容机制的相关状态控制。并发读写的判断条件之一就是该值
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">flags&lt;/span> &lt;span class="kt">uint8&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 哈希表持有的 buckets 数量，但是因为哈希表中桶的数量都 2 的倍数，
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 所以该字段会存储对数，也就是 len(buckets) == 2^B
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">B&lt;/span> &lt;span class="kt">uint8&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 溢出桶的数量
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">noverflow&lt;/span> &lt;span class="kt">uint16&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 哈希种子，它能为哈希函数的结果引入随机性，这个值在创建哈希表时确定，并在调用哈希函数时作为参数传入
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">hash0&lt;/span> &lt;span class="kt">uint32&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 指向 buckets 数组，长度为 2^B
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">buckets&lt;/span> &lt;span class="nx">unsafe&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Pointer&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 哈希在扩容时用于保存之前 buckets 的字段
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 等量扩容的时候，buckets 长度和 oldbuckets 相等
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 双倍扩容的时候，buckets 长度是 oldbuckets 的两倍
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">oldbuckets&lt;/span> &lt;span class="nx">unsafe&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Pointer&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 迁移进度，小于此地址的 buckets 是已迁移完成的
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">nevacuate&lt;/span> &lt;span class="kt">uintptr&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">extra&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">mapextra&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">type&lt;/span> &lt;span class="nx">mapextra&lt;/span> &lt;span class="kd">struct&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// hmap.buckets （当前）溢出桶的指针地址
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">overflow&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="p">[]&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="nx">bmap&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 为 hmap.oldbuckets （旧）溢出桶的指针地址
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">oldoverflow&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="p">[]&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="nx">bmap&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 为空闲溢出桶的指针地址
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">nextOverflow&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">bmap&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;code>hmap.buckets&lt;/code> 就是指向一个 &lt;code>bmap&lt;/code> 数组。&lt;code>bmap&lt;/code> 的结构体：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">type&lt;/span> &lt;span class="nx">bmap&lt;/span> &lt;span class="kd">struct&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">tophash&lt;/span> &lt;span class="p">[&lt;/span>&lt;span class="nx">bucketCnt&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="kt">uint8&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 编译时，编译器会推导键值对占用内存空间的大小，然后修改 bmap 的结构
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="kd">type&lt;/span> &lt;span class="nx">bmap&lt;/span> &lt;span class="kd">struct&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">topbits&lt;/span> &lt;span class="p">[&lt;/span>&lt;span class="mi">8&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="kt">uint8&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">keys&lt;/span> &lt;span class="p">[&lt;/span>&lt;span class="mi">8&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="nx">keytype&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">values&lt;/span> &lt;span class="p">[&lt;/span>&lt;span class="mi">8&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="nx">valuetype&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">pad&lt;/span> &lt;span class="kt">uintptr&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">overflow&lt;/span> &lt;span class="kt">uintptr&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;code>bmap&lt;/code> 就是桶，一个桶里面会最多存储 8 个键值对。&lt;/p>
+&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/8e8c090d5a1de970d1d00bdf5f79917e74bfd63d/go/bmap-struct.png" alt="bmap-struct" loading="lazy" />&lt;/p>
+&lt;ol>
+&lt;li>在桶内，会根据 key 计算出来的 hash 值的高 8 位来决定 key 存储在桶中的位置。&lt;/li>
+&lt;li>key 和 value 是分别放在一块连续的内存，这样做的目的是为了节省内存。例如一个 &lt;code>map[int64]int8&lt;/code> 类型的 map，如果按照 &lt;code>key1/value1/key2/value2 ...&lt;/code> 这样的形式来存储，那么内存对齐每个 &lt;code>key/value&lt;/code> 都需要 padding 7 个字节。
+分开连续存储的话，就只需要在最后 padding 一次。&lt;/li>
+&lt;li>每个桶只能存储 8 个 &lt;code>key/value&lt;/code>，如果有更多的 key 放入当前桶，就需要一个溢出桶，通过 &lt;code>overflow&lt;/code> 指针连接起来。&lt;/li>
+&lt;/ol>
+&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/8e8c090d5a1de970d1d00bdf5f79917e74bfd63d/go/hmap.png" alt="hmap" loading="lazy" />&lt;/p>
+&lt;h3>初始化&lt;span class="hx-absolute -hx-mt-20" id="初始化">&lt;/span>
+&lt;a href="#%e5%88%9d%e5%a7%8b%e5%8c%96" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>初始化 &lt;code>map&lt;/code>：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="nx">hash&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="kd">map&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="kt">string&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="kt">int&lt;/span>&lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s">&amp;#34;1&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="mi">2&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s">&amp;#34;3&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="mi">4&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s">&amp;#34;5&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="mi">6&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nx">hash2&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">make&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kd">map&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="kt">string&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="kt">int&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">3&lt;/span>&lt;span class="p">)&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>不管是使用字面量还是 &lt;code>make&lt;/code> 初始化 map，最后都是调用 &lt;code>makemap&lt;/code> 函数：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">makemap&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">t&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">maptype&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">hint&lt;/span> &lt;span class="kt">int&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">h&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">hmap&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">hmap&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// initialize Hmap
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nx">h&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="kc">nil&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">h&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nb">new&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">hmap&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 获取一个随机的哈希种子
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">hash0&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nf">fastrand&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 根据传入的 hint 计算出需要的最小需要的桶的数量
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">B&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">uint8&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="nf">overLoadFactor&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">hint&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">B&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">B&lt;/span>&lt;span class="o">++&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">B&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">B&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 初始化 hash table
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 如果 B 等于 0，那么 buckets 就会在赋值的时候再分配
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 如果 hint 长度比较大，分配内存会花费长一点
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">B&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="kd">var&lt;/span> &lt;span class="nx">nextOverflow&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">bmap&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// makeBucketArray 根据传入的 B 计算出的需要创建的桶数量
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 并在内存中分配一片连续的空间用于存储数据
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">buckets&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">nextOverflow&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nf">makeBucketArray&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">t&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">B&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="kc">nil&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">nextOverflow&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="kc">nil&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">extra&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nb">new&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">mapextra&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">extra&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">nextOverflow&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">nextOverflow&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="nx">h&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>预分配的溢出桶和正常桶是在一块连续的内存中。&lt;/p>
+&lt;h3>查询&lt;span class="hx-absolute -hx-mt-20" id="查询">&lt;/span>
+&lt;a href="#%e6%9f%a5%e8%af%a2" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>查询 map 中的值：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="nx">v&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">hash&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="nx">key&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nx">v&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">ok&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">hash&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="nx">key&lt;/span>&lt;span class="p">]&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>这两种查询方式会被转换成 &lt;a href="https://github.com/golang/go/blob/8da6405e0db80fa0a4136fb816c7ca2db716c2b2/src/runtime/map.go#L396" target="_blank" rel="noopener">&lt;code>mapaccess1&lt;/code>&lt;/a> 和 &lt;code>mapaccess2&lt;/code> 函数，两个函数基本一样，不过 &lt;code>mapaccess2&lt;/code> 函数的返回值多了一个 &lt;code>bool&lt;/code> 类型。&lt;/p>
+&lt;p>查询过程：&lt;/p>
+&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/ae69f3fdb54032a8619d342edccbcdc95c7776a6/go/map-get.png" alt="map-get" loading="lazy" />&lt;/p>
+&lt;h4>1. 计算哈希值&lt;span class="hx-absolute -hx-mt-20" id="1-计算哈希值">&lt;/span>
+&lt;a href="#1-%e8%ae%a1%e7%ae%97%e5%93%88%e5%b8%8c%e5%80%bc" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>通过哈希函数和种子获取当前 key 的 64 位的哈希值（64 位机）。以上图哈希值：&lt;code>11010111 | 110000110110110010001111001010100010010110010101001 │ 00011&lt;/code> 为例。&lt;/p>
+&lt;h4>2. 计算这个 key 要放在哪个桶&lt;span class="hx-absolute -hx-mt-20" id="2-计算这个-key-要放在哪个桶">&lt;/span>
+&lt;a href="#2-%e8%ae%a1%e7%ae%97%e8%bf%99%e4%b8%aa-key-%e8%a6%81%e6%94%be%e5%9c%a8%e5%93%aa%e4%b8%aa%e6%a1%b6" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>根据哈希值的 &lt;code>B&lt;/code> （&lt;code>hmap.B&lt;/code>）个 bit 位来计算，也就是 &lt;code>00011&lt;/code>，十进制的值是 &lt;code>3&lt;/code>，那么就是 &lt;code>3&lt;/code> 号桶。&lt;/p>
+&lt;h4>3. 计算这个 key 在桶内的位置&lt;span class="hx-absolute -hx-mt-20" id="3-计算这个-key-在桶内的位置">&lt;/span>
+&lt;a href="#3-%e8%ae%a1%e7%ae%97%e8%bf%99%e4%b8%aa-key-%e5%9c%a8%e6%a1%b6%e5%86%85%e7%9a%84%e4%bd%8d%e7%bd%ae" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>根据哈希值的高 8 位，也就是 &lt;code>10010111&lt;/code>，十进制的值是 &lt;code>151&lt;/code>，先用 &lt;code>151&lt;/code> 和桶内存储的 &lt;code>tophash&lt;/code> 比较，再比较桶内的存储的 key 和传入的 key，这种方式可以优化桶内的读写速度。&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// src/runtime/map.go#L434 mapaccess1
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="k">for&lt;/span> &lt;span class="nx">i&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">uintptr&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">);&lt;/span> &lt;span class="nx">i&lt;/span> &lt;span class="p">&amp;lt;&lt;/span> &lt;span class="nx">bucketCnt&lt;/span>&lt;span class="p">;&lt;/span> &lt;span class="nx">i&lt;/span>&lt;span class="o">++&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 先比较 tophash，如果不相等，就直接进入下次循环
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nx">b&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">tophash&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="nx">i&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="nx">top&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">b&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">tophash&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="nx">i&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="nx">emptyRest&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">break&lt;/span> &lt;span class="nx">bucketloop&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">continue&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 再比较桶内的 key 和传入的 key，如果相等，再获取目标值的指针
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nx">t&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Key&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Equal&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">key&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">k&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;blockquote>
+&lt;p>计算在几号桶用的是后 &lt;code>B&lt;/code> 位，&lt;code>tophash&lt;/code> 使用的是高 8 位，这种方式可以避免一个桶内出现大量相同的 &lt;code>tophash&lt;/code>，影响读写的性能。&lt;/p>
+&lt;/blockquote>
+&lt;p>如果当前桶中没有找到 key，而且存在溢出桶，那么会接着遍历所有的溢出桶中的数据。&lt;/p>
+&lt;h3>写入&lt;span class="hx-absolute -hx-mt-20" id="写入">&lt;/span>
+&lt;a href="#%e5%86%99%e5%85%a5" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>写入 map 和查询 map 的实现原理类似，计算哈希值和存放在哪个桶，然后遍历当前桶和溢出桶的数据：&lt;/p>
+&lt;ul>
+&lt;li>如果当前 key 不存在，则通过偏移量存储到桶中&lt;/li>
+&lt;li>如果已经存在，则返回 value 的内存地址，赋值操作是在编译期执行的。&lt;/li>
+&lt;li>如果桶已满，则会创建新桶或者使用空闲的溢出桶，添加到已有桶的末尾，&lt;code>noverflow&lt;/code> 计数加 1。&lt;/li>
+&lt;/ul>
+&lt;h3>扩容&lt;span class="hx-absolute -hx-mt-20" id="扩容">&lt;/span>
+&lt;a href="#%e6%89%a9%e5%ae%b9" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>随着 map 中写入的 &lt;code>key/value&lt;/code> 增多，装载因子会越来越大，哈希冲突的概率越来越大，性能会跟着下降。如果大量的 key 都落入到同一个桶中，哈希表会退化成链表，查询的时间复杂度会从 &lt;code>O(1)&lt;/code> 退化到 &lt;code>O(n)&lt;/code>。&lt;/p>
+&lt;p>所以当装载因子大到一定程度之后，哈希表就不得不进行扩容。&lt;/p>
+&lt;h4>Go map 在什么时候会触发扩容？&lt;span class="hx-absolute -hx-mt-20" id="go-map-在什么时候会触发扩容">&lt;/span>
+&lt;a href="#go-map-%e5%9c%a8%e4%bb%80%e4%b9%88%e6%97%b6%e5%80%99%e4%bc%9a%e8%a7%a6%e5%8f%91%e6%89%a9%e5%ae%b9" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">mapassign&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">t&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">maptype&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">h&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">hmap&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">key&lt;/span> &lt;span class="nx">unsafe&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Pointer&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="nx">unsafe&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Pointer&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// src/runtime/map.go mapassign
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// If we hit the max load factor or we have too many overflow buckets,
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// and we&amp;#39;re not already in the middle of growing, start growing.
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="p">!&lt;/span>&lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">growing&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="o">&amp;amp;&amp;amp;&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="nf">overLoadFactor&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">count&lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">B&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">||&lt;/span> &lt;span class="nf">tooManyOverflowBuckets&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">noverflow&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">B&lt;/span>&lt;span class="p">))&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">hashGrow&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">t&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">h&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">goto&lt;/span> &lt;span class="nx">again&lt;/span> &lt;span class="c1">// Growing the table invalidates everything, so try again
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;ol>
+&lt;li>装载因子超过阈值 6.5。&lt;/li>
+&lt;li>溢出桶的数量过多：
+&lt;ul>
+&lt;li>当 &lt;code>B &amp;lt; 15&lt;/code> 时，如果溢出桶的数量超多 &lt;code>2^B&lt;/code> 则触发扩容。&lt;/li>
+&lt;li>当 &lt;code>B &amp;gt;= 15&lt;/code> 时，如果溢出桶的数量超过 &lt;code>2^15&lt;/code> 则触发扩容。&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ol>
+&lt;h4>为什么溢出桶过多需要进行扩容？&lt;span class="hx-absolute -hx-mt-20" id="为什么溢出桶过多需要进行扩容">&lt;/span>
+&lt;a href="#%e4%b8%ba%e4%bb%80%e4%b9%88%e6%ba%a2%e5%87%ba%e6%a1%b6%e8%bf%87%e5%a4%9a%e9%9c%80%e8%a6%81%e8%bf%9b%e8%a1%8c%e6%89%a9%e5%ae%b9" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>什么情况下会出现装载因子很小不超过阈值，但是溢出桶过多的情况？&lt;/p>
+&lt;p>先插入很多元素，导致创建了很多桶，但是未达到阈值，并没有触发扩容。之后再删除元素，降低元素的总量。反复执行前面的步骤，但是又不会触发扩容，就会导致创建了很多溢出桶，但是 map 中的 key 分布的很分散。导致查询和插入的效率很低。&lt;/p>
+&lt;h4>渐进式扩容&lt;span class="hx-absolute -hx-mt-20" id="渐进式扩容">&lt;/span>
+&lt;a href="#%e6%b8%90%e8%bf%9b%e5%bc%8f%e6%89%a9%e5%ae%b9" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>扩容需要把原有的 buckets 中的数据迁移到新的 buckets 中。如果一个哈希表当前大小为 1GB，扩容为原来的两倍大小，那就需要对 1GB 的数据重新计算哈希值，并且从原来的内存空间搬移到新的内存空间，这是非常耗时的操作。&lt;/p>
+&lt;p>所以 map 的扩容采用的是一种&lt;strong>渐进式&lt;/strong>的方式，将迁移的操作穿插在插入操作的过程中，分批完成。&lt;/p>
+&lt;p>大概思路就是：&lt;/p>
+&lt;p>当有新的 &lt;code>key/value&lt;/code> 要插入时，将这个 &lt;code>key/value&lt;/code> 插入到新 buckets 中，并且从老的 buckets 中拿出一个 &lt;code>key/value&lt;/code> 放入到新 buckets。每次插入一个 &lt;code>key/value&lt;/code>，都重复上面的过程。经过多次插入操作之后，老的 buckets 中的数据就一点一点全部迁移到新的 buckets 中了。
+这样不用一次性将数据迁移，插入操作就都变得很快了。&lt;/p>
+&lt;p>对于查询操作，为了兼容了新、老 buckets 中的数据，会先从新 buckets 中查找，如果没有找到，再去老的 buckets 中查找。&lt;/p>
+&lt;h5>对于条件 2 溢出桶的数量过多&lt;span class="hx-absolute -hx-mt-20" id="对于条件-2-溢出桶的数量过多">&lt;/span>
+&lt;a href="#%e5%af%b9%e4%ba%8e%e6%9d%a1%e4%bb%b6-2-%e6%ba%a2%e5%87%ba%e6%a1%b6%e7%9a%84%e6%95%b0%e9%87%8f%e8%bf%87%e5%a4%9a" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h5>&lt;p>申请的新的 buckets 数量和原有的 buckets 数量是&lt;strong>相等的&lt;/strong>，进行的是&lt;strong>等量扩容&lt;/strong>。由于 buckets 数量不变，所以原有的数据在几号桶，迁移之后仍然在几号桶。比如原来在 0 号 bucket，到新的地方后，仍然放在 0 号 bucket。&lt;/p>
+&lt;p>扩容完成后，溢出桶没有了，key 都集中到了一个 bucket，更为紧凑了，提高了查找的效率。&lt;/p>
+&lt;h5>对于条件 1 当装载因子超过阈值后&lt;span class="hx-absolute -hx-mt-20" id="对于条件-1-当装载因子超过阈值后">&lt;/span>
+&lt;a href="#%e5%af%b9%e4%ba%8e%e6%9d%a1%e4%bb%b6-1-%e5%bd%93%e8%a3%85%e8%bd%bd%e5%9b%a0%e5%ad%90%e8%b6%85%e8%bf%87%e9%98%88%e5%80%bc%e5%90%8e" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h5>&lt;p>申请的新的 buckets 数量和原有的 buckets 数量的 &lt;strong>2 倍&lt;/strong>，也就是 &lt;code>B+1&lt;/code>。桶的数量改变了，那么 key 的哈希值要重新计算，才能决定它到底落在哪个 bucket。&lt;/p>
+&lt;p>例如，原来 &lt;code>B=5&lt;/code>，根据出 key 的哈希值的后 5 位，就能决定它落在哪个 bucket。扩容后的 buckets 数量翻倍，B 变成了 6，因此变成哈希值的后 6 位才能决定 key 落在哪个 bucket。这叫做 &lt;code>rehash&lt;/code>。&lt;/p>
+&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/d6f049a373b8bc7134b2fd13014a4e02aa7b6248/go/map-evacuate-bucket-num.png" alt="map-evacuate-bucket-num" loading="lazy" />&lt;/p>
+&lt;p>因此，某个 key 在迁移前后 bucket 序号可能会改变，取决于 &lt;code>rehash&lt;/code> 之后的哈希值倒数第 6 位是 0 还是 1。&lt;/p>
+&lt;p>扩容完成后，老 buckets 中的 key 分裂到了 2 个新的 bucket。&lt;/p>
+&lt;h5>迁移实现&lt;span class="hx-absolute -hx-mt-20" id="迁移实现">&lt;/span>
+&lt;a href="#%e8%bf%81%e7%a7%bb%e5%ae%9e%e7%8e%b0" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h5>&lt;p>Go map 扩容的实现在 &lt;code>hashGrow&lt;/code> 函数中，&lt;code>hashGrow&lt;/code> 只申请新的 buckets，但并没有马上将原有的 &lt;code>key/value&lt;/code> 迁移新的 buckets 中：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">hashGrow&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">t&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">maptype&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">h&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">hmap&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">bigger&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">uint8&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 溢出桶过多触发的扩容是等量扩容，bigger 设置为 0
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="p">!&lt;/span>&lt;span class="nf">overLoadFactor&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">count&lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">B&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">bigger&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="mi">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">flags&lt;/span> &lt;span class="o">|=&lt;/span> &lt;span class="nx">sameSizeGrow&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 将原有的 buckets 挂到 oldbuckets 上
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">oldbuckets&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">buckets&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 申请新的 buckets
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">newbuckets&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">nextOverflow&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nf">makeBucketArray&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">t&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">B&lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="nx">bigger&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="kc">nil&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">flags&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">flags&lt;/span> &lt;span class="o">&amp;amp;^&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="nx">iterator&lt;/span> &lt;span class="p">|&lt;/span> &lt;span class="nx">oldIterator&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">flags&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">iterator&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">flags&lt;/span> &lt;span class="o">|=&lt;/span> &lt;span class="nx">oldIterator&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 如果是等量扩容，bigger 为 0，B 不变
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">B&lt;/span> &lt;span class="o">+=&lt;/span> &lt;span class="nx">bigger&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">flags&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">flags&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 原有的 buckets 挂到 map 的 oldbuckets 上
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">oldbuckets&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">oldbuckets&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 新申请的 buckets 挂到 buckets 上
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">buckets&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">newbuckets&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 设置迁移进度为 0
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">nevacuate&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="mi">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 溢出桶数量为 0
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">noverflow&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="mi">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>迁移是在插入数据和删除数据时，也就是 &lt;code>mapassign&lt;/code> 和 &lt;code>mapdelete&lt;/code> 中进行的：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">mapassign&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">t&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">maptype&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">h&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">hmap&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">key&lt;/span> &lt;span class="nx">unsafe&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Pointer&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="nx">unsafe&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Pointer&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="nx">again&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">bucket&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">hash&lt;/span> &lt;span class="o">&amp;amp;&lt;/span> &lt;span class="nf">bucketMask&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">B&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">growing&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 真正的迁移在 growWork 中
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nf">growWork&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">t&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">h&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">bucket&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">mapdelete&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">t&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">maptype&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">h&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">hmap&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">key&lt;/span> &lt;span class="nx">unsafe&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Pointer&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">bucket&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">hash&lt;/span> &lt;span class="o">&amp;amp;&lt;/span> &lt;span class="nf">bucketMask&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">B&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">growing&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">growWork&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">t&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">h&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">bucket&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="nx">h&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">hmap&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="nf">growing&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="kt">bool&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// oldbuckets 不为空，说明还没有迁移完成
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">return&lt;/span> &lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">oldbuckets&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="kc">nil&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;code>growWork&lt;/code>：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">growWork&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">t&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">maptype&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">h&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">hmap&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">bucket&lt;/span> &lt;span class="kt">uintptr&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 确认迁移的老的 bucket 对应正在使用的 bucket
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nf">evacuate&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">t&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">h&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">bucket&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">oldbucketmask&lt;/span>&lt;span class="p">())&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 额外再迁移一个 bucket，加快迁移进度
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">growing&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">evacuate&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">t&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">h&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">nevacuate&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>真正的迁移在 &lt;code>evacuate&lt;/code> 函数中，它会对传入桶中的数据进行再分配。&lt;code>evacuate&lt;/code> 函数每次只完成一个 bucket 的迁移工作（包括这个 bucket 链接的溢出桶），它会遍历 bucket （包括溢出桶）中得到所有 &lt;code>key/value&lt;/code> 并迁移。
+已迁移的 &lt;code>key/value&lt;/code> 对应的 &lt;code>tophash&lt;/code> 会被设置为 &lt;code>evacuatedEmpty&lt;/code>，表示已经迁移。&lt;/p>
+&lt;h3>删除&lt;span class="hx-absolute -hx-mt-20" id="删除">&lt;/span>
+&lt;a href="#%e5%88%a0%e9%99%a4" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>删除 map 中的 &lt;code>key/value&lt;/code>：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="nb">delete&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">hashmap&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">key&lt;/span>&lt;span class="p">)&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;code>delete&lt;/code> 关键字的唯一作用就是将某一个 &lt;code>key/value&lt;/code> 从哈希表中删除。会被编译器被转换成 &lt;code>mapdelete&lt;/code> 方法。删除操作先是找到 key 的位置，清空 &lt;code>key/value&lt;/code>，然后将 &lt;code>hmap.count - 1&lt;/code>，并且对应的 &lt;code>tophash&lt;/code> 设置为 &lt;code>Empty&lt;/code>。&lt;/p>
+&lt;h3>map 为什么是无序的&lt;span class="hx-absolute -hx-mt-20" id="map-为什么是无序的">&lt;/span>
+&lt;a href="#map-%e4%b8%ba%e4%bb%80%e4%b9%88%e6%98%af%e6%97%a0%e5%ba%8f%e7%9a%84" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>map 在扩容后，&lt;code>key/value&lt;/code> 会进行迁移，在同一个桶中的 key，有些会迁移到别的桶中，有些 key 原地不动，导致遍历 map 就无法保证顺序。&lt;/p>
+&lt;p>Go 底层的实现简单粗暴，直接生成一个随机数，这个随机数决定从哪里开始遍历，因此&lt;strong>每次 &lt;code>for range map&lt;/code> 的结果都是不一样的。那是因为它的起始位置根本就不固定&lt;/strong>。&lt;/p></description></item><item><title>函数</title><link>https://shipengqi.github.io/golang-learn/docs/basic/05_function/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/basic/05_function/</guid><description>
+&lt;h2>参数传递&lt;span class="hx-absolute -hx-mt-20" id="参数传递">&lt;/span>
+&lt;a href="#%e5%8f%82%e6%95%b0%e4%bc%a0%e9%80%92" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>函数的参数传递有两种方式：&lt;/p>
+&lt;ul>
+&lt;li>值传递：当传一个参数值到被调用的函数里面时，实际上是传了这个值的副本，被调用方和调用方两者持有不相关的两份数据。&lt;/li>
+&lt;li>引用传递：当传一个参数值到被调用的函数里面时，实际是传了参数的指针，被调用方和调用方两者持有相同的数据，任意一方做出的修改都会影响另一方。&lt;/li>
+&lt;/ul>
+&lt;p>Go 使用的是&lt;strong>值传递，不管参数是基本类型，结构体还是指针，都会对传递的参数进行拷贝，区别无非是拷贝的目标对象还是拷贝指针&lt;/strong>。拷贝指针，也就是会同时出现两个指针指向原有的内存空间。&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">package&lt;/span> &lt;span class="nx">main&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="s">&amp;#34;fmt&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">type&lt;/span> &lt;span class="nx">foo&lt;/span> &lt;span class="kd">struct&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">i&lt;/span> &lt;span class="kt">int&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">printFunc&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">a&lt;/span> &lt;span class="nx">foo&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">b&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">c&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">foo&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">a&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">i&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="mi">31&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">b&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">i&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="mi">41&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">c&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">foo&lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="nx">i&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="mi">60&lt;/span>&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Printf&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;print function - a=(%d, %p) b=(%v, %p) c=(%v, %p)\n&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">a&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">a&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">b&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">b&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">c&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">c&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">main&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">a&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">foo&lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="nx">i&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="mi">30&lt;/span>&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">b&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">foo&lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="nx">i&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="mi">40&lt;/span>&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">c&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">foo&lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="nx">i&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="mi">50&lt;/span>&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Printf&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;before calling - a=(%d, %p) b=(%v, %p) c=(%v, %p)\n&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">a&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">a&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">b&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">b&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">c&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">c&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">printFunc&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">a&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">b&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">c&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Printf&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;after calling - a=(%d, %p) b=(%v, %p) c=(%v, %p)\n&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">a&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">a&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">b&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">b&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">c&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">c&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>运行后输出：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>before calling - a=({30}, 0xc00000a0d8) b=(&amp;amp;{40}, 0xc00004c020) c=(&amp;amp;{50}, 0xc00004c028)
+print function - a=({31}, 0xc00000a120) b=(&amp;amp;{41}, 0xc00004c038) c=(&amp;amp;{60}, 0xc00004c040)
+after calling - a=({30}, 0xc00000a0d8) b=(&amp;amp;{41}, 0xc00004c020) c=(&amp;amp;{50}, 0xc00004c028)&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;ul>
+&lt;li>&lt;code>a&lt;/code> 传入函数的只是副本，函数内的修改不会影响到调用方。&lt;/li>
+&lt;li>&lt;code>b&lt;/code> 传入函数的是指针的副本，但是两个指针指向同一片内存空间，修改后会影响到调用方。&lt;/li>
+&lt;li>&lt;code>c&lt;/code> 传入函数的是指针的副本，但是函数内的 &lt;code>c = &amp;amp;foo{i: 60}&lt;/code> 将这个指针副本指向了另一片内存空间，所以不会再影响调用方。&lt;/li>
+&lt;/ul>
+&lt;h3>传值还是传指针？&lt;span class="hx-absolute -hx-mt-20" id="传值还是传指针">&lt;/span>
+&lt;a href="#%e4%bc%a0%e5%80%bc%e8%bf%98%e6%98%af%e4%bc%a0%e6%8c%87%e9%92%88" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>表面上看，指针参数性能会更好，但是要注意被复制的指针会延长目标对象的生命周期，还可能导致它被分配到堆上，其性能消耗要加上堆内存分配和垃圾回收的成本。&lt;/p>
+&lt;p>&lt;strong>在栈上复制小对象，要比堆上分配内存要快的多。如果复制成本高，或者需要修改原对象，使用指针更好&lt;/strong>。&lt;/p></description></item><item><title>指针</title><link>https://shipengqi.github.io/golang-learn/docs/basic/09_pointer/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/basic/09_pointer/</guid><description>
+&lt;p>&lt;strong>指针和内存地址不能混为一谈&lt;/strong>。内存地址是内存中每个字节单元的唯一编号，而指针是一个实体。指针也会分配内存空间，相当于一个保存内存地址的整形变量。&lt;/p>
+&lt;h2>指针的限制&lt;span class="hx-absolute -hx-mt-20" id="指针的限制">&lt;/span>
+&lt;a href="#%e6%8c%87%e9%92%88%e7%9a%84%e9%99%90%e5%88%b6" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;h3>指针不能参与运算&lt;span class="hx-absolute -hx-mt-20" id="指针不能参与运算">&lt;/span>
+&lt;a href="#%e6%8c%87%e9%92%88%e4%b8%8d%e8%83%bd%e5%8f%82%e4%b8%8e%e8%bf%90%e7%ae%97" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">package&lt;/span> &lt;span class="nx">main&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="s">&amp;#34;fmt&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">main&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">a&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="mi">1&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">b&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">a&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">b&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">b&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">a&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="mi">1&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>上面的代码编译时会报错：&lt;code>Invalid operation: &amp;amp;a + 1 (mismatched types *int and untyped int)&lt;/code>。&lt;/p>
+&lt;p>说明 Go 是不允许对指针进行运算的。&lt;/p>
+&lt;h3>不同类型的指针不允许相互转换&lt;span class="hx-absolute -hx-mt-20" id="不同类型的指针不允许相互转换">&lt;/span>
+&lt;a href="#%e4%b8%8d%e5%90%8c%e7%b1%bb%e5%9e%8b%e7%9a%84%e6%8c%87%e9%92%88%e4%b8%8d%e5%85%81%e8%ae%b8%e7%9b%b8%e4%ba%92%e8%bd%ac%e6%8d%a2" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">package&lt;/span> &lt;span class="nx">main&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">main&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="kd">var&lt;/span> &lt;span class="nx">a&lt;/span> &lt;span class="kt">int&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="mi">100&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="kd">var&lt;/span> &lt;span class="nx">f&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="kt">float64&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">f&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">a&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>上面的代码编译时会报错：&lt;code>Cannot use '&amp;amp;a' (type *int) as the type *float64&lt;/code>。&lt;/p>
+&lt;h3>不同类型的指针不能比较&lt;span class="hx-absolute -hx-mt-20" id="不同类型的指针不能比较">&lt;/span>
+&lt;a href="#%e4%b8%8d%e5%90%8c%e7%b1%bb%e5%9e%8b%e7%9a%84%e6%8c%87%e9%92%88%e4%b8%8d%e8%83%bd%e6%af%94%e8%be%83" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>因为不同类型的指针之间不能转换，所以也不能赋值。&lt;/p>
+&lt;h3>不同类型的指针变量不能相互赋值&lt;span class="hx-absolute -hx-mt-20" id="不同类型的指针变量不能相互赋值">&lt;/span>
+&lt;a href="#%e4%b8%8d%e5%90%8c%e7%b1%bb%e5%9e%8b%e7%9a%84%e6%8c%87%e9%92%88%e5%8f%98%e9%87%8f%e4%b8%8d%e8%83%bd%e7%9b%b8%e4%ba%92%e8%b5%8b%e5%80%bc" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>同样的由于不同类型的指针之间不能转换，所以也没法使用 &lt;code>==&lt;/code> 或者 &lt;code>!=&lt;/code> 进行比较。&lt;/p>
+&lt;h2>uintptr 类型&lt;span class="hx-absolute -hx-mt-20" id="uintptr-类型">&lt;/span>
+&lt;a href="#uintptr-%e7%b1%bb%e5%9e%8b" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>uintptr&lt;/code> 只是一个无符号整型，用于存储内存地址的整形变量。也就是说，和普通的整型一样，是会被 GC 回收的。&lt;/p>
+&lt;h2>unsafe.Pointer&lt;span class="hx-absolute -hx-mt-20" id="unsafepointer">&lt;/span>
+&lt;a href="#unsafepointer" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>由于 Go 指针的限制，所以 Go 提供了可以进行类型转换的通用指针 &lt;code>unsafe.Pointer&lt;/code>。&lt;/p>
+&lt;p>&lt;code>unsafe.Pointer&lt;/code> 是特别定义的一种指针类型，它指向的对象如果还有用，那么是不会被 GC 回收的。&lt;/p>
+&lt;p>&lt;code>unsafe.Pointer&lt;/code> 是各种指针相互转换的桥梁：&lt;/p>
+&lt;ul>
+&lt;li>任何类型的指针 &lt;code>*T&lt;/code> 可以和 &lt;code>unsafe.Pointer&lt;/code> 相互转换。&lt;/li>
+&lt;li>&lt;code>uintptr&lt;/code> 可以和 &lt;code>unsafe.Pointer&lt;/code> 相互转换。&lt;/li>
+&lt;/ul>
+&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/61f9eba25ea2a7f36ba14a9f6c06e13f14378c5d/go/pointer.png" alt="pointer" loading="lazy" />&lt;/p>
+&lt;p>指针类型转换示例：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">package&lt;/span> &lt;span class="nx">main&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="p">(&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s">&amp;#34;fmt&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s">&amp;#34;reflect&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s">&amp;#34;unsafe&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">main&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">v1&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">uint&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">10&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">v2&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">int&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">11&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">reflect&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">TypeOf&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">v1&lt;/span>&lt;span class="p">))&lt;/span> &lt;span class="c1">// uint
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">reflect&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">TypeOf&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">v2&lt;/span>&lt;span class="p">))&lt;/span> &lt;span class="c1">// int
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">reflect&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">TypeOf&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">v1&lt;/span>&lt;span class="p">))&lt;/span> &lt;span class="c1">// *uint
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">reflect&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">TypeOf&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">v2&lt;/span>&lt;span class="p">))&lt;/span> &lt;span class="c1">// *int
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">p&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">v1&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 使用 unsafe.Pointer 进行类型转换，将 *int 转为 *uint
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">p&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="kt">uint&lt;/span>&lt;span class="p">)(&lt;/span>&lt;span class="nx">unsafe&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Pointer&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">v2&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">reflect&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">TypeOf&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">p&lt;/span>&lt;span class="p">))&lt;/span> &lt;span class="c1">// *unit
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="nx">p&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="c1">// 11
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div></description></item></channel></rss>
