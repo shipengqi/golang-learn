@@ -286,12 +286,12 @@ Casbin 中的内置角色管理器，可以指定**最大层次级别**。默认
 // NewRoleManager is the constructor for creating an instance of the
 // default RoleManager implementation.
 func NewRoleManager(maxHierarchyLevel int) rbac.RoleManager {
-rm := RoleManager{}
-rm.allRoles = &sync.Map{}
-rm.maxHierarchyLevel = maxHierarchyLevel
-rm.hasPattern = false
+    rm := RoleManager{}
+    rm.allRoles = &sync.Map{}
+    rm.maxHierarchyLevel = maxHierarchyLevel
+    rm.hasPattern = false
 
-return &rm
+    return &rm
 }
 ```
 

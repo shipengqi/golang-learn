@@ -1,5 +1,5 @@
 baseURL: "https://shipengqi.github.io/golang-learn"
-title: "Golang Learning"
+title: "Go Learning"
 
 module:
   imports:
@@ -29,7 +29,7 @@ languages:
     languageName: 简体中文
     languageCode: zh-CN
     weight: 2
-    title: Golang Learning
+    title: Go Learning
 
 markup:
   goldmark:
@@ -46,7 +46,7 @@ menu:
   main:
     - identifier: documentation
       name: Documentation
-      pageRef: /docs
+      pageRef: /docs/basic
       weight: 1
     - identifier: blog
       name: Blog

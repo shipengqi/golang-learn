@@ -3,7 +3,7 @@
 set -e
 
 # Build the project.
-hugo -t book --minify # if using a theme, replace with `hugo -t <YOURTHEME>`
+hugo --minify # if using a theme, replace with `hugo -t <YOURTHEME>`
 
 cd public
 
