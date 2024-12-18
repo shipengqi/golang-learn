@@ -112,7 +112,7 @@ title="Copy code"
 &lt;/div>
 &lt;p>&lt;code>state&lt;/code> 和 &lt;code>sema&lt;/code> 加起来占用 8 个字节。&lt;/p>
 &lt;p>&lt;code>state&lt;/code> 是一个复合型的字段，包含多个意义：&lt;/p>
-&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/132b0f97ec250e221f725cbeb2d5c323a35f1cfe/go/mutex-state.png" alt="mutex-state" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/mutex-state.png" alt="mutex-state" loading="lazy" />&lt;/p>
 &lt;p>在默认状态下，互斥锁的所有状态位都是 0，&lt;code>int32&lt;/code> 中的不同位分别表示了不同的状态：&lt;/p>
 &lt;ul>
 &lt;li>&lt;code>locked&lt;/code>：表示这个锁是否被持有&lt;/li>
@@ -545,7 +545,7 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;p>&lt;code>state1&lt;/code> 包含一个总共占用 12 字节的数组，这个数组会存储当前结构体的状态，在 64 位与 32 位的机器上表现也非常不同。&lt;/p>
-&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/3039de62b8205f48431e7568e30a26c2f16524d9/go/waitgroup-state1.png" alt="waitgroup-state1" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/waitgroup-state1.png" alt="waitgroup-state1" loading="lazy" />&lt;/p>
 &lt;p>&lt;code>state&lt;/code> 方法用来从 &lt;code>state1&lt;/code> 字段中取出它的状态和信号量。&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 得到 state 的地址和信号量的地址
@@ -1301,7 +1301,7 @@ title="Copy code"
 &lt;a href="#%e5%8e%9f%e7%90%86" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>context 的最大作用就是在一组 goroutine 构成的树形结构中对信号进行同步，以减少计算资源的浪费。&lt;/p>
 &lt;p>例如，Go 的 HTTP server，处理每一个请求，都是启动一个单独的 goroutine，处理过程中还会启动新的 goroutine 来访问数据库和其他服务。而 context 在不同 Goroutine 之间可以同步请求特定数据、取消信号以及处理
 请求的截止日期。&lt;/p>
-&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/505be84aff62a8b94292bf3468f0d9a1c8c049cf/go/context.png" alt="context" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/context.png" alt="context" loading="lazy" />&lt;/p>
 &lt;p>每一个 context 都会从 root goroutine 一层层传递到底层。context 可以在上层 goroutine 执行出现错误时，将信号及时同步给下层。&lt;/p>
 &lt;h3>WithCancel&lt;span class="hx-absolute -hx-mt-20" id="withcancel">&lt;/span>
 &lt;a href="#withcancel" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">

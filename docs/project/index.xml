@@ -9,7 +9,7 @@
 &lt;li>Copyleft 许可证：比宽松式许可证的限制要多，修改源码后不可以闭源。例如 GPL，Mozilla（MPL）等。&lt;/li>
 &lt;/ul>
 &lt;p>如何选择自己项目的开源许可证，可以根据下面的图示：&lt;/p>
-&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/5567f7aabb4fd6d2cbf6ae2d619502b1a0191be4/go/licenses.png" alt="" loading="lazy" />
+&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/licenses.png" alt="" loading="lazy" />
 图片来自于阮一峰的网络日志&lt;/p>
 &lt;h2>文档规范&lt;span class="hx-absolute -hx-mt-20" id="文档规范">&lt;/span>
 &lt;a href="#%e6%96%87%e6%a1%a3%e8%a7%84%e8%8c%83" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;h3>README&lt;span class="hx-absolute -hx-mt-20" id="readme">&lt;/span>
@@ -1201,7 +1201,7 @@ title="Copy code"
 &lt;li>&lt;code>–port&lt;/code>：指定启动的 HTTP 服务监听端口。&lt;/li>
 &lt;/ul>
 &lt;p>在浏览器查看 API 文档：&lt;/p>
-&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/0dad40be58e3b5959e8a9093a92ce49a9e280c6d/go/swagger-redoc.png" alt="swagger-redoc" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/swagger-redoc.png" alt="swagger-redoc" loading="lazy" />&lt;/p>
 &lt;p>还可以使用下面的命令将生成的 &lt;code>swagger.yaml&lt;/code> 转换为 &lt;code>swagger.json&lt;/code>：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;pre>&lt;code>$ swagger generate spec -i ./swagger.yaml -o ./swagger.json&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
@@ -1240,7 +1240,7 @@ title="Copy code"
 &lt;blockquote>
 &lt;p>这三种短期分支会在开发完成后合并到 develop 或者 master，然后删除。&lt;/p>
 &lt;/blockquote>
-&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/fd008848e44e727d11ad1d52f047051673f652a3/go/git-flow.png" alt="git-flow" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/git-flow.png" alt="git-flow" loading="lazy" />&lt;/p>
 &lt;p>Git flow 的优点是每个分支分工明确，可以最大程度减少它们之间的相互影响。但是需要同时维护两个长期分支，相对比较复杂，需要经常在 &lt;code>master&lt;/code> 分支 &lt;code>develop&lt;/code> 分支进行切换。&lt;/p>
 &lt;h2>GitHub Flow&lt;span class="hx-absolute -hx-mt-20" id="github-flow">&lt;/span>
 &lt;a href="#github-flow" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>GitHub Flow 是 Git flow 的简化版。只要一个长期分支 &lt;code>master&lt;/code>。&lt;/p>
@@ -1271,7 +1271,7 @@ title="Copy code"
 &lt;h2>Makefile 结构&lt;span class="hx-absolute -hx-mt-20" id="makefile-结构">&lt;/span>
 &lt;a href="#makefile-%e7%bb%93%e6%9e%84" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>随着项目越来越大，需要管理的功能就会越来越多，如果全部放在一个 Makefile 中，会导致 Makefile 过大，难以维护，可读性差。所以设计 Makefile 结构时，最好采用&lt;strong>分层&lt;/strong>的设计。&lt;/p>
 &lt;p>项目根目录下的 Makefile 来聚合子目录下的 Makefile 命令。将复杂的 shell 命令封装在 shell 脚本中，供 Makefile 直接调用，而一些简单的命令则可以直接集成在 Makefile 中。&lt;/p>
-&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/1908ed2c659dbb11c7b4c46169d7aa8321481d4c/go/makefile.png" alt="makefile" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/makefile.png" alt="makefile" loading="lazy" />&lt;/p>
 &lt;p>示例；&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-makefile" data-lang="makefile">&lt;span class="line">&lt;span class="cl">&lt;span class="nf">.PHONY&lt;/span>&lt;span class="o">:&lt;/span> &lt;span class="n">all&lt;/span>
@@ -2971,7 +2971,7 @@ title="Copy code"
 &lt;li>&lt;code>groups&lt;/code> 根据 Commit Message 的 type 分组。&lt;/li>
 &lt;/ul>
 &lt;p>生成的 CHANGELOG 如下图：&lt;/p>
-&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/f30c629498b577f1cb6b84a60e98fca4ad1da984/go/changlog.png" alt="changlog" loading="lazy" />&lt;/p></description></item><item><title>错误处理</title><link>https://shipengqi.github.io/golang-learn/docs/project/14_error/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/project/14_error/</guid><description>
+&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/changlog.png" alt="changlog" loading="lazy" />&lt;/p></description></item><item><title>错误处理</title><link>https://shipengqi.github.io/golang-learn/docs/project/14_error/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/project/14_error/</guid><description>
 &lt;h2>Error 和 Panic&lt;span class="hx-absolute -hx-mt-20" id="error-和-panic">&lt;/span>
 &lt;a href="#error-%e5%92%8c-panic" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Go 的错误设计中，错误应该明确地当成业务的一部分，&lt;strong>任何可以预见的问题都需要做错误处理&lt;/strong>。通常 Go 的函数返回两个值，一个是函数的结果，
 另一个是错误对象。如果没有发生错误，错误对象就是 &lt;code>nil&lt;/code>。这种方式，强迫调用者对错误进行处理，以防遗漏任何运行时可能的错误。&lt;/p>

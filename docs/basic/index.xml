@@ -174,7 +174,7 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;p>注意 &lt;code>Cap&lt;/code> 也是底层数组的长度。&lt;code>Data&lt;/code> 是一块连续的内存，可以存储切片 &lt;code>Cap&lt;/code> 大小的所有元素。&lt;/p>
-&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/76c579125ad122d2f1a4d9e605139af61da3a7c5/go/slice-struct.png" alt="slice-struct" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/slice-struct.png" alt="slice-struct" loading="lazy" />&lt;/p>
 &lt;p>如图，虽然 slice 的 &lt;code>Len&lt;/code> 是 5，但是底层数组的长度是 10，也就是 &lt;code>Cap&lt;/code>。&lt;/p>
 &lt;h2>初始化&lt;span class="hx-absolute -hx-mt-20" id="初始化">&lt;/span>
 &lt;a href="#%e5%88%9d%e5%a7%8b%e5%8c%96" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>初始化切片有三种方式：&lt;/p>
@@ -273,14 +273,14 @@ title="Copy code"
 &lt;li>&lt;code>s1 := slice[2:5]&lt;/code> 得到的 &lt;code>s1&lt;/code> 的容量为 8，因为没有传入 &lt;code>max&lt;/code>，容量默认是到底层数组的结尾。&lt;/li>
 &lt;li>&lt;code>s2 := s1[2:6:7]&lt;/code> 得到的 &lt;code>s2&lt;/code> 的容量为 5（&lt;code>max - low&lt;/code>）。&lt;code>s2&lt;/code>，&lt;code>s1&lt;/code> 和 &lt;code>slice&lt;/code> 底层数组是同一个，所以 &lt;code>s2&lt;/code> 中的元素是 &lt;code>[4,5,6,7]&lt;/code>。&lt;/li>
 &lt;/ul>
-&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/d28ded522afae7c5fec7cd9a38d6ba3e4287c52d/go/slice-cut.png" alt="slice-cut" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/slice-cut.png" alt="slice-cut" loading="lazy" />&lt;/p>
 &lt;p>下面的 &lt;code>s2 = append(s2, 100)&lt;/code> 追加一个元素，容量够用，不需要扩容，但是这个修改会影响所有指向这个底层数组的切片。&lt;/p>
-&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/d28ded522afae7c5fec7cd9a38d6ba3e4287c52d/go/slice-cut-append.png" alt="slice-cut-append" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/slice-cut-append.png" alt="slice-cut-append" loading="lazy" />&lt;/p>
 &lt;p>再次追加一个元素 &lt;code>s2 = append(s2, 200)&lt;/code>，&lt;code>s2&lt;/code> 的容量不够了，需要扩容，于是 &lt;code>s2&lt;/code> 申请一块新的连续内存，并将数据拷贝过去，扩容后的容量是原来的 2 倍。
 这时候 &lt;code>s2&lt;/code> 的 &lt;code>Data&lt;/code> 指向了新的底层数组，已经和 &lt;code>s1&lt;/code> &lt;code>slice&lt;/code> 没有关系了，对 &lt;code>s2&lt;/code> 的修改不会再影响 &lt;code>s1&lt;/code> &lt;code>slice&lt;/code>。&lt;/p>
-&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/d28ded522afae7c5fec7cd9a38d6ba3e4287c52d/go/slice-cut-append2.png" alt="slice-cut-append2" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/slice-cut-append2.png" alt="slice-cut-append2" loading="lazy" />&lt;/p>
 &lt;p>最后 &lt;code>s1[2] = 20&lt;/code> 也不会再影响 &lt;code>s2&lt;/code>。&lt;/p>
-&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/d28ded522afae7c5fec7cd9a38d6ba3e4287c52d/go/slice-cut-append3.png" alt="slice-cut-append3" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/slice-cut-append3.png" alt="slice-cut-append3" loading="lazy" />&lt;/p>
 &lt;h2>切片是如何扩容的？&lt;span class="hx-absolute -hx-mt-20" id="切片是如何扩容的">&lt;/span>
 &lt;a href="#%e5%88%87%e7%89%87%e6%98%af%e5%a6%82%e4%bd%95%e6%89%a9%e5%ae%b9%e7%9a%84" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>append&lt;/code> 是用来向 slice 追加元素的，并&lt;strong>返回一个新的 slice&lt;/strong>。&lt;/p>
 &lt;p>&lt;code>append&lt;/code> 实际上就是向底层数组添加元素，但是数组的长度是固定的：&lt;/p>
@@ -340,7 +340,7 @@ title="Copy code"
 &lt;a href="#%e5%93%88%e5%b8%8c%e8%a1%a8%e7%9a%84%e8%ae%be%e8%ae%a1%e5%8e%9f%e7%90%86" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>哈希表其实是数组的扩展。哈希表是利用数组可以根据下标随机访问（时间复杂度是 &lt;code>O(1)&lt;/code>）这一特性来实现快速查找的。&lt;/p>
 &lt;h3>哈希函数&lt;span class="hx-absolute -hx-mt-20" id="哈希函数">&lt;/span>
 &lt;a href="#%e5%93%88%e5%b8%8c%e5%87%bd%e6%95%b0" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>哈希表是通过&lt;strong>哈希函数&lt;/strong>将 key 转化为数组的下标，然后将数据存储在数组下标对应的位置。查询时，也是同样的使用哈希函数计算出数组下标，从下标对应的位置取出数据。&lt;/p>
-&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/c532a70c015ab877e64c7fec6382cf1791597cbc/go/hash-func.png" alt="map-seek-addr" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/hash-func.png" alt="map-seek-addr" loading="lazy" />&lt;/p>
 &lt;p>哈希函数的基本要求：&lt;/p>
 &lt;ol>
 &lt;li>哈希函数计算出来的值是一个非负整数。&lt;/li>
@@ -351,7 +351,7 @@ title="Copy code"
 &lt;p>常用的处理哈希冲突的方法有两种：&lt;strong>开放寻址法&lt;/strong>和&lt;strong>链表法&lt;/strong>。&lt;/p>
 &lt;h3>开放寻址法&lt;span class="hx-absolute -hx-mt-20" id="开放寻址法">&lt;/span>
 &lt;a href="#%e5%bc%80%e6%94%be%e5%af%bb%e5%9d%80%e6%b3%95" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>开放寻址法核心思想是，如果出现了哈希冲突，就重新探测一个空闲位置，将其插入。&lt;/p>
-&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/1e5051b9e3f0f681565b1737802ae7e15e075fc5/go/map-seek-addr.png" alt="map-seek-addr" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/map-seek-addr.png" alt="map-seek-addr" loading="lazy" />&lt;/p>
 &lt;p>上图蓝色表示已经插入的元素，&lt;code>key9&lt;/code> 哈希后得到的数组下标为 6，但是已经有数据了，产生了冲突。那么就按顺序向后查找直到找到一个空闲的位置，如果到数组的尾部都没有找到空闲的位置，就从头开始继续找。
 上图最终找到位置 1 并插入元素。&lt;/p>
 &lt;p>查找的逻辑和插入类似，从哈希函数计算出来的下标位置开始查找，比较数组中下标位置的元素和要查找的元素。如果相等，则说明就是要找的元素；否则就顺序往后依次查找。直到找到数组中的空闲位置，还没有找到，就说明要查找的元素并没有在哈希表中。&lt;/p>
@@ -370,7 +370,7 @@ title="Copy code"
 &lt;p>装载因子越大，说明空闲位置越少，冲突越多，哈希表的性能会下降。&lt;/p>
 &lt;h3>链表法&lt;span class="hx-absolute -hx-mt-20" id="链表法">&lt;/span>
 &lt;a href="#%e9%93%be%e8%a1%a8%e6%b3%95" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>链表法是最常见的哈希冲突的解决办法。在哈希表中，每个桶（bucket）会对应一条链表，所有哈希值相同的元素都放到相同桶对应的链表中。&lt;/p>
-&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/c532a70c015ab877e64c7fec6382cf1791597cbc/go/map-link.png" alt="map-link" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/map-link.png" alt="map-link" loading="lazy" />&lt;/p>
 &lt;p>插入时，哈希函数计算后得出存放在几号桶，然后遍历桶中的链表了：&lt;/p>
 &lt;ul>
 &lt;li>找到键相同的键值对，则更新键对应的值；&lt;/li>
@@ -456,14 +456,14 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;p>&lt;code>bmap&lt;/code> 就是桶，一个桶里面会最多存储 8 个键值对。&lt;/p>
-&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/8e8c090d5a1de970d1d00bdf5f79917e74bfd63d/go/bmap-struct.png" alt="bmap-struct" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/bmap-struct.png" alt="bmap-struct" loading="lazy" />&lt;/p>
 &lt;ol>
 &lt;li>在桶内，会根据 key 计算出来的 hash 值的高 8 位来决定 key 存储在桶中的位置。&lt;/li>
 &lt;li>key 和 value 是分别放在一块连续的内存，这样做的目的是为了节省内存。例如一个 &lt;code>map[int64]int8&lt;/code> 类型的 map，如果按照 &lt;code>key1/value1/key2/value2 ...&lt;/code> 这样的形式来存储，那么内存对齐每个 &lt;code>key/value&lt;/code> 都需要 padding 7 个字节。
 分开连续存储的话，就只需要在最后 padding 一次。&lt;/li>
 &lt;li>每个桶只能存储 8 个 &lt;code>key/value&lt;/code>，如果有更多的 key 放入当前桶，就需要一个溢出桶，通过 &lt;code>overflow&lt;/code> 指针连接起来。&lt;/li>
 &lt;/ol>
-&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/8e8c090d5a1de970d1d00bdf5f79917e74bfd63d/go/hmap.png" alt="hmap" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/hmap.png" alt="hmap" loading="lazy" />&lt;/p>
 &lt;h3>初始化&lt;span class="hx-absolute -hx-mt-20" id="初始化">&lt;/span>
 &lt;a href="#%e5%88%9d%e5%a7%8b%e5%8c%96" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>初始化 &lt;code>map&lt;/code>：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
@@ -542,7 +542,7 @@ title="Copy code"
 &lt;/div>
 &lt;p>这两种查询方式会被转换成 &lt;a href="https://github.com/golang/go/blob/8da6405e0db80fa0a4136fb816c7ca2db716c2b2/src/runtime/map.go#L396" target="_blank" rel="noopener">&lt;code>mapaccess1&lt;/code>&lt;/a> 和 &lt;code>mapaccess2&lt;/code> 函数，两个函数基本一样，不过 &lt;code>mapaccess2&lt;/code> 函数的返回值多了一个 &lt;code>bool&lt;/code> 类型。&lt;/p>
 &lt;p>查询过程：&lt;/p>
-&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/ae69f3fdb54032a8619d342edccbcdc95c7776a6/go/map-get.png" alt="map-get" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/map-get.png" alt="map-get" loading="lazy" />&lt;/p>
 &lt;h4>1. 计算哈希值&lt;span class="hx-absolute -hx-mt-20" id="1-计算哈希值">&lt;/span>
 &lt;a href="#1-%e8%ae%a1%e7%ae%97%e5%93%88%e5%b8%8c%e5%80%bc" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>通过哈希函数和种子获取当前 key 的 64 位的哈希值（64 位机）。以上图哈希值：&lt;code>11010111 | 110000110110110010001111001010100010010110010101001 │ 00011&lt;/code> 为例。&lt;/p>
 &lt;h4>2. 计算这个 key 要放在哪个桶&lt;span class="hx-absolute -hx-mt-20" id="2-计算这个-key-要放在哪个桶">&lt;/span>
@@ -633,7 +633,7 @@ title="Copy code"
 &lt;h5>对于条件 1 当装载因子超过阈值后&lt;span class="hx-absolute -hx-mt-20" id="对于条件-1-当装载因子超过阈值后">&lt;/span>
 &lt;a href="#%e5%af%b9%e4%ba%8e%e6%9d%a1%e4%bb%b6-1-%e5%bd%93%e8%a3%85%e8%bd%bd%e5%9b%a0%e5%ad%90%e8%b6%85%e8%bf%87%e9%98%88%e5%80%bc%e5%90%8e" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h5>&lt;p>申请的新的 buckets 数量和原有的 buckets 数量的 &lt;strong>2 倍&lt;/strong>，也就是 &lt;code>B+1&lt;/code>。桶的数量改变了，那么 key 的哈希值要重新计算，才能决定它到底落在哪个 bucket。&lt;/p>
 &lt;p>例如，原来 &lt;code>B=5&lt;/code>，根据出 key 的哈希值的后 5 位，就能决定它落在哪个 bucket。扩容后的 buckets 数量翻倍，B 变成了 6，因此变成哈希值的后 6 位才能决定 key 落在哪个 bucket。这叫做 &lt;code>rehash&lt;/code>。&lt;/p>
-&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/d6f049a373b8bc7134b2fd13014a4e02aa7b6248/go/map-evacuate-bucket-num.png" alt="map-evacuate-bucket-num" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/map-evacuate-bucket-num.png" alt="map-evacuate-bucket-num" loading="lazy" />&lt;/p>
 &lt;p>因此，某个 key 在迁移前后 bucket 序号可能会改变，取决于 &lt;code>rehash&lt;/code> 之后的哈希值倒数第 6 位是 0 还是 1。&lt;/p>
 &lt;p>扩容完成后，老 buckets 中的 key 分裂到了 2 个新的 bucket。&lt;/p>
 &lt;h5>迁移实现&lt;span class="hx-absolute -hx-mt-20" id="迁移实现">&lt;/span>
@@ -871,7 +871,7 @@ title="Copy code"
 &lt;li>任何类型的指针 &lt;code>*T&lt;/code> 可以和 &lt;code>unsafe.Pointer&lt;/code> 相互转换。&lt;/li>
 &lt;li>&lt;code>uintptr&lt;/code> 可以和 &lt;code>unsafe.Pointer&lt;/code> 相互转换。&lt;/li>
 &lt;/ul>
-&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/61f9eba25ea2a7f36ba14a9f6c06e13f14378c5d/go/pointer.png" alt="pointer" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/pointer.png" alt="pointer" loading="lazy" />&lt;/p>
 &lt;p>指针类型转换示例：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">package&lt;/span> &lt;span class="nx">main&lt;/span>

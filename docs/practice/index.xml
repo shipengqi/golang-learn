@@ -580,7 +580,7 @@ title="Copy code"
 &lt;p>&lt;code>_ &amp;quot;net/http/pprof&amp;quot;&lt;/code> 这行代码会自动添加 &lt;code>/debug/pprof&lt;/code> 的路由。程序运行后，访问 http://localhost:8080/debug/pprof 就可以查看分析样本。&lt;/p>
 &lt;h2>如何查看分析报告&lt;span class="hx-absolute -hx-mt-20" id="如何查看分析报告">&lt;/span>
 &lt;a href="#%e5%a6%82%e4%bd%95%e6%9f%a5%e7%9c%8b%e5%88%86%e6%9e%90%e6%8a%a5%e5%91%8a" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>打开 http://localhost:8080/debug/pprof 后会看到下面页面：&lt;/p>
-&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/810cbdff82baab7279ec4504d20e5b7bd88b6b33/go/pprof-home.png" alt="pprof-home" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/pprof-home.png" alt="pprof-home" loading="lazy" />&lt;/p>
 &lt;p>pprof 包括了几个子页面：&lt;/p>
 &lt;ul>
 &lt;li>alloc: 查看所有内存分配的情况&lt;/li>
@@ -636,10 +636,10 @@ title="Copy code"
 &lt;blockquote>
 &lt;p>如果出现 &lt;code>Could not execute dot; may need to install graphviz.&lt;/code>，那么需要安裝 Graphviz。&lt;/p>
 &lt;/blockquote>
-&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/810cbdff82baab7279ec4504d20e5b7bd88b6b33/go/profile-graph.png" alt="profile-graph" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/profile-graph.png" alt="profile-graph" loading="lazy" />&lt;/p>
 &lt;p>图中框越大，线越粗代表它占用 CPU 的时间越长。&lt;/p>
 &lt;p>点击 &lt;code>View -&amp;gt; Flame Graph&lt;/code> 可以查看火焰图：&lt;/p>
-&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/810cbdff82baab7279ec4504d20e5b7bd88b6b33/go/profile-flame-graph.png" alt="profile-flame-graph" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/profile-flame-graph.png" alt="profile-flame-graph" loading="lazy" />&lt;/p>
 &lt;p>图中调用顺序由上到下，每一块代表一个函数，越大代表占用 CPU 的时间越长。&lt;/p>
 &lt;p>还可以查看 Top，Peek，Source 等。能够更方便、更直观的看到 Go 应用程序的调用链、使用情况等。&lt;/p>
 &lt;h3>在终端查看分析报告&lt;span class="hx-absolute -hx-mt-20" id="在终端查看分析报告">&lt;/span>
@@ -950,7 +950,7 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;p>访问 http://127.0.0.1:59181，可以看到类似的界面：&lt;/p>
-&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/f700fde7450ccdb21c410611ff949769e301c364/go/trace-home.png" alt="trace-home" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/trace-home.png" alt="trace-home" loading="lazy" />&lt;/p>
 &lt;ul>
 &lt;li>&lt;code>View trace&lt;/code>：查看所有 goroutines 的执行过程。&lt;/li>
 &lt;li>&lt;code>Goroutine analysis&lt;/code>：goroutines 分析，查看具体的 goroutine 的信息。&lt;/li>
@@ -967,7 +967,7 @@ title="Copy code"
 &lt;/blockquote>
 &lt;h3>View trace&lt;span class="hx-absolute -hx-mt-20" id="view-trace">&lt;/span>
 &lt;a href="#view-trace" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>进入 &lt;code>View trace&lt;/code> 页面：&lt;/p>
-&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/f700fde7450ccdb21c410611ff949769e301c364/go/view-trace.png" alt="view-trace" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/view-trace.png" alt="view-trace" loading="lazy" />&lt;/p>
 &lt;ol>
 &lt;li>时间线：显示执行的时间。&lt;/li>
 &lt;li>Goroutines/Heap/Threads 的详细信息。
@@ -988,22 +988,22 @@ title="Copy code"
 &lt;p>快捷键：w（放大），s（缩小），a（左移），d（右移）。&lt;/p>
 &lt;/blockquote>
 &lt;h4>查看某个时间点 goroutines 情况&lt;span class="hx-absolute -hx-mt-20" id="查看某个时间点-goroutines-情况">&lt;/span>
-&lt;a href="#%e6%9f%a5%e7%9c%8b%e6%9f%90%e4%b8%aa%e6%97%b6%e9%97%b4%e7%82%b9-goroutines-%e6%83%85%e5%86%b5" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/f700fde7450ccdb21c410611ff949769e301c364/go/view-trace-g-counter.png" alt="view-trace-g-counter" loading="lazy" />&lt;/p>
+&lt;a href="#%e6%9f%a5%e7%9c%8b%e6%9f%90%e4%b8%aa%e6%97%b6%e9%97%b4%e7%82%b9-goroutines-%e6%83%85%e5%86%b5" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/view-trace-g-counter.png" alt="view-trace-g-counter" loading="lazy" />&lt;/p>
 &lt;p>图中正在运行的 goroutine 数量为 3，其他状态的 goroutine 数量都是 0。&lt;/p>
 &lt;h4>查看某个时间点堆的使用情况&lt;span class="hx-absolute -hx-mt-20" id="查看某个时间点堆的使用情况">&lt;/span>
-&lt;a href="#%e6%9f%a5%e7%9c%8b%e6%9f%90%e4%b8%aa%e6%97%b6%e9%97%b4%e7%82%b9%e5%a0%86%e7%9a%84%e4%bd%bf%e7%94%a8%e6%83%85%e5%86%b5" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/aa2cb61b817e520379277b90937ac21909b4abd5/go/view-trace-heap.png" alt="view-trace-heap" loading="lazy" />&lt;/p>
+&lt;a href="#%e6%9f%a5%e7%9c%8b%e6%9f%90%e4%b8%aa%e6%97%b6%e9%97%b4%e7%82%b9%e5%a0%86%e7%9a%84%e4%bd%bf%e7%94%a8%e6%83%85%e5%86%b5" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/view-trace-heap.png" alt="view-trace-heap" loading="lazy" />&lt;/p>
 &lt;ol>
 &lt;li>红色部分表示已经占用的内存&lt;/li>
 &lt;li>绿色部分的上边沿表示下次 GC 的目标内存，也就是绿色部分用完之后，就会触发 GC。&lt;/li>
 &lt;/ol>
 &lt;h4>查看某个时间点的系统线程&lt;span class="hx-absolute -hx-mt-20" id="查看某个时间点的系统线程">&lt;/span>
-&lt;a href="#%e6%9f%a5%e7%9c%8b%e6%9f%90%e4%b8%aa%e6%97%b6%e9%97%b4%e7%82%b9%e7%9a%84%e7%b3%bb%e7%bb%9f%e7%ba%bf%e7%a8%8b" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/aa2cb61b817e520379277b90937ac21909b4abd5/go/view-trace-threads.png" alt="view-trace-threads" loading="lazy" />&lt;/p>
+&lt;a href="#%e6%9f%a5%e7%9c%8b%e6%9f%90%e4%b8%aa%e6%97%b6%e9%97%b4%e7%82%b9%e7%9a%84%e7%b3%bb%e7%bb%9f%e7%ba%bf%e7%a8%8b" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/view-trace-threads.png" alt="view-trace-threads" loading="lazy" />&lt;/p>
 &lt;p>图中正在运行的线程数量为 3，正在调用 SysCall 的线程数量为 0。&lt;/p>
 &lt;h4>查看 GC&lt;span class="hx-absolute -hx-mt-20" id="查看-gc">&lt;/span>
-&lt;a href="#%e6%9f%a5%e7%9c%8b-gc" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/aa2cb61b817e520379277b90937ac21909b4abd5/go/view-trace-gc.png" alt="view-trace-gc" loading="lazy" />&lt;/p>
+&lt;a href="#%e6%9f%a5%e7%9c%8b-gc" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/view-trace-gc.png" alt="view-trace-gc" loading="lazy" />&lt;/p>
 &lt;p>可以选择多个查看统计信息。&lt;/p>
 &lt;h4>查看某个时间点的 goroutine 运行情况&lt;span class="hx-absolute -hx-mt-20" id="查看某个时间点的-goroutine-运行情况">&lt;/span>
-&lt;a href="#%e6%9f%a5%e7%9c%8b%e6%9f%90%e4%b8%aa%e6%97%b6%e9%97%b4%e7%82%b9%e7%9a%84-goroutine-%e8%bf%90%e8%a1%8c%e6%83%85%e5%86%b5" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/aa2cb61b817e520379277b90937ac21909b4abd5/go/view-trace-folw-events.png" alt="view-trace-folw-events" loading="lazy" />&lt;/p>
+&lt;a href="#%e6%9f%a5%e7%9c%8b%e6%9f%90%e4%b8%aa%e6%97%b6%e9%97%b4%e7%82%b9%e7%9a%84-goroutine-%e8%bf%90%e8%a1%8c%e6%83%85%e5%86%b5" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/view-trace-folw-events.png" alt="view-trace-folw-events" loading="lazy" />&lt;/p>
 &lt;p>点击具体的 Goroutine 可以查看详细信息：&lt;/p>
 &lt;ul>
 &lt;li>&lt;code>Start&lt;/code>：开始时间&lt;/li>
@@ -1020,9 +1020,9 @@ title="Copy code"
 &lt;p>点击 &lt;code>Flow events&lt;/code> 选择 &lt;code>All&lt;/code>，可以查看程序运行中的事件流情况。&lt;/p>
 &lt;h3>Goroutine analysis&lt;span class="hx-absolute -hx-mt-20" id="goroutine-analysis">&lt;/span>
 &lt;a href="#goroutine-analysis" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>进入 &lt;code>Goroutine analysis&lt;/code> 可查看整个运行过程中，每个函数块有多少个 goroutine 在跑，并且观察每个的 goroutine 的运行开销都花费在哪个阶段。&lt;/p>
-&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/aa2cb61b817e520379277b90937ac21909b4abd5/go/goroutines-analysis.png" alt="goroutines-analysis" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/goroutines-analysis.png" alt="goroutines-analysis" loading="lazy" />&lt;/p>
 &lt;p>点击一个 goroutine 查看详细信息，例如 &lt;code>main.main.func1&lt;/code>：&lt;/p>
-&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/aa2cb61b817e520379277b90937ac21909b4abd5/go/goroutines-analysis-n.png" alt="goroutines-analysis-n" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/goroutines-analysis-n.png" alt="goroutines-analysis-n" loading="lazy" />&lt;/p>
 &lt;table>
 &lt;thead>
 &lt;tr>
@@ -1115,7 +1115,7 @@ title="Copy code"
 &lt;p>因此 CPU 在读取内存时是一块一块进行读取的。这么设计的目的，是减少 CPU 访问内存的次数，加大 CPU 访问内存的吞吐量。比如同样读取 8 个字节的数据，一
 次读取 4 个字节那么只需要读取 2 次。&lt;/p>
 &lt;p>进行内存对齐，就是为了减少 CPU 访问内存的次数。&lt;/p>
-&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/0a6f953f0387c30638ae8b0e03dda230194d10ab/go/mem-align.png" alt="mem-align" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/mem-align.png" alt="mem-align" loading="lazy" />&lt;/p>
 &lt;p>上图中，假如 CPU 字长为 4 个字节。变量 a 和 b 的大小为 3 个字节，没有内存对齐之前，CPU 读取 b 时，需要访问两次内存：&lt;/p>
 &lt;ol>
 &lt;li>第一次读取 0-3 字节，移除不需要的 0-2 字节，拿到 b 的第一个字节，&lt;/li>
@@ -1202,7 +1202,7 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;p>&lt;code>Part1&lt;/code> 只是对成员变量的字段顺序进行了调整，就减少了结构体占用大小。&lt;/p>
-&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/ca9f00e7c3f54f02935d6615da69123d09ee8c7c/go/struct-mem-align.png" alt="mem-align" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/struct-mem-align.png" alt="mem-align" loading="lazy" />&lt;/p>
 &lt;p>&lt;code>part1&lt;/code>：&lt;/p>
 &lt;ul>
 &lt;li>a 从第 0 个位置开始占据 1 字节。&lt;/li>
@@ -2338,7 +2338,7 @@ base href 可用于定位相对路径模板 (HTML) 资产和针对相对路径�
 &lt;li>&lt;a href="https://code.visualstudio.com/docs/remote/wsl" target="_blank" rel="noopener">Remote - WSL&lt;/a>：连接子系统（Windows Subsystem for Linux）进行开发。&lt;/li>
 &lt;/ul>
 &lt;p>SSH 模式的原理：&lt;/p>
-&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/f453d238f302873f51c3859269a86bcc8248d6ce/go/architecture-vscode-ssh.png" alt="architecture-vscode-ssh" loading="lazy" />
+&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/architecture-vscode-ssh.png" alt="architecture-vscode-ssh" loading="lazy" />
 图片来自于 Visual Studio Code 官网&lt;/p>
 &lt;h3>连接远程机器&lt;span class="hx-absolute -hx-mt-20" id="连接远程机器">&lt;/span>
 &lt;a href="#%e8%bf%9e%e6%8e%a5%e8%bf%9c%e7%a8%8b%e6%9c%ba%e5%99%a8" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>安装插件 &lt;a href="https://code.visualstudio.com/docs/remote/ssh" target="_blank" rel="noopener">Remote SSH&lt;/a>。&lt;/p>
@@ -2375,7 +2375,7 @@ title="Copy code"
 &lt;li>VS Code 会提示远程机器需要安装 Go 扩展，选择安装。&lt;/li>
 &lt;/ol>
 &lt;p>左侧边栏的 Remote Explorer，可以快速打开远程机器上的代码目录：&lt;/p>
-&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/c31f3c17d77e206a8abf012b5aac54744b185dbe/go/vscode-remote-usage.png" alt="vscode-remote-usage" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/vscode-remote-usage.png" alt="vscode-remote-usage" loading="lazy" />&lt;/p>
 &lt;h3>配置免密登录&lt;span class="hx-absolute -hx-mt-20" id="配置免密登录">&lt;/span>
 &lt;a href="#%e9%85%8d%e7%bd%ae%e5%85%8d%e5%af%86%e7%99%bb%e5%bd%95" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>使用快捷键 &lt;code>F1&lt;/code> 或者 &lt;code>ctrl+shift+p&lt;/code> 打开 commands，输入 &lt;code>Open SSH Configuration File&lt;/code> 编辑配置文件：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
@@ -2408,7 +2408,7 @@ title="Copy code"
 &lt;p>如果 &lt;code>ssh-copy-id&lt;/code> 命令不存在，就手动将 &lt;code>&amp;lt;absolute-path&amp;gt;/.ssh/id_rsa.pub&lt;/code> 的内容，追加到远程机器的 &lt;code>~/.ssh/authorized_keys&lt;/code> 文件后面。&lt;/p>
 &lt;h2>远程开发&lt;span class="hx-absolute -hx-mt-20" id="远程开发">&lt;/span>
 &lt;a href="#%e8%bf%9c%e7%a8%8b%e5%bc%80%e5%8f%91" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>连接到远程主机后，就可以进行远程开发了。可以像本地开发一样查看，修改文件。&lt;/p>
-&lt;p>&lt;img src="https://raw.githubusercontent.com/shipengqi/illustrations/c31f3c17d77e206a8abf012b5aac54744b185dbe/go/vscode-ssh-dev.png" alt="vscode-ssh-dev" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/vscode-ssh-dev.png" alt="vscode-ssh-dev" loading="lazy" />&lt;/p>
 &lt;h2>远程调试&lt;span class="hx-absolute -hx-mt-20" id="远程调试">&lt;/span>
 &lt;a href="#%e8%bf%9c%e7%a8%8b%e8%b0%83%e8%af%95" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Go 远程调试本地机器和远程机器都需要&lt;a href="https://github.com/derekparker/delve/blob/master/Documentation/installation/README.md" target="_blank" rel="noopener">安装 &amp;ldquo;delve&amp;rdquo;&lt;/a>：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
