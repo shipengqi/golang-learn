@@ -60,7 +60,7 @@ func main() {
 
 打开 http://localhost:8080/debug/pprof 后会看到下面页面：
 
-![pprof-home](https://raw.githubusercontent.com/shipengqi/illustrations/810cbdff82baab7279ec4504d20e5b7bd88b6b33/go/pprof-home.png)
+![pprof-home](https://gitee.com/shipengqi/illustrations/raw/main/go/pprof-home.png)
 
 pprof 包括了几个子页面：
 
@@ -99,13 +99,13 @@ $ (pprof) web
 
 > 如果出现 `Could not execute dot; may need to install graphviz.`，那么需要安裝 Graphviz。
 
-![profile-graph](https://raw.githubusercontent.com/shipengqi/illustrations/810cbdff82baab7279ec4504d20e5b7bd88b6b33/go/profile-graph.png)
+![profile-graph](https://gitee.com/shipengqi/illustrations/raw/main/go/profile-graph.png)
 
 图中框越大，线越粗代表它占用 CPU 的时间越长。
 
 点击 `View -> Flame Graph` 可以查看火焰图：
 
-![profile-flame-graph](https://raw.githubusercontent.com/shipengqi/illustrations/810cbdff82baab7279ec4504d20e5b7bd88b6b33/go/profile-flame-graph.png)
+![profile-flame-graph](https://gitee.com/shipengqi/illustrations/raw/main/go/profile-flame-graph.png)
 
 图中调用顺序由上到下，每一块代表一个函数，越大代表占用 CPU 的时间越长。
 

@@ -54,7 +54,7 @@ CPU 访问内存时，并不是逐个字节访问，而是以**字长**（word s
 
 进行内存对齐，就是为了减少 CPU 访问内存的次数。
 
-![mem-align](https://raw.githubusercontent.com/shipengqi/illustrations/0a6f953f0387c30638ae8b0e03dda230194d10ab/go/mem-align.png)
+![mem-align](https://gitee.com/shipengqi/illustrations/raw/main/go/mem-align.png)
 
 上图中，假如 CPU 字长为 4 个字节。变量 a 和 b 的大小为 3 个字节，没有内存对齐之前，CPU 读取 b 时，需要访问两次内存：
 
@@ -127,7 +127,7 @@ func main()  {
 
 `Part1` 只是对成员变量的字段顺序进行了调整，就减少了结构体占用大小。
 
-![mem-align](https://raw.githubusercontent.com/shipengqi/illustrations/ca9f00e7c3f54f02935d6615da69123d09ee8c7c/go/struct-mem-align.png)
+![mem-align](https://gitee.com/shipengqi/illustrations/raw/main/go/struct-mem-align.png)
 
 `part1`：
 

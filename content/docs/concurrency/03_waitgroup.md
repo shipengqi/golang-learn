@@ -89,7 +89,7 @@ $ go vet proc.go
 
 `state1` 包含一个总共占用 12 字节的数组，这个数组会存储当前结构体的状态，在 64 位与 32 位的机器上表现也非常不同。
 
-![waitgroup-state1](https://raw.githubusercontent.com/shipengqi/illustrations/3039de62b8205f48431e7568e30a26c2f16524d9/go/waitgroup-state1.png)
+![waitgroup-state1](https://gitee.com/shipengqi/illustrations/raw/main/go/waitgroup-state1.png)
 
 `state` 方法用来从 `state1` 字段中取出它的状态和信号量。
 

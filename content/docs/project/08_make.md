@@ -15,7 +15,7 @@ Go 项目通常使用 Makefile 作为项目管理工具。
 
 项目根目录下的 Makefile 来聚合子目录下的 Makefile 命令。将复杂的 shell 命令封装在 shell 脚本中，供 Makefile 直接调用，而一些简单的命令则可以直接集成在 Makefile 中。
 
-![makefile](https://raw.githubusercontent.com/shipengqi/illustrations/1908ed2c659dbb11c7b4c46169d7aa8321481d4c/go/makefile.png)
+![makefile](https://gitee.com/shipengqi/illustrations/raw/main/go/makefile.png)
 
 示例；
 

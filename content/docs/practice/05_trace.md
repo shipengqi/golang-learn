@@ -70,7 +70,7 @@ $ go tool trace trace.out
 
 访问 http://127.0.0.1:59181，可以看到类似的界面：
 
-![trace-home](https://raw.githubusercontent.com/shipengqi/illustrations/f700fde7450ccdb21c410611ff949769e301c364/go/trace-home.png)
+![trace-home](https://gitee.com/shipengqi/illustrations/raw/main/go/trace-home.png)
 
 - `View trace`：查看所有 goroutines 的执行过程。
 - `Goroutine analysis`：goroutines 分析，查看具体的 goroutine 的信息。
@@ -88,7 +88,7 @@ $ go tool trace trace.out
 
 进入 `View trace` 页面：
 
-![view-trace](https://raw.githubusercontent.com/shipengqi/illustrations/f700fde7450ccdb21c410611ff949769e301c364/go/view-trace.png)
+![view-trace](https://gitee.com/shipengqi/illustrations/raw/main/go/view-trace.png)
 
 1. 时间线：显示执行的时间。
 2. Goroutines/Heap/Threads 的详细信息。
@@ -103,32 +103,32 @@ $ go tool trace trace.out
 
 #### 查看某个时间点 goroutines 情况
 
-![view-trace-g-counter](https://raw.githubusercontent.com/shipengqi/illustrations/f700fde7450ccdb21c410611ff949769e301c364/go/view-trace-g-counter.png)
+![view-trace-g-counter](https://gitee.com/shipengqi/illustrations/raw/main/go/view-trace-g-counter.png)
 
 图中正在运行的 goroutine 数量为 3，其他状态的 goroutine 数量都是 0。
 
 #### 查看某个时间点堆的使用情况
 
-![view-trace-heap](https://raw.githubusercontent.com/shipengqi/illustrations/aa2cb61b817e520379277b90937ac21909b4abd5/go/view-trace-heap.png)
+![view-trace-heap](https://gitee.com/shipengqi/illustrations/raw/main/go/view-trace-heap.png)
 
 1. 红色部分表示已经占用的内存
 2. 绿色部分的上边沿表示下次 GC 的目标内存，也就是绿色部分用完之后，就会触发 GC。
 
 #### 查看某个时间点的系统线程
 
-![view-trace-threads](https://raw.githubusercontent.com/shipengqi/illustrations/aa2cb61b817e520379277b90937ac21909b4abd5/go/view-trace-threads.png)
+![view-trace-threads](https://gitee.com/shipengqi/illustrations/raw/main/go/view-trace-threads.png)
 
 图中正在运行的线程数量为 3，正在调用 SysCall 的线程数量为 0。
 
 #### 查看 GC
 
-![view-trace-gc](https://raw.githubusercontent.com/shipengqi/illustrations/aa2cb61b817e520379277b90937ac21909b4abd5/go/view-trace-gc.png)
+![view-trace-gc](https://gitee.com/shipengqi/illustrations/raw/main/go/view-trace-gc.png)
 
 可以选择多个查看统计信息。
 
 #### 查看某个时间点的 goroutine 运行情况
 
-![view-trace-folw-events](https://raw.githubusercontent.com/shipengqi/illustrations/aa2cb61b817e520379277b90937ac21909b4abd5/go/view-trace-folw-events.png)
+![view-trace-folw-events](https://gitee.com/shipengqi/illustrations/raw/main/go/view-trace-folw-events.png)
 
 点击具体的 Goroutine 可以查看详细信息：
 
@@ -149,11 +149,11 @@ $ go tool trace trace.out
 
 进入 `Goroutine analysis` 可查看整个运行过程中，每个函数块有多少个 goroutine 在跑，并且观察每个的 goroutine 的运行开销都花费在哪个阶段。
 
-![goroutines-analysis](https://raw.githubusercontent.com/shipengqi/illustrations/aa2cb61b817e520379277b90937ac21909b4abd5/go/goroutines-analysis.png)
+![goroutines-analysis](https://gitee.com/shipengqi/illustrations/raw/main/goroutines-analysis.png)
 
 点击一个 goroutine 查看详细信息，例如 `main.main.func1`：
 
-![goroutines-analysis-n](https://raw.githubusercontent.com/shipengqi/illustrations/aa2cb61b817e520379277b90937ac21909b4abd5/go/goroutines-analysis-n.png)
+![goroutines-analysis-n](https://gitee.com/shipengqi/illustrations/raw/main/goroutines-analysis-n.png)
 
 | 名称                    | 含义     | 耗时    |
 |-----------------------|--------|-------|
