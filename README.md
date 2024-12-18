@@ -1,6 +1,6 @@
 # golang-learn
 
-Go language learning ...
+Go learning ...
 
 ## Usage
 

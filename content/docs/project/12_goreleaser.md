@@ -350,4 +350,4 @@ changelog:
 
 生成的 CHANGELOG 如下图：
 
-![changlog](https://raw.githubusercontent.com/shipengqi/illustrations/f30c629498b577f1cb6b84a60e98fca4ad1da984/go/changlog.png)
+![changlog](https://gitee.com/shipengqi/illustrations/raw/main/go/changlog.png)

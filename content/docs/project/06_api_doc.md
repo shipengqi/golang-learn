@@ -287,7 +287,7 @@ $ swagger serve --no-open -F=redoc --port 36666 swagger.yaml
 
 在浏览器查看 API 文档：
 
-![swagger-redoc](https://raw.githubusercontent.com/shipengqi/illustrations/0dad40be58e3b5959e8a9093a92ce49a9e280c6d/go/swagger-redoc.png)
+![swagger-redoc](https://gitee.com/shipengqi/illustrations/raw/main/go/swagger-redoc.png)
 
 还可以使用下面的命令将生成的 `swagger.yaml` 转换为 `swagger.json`：
 
