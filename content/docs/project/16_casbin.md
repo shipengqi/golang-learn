@@ -683,7 +683,7 @@ m = r.sub == p.sub && ReverseMatch(r.obj, p.obj) && r.act == p.act
 
 ## Enforcer
 
-Casbin [Enforcer(https://casbin.org/zh/docs/enforcers) 执行器往内存中缓存策略数据时并**不是并发安全**的，
+Casbin [Enforcer](https://casbin.org/zh/docs/enforcers) （执行器）往内存中缓存策略数据时并**不是并发安全**的，
 所以 Casbin 还实现了多种 `Enforcer`，可以分为并发安全的 `SyncedEnforcer`，带缓存的 `CachedEnforcer` 等等。
 
 - `Enforcer`：基础的执行器，内存中的操作不是并发安全的。
