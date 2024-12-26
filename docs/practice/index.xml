@@ -1246,7 +1246,7 @@ title="Copy code"
 &lt;p>可以看到 &lt;code>Part1{&lt;/code>} 额外填充了 4 字节的空间。&lt;/p>
 &lt;h2>逃逸分析&lt;span class="hx-absolute -hx-mt-20" id="逃逸分析">&lt;/span>
 &lt;a href="#%e9%80%83%e9%80%b8%e5%88%86%e6%9e%90" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>编译器决定内存分配位置的方式，就称之为&lt;strong>逃逸分析&lt;/strong>(escape analysis)。逃逸分析由编译器完成，作用于编译阶段。&lt;/p>
-&lt;p>变量逃逸是指编译器将一个变量从栈上分配到对上的情况。&lt;/p>
+&lt;p>变量逃逸是指编译器将一个变量从栈上分配到堆上的情况。&lt;/p>
 &lt;p>在 Go 中，栈是跟函数绑定的，函数结束时栈被回收。如果一个变量分配在栈中，则函数执行结束可自动将内存回收。如果分配在堆中，则函数执行结束可交给 GC（垃圾回收）处理。&lt;/p>
 &lt;p>变量逃逸常见的情况：&lt;/p>
 &lt;ol>

@@ -3983,7 +3983,7 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;h2>Enforcer&lt;span class="hx-absolute -hx-mt-20" id="enforcer">&lt;/span>
-&lt;a href="#enforcer" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Casbin [Enforcer(https://casbin.org/zh/docs/enforcers) 执行器往内存中缓存策略数据时并&lt;strong>不是并发安全&lt;/strong>的，
+&lt;a href="#enforcer" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Casbin &lt;a href="https://casbin.org/zh/docs/enforcers" target="_blank" rel="noopener">Enforcer&lt;/a> （执行器）往内存中缓存策略数据时并&lt;strong>不是并发安全&lt;/strong>的，
 所以 Casbin 还实现了多种 &lt;code>Enforcer&lt;/code>，可以分为并发安全的 &lt;code>SyncedEnforcer&lt;/code>，带缓存的 &lt;code>CachedEnforcer&lt;/code> 等等。&lt;/p>
 &lt;ul>
 &lt;li>&lt;code>Enforcer&lt;/code>：基础的执行器，内存中的操作不是并发安全的。&lt;/li>

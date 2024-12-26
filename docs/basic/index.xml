@@ -57,7 +57,8 @@ title="Copy code"
 &lt;h3>字符串拼接&lt;span class="hx-absolute -hx-mt-20" id="字符串拼接">&lt;/span>
 &lt;a href="#%e5%ad%97%e7%ac%a6%e4%b8%b2%e6%8b%bc%e6%8e%a5" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>拼接字符串的几种方式：&lt;/p>
 &lt;h4>&lt;code>+&lt;/code> 拼接字符串&lt;span class="hx-absolute -hx-mt-20" id="-拼接字符串">&lt;/span>
-&lt;a href="#-%e6%8b%bc%e6%8e%a5%e5%ad%97%e7%ac%a6%e4%b8%b2" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>例如 &lt;code>fmt.Println(&amp;quot;hello&amp;quot; + s[5:])&lt;/code> 输出 &lt;code>&amp;quot;hello, world&amp;quot;&lt;/code>。使用 &lt;code>+&lt;/code> 来拼接两个字符串时，它会申请一块新的内存空间，大小是两个字符串的大小之和。拼接第三个字符串时，再申请一块新的内存空间，大小是三个字符串大小之和。这种方式每次运算都需要重新分配内存，会给内存分配和 GC 带来额外的负担，所以性能比较差。&lt;/p>
+&lt;a href="#-%e6%8b%bc%e6%8e%a5%e5%ad%97%e7%ac%a6%e4%b8%b2" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>例如 &lt;code>fmt.Println(&amp;quot;hello&amp;quot; + s[5:])&lt;/code> 输出 &lt;code>&amp;quot;hello, world&amp;quot;&lt;/code>。使用 &lt;code>+&lt;/code> 来拼接两个字符串时，它会申请一块新的内存空间，大小是两个字符串的大小之和。
+拼接第三个字符串时，再申请一块新的内存空间，大小是三个字符串大小之和。&lt;strong>这种方式每次运算都需要重新分配内存，会给内存分配和 GC 带来额外的负担，所以性能较差&lt;/strong>。&lt;/p>
 &lt;h4>fmt.Sprintf&lt;span class="hx-absolute -hx-mt-20" id="fmtsprintf">&lt;/span>
 &lt;a href="#fmtsprintf" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>&lt;code>fmt.Sprintf()&lt;/code> 拼接字符串，内部使用 &lt;code>[]byte&lt;/code> 实现，不像直接运算符这种会产生很多临时的字符串，但是内部的逻辑比较复杂，有很多额外的判断，还用到了 &lt;code>interface&lt;/code>，所以性能一般。&lt;/p>
 &lt;h4>bytes.Buffer&lt;span class="hx-absolute -hx-mt-20" id="bytesbuffer">&lt;/span>
@@ -337,19 +338,27 @@ title="Copy code"
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">sl&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">make&lt;/span>&lt;span class="p">([]&lt;/span>&lt;span class="kt">int&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">10&lt;/span>&lt;span class="p">)&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">appendFunc&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">sl&lt;/span>&lt;span class="p">)&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// appendFunc 修改的是 sl 的副本，len 和 cap 并没有被修改，下面的输出是 []
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// appendFunc 修改的是 sl 的副本
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 副本的 struct {
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// Data uintptr
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// Len int
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// Cap int
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// }
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 副本的 len 和 cap 被修改了，但是不会影响外部 slice 的 len 和 cap，所以下面的输出是 []
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">sl&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="c1">// []
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// appendFunc，虽然没有修改 len 和 cap，但是底层数组是被修改了的，所以下面的输出会包含 10 20 30
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// appendFunc，虽然没有修改外部 slice 的 len 和 cap，
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 但是副本 `Data uintptr` 是一个指针的拷贝，和外部 slice 指向的是同一个底层数组
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 所以底层数组最终是被修改了的，所以下面的输出会包含 10 20 30
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">sl&lt;/span>&lt;span class="p">[:&lt;/span>&lt;span class="mi">10&lt;/span>&lt;span class="p">])&lt;/span> &lt;span class="c1">// [10 20 30 0 0 0 0 0 0 0]
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 为什么 sl[:10] 和 sl[:] 的输出不同，是因为 go 的切片的一个优化
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// slice[low:high] 中的 high，最大的取值范围对应着切片的容量（cap），不是单纯的长度（len）。
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// slice[low:high] 中的 high，最大的取值范围对应着切片的容量（cap），不只是单纯的长度（len）。
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// sl[:10] 可以输出容量范围内的值，并且没有越界。
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// sl[:] 由于 len 为 0，并且没有指定最大索引。high 则会取 len 的值，所以输出为 []
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">sl&lt;/span>&lt;span class="p">[:])&lt;/span> &lt;span class="c1">// []
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">slptr&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">make&lt;/span>&lt;span class="p">([]&lt;/span>&lt;span class="kt">int&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">10&lt;/span>&lt;span class="p">)&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">appendPtrFunc&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">slptr&lt;/span>&lt;span class="p">)&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 这里传入的是切片的指针，会改变外层的 slptr
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 这里传入的是切片的指针，会改变外部的 slice slptr
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">slptr&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="c1">// [10 20 30]
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
@@ -809,7 +818,13 @@ title="Copy code"
 &lt;li>值传递：当传一个参数值到被调用的函数里面时，实际上是传了这个值的副本，被调用方和调用方两者持有不相关的两份数据。&lt;/li>
 &lt;li>引用传递：当传一个参数值到被调用的函数里面时，实际是传了参数的指针，被调用方和调用方两者持有相同的数据，任意一方做出的修改都会影响另一方。&lt;/li>
 &lt;/ul>
-&lt;p>Go 使用的是&lt;strong>值传递，不管参数是基本类型，结构体还是指针，都会对传递的参数进行拷贝，区别无非是拷贝的目标对象还是拷贝指针&lt;/strong>。拷贝指针，也就是会同时出现两个指针指向原有的内存空间。&lt;/p>
+&lt;p>Go 使用的是&lt;strong>值传递，不管参数是基本类型，结构体还是指针，都会对传递的参数进行拷贝，区别无非是拷贝的目标对象还是拷贝指针&lt;/strong>。&lt;/p>
+&lt;div class="hx-overflow-x-auto hx-mt-6 hx-flex hx-rounded-lg hx-border hx-py-2 ltr:hx-pr-4 rtl:hx-pl-4 contrast-more:hx-border-current contrast-more:dark:hx-border-current hx-border-blue-200 hx-bg-blue-100 hx-text-blue-900 dark:hx-border-blue-200/30 dark:hx-bg-blue-900/30 dark:hx-text-blue-200">
+&lt;div class="ltr:hx-pl-3 ltr:hx-pr-2 rtl:hx-pr-3 rtl:hx-pl-2">&lt;div class="hx-select-none hx-text-xl" style="font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';">ℹ️&lt;/div>&lt;/div>
+&lt;div class="hx-w-full hx-min-w-0 hx-leading-7">
+&lt;div class="hx-mt-6 hx-leading-7 first:hx-mt-0">拷贝指针，也就是会同时出现两个指针指向原有的内存空间。&lt;/div>
+&lt;/div>
+&lt;/div>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">package&lt;/span> &lt;span class="nx">main&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
