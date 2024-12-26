@@ -89,7 +89,7 @@ func main() {
 ![slice-cut-append](https://gitee.com/shipengqi/illustrations/raw/main/go/slice-cut-append.png)
 
 再次追加一个元素 `s2 = append(s2, 200)`，`s2` 的容量不够了，需要扩容，于是 `s2` 申请一块新的连续内存，并将数据拷贝过去，扩容后的容量是原来的 2 倍。
-这时候 `s2` 的 `Data` 指向了新的底层数组，已经和 `s1` `slice` 没有关系了，对 `s2` 的修改不会再影响 `s1` `slice`。
+这时候 `s2` 的 `Data` 指向了新的底层数组，已经和 `s1` 这个 `slice` 没有关系了，所以对 `s2` 的修改不会再影响 `s1`。
 
 ![slice-cut-append2](https://gitee.com/shipengqi/illustrations/raw/main/go/slice-cut-append2.png)
 
@@ -114,7 +114,7 @@ Go 1.18 后切片的扩容策略：
 
 Go 是值传递。那么传入一个切片，切片会不会被函数中的操作改变？
 
-**不管传入的是切片还是切片指针，如果改变了底层数组，原切片的底层数组也会被改变**。
+**不管传入的是切片还是切片指针，如果改变了底层数组，那么外部切片的底层数组也会被改变**。
 
 示例：
 

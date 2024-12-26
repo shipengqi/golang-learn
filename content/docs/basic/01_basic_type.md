@@ -128,3 +128,22 @@ func (b *Builder) String() string {
 ### 类型转换
 
 在日常开发中，`string` 和 `[]byte` 之间的转换是很常见的，不管是 `string` 转 `[]byte` 还是 `[]byte` 转 `string` 都需要拷贝数据，而内存拷贝带来的性能损耗会随着字符串和 `[]byte` 长度的增长而增长。
+
+## interface{} 和 any
+
+`interface{}` 和 `any` 都是 Go 语言中表示**任意类型**的类型，但是它们的含义和使用方式有一些不同的背景和语境。
+
+- `interface{}` 是 Go 语言的一个**空接口类型，表示没有方法集合的接口**。任何类型都实现了空接口，因为空接口没有要求具体实现任何方法。换句话说，**`interface{}` 可以持有任何类型的值**。
+- `any` 是 Go 1.18 引入的一个新的别名，它是 `interface{}` 的类型**别名**。从语义上讲，`any` 和 `interface{}` 是等价的，但 `any` 是为了增强代码的可读性和清晰度。在新的 Go 代码中，使用 `any` 可以更明确地表达类型含义，避免误解。
+
+```go
+var x interface{}
+x = 42       // 可以存储 int 类型
+x = "hello"  // 也可以存储 string 类型
+x = true     // 甚至可以存储 bool 类型
+
+var x2 any
+x2 = 42       // 可以存储 int 类型
+x2 = "hello"  // 也可以存储 string 类型
+x2 = true     // 甚至可以存储 bool 类型
+```

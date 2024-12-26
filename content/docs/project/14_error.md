@@ -65,7 +65,7 @@ func WithStack(err error) error
 func Cause(err error) error
 ```
 
-![error-handle](https://github.com/shipengqi/illustrations/blob/63b742cee77624dfc1f8de5946f051e3c8f395be/go/error-handle.png?raw=true)
+![error-handle](https://gitee.com/shipengqi/illustrations/raw/main/go/error-handle.png)
 
 {{< callout type="info" >}}
 调用第三方库或者标准库也考虑使用 `errors.Wrap` 保存堆栈信息。

@@ -680,6 +680,141 @@ func main() {
 m = r.sub == p.sub && ReverseMatch(r.obj, p.obj) && r.act == p.act
 ```
 
+
+## Enforcer
+
+Casbin [Enforcer(https://casbin.org/zh/docs/enforcers) 执行器往内存中缓存策略数据时并**不是并发安全**的，
+所以 Casbin 还实现了多种 `Enforcer`，可以分为并发安全的 `SyncedEnforcer`，带缓存的 `CachedEnforcer` 等等。
+
+- `Enforcer`：基础的执行器，内存中的操作不是并发安全的。
+- `CachedEnforcer`：基于 `Enforcer` 实现，使用内存中的映射来缓存请求的评估结果，这样可以提高访问控制决策的性能。
+- `SyncedEnforcer`：基于 `Enforcer` 实现的并发安全的执行器。
+- `SyncedCachedEnforcer`：是 `SyncedEnforcer` 和 `CachedEnforcer` 的结合体，支持缓存请求的评估结果，同时是并发安全的。
+- `DistributedEnforcer`：基于 `SyncedEnforcer` 实现，支持分布式集群中的多个实例。
+
+## Adapter
+
+[Adapter](https://casbin.org/zh/docs/adapters) 是用来持久化策略数据的（支持文件，数据库等各种持久化方式）。用户可以使用 `LoadPolicy()` 从持久化存储中加载策略规则，
+使用 `SavePolicy()` 将策略规则保存到持久化存储中。
+
+1. 从 `Adapter` A 加载策略规则到内存中：
+
+   ```go
+   e, _ := NewEnforcer(m, A)
+   e.LoadPolicy()
+   ```
+
+2. 将适配器从 A 转换到 B
+   ```go
+   e.SetAdapter(B)
+   ```
+   
+3. 将策略从内存保存到持久化存储中：
+
+   ```go
+   e.SavePolicy()
+   ```
+
+Casbin 初始化后是可以重新加载模型，重新加载策略或保存策略的：
+
+```go
+// Reload the model from the model CONF file.
+e.LoadModel()
+
+// Reload the policy from file/database.
+e.LoadPolicy()
+
+// Save the current policy (usually after changed with Casbin API) back to file/database.
+e.SavePolicy()
+```
+
+### AutoSave
+
+由于 Casbin 为了提高性能，在 `Enforcer` 中内置了一个**内存缓存**，所有的操作都是在操作内存中的数据，直到调用 `SavePolicy()`。
+AutoSave 功能，是将策略的操作自动保存到存储中，这意味着单个策略规则添加，删除作者更新，都会自动保存，而不需要再调用 `SavePolicy()`。
+
+{{< callout type="info" >}}
+AutoSave 功能需要适配器的支持，如果适配器支持，可以使用 `EnableAutoSave()` 开启或者禁用。**默认启用**。
+{{< /callout >}}
+
+```go
+
+// By default, the AutoSave option is enabled for an enforcer.
+a := xormadapter.NewAdapter("mysql", "mysql_username:mysql_password@tcp(127.0.0.1:3306)/")
+e := casbin.NewEnforcer("examples/basic_model.conf", a)
+
+// Disable the AutoSave option.
+e.EnableAutoSave(false)
+
+// Because AutoSave is disabled, the policy change only affects the policy in Casbin enforcer,
+// it doesn't affect the policy in the storage.
+e.AddPolicy(...)
+e.RemovePolicy(...)
+
+// Enable the AutoSave option.
+e.EnableAutoSave(true)
+
+// Because AutoSave is enabled, the policy change not only affects the policy in Casbin enforcer,
+// but also affects the policy in the storage.
+e.AddPolicy(...)
+e.RemovePolicy(...)
+```
+
+{{< callout type="warning" >}}
+`SavePolicy()` 会删除持久化存储中的所有策略规则，然后将 Enforcer 内存中的策略规则保存到持久化存储中。因此，当策略规则的数量较大时，可能会有性能问题。
+{{< /callout >}}
+
+## Watcher
+
+在使用 Casbin 作为权限管理时，一般会增加多个 Casbin 实例来保证请求高并发和稳定性，但是与此同时会出现多个实例之间数据不一致的问题。
+
+这是因为在 Casbin 内置的**内存缓存**，每当执行读数据的动作时，会先获取内存缓存中的数据，而不是数据库中的数据。
+
+因此在多实例场景下，当一个实例的 Casbin 数据发生变更时，其它实例的 Casbin 内存缓存并没有及时同步刷新，这就导致了当请求被分发到对应的实例上时，获取到的依然还是旧的数据。
+
+对此 Casbin 官方提供了一种解决方案 **[Watcher 机制](https://casbin.org/zh/docs/watchers)**，来维持多个 Casbin 实例之间数据的一致性。
+
+## Dispatcher
+
+Casbin 多节点之间的策略数据同步，可以通过 Watcher 机制来实现，也可通过 Dispatcher 调度器来实现。
+
+官方实现的 [hraft-dispatcher](https://github.com/casbin/hraft-dispatcher) 的架构：
+
+![dispatcher-architecture](https://gitee.com/shipengqi/illustrations/raw/main/go/dispatcher-architecture.svg)
+
+在 Dispatcher 中能使用适配器，因为 Dispatcher 自带一个适配器。所有策略都由 Dispatcher 维护。不能调用 `LoadPolicy` 和 `SavePolicy` 方法，
+因为这会影响数据的一致性。可以理解为 `Dispatcher = Adapter + Watcher`。
+
+使用示例：
+
+```go
+m, err := model.NewModelFromString(modelText)
+if err != nil {
+    log.Fatal(err)
+}
+
+// Adapter is not required here.
+// Dispatcher = Adapter + Watcher
+e, err := casbin.NewDistributedEnforcer(m)
+if err != nil {
+    log.Fatal(err)
+}
+
+// New a Dispatcher
+dispatcher, err := hraftdispatcher.NewHRaftDispatcher(&hraftdispatcher.Config{
+    Enforcer:      e,
+    JoinAddress:   config.JoinAddress,
+    ListenAddress: config.ListenAddress,
+    TLSConfig:     tlsConfig,
+    DataDir:       config.DataDir,
+})
+if err != nil {
+    log.Fatal(err)
+}
+
+e.SetDispatcher(dispatcher)
+```
+
 ## 性能优化
 
 ### 优化匹配器
@@ -714,6 +849,96 @@ m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act
 
 角色继承关系会影响匹配器的效率。深度过大的继承链会增加计算成本。
 
+### CachedEnforcer
+
+`CachedEnforcer` 基于 `Enforcer`，但是增加了缓存机制。
+
+1. **缓存评估结果**：`CachedEnforcer` 使用内存中的映射来缓存请求的评估结果，这样可以提高访问控制决策的性能，减少对策略存储的频繁访问。
+2. **指定过期时间清除缓存**：它允许在指定的过期时间内清除缓存，这有助于确保策略的变更能够及时生效 。
+3. **通过读写锁保证缓存的并发安全**。
+4. **启用缓存**：可以使用 `EnableCache` 方法来启用评估结果的缓存，**默认是启用的**。
+5. **API 一致性**：`CachedEnforcer 的其他 API 方法与 `Enforcer` 相同。
+
+`CachedEnforcer` 的部分源码：
+
+```go
+// Enforce decides whether a "subject" can access a "object" with the operation "action", input parameters are usually: (sub, obj, act).
+// if rvals is not string , ignore the cache.
+func (e *CachedEnforcer) Enforce(rvals ...interface{}) (bool, error) {
+    // 没有开启缓存
+    if atomic.LoadInt32(&e.enableCache) == 0 {
+        return e.Enforcer.Enforce(rvals...)
+    }
+
+	// 查询缓存 key 是否存在
+    key, ok := e.getKey(rvals...)
+    if !ok {
+        return e.Enforcer.Enforce(rvals...)
+    }
+    
+	// 查询缓存的评估结果
+    if res, err := e.getCachedResult(key); err == nil {
+        return res, nil
+    } else if err != cache.ErrNoSuchKey {
+        return res, err
+    }
+    
+	// 没有找到缓存的评估结果
+    res, err := e.Enforcer.Enforce(rvals...)
+    if err != nil {
+        return false, err
+    }
+
+	// 缓存评估结果
+    err = e.setCachedResult(key, res, e.expireTime)
+    return res, err
+}
+
+// LoadPolicy，策略重新加载，会清除缓存的所有评估结果
+func (e *CachedEnforcer) LoadPolicy() error {
+	if atomic.LoadInt32(&e.enableCache) != 0 {
+		if err := e.cache.Clear(); err != nil {
+			return err
+		}
+	}
+	return e.Enforcer.LoadPolicy()
+}
+
+// RemovePolicy 策略删除会清除响应的 key 的评估结果
+func (e *CachedEnforcer) RemovePolicy(params ...interface{}) (bool, error) {
+	if atomic.LoadInt32(&e.enableCache) != 0 {
+		key, ok := e.getKey(params...)
+		if ok {
+			if err := e.cache.Delete(key); err != nil && err != cache.ErrNoSuchKey {
+				return false, err
+			}
+		}
+	}
+	return e.Enforcer.RemovePolicy(params...)
+}
+
+// getCachedResult setCachedResult 对缓存的操作是并发安全的
+func (e *CachedEnforcer) getCachedResult(key string) (res bool, err error) {
+    e.locker.Lock()
+    defer e.locker.Unlock()
+    return e.cache.Get(key)
+}
+
+func (e *CachedEnforcer) setCachedResult(key string, res bool, extra ...interface{}) error {
+    e.locker.Lock()
+    defer e.locker.Unlock()
+    return e.cache.Set(key, res, extra...)
+}
+```
+
+{{< callout type="warning" >}}
+`CachedEnforcer` 并没有针对 `UpdatePolicy` 做特殊处理，如果使用 `UpdatePolicy` 修改策略，那么缓存的评估结果不会被清理。
+所以尽量使用 `AddPolicy` 和 `RemovePolicy` 来修改策略。
+{{< /callout >}}
+
+
 ### 分片
 
 进行分片，让 Casbin 执行器只加载一小部分策略规则。例如，`执行器_0` 可以服务于 `租户_0` 到 `租户_99`，而 `执行器_1` 可以服务于 `租户_100` 到 `租户_199`。
+
+可以利用 [LoadFilteredPolicy ](https://casbin.org/zh/docs/policy-subset-loading) 来实现。
