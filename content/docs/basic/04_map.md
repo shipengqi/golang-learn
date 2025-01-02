@@ -397,23 +397,3 @@ delete(hashmap, key)
 map 在扩容后，`key/value` 会进行迁移，在同一个桶中的 key，有些会迁移到别的桶中，有些 key 原地不动，导致遍历 map 就无法保证顺序。
 
 Go 底层的实现简单粗暴，直接生成一个随机数，这个随机数决定从哪里开始遍历，因此**每次 `for range map` 的结果都是不一样的。那是因为它的起始位置根本就不固定**。
-
-## map 传入函数
-
-```go
-package main
-
-import "fmt"
-
-func main() {
-	var ts map[string]string
-	ts2 := make(map[string]string)
-	fmt.Println(ts, len(ts))
-	fmt.Println(ts2, len(ts2))
-	ts2["test1"] = "test1"
-	fmt.Println(ts2, len(ts2))
-	// ts["test1"] = "test1" // nil map 不能进行写操作
-	v := ts["test1"] // nil map 可以进行读操作
-	fmt.Println("-------", v)
-}
-```
