@@ -3,6 +3,14 @@ title: Go 性能优化
 weight: 6
 ---
 
+## 预分配容量
+
+对于切片和 map，尽量预分配容量来避免触发扩容机制，扩容是一个比较耗时的操作。
+
+## 字符串拼接
+
+使用 `strings.Builder` 或 `bytes.Buffer` 操作字符串，参考 [字符串拼接](../../basic/01_basic_type/#%e5%ad%97%e7%ac%a6%e4%b8%b2%e6%8b%bc%e6%8e%a5)。
+
 ## JSON 优化
 
 Go 的标准库 `encoding/json` 是通过反射来实现的。性能相对有些慢。 可以使用第三方库来替代标准库：
@@ -40,6 +48,101 @@ func main() {
 ### channel 通知
 
 有时候使用 `channel` 不需要发送任何的数据，只用来通知 goroutine 执行任务，或结束等。这个时候就可以使用空结构体。
+
+## 使用原子操作保护变量
+
+在并发编程中，对于一个变量更新的保护，原子操作通常会更有效率。参考 [互斥锁与原子操作](../../concurrency/08_atomic/#互斥锁与原子操作)。
+
+## 减少循环中的内存读写操作
+
+```go
+package main
+
+import (
+	"fmt"
+	"math/rand"
+	"os"
+	"strconv"
+)
+
+func main() {
+	input, _ := strconv.Atoi(os.Args[1]) // Get an input number from the command line
+	u := int32(input)
+	r := int32(rand.Uint32() % 10000)   // Use Uint32 for faster random number generation
+	var a [10000]int32                  // Array of 10k elements initialized to 0
+	for i := int32(0); i < 10000; i++ { // 10k outer loop iterations
+		for j := int32(0); j < 100000; j++ { // 100k inner loop iterations, per outer loop iteration
+			a[i] = a[i] + j%u // Simple sum
+		}
+		a[i] += r // Add a random value to each element in array
+	}
+	z := a[r]
+	fmt.Println(z) // Print out a single element from the array
+}
+
+```
+
+编译测试：
+
+```bash
+$go build -o code code.go
+$time ./code 10
+456953
+
+real 0m3.766s
+user 0m3.767s
+sys 0m0.007s
+```
+
+修改代码，将数组元素累积到一个临时变量中，并在外层循环结束后写回数组，这样做可以减少内层循环中的内存读写操作，充分利用 CPU 缓存和寄存器，加速数据处理。
+
+{{< callout type="info" >}}
+数组从内存或缓存读，而一个临时变量很大可能是从寄存器读，那读取速度相差还是很大的。
+{{< /callout >}}
+
+```go
+package main
+
+import (
+	"fmt"
+	"math/rand"
+	"os"
+	"strconv"
+)
+
+func main() {
+	input, e := strconv.Atoi(os.Args[1]) // Get an input number from the command line
+	if e != nil {
+		panic(e)
+	}
+	u := int32(input)
+	r := int32(rand.Intn(10000))        // Get a random number 0 <= r < 10k
+	var a [10000]int32                  // Array of 10k elements initialized to 0
+	for i := int32(0); i < 10000; i++ { // 10k outer loop iterations
+		temp := a[i]
+		for j := int32(0); j < 100000; j++ { // 100k inner loop iterations, per outer loop iteration
+			temp += j % u // Simple sum
+		}
+		temp += r // Add a random value to each element in array
+		a[i] = temp
+	}
+	fmt.Println(a[r]) // Print out a single element from the array
+}
+```
+
+编译测试：
+
+```bash
+$go build -o code code.go
+$time ./code 10
+459169
+
+real 0m3.017s
+user 0m3.017s
+sys 0m0.007s
+```
+
+参考文章：[惊！Go 在十亿次循环和百万任务中表现不如 Java，究竟为何？](https://mp.weixin.qq.com/s/hTQiEmf3ztRS-77fBET91A)
 
 ## 内存对齐
 
