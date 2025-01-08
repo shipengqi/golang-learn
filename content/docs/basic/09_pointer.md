@@ -54,7 +54,7 @@ func main() {
 
 ## unsafe.Pointer
 
-由于 Go 指针的限制，所以 Go 提供了可以进行类型转换的通用指针 `unsafe.Pointer`。
+由于 Go 指针的限制，所以 Go 提供了可以进行**类型转换**的通用指针 `unsafe.Pointer`。
 
 `unsafe.Pointer` 是特别定义的一种指针类型，它指向的对象如果还有用，那么是不会被 GC 回收的。
 

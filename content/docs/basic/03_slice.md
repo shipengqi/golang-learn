@@ -46,6 +46,8 @@ type SliceHeader struct {
    s := numbers[:3]) // [0 1 2]
    ```
 
+不管使用那种初始化方式，最后都是返回一个 `SliceHeader` 的结构体。
+
 《Go 学习笔记》 第四版 中的示例：
 
 ```go
