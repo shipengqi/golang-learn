@@ -149,11 +149,11 @@ $ go tool trace trace.out
 
 进入 `Goroutine analysis` 可查看整个运行过程中，每个函数块有多少个 goroutine 在跑，并且观察每个的 goroutine 的运行开销都花费在哪个阶段。
 
-![goroutines-analysis](https://gitee.com/shipengqi/illustrations/raw/main/goroutines-analysis.png)
+![goroutines-analysis](https://gitee.com/shipengqi/illustrations/raw/main/go/goroutines-analysis.png)
 
 点击一个 goroutine 查看详细信息，例如 `main.main.func1`：
 
-![goroutines-analysis-n](https://gitee.com/shipengqi/illustrations/raw/main/goroutines-analysis-n.png)
+![goroutines-analysis-n](https://gitee.com/shipengqi/illustrations/raw/main/go/goroutines-analysis-n.png)
 
 | 名称                    | 含义     | 耗时    |
 |-----------------------|--------|-------|
