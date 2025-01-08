@@ -776,7 +776,7 @@ title="Copy code"
 &lt;h2>布尔类型&lt;span class="hx-absolute -hx-mt-20" id="布尔类型">&lt;/span>
 &lt;a href="#%e5%b8%83%e5%b0%94%e7%b1%bb%e5%9e%8b" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>布尔类型的值只有两种：&lt;code>true&lt;/code> 和 &lt;code>false&lt;/code>。&lt;/p>
 &lt;h2>字符串&lt;span class="hx-absolute -hx-mt-20" id="字符串">&lt;/span>
-&lt;a href="#%e5%ad%97%e7%ac%a6%e4%b8%b2" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>字符串实际上是由&lt;strong>字符组成的数组&lt;/strong>，C 语言中的字符串使用字符数组 &lt;code>char[]&lt;/code> 表示。数组会占用一片连续的内存空间，而内存空间存储的字节共同组成了字符串，Go 中的字符串只是一个&lt;strong>只读的字节数组&lt;/strong>。&lt;/p>
+&lt;a href="#%e5%ad%97%e7%ac%a6%e4%b8%b2" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>字符串实际上是由&lt;strong>字符组成的数组&lt;/strong>，数组连续的内存空间中存储的字节共同组成了字符串。Go 中的字符串是一个&lt;strong>只读的字节数组&lt;/strong>。&lt;/p>
 &lt;p>字符串的结构体：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// src/reflect/value.go#L1983
@@ -794,7 +794,7 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;p>与切片的结构体很像，只不过少了一个容量 &lt;code>Cap&lt;/code>。&lt;/p>
-&lt;p>因为字符串是一个只读的类型，不可以直接向字符串直接追加元素改变其本身的内存空间，所有在&lt;strong>字符串上的写入操作都是通过拷贝实现的&lt;/strong>。&lt;/p>
+&lt;p>字符串是不可变的（immutable），也就是说，不能直接修改已有字符串的内容。所有在&lt;strong>字符串上的写入操作都是通过拷贝实现的&lt;/strong>。&lt;/p>
 &lt;h3>字符串拼接&lt;span class="hx-absolute -hx-mt-20" id="字符串拼接">&lt;/span>
 &lt;a href="#%e5%ad%97%e7%ac%a6%e4%b8%b2%e6%8b%bc%e6%8e%a5" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>拼接字符串的几种方式：&lt;/p>
 &lt;h4>&lt;code>+&lt;/code> 拼接字符串&lt;span class="hx-absolute -hx-mt-20" id="-拼接字符串">&lt;/span>
@@ -899,7 +899,20 @@ title="Copy code"
 &lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
 &lt;/button>
 &lt;/div>
-&lt;/div></description></item><item><title>项目规范</title><link>https://shipengqi.github.io/golang-learn/docs/project/01_specs/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/project/01_specs/</guid><description>
+&lt;/div>
+&lt;h2>零值&lt;span class="hx-absolute -hx-mt-20" id="零值">&lt;/span>
+&lt;a href="#%e9%9b%b6%e5%80%bc" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>数值类型：整数，浮点数的零值是 &lt;code>0&lt;/code>。复数的零值是 &lt;code>0+0i&lt;/code>&lt;/li>
+&lt;li>布尔类型：零值是 &lt;code>false&lt;/code>。&lt;/li>
+&lt;li>字符串类型：零值是空字符串 &lt;code>&amp;quot;&amp;quot;&lt;/code>。&lt;/li>
+&lt;li>指针类型：零值是 &lt;code>nil&lt;/code>。&lt;/li>
+&lt;li>数组类型：零值是所有元素都为零值的数组。&lt;/li>
+&lt;li>切片类型：零值是 &lt;code>nil&lt;/code>。&lt;/li>
+&lt;li>映射类型（map）：零值是 &lt;code>nil&lt;/code>。&lt;/li>
+&lt;li>通道类型（channel）：零值是 &lt;code>nil&lt;/code>。&lt;/li>
+&lt;li>函数类型：零值是 &lt;code>nil&lt;/code>。&lt;/li>
+&lt;li>接口类型：零值是 &lt;code>nil&lt;/code>。&lt;/li>
+&lt;/ul></description></item><item><title>项目规范</title><link>https://shipengqi.github.io/golang-learn/docs/project/01_specs/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/project/01_specs/</guid><description>
 &lt;p>对于多人协作的项目，每个人的开发习惯都不相同，没有统一的规范，会造成很多问题。比如：代码风格不统一，目录结构杂乱无章，API 定义不统一（URL 和错误码）。&lt;/p>
 &lt;p>一个好的规范可以提高软件质量，提高开发效率，降低维护成本。&lt;/p>
 &lt;h2>选择开源协议&lt;span class="hx-absolute -hx-mt-20" id="选择开源协议">&lt;/span>
@@ -1887,6 +1900,7 @@ title="Copy code"
 &lt;/div>
 &lt;/li>
 &lt;/ol>
+&lt;p>不管使用那种初始化方式，最后都是返回一个 &lt;code>SliceHeader&lt;/code> 的结构体。&lt;/p>
 &lt;p>《Go 学习笔记》 第四版 中的示例：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">package&lt;/span> &lt;span class="nx">main&lt;/span>
@@ -3050,33 +3064,7 @@ title="Copy code"
 &lt;p>&lt;code>delete&lt;/code> 关键字的唯一作用就是将某一个 &lt;code>key/value&lt;/code> 从哈希表中删除。会被编译器被转换成 &lt;code>mapdelete&lt;/code> 方法。删除操作先是找到 key 的位置，清空 &lt;code>key/value&lt;/code>，然后将 &lt;code>hmap.count - 1&lt;/code>，并且对应的 &lt;code>tophash&lt;/code> 设置为 &lt;code>Empty&lt;/code>。&lt;/p>
 &lt;h3>map 为什么是无序的&lt;span class="hx-absolute -hx-mt-20" id="map-为什么是无序的">&lt;/span>
 &lt;a href="#map-%e4%b8%ba%e4%bb%80%e4%b9%88%e6%98%af%e6%97%a0%e5%ba%8f%e7%9a%84" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>map 在扩容后，&lt;code>key/value&lt;/code> 会进行迁移，在同一个桶中的 key，有些会迁移到别的桶中，有些 key 原地不动，导致遍历 map 就无法保证顺序。&lt;/p>
-&lt;p>Go 底层的实现简单粗暴，直接生成一个随机数，这个随机数决定从哪里开始遍历，因此&lt;strong>每次 &lt;code>for range map&lt;/code> 的结果都是不一样的。那是因为它的起始位置根本就不固定&lt;/strong>。&lt;/p>
-&lt;h2>map 传入函数&lt;span class="hx-absolute -hx-mt-20" id="map-传入函数">&lt;/span>
-&lt;a href="#map-%e4%bc%a0%e5%85%a5%e5%87%bd%e6%95%b0" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">package&lt;/span> &lt;span class="nx">main&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="s">&amp;#34;fmt&amp;#34;&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">main&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="kd">var&lt;/span> &lt;span class="nx">ts&lt;/span> &lt;span class="kd">map&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="kt">string&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="kt">string&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">ts2&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">make&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kd">map&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="kt">string&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="kt">string&lt;/span>&lt;span class="p">)&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">ts&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nb">len&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">ts&lt;/span>&lt;span class="p">))&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">ts2&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nb">len&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">ts2&lt;/span>&lt;span class="p">))&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">ts2&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s">&amp;#34;test1&amp;#34;&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="s">&amp;#34;test1&amp;#34;&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">ts2&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nb">len&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">ts2&lt;/span>&lt;span class="p">))&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// ts[&amp;#34;test1&amp;#34;] = &amp;#34;test1&amp;#34; // nil map 不能进行写操作
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">v&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">ts&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s">&amp;#34;test1&amp;#34;&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="c1">// nil map 可以进行读操作
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;-------&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">v&lt;/span>&lt;span class="p">)&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
-&lt;button
-class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
-title="Copy code"
->
-&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;/button>
-&lt;/div>
-&lt;/div></description></item><item><title>条件变量</title><link>https://shipengqi.github.io/golang-learn/docs/concurrency/04_cond/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/concurrency/04_cond/</guid><description>
+&lt;p>Go 底层的实现简单粗暴，直接生成一个随机数，这个随机数决定从哪里开始遍历，因此&lt;strong>每次 &lt;code>for range map&lt;/code> 的结果都是不一样的。那是因为它的起始位置根本就不固定&lt;/strong>。&lt;/p></description></item><item><title>条件变量</title><link>https://shipengqi.github.io/golang-learn/docs/concurrency/04_cond/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/concurrency/04_cond/</guid><description>
 &lt;p>Go 标准库提供了条件变量 &lt;code>sync.Cond&lt;/code> 它可以让一组的 goroutine 都在满足特定条件时被唤醒。&lt;/p>
 &lt;p>&lt;code>sync.Cond&lt;/code> 不是一个常用的同步机制，但是在条件长时间无法满足时，&lt;strong>与使用 &lt;code>for {}&lt;/code> 进行忙碌等待相比，&lt;code>sync.Cond&lt;/code> 能够让出处理器的使用权，提高 CPU 的利用率&lt;/strong>。&lt;/p>
 &lt;p>&lt;code>sync.Cond&lt;/code> 基于互斥锁/读写锁，它和互斥锁的区别是什么？&lt;/p>
@@ -3463,9 +3451,9 @@ title="Copy code"
 &lt;p>点击 &lt;code>Flow events&lt;/code> 选择 &lt;code>All&lt;/code>，可以查看程序运行中的事件流情况。&lt;/p>
 &lt;h3>Goroutine analysis&lt;span class="hx-absolute -hx-mt-20" id="goroutine-analysis">&lt;/span>
 &lt;a href="#goroutine-analysis" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>进入 &lt;code>Goroutine analysis&lt;/code> 可查看整个运行过程中，每个函数块有多少个 goroutine 在跑，并且观察每个的 goroutine 的运行开销都花费在哪个阶段。&lt;/p>
-&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/goroutines-analysis.png" alt="goroutines-analysis" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/goroutines-analysis.png" alt="goroutines-analysis" loading="lazy" />&lt;/p>
 &lt;p>点击一个 goroutine 查看详细信息，例如 &lt;code>main.main.func1&lt;/code>：&lt;/p>
-&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/goroutines-analysis-n.png" alt="goroutines-analysis-n" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/goroutines-analysis-n.png" alt="goroutines-analysis-n" loading="lazy" />&lt;/p>
 &lt;table>
 &lt;thead>
 &lt;tr>
@@ -4138,6 +4126,10 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div></description></item><item><title>Go 性能优化</title><link>https://shipengqi.github.io/golang-learn/docs/practice/06_performance/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/practice/06_performance/</guid><description>
+&lt;h2>预分配容量&lt;span class="hx-absolute -hx-mt-20" id="预分配容量">&lt;/span>
+&lt;a href="#%e9%a2%84%e5%88%86%e9%85%8d%e5%ae%b9%e9%87%8f" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>对于切片和 map，尽量预分配容量来避免触发扩容机制，扩容是一个比较耗时的操作。&lt;/p>
+&lt;h2>字符串拼接&lt;span class="hx-absolute -hx-mt-20" id="字符串拼接">&lt;/span>
+&lt;a href="#%e5%ad%97%e7%ac%a6%e4%b8%b2%e6%8b%bc%e6%8e%a5" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>使用 &lt;code>strings.Builder&lt;/code> 或 &lt;code>bytes.Buffer&lt;/code> 操作字符串，参考 &lt;a href="../../basic/01_basic_type/#%e5%ad%97%e7%ac%a6%e4%b8%b2%e6%8b%bc%e6%8e%a5" >字符串拼接&lt;/a>。&lt;/p>
 &lt;h2>JSON 优化&lt;span class="hx-absolute -hx-mt-20" id="json-优化">&lt;/span>
 &lt;a href="#json-%e4%bc%98%e5%8c%96" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Go 的标准库 &lt;code>encoding/json&lt;/code> 是通过反射来实现的。性能相对有些慢。 可以使用第三方库来替代标准库：&lt;/p>
 &lt;ul>
@@ -4174,6 +4166,123 @@ title="Copy code"
 类型，就会多占据 1 个字节。这个时候就可以使用空结构体 &lt;code>map[string]struct{}&lt;/code>。&lt;/p>
 &lt;h3>channel 通知&lt;span class="hx-absolute -hx-mt-20" id="channel-通知">&lt;/span>
 &lt;a href="#channel-%e9%80%9a%e7%9f%a5" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>有时候使用 &lt;code>channel&lt;/code> 不需要发送任何的数据，只用来通知 goroutine 执行任务，或结束等。这个时候就可以使用空结构体。&lt;/p>
+&lt;h2>使用原子操作保护变量&lt;span class="hx-absolute -hx-mt-20" id="使用原子操作保护变量">&lt;/span>
+&lt;a href="#%e4%bd%bf%e7%94%a8%e5%8e%9f%e5%ad%90%e6%93%8d%e4%bd%9c%e4%bf%9d%e6%8a%a4%e5%8f%98%e9%87%8f" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>在并发编程中，对于一个变量更新的保护，原子操作通常会更有效率。参考 &lt;a href="../../concurrency/08_atomic/#%e4%ba%92%e6%96%a5%e9%94%81%e4%b8%8e%e5%8e%9f%e5%ad%90%e6%93%8d%e4%bd%9c" >互斥锁与原子操作&lt;/a>。&lt;/p>
+&lt;h2>减少循环中的内存读写操作&lt;span class="hx-absolute -hx-mt-20" id="减少循环中的内存读写操作">&lt;/span>
+&lt;a href="#%e5%87%8f%e5%b0%91%e5%be%aa%e7%8e%af%e4%b8%ad%e7%9a%84%e5%86%85%e5%ad%98%e8%af%bb%e5%86%99%e6%93%8d%e4%bd%9c" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">package&lt;/span> &lt;span class="nx">main&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="p">(&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s">&amp;#34;fmt&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s">&amp;#34;math/rand&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s">&amp;#34;os&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s">&amp;#34;strconv&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">main&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">input&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">_&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">strconv&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Atoi&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">os&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Args&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">])&lt;/span> &lt;span class="c1">// Get an input number from the command line
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">u&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">int32&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">input&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">r&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">int32&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">rand&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Uint32&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="o">%&lt;/span> &lt;span class="mi">10000&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="c1">// Use Uint32 for faster random number generation
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="kd">var&lt;/span> &lt;span class="nx">a&lt;/span> &lt;span class="p">[&lt;/span>&lt;span class="mi">10000&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="kt">int32&lt;/span> &lt;span class="c1">// Array of 10k elements initialized to 0
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">for&lt;/span> &lt;span class="nx">i&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">int32&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">);&lt;/span> &lt;span class="nx">i&lt;/span> &lt;span class="p">&amp;lt;&lt;/span> &lt;span class="mi">10000&lt;/span>&lt;span class="p">;&lt;/span> &lt;span class="nx">i&lt;/span>&lt;span class="o">++&lt;/span> &lt;span class="p">{&lt;/span> &lt;span class="c1">// 10k outer loop iterations
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">for&lt;/span> &lt;span class="nx">j&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">int32&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">);&lt;/span> &lt;span class="nx">j&lt;/span> &lt;span class="p">&amp;lt;&lt;/span> &lt;span class="mi">100000&lt;/span>&lt;span class="p">;&lt;/span> &lt;span class="nx">j&lt;/span>&lt;span class="o">++&lt;/span> &lt;span class="p">{&lt;/span> &lt;span class="c1">// 100k inner loop iterations, per outer loop iteration
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">a&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="nx">i&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">a&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="nx">i&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="nx">j&lt;/span>&lt;span class="o">%&lt;/span>&lt;span class="nx">u&lt;/span> &lt;span class="c1">// Simple sum
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">a&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="nx">i&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="o">+=&lt;/span> &lt;span class="nx">r&lt;/span> &lt;span class="c1">// Add a random value to each element in array
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">z&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">a&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="nx">r&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">z&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="c1">// Print out a single element from the array
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>编译测试：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">&lt;span class="nv">$go&lt;/span> build -o code code.go
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nv">$time&lt;/span> ./code &lt;span class="m">10&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="m">456953&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">real 0m3.766s
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">user 0m3.767s
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">sys 0m0.007s&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>修改代码，将数组元素累积到一个临时变量中，并在外层循环结束后写回数组，这样做可以减少内层循环中的内存读写操作，充分利用 CPU 缓存和寄存器，加速数据处理。&lt;/p>
+&lt;div class="hx-overflow-x-auto hx-mt-6 hx-flex hx-rounded-lg hx-border hx-py-2 ltr:hx-pr-4 rtl:hx-pl-4 contrast-more:hx-border-current contrast-more:dark:hx-border-current hx-border-blue-200 hx-bg-blue-100 hx-text-blue-900 dark:hx-border-blue-200/30 dark:hx-bg-blue-900/30 dark:hx-text-blue-200">
+&lt;div class="ltr:hx-pl-3 ltr:hx-pr-2 rtl:hx-pr-3 rtl:hx-pl-2">&lt;div class="hx-select-none hx-text-xl" style="font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';">ℹ️&lt;/div>&lt;/div>
+&lt;div class="hx-w-full hx-min-w-0 hx-leading-7">
+&lt;div class="hx-mt-6 hx-leading-7 first:hx-mt-0">数组从内存或缓存读，而一个临时变量很大可能是从寄存器读，那读取速度相差还是很大的。&lt;/div>
+&lt;/div>
+&lt;/div>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">package&lt;/span> &lt;span class="nx">main&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="p">(&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s">&amp;#34;fmt&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s">&amp;#34;math/rand&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s">&amp;#34;os&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s">&amp;#34;strconv&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">main&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">input&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">e&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">strconv&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Atoi&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">os&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Args&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">])&lt;/span> &lt;span class="c1">// Get an input number from the command line
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nx">e&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="kc">nil&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nb">panic&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">e&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">u&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">int32&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">input&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">r&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">int32&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">rand&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Intn&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">10000&lt;/span>&lt;span class="p">))&lt;/span> &lt;span class="c1">// Get a random number 0 &amp;lt;= r &amp;lt; 10k
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="kd">var&lt;/span> &lt;span class="nx">a&lt;/span> &lt;span class="p">[&lt;/span>&lt;span class="mi">10000&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="kt">int32&lt;/span> &lt;span class="c1">// Array of 10k elements initialized to 0
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">for&lt;/span> &lt;span class="nx">i&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">int32&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">);&lt;/span> &lt;span class="nx">i&lt;/span> &lt;span class="p">&amp;lt;&lt;/span> &lt;span class="mi">10000&lt;/span>&lt;span class="p">;&lt;/span> &lt;span class="nx">i&lt;/span>&lt;span class="o">++&lt;/span> &lt;span class="p">{&lt;/span> &lt;span class="c1">// 10k outer loop iterations
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">temp&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">a&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="nx">i&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="nx">j&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">int32&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">);&lt;/span> &lt;span class="nx">j&lt;/span> &lt;span class="p">&amp;lt;&lt;/span> &lt;span class="mi">100000&lt;/span>&lt;span class="p">;&lt;/span> &lt;span class="nx">j&lt;/span>&lt;span class="o">++&lt;/span> &lt;span class="p">{&lt;/span> &lt;span class="c1">// 100k inner loop iterations, per outer loop iteration
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">temp&lt;/span> &lt;span class="o">+=&lt;/span> &lt;span class="nx">j&lt;/span> &lt;span class="o">%&lt;/span> &lt;span class="nx">u&lt;/span> &lt;span class="c1">// Simple sum
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">temp&lt;/span> &lt;span class="o">+=&lt;/span> &lt;span class="nx">r&lt;/span> &lt;span class="c1">// Add a random value to each element in array
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">a&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="nx">i&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">temp&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">a&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="nx">r&lt;/span>&lt;span class="p">])&lt;/span> &lt;span class="c1">// Print out a single element from the array
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>编译测试：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">&lt;span class="nv">$go&lt;/span> build -o code code.go
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nv">$time&lt;/span> ./code &lt;span class="m">10&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="m">459169&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">real 0m3.017s
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">user 0m3.017s
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">sys 0m0.007s&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>参考文章：&lt;a href="https://mp.weixin.qq.com/s/hTQiEmf3ztRS-77fBET91A" target="_blank" rel="noopener">惊！Go 在十亿次循环和百万任务中表现不如 Java，究竟为何？&lt;/a>&lt;/p>
 &lt;h2>内存对齐&lt;span class="hx-absolute -hx-mt-20" id="内存对齐">&lt;/span>
 &lt;a href="#%e5%86%85%e5%ad%98%e5%af%b9%e9%bd%90" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;h3>为什么需要内存对齐？&lt;span class="hx-absolute -hx-mt-20" id="为什么需要内存对齐">&lt;/span>
 &lt;a href="#%e4%b8%ba%e4%bb%80%e4%b9%88%e9%9c%80%e8%a6%81%e5%86%85%e5%ad%98%e5%af%b9%e9%bd%90" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>CPU 访问内存时，并不是逐个字节访问，而是以&lt;strong>字长&lt;/strong>（word size）为单位访问。比如：&lt;/p>
@@ -6106,6 +6215,12 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;p>在高并发的情况下，单次 CAS 的执行成功率会降低，因此需要配合循环语句 &lt;code>for&lt;/code>，形成一个 &lt;code>for+atomic&lt;/code> 的类似自旋乐观锁。&lt;/p>
+&lt;p>&lt;strong>自旋锁的使用场景&lt;/strong>：&lt;/p>
+&lt;ol>
+&lt;li>读多写少的场景，线程能够很快地获得锁，则自旋锁非常有效，因为它避免了线程调度和上下文切换的开销。如果有大量的写操作，CAS 操作无法获取到锁，
+线程会在不断的自旋中消耗大量的 CPU 时间。线程需要反复尝试获取锁，而不释放 CPU，这可能导致性能下降。&lt;/li>
+&lt;li>自旋锁适合用在加锁粒度很小的场景，锁的持有时间非常短。如果锁定时间较长，使用自旋锁可能导致线程长时间占用 CPU。&lt;/li>
+&lt;/ol>
 &lt;h3>ABA 问题&lt;span class="hx-absolute -hx-mt-20" id="aba-问题">&lt;/span>
 &lt;a href="#aba-%e9%97%ae%e9%a2%98" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>使用 CAS，会有 ABA 问题，ABA 问题是什么？&lt;/p>
 &lt;p>例如，一个 goroutine a 从内存位置 V 中取出 1，这时候另一个 goroutine b 也从内存位置 V 中取出 1，并且 goroutine b 将 V 位置的值更新为 0，接着又将 V 位置的值改为 1，这时候 goroutine a 进行 CAS 操作发现位置 V 的值仍然是 1，然后 goroutine a 操作成功。虽然 goroutine a 的 CAS 操
@@ -6164,11 +6279,14 @@ title="Copy code"
 &lt;li>channel 关闭后如果 channel 中没有数据，那么接收者会收到一个 channel 元素的零值。&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>close&lt;/code> 表示这个 channel 不会再继续发送数据，所以要&lt;strong>在发送者所在的 goroutine 去关闭 channel&lt;/strong>。&lt;/p>
-&lt;blockquote>
-&lt;p>关闭一个 &lt;code>nil&lt;/code> 的 channel 会导致 panic。&lt;br>
+&lt;div class="hx-overflow-x-auto hx-mt-6 hx-flex hx-rounded-lg hx-border hx-py-2 ltr:hx-pr-4 rtl:hx-pl-4 contrast-more:hx-border-current contrast-more:dark:hx-border-current hx-border-yellow-100 hx-bg-yellow-50 hx-text-yellow-900 dark:hx-border-yellow-200/30 dark:hx-bg-yellow-700/30 dark:hx-text-yellow-200">
+&lt;div class="ltr:hx-pl-3 ltr:hx-pr-2 rtl:hx-pr-3 rtl:hx-pl-2">&lt;div class="hx-select-none hx-text-xl" style="font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';">⚠️&lt;/div>&lt;/div>
+&lt;div class="hx-w-full hx-min-w-0 hx-leading-7">
+&lt;div class="hx-mt-6 hx-leading-7 first:hx-mt-0">关闭一个 &lt;code>nil&lt;/code> 的 channel 会导致 panic。&lt;br>
 重复关闭 channel 会导致 panic。&lt;br>
-向已关闭的 channel 发送值会导致 panic。&lt;br>&lt;/p>
-&lt;/blockquote>
+向已关闭的 channel 发送值会导致 panic。&lt;br>&lt;/div>
+&lt;/div>
+&lt;/div>
 &lt;h3>单向 channel&lt;span class="hx-absolute -hx-mt-20" id="单向-channel">&lt;/span>
 &lt;a href="#%e5%8d%95%e5%90%91-channel" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>当一个 channel 作为一个函数参数时，它一般总是被专门用于&lt;strong>只发送或者只接收&lt;/strong>。&lt;/p>
 &lt;ul>
@@ -8055,7 +8173,7 @@ title="Copy code"
 &lt;h2>uintptr 类型&lt;span class="hx-absolute -hx-mt-20" id="uintptr-类型">&lt;/span>
 &lt;a href="#uintptr-%e7%b1%bb%e5%9e%8b" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>uintptr&lt;/code> 只是一个无符号整型，用于存储内存地址的整形变量。也就是说，和普通的整型一样，是会被 GC 回收的。&lt;/p>
 &lt;h2>unsafe.Pointer&lt;span class="hx-absolute -hx-mt-20" id="unsafepointer">&lt;/span>
-&lt;a href="#unsafepointer" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>由于 Go 指针的限制，所以 Go 提供了可以进行类型转换的通用指针 &lt;code>unsafe.Pointer&lt;/code>。&lt;/p>
+&lt;a href="#unsafepointer" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>由于 Go 指针的限制，所以 Go 提供了可以进行&lt;strong>类型转换&lt;/strong>的通用指针 &lt;code>unsafe.Pointer&lt;/code>。&lt;/p>
 &lt;p>&lt;code>unsafe.Pointer&lt;/code> 是特别定义的一种指针类型，它指向的对象如果还有用，那么是不会被 GC 回收的。&lt;/p>
 &lt;p>&lt;code>unsafe.Pointer&lt;/code> 是各种指针相互转换的桥梁：&lt;/p>
 &lt;ul>
@@ -9803,7 +9921,34 @@ title="Copy code"
 &lt;li>&lt;code>groups&lt;/code> 根据 Commit Message 的 type 分组。&lt;/li>
 &lt;/ul>
 &lt;p>生成的 CHANGELOG 如下图：&lt;/p>
-&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/changlog.png" alt="changlog" loading="lazy" />&lt;/p></description></item><item><title>错误处理</title><link>https://shipengqi.github.io/golang-learn/docs/project/14_error/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/project/14_error/</guid><description>
+&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/changlog.png" alt="changlog" loading="lazy" />&lt;/p></description></item><item><title>make 和 new</title><link>https://shipengqi.github.io/golang-learn/docs/basic/14_make_new/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/basic/14_make_new/</guid><description>
+&lt;p>Go 中初始化一个结构，有两个关键字：&lt;code>make&lt;/code> 和 &lt;code>new&lt;/code>。虽然都是用于初始化结构，但是有很大的不同。&lt;/p>
+&lt;ol>
+&lt;li>&lt;code>new&lt;/code> 是根据传入的类型分配一片内存空间，并返回指向这片内存空间的指针。
+&lt;ul>
+&lt;li>任何类型都可以使用 &lt;code>new&lt;/code> 来初始化。&lt;/li>
+&lt;li>&lt;strong>内存里存的值是对应类型的零值&lt;/strong>，这就意味着，使用 &lt;code>new&lt;/code> 初始化切片、map 和 channel 时，得到是 &lt;code>nil&lt;/code>。&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;code>make&lt;/code> 是用来初始化内置的数据结构，也就是切片、map 和 channel。
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// sl 是一个结构体 reflect.SliceHeader；
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="nx">sl&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">make&lt;/span>&lt;span class="p">([]&lt;/span>&lt;span class="kt">int&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">100&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// m 是一个指向 runtime.hmap 结构体的指针
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="nx">m&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">make&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kd">map&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="kt">int&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="kt">bool&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">10&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// ch 是一个指向 runtime.hchan 结构体的指针
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="nx">ch&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">make&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kd">chan&lt;/span> &lt;span class="kt">int&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">5&lt;/span>&lt;span class="p">)&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;/li>
+&lt;/ol></description></item><item><title>错误处理</title><link>https://shipengqi.github.io/golang-learn/docs/project/14_error/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/project/14_error/</guid><description>
 &lt;h2>Error 和 Panic&lt;span class="hx-absolute -hx-mt-20" id="error-和-panic">&lt;/span>
 &lt;a href="#error-%e5%92%8c-panic" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Go 的错误设计中，错误应该明确地当成业务的一部分，&lt;strong>任何可以预见的问题都需要做错误处理&lt;/strong>。通常 Go 的函数返回两个值，一个是函数的结果，
 另一个是错误对象。如果没有发生错误，错误对象就是 &lt;code>nil&lt;/code>。这种方式，强迫调用者对错误进行处理，以防遗漏任何运行时可能的错误。&lt;/p>

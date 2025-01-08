@@ -1746,6 +1746,12 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;p>在高并发的情况下，单次 CAS 的执行成功率会降低，因此需要配合循环语句 &lt;code>for&lt;/code>，形成一个 &lt;code>for+atomic&lt;/code> 的类似自旋乐观锁。&lt;/p>
+&lt;p>&lt;strong>自旋锁的使用场景&lt;/strong>：&lt;/p>
+&lt;ol>
+&lt;li>读多写少的场景，线程能够很快地获得锁，则自旋锁非常有效，因为它避免了线程调度和上下文切换的开销。如果有大量的写操作，CAS 操作无法获取到锁，
+线程会在不断的自旋中消耗大量的 CPU 时间。线程需要反复尝试获取锁，而不释放 CPU，这可能导致性能下降。&lt;/li>
+&lt;li>自旋锁适合用在加锁粒度很小的场景，锁的持有时间非常短。如果锁定时间较长，使用自旋锁可能导致线程长时间占用 CPU。&lt;/li>
+&lt;/ol>
 &lt;h3>ABA 问题&lt;span class="hx-absolute -hx-mt-20" id="aba-问题">&lt;/span>
 &lt;a href="#aba-%e9%97%ae%e9%a2%98" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>使用 CAS，会有 ABA 问题，ABA 问题是什么？&lt;/p>
 &lt;p>例如，一个 goroutine a 从内存位置 V 中取出 1，这时候另一个 goroutine b 也从内存位置 V 中取出 1，并且 goroutine b 将 V 位置的值更新为 0，接着又将 V 位置的值改为 1，这时候 goroutine a 进行 CAS 操作发现位置 V 的值仍然是 1，然后 goroutine a 操作成功。虽然 goroutine a 的 CAS 操
@@ -1804,11 +1810,14 @@ title="Copy code"
 &lt;li>channel 关闭后如果 channel 中没有数据，那么接收者会收到一个 channel 元素的零值。&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>close&lt;/code> 表示这个 channel 不会再继续发送数据，所以要&lt;strong>在发送者所在的 goroutine 去关闭 channel&lt;/strong>。&lt;/p>
-&lt;blockquote>
-&lt;p>关闭一个 &lt;code>nil&lt;/code> 的 channel 会导致 panic。&lt;br>
+&lt;div class="hx-overflow-x-auto hx-mt-6 hx-flex hx-rounded-lg hx-border hx-py-2 ltr:hx-pr-4 rtl:hx-pl-4 contrast-more:hx-border-current contrast-more:dark:hx-border-current hx-border-yellow-100 hx-bg-yellow-50 hx-text-yellow-900 dark:hx-border-yellow-200/30 dark:hx-bg-yellow-700/30 dark:hx-text-yellow-200">
+&lt;div class="ltr:hx-pl-3 ltr:hx-pr-2 rtl:hx-pr-3 rtl:hx-pl-2">&lt;div class="hx-select-none hx-text-xl" style="font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';">⚠️&lt;/div>&lt;/div>
+&lt;div class="hx-w-full hx-min-w-0 hx-leading-7">
+&lt;div class="hx-mt-6 hx-leading-7 first:hx-mt-0">关闭一个 &lt;code>nil&lt;/code> 的 channel 会导致 panic。&lt;br>
 重复关闭 channel 会导致 panic。&lt;br>
-向已关闭的 channel 发送值会导致 panic。&lt;br>&lt;/p>
-&lt;/blockquote>
+向已关闭的 channel 发送值会导致 panic。&lt;br>&lt;/div>
+&lt;/div>
+&lt;/div>
 &lt;h3>单向 channel&lt;span class="hx-absolute -hx-mt-20" id="单向-channel">&lt;/span>
 &lt;a href="#%e5%8d%95%e5%90%91-channel" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>当一个 channel 作为一个函数参数时，它一般总是被专门用于&lt;strong>只发送或者只接收&lt;/strong>。&lt;/p>
 &lt;ul>

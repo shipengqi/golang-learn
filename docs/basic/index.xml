@@ -35,7 +35,7 @@
 &lt;h2>布尔类型&lt;span class="hx-absolute -hx-mt-20" id="布尔类型">&lt;/span>
 &lt;a href="#%e5%b8%83%e5%b0%94%e7%b1%bb%e5%9e%8b" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>布尔类型的值只有两种：&lt;code>true&lt;/code> 和 &lt;code>false&lt;/code>。&lt;/p>
 &lt;h2>字符串&lt;span class="hx-absolute -hx-mt-20" id="字符串">&lt;/span>
-&lt;a href="#%e5%ad%97%e7%ac%a6%e4%b8%b2" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>字符串实际上是由&lt;strong>字符组成的数组&lt;/strong>，C 语言中的字符串使用字符数组 &lt;code>char[]&lt;/code> 表示。数组会占用一片连续的内存空间，而内存空间存储的字节共同组成了字符串，Go 中的字符串只是一个&lt;strong>只读的字节数组&lt;/strong>。&lt;/p>
+&lt;a href="#%e5%ad%97%e7%ac%a6%e4%b8%b2" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>字符串实际上是由&lt;strong>字符组成的数组&lt;/strong>，数组连续的内存空间中存储的字节共同组成了字符串。Go 中的字符串是一个&lt;strong>只读的字节数组&lt;/strong>。&lt;/p>
 &lt;p>字符串的结构体：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// src/reflect/value.go#L1983
@@ -53,7 +53,7 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;p>与切片的结构体很像，只不过少了一个容量 &lt;code>Cap&lt;/code>。&lt;/p>
-&lt;p>因为字符串是一个只读的类型，不可以直接向字符串直接追加元素改变其本身的内存空间，所有在&lt;strong>字符串上的写入操作都是通过拷贝实现的&lt;/strong>。&lt;/p>
+&lt;p>字符串是不可变的（immutable），也就是说，不能直接修改已有字符串的内容。所有在&lt;strong>字符串上的写入操作都是通过拷贝实现的&lt;/strong>。&lt;/p>
 &lt;h3>字符串拼接&lt;span class="hx-absolute -hx-mt-20" id="字符串拼接">&lt;/span>
 &lt;a href="#%e5%ad%97%e7%ac%a6%e4%b8%b2%e6%8b%bc%e6%8e%a5" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>拼接字符串的几种方式：&lt;/p>
 &lt;h4>&lt;code>+&lt;/code> 拼接字符串&lt;span class="hx-absolute -hx-mt-20" id="-拼接字符串">&lt;/span>
@@ -158,7 +158,20 @@ title="Copy code"
 &lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
 &lt;/button>
 &lt;/div>
-&lt;/div></description></item><item><title>数组</title><link>https://shipengqi.github.io/golang-learn/docs/basic/02_array/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/basic/02_array/</guid><description>
+&lt;/div>
+&lt;h2>零值&lt;span class="hx-absolute -hx-mt-20" id="零值">&lt;/span>
+&lt;a href="#%e9%9b%b6%e5%80%bc" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>数值类型：整数，浮点数的零值是 &lt;code>0&lt;/code>。复数的零值是 &lt;code>0+0i&lt;/code>&lt;/li>
+&lt;li>布尔类型：零值是 &lt;code>false&lt;/code>。&lt;/li>
+&lt;li>字符串类型：零值是空字符串 &lt;code>&amp;quot;&amp;quot;&lt;/code>。&lt;/li>
+&lt;li>指针类型：零值是 &lt;code>nil&lt;/code>。&lt;/li>
+&lt;li>数组类型：零值是所有元素都为零值的数组。&lt;/li>
+&lt;li>切片类型：零值是 &lt;code>nil&lt;/code>。&lt;/li>
+&lt;li>映射类型（map）：零值是 &lt;code>nil&lt;/code>。&lt;/li>
+&lt;li>通道类型（channel）：零值是 &lt;code>nil&lt;/code>。&lt;/li>
+&lt;li>函数类型：零值是 &lt;code>nil&lt;/code>。&lt;/li>
+&lt;li>接口类型：零值是 &lt;code>nil&lt;/code>。&lt;/li>
+&lt;/ul></description></item><item><title>数组</title><link>https://shipengqi.github.io/golang-learn/docs/basic/02_array/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/basic/02_array/</guid><description>
 &lt;p>数组是一个由&lt;strong>固定长度&lt;/strong>，&lt;strong>相同类型的元素&lt;/strong>组成的数据结构。计算机会为数组分配一块&lt;strong>连续的内存&lt;/strong>来保存其中的元素，并且可以利用&lt;strong>索引&lt;/strong>快速访问数组中的元素。&lt;/p>
 &lt;h2>初始化&lt;span class="hx-absolute -hx-mt-20" id="初始化">&lt;/span>
 &lt;a href="#%e5%88%9d%e5%a7%8b%e5%8c%96" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
@@ -252,6 +265,7 @@ title="Copy code"
 &lt;/div>
 &lt;/li>
 &lt;/ol>
+&lt;p>不管使用那种初始化方式，最后都是返回一个 &lt;code>SliceHeader&lt;/code> 的结构体。&lt;/p>
 &lt;p>《Go 学习笔记》 第四版 中的示例：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">package&lt;/span> &lt;span class="nx">main&lt;/span>
@@ -785,33 +799,7 @@ title="Copy code"
 &lt;p>&lt;code>delete&lt;/code> 关键字的唯一作用就是将某一个 &lt;code>key/value&lt;/code> 从哈希表中删除。会被编译器被转换成 &lt;code>mapdelete&lt;/code> 方法。删除操作先是找到 key 的位置，清空 &lt;code>key/value&lt;/code>，然后将 &lt;code>hmap.count - 1&lt;/code>，并且对应的 &lt;code>tophash&lt;/code> 设置为 &lt;code>Empty&lt;/code>。&lt;/p>
 &lt;h3>map 为什么是无序的&lt;span class="hx-absolute -hx-mt-20" id="map-为什么是无序的">&lt;/span>
 &lt;a href="#map-%e4%b8%ba%e4%bb%80%e4%b9%88%e6%98%af%e6%97%a0%e5%ba%8f%e7%9a%84" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>map 在扩容后，&lt;code>key/value&lt;/code> 会进行迁移，在同一个桶中的 key，有些会迁移到别的桶中，有些 key 原地不动，导致遍历 map 就无法保证顺序。&lt;/p>
-&lt;p>Go 底层的实现简单粗暴，直接生成一个随机数，这个随机数决定从哪里开始遍历，因此&lt;strong>每次 &lt;code>for range map&lt;/code> 的结果都是不一样的。那是因为它的起始位置根本就不固定&lt;/strong>。&lt;/p>
-&lt;h2>map 传入函数&lt;span class="hx-absolute -hx-mt-20" id="map-传入函数">&lt;/span>
-&lt;a href="#map-%e4%bc%a0%e5%85%a5%e5%87%bd%e6%95%b0" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">package&lt;/span> &lt;span class="nx">main&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="s">&amp;#34;fmt&amp;#34;&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">main&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="kd">var&lt;/span> &lt;span class="nx">ts&lt;/span> &lt;span class="kd">map&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="kt">string&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="kt">string&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">ts2&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">make&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kd">map&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="kt">string&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="kt">string&lt;/span>&lt;span class="p">)&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">ts&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nb">len&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">ts&lt;/span>&lt;span class="p">))&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">ts2&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nb">len&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">ts2&lt;/span>&lt;span class="p">))&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">ts2&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s">&amp;#34;test1&amp;#34;&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="s">&amp;#34;test1&amp;#34;&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">ts2&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nb">len&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">ts2&lt;/span>&lt;span class="p">))&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// ts[&amp;#34;test1&amp;#34;] = &amp;#34;test1&amp;#34; // nil map 不能进行写操作
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">v&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">ts&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s">&amp;#34;test1&amp;#34;&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="c1">// nil map 可以进行读操作
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;-------&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">v&lt;/span>&lt;span class="p">)&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
-&lt;button
-class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
-title="Copy code"
->
-&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;/button>
-&lt;/div>
-&lt;/div></description></item><item><title>函数</title><link>https://shipengqi.github.io/golang-learn/docs/basic/05_function/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/basic/05_function/</guid><description>
+&lt;p>Go 底层的实现简单粗暴，直接生成一个随机数，这个随机数决定从哪里开始遍历，因此&lt;strong>每次 &lt;code>for range map&lt;/code> 的结果都是不一样的。那是因为它的起始位置根本就不固定&lt;/strong>。&lt;/p></description></item><item><title>函数</title><link>https://shipengqi.github.io/golang-learn/docs/basic/05_function/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/basic/05_function/</guid><description>
 &lt;h2>参数传递&lt;span class="hx-absolute -hx-mt-20" id="参数传递">&lt;/span>
 &lt;a href="#%e5%8f%82%e6%95%b0%e4%bc%a0%e9%80%92" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>函数的参数传递有两种方式：&lt;/p>
 &lt;ul>
@@ -931,7 +919,7 @@ title="Copy code"
 &lt;h2>uintptr 类型&lt;span class="hx-absolute -hx-mt-20" id="uintptr-类型">&lt;/span>
 &lt;a href="#uintptr-%e7%b1%bb%e5%9e%8b" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>uintptr&lt;/code> 只是一个无符号整型，用于存储内存地址的整形变量。也就是说，和普通的整型一样，是会被 GC 回收的。&lt;/p>
 &lt;h2>unsafe.Pointer&lt;span class="hx-absolute -hx-mt-20" id="unsafepointer">&lt;/span>
-&lt;a href="#unsafepointer" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>由于 Go 指针的限制，所以 Go 提供了可以进行类型转换的通用指针 &lt;code>unsafe.Pointer&lt;/code>。&lt;/p>
+&lt;a href="#unsafepointer" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>由于 Go 指针的限制，所以 Go 提供了可以进行&lt;strong>类型转换&lt;/strong>的通用指针 &lt;code>unsafe.Pointer&lt;/code>。&lt;/p>
 &lt;p>&lt;code>unsafe.Pointer&lt;/code> 是特别定义的一种指针类型，它指向的对象如果还有用，那么是不会被 GC 回收的。&lt;/p>
 &lt;p>&lt;code>unsafe.Pointer&lt;/code> 是各种指针相互转换的桥梁：&lt;/p>
 &lt;ul>
@@ -972,4 +960,31 @@ title="Copy code"
 &lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
 &lt;/button>
 &lt;/div>
-&lt;/div></description></item></channel></rss>
+&lt;/div></description></item><item><title>make 和 new</title><link>https://shipengqi.github.io/golang-learn/docs/basic/14_make_new/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/basic/14_make_new/</guid><description>
+&lt;p>Go 中初始化一个结构，有两个关键字：&lt;code>make&lt;/code> 和 &lt;code>new&lt;/code>。虽然都是用于初始化结构，但是有很大的不同。&lt;/p>
+&lt;ol>
+&lt;li>&lt;code>new&lt;/code> 是根据传入的类型分配一片内存空间，并返回指向这片内存空间的指针。
+&lt;ul>
+&lt;li>任何类型都可以使用 &lt;code>new&lt;/code> 来初始化。&lt;/li>
+&lt;li>&lt;strong>内存里存的值是对应类型的零值&lt;/strong>，这就意味着，使用 &lt;code>new&lt;/code> 初始化切片、map 和 channel 时，得到是 &lt;code>nil&lt;/code>。&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;code>make&lt;/code> 是用来初始化内置的数据结构，也就是切片、map 和 channel。
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// sl 是一个结构体 reflect.SliceHeader；
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="nx">sl&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">make&lt;/span>&lt;span class="p">([]&lt;/span>&lt;span class="kt">int&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">100&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// m 是一个指向 runtime.hmap 结构体的指针
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="nx">m&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">make&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kd">map&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="kt">int&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="kt">bool&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">10&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// ch 是一个指向 runtime.hchan 结构体的指针
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="nx">ch&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">make&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kd">chan&lt;/span> &lt;span class="kt">int&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">5&lt;/span>&lt;span class="p">)&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;/li>
+&lt;/ol></description></item></channel></rss>
