@@ -5,6 +5,7 @@
 - [GO 入门指南](https://github.com/Unknwon/the-way-to-go_ZH_CN) 33.7k
 - [Go 42](https://github.com/ffhelicopter/Go42) 4.9k
 - [Go 语言入门](https://eddycjy.com/go-categories/)
+- [Go 快速入门](https://github.com/jaywcjlove/golang-tutorial)
 
 ## 高级编程
 
@@ -13,6 +14,7 @@
 - [Go 语言高级编程](https://chai2010.gitbooks.io/advanced-go-programming-book/content/)
 - [Go 夜读](https://github.com/developer-learning/reading-go) 11.6k
 - [Go Tutorial](https://github.com/jincheng9/go-tutorial)
+- [GO 设计模式](https://github.com/mohuishou/go-design-pattern)
 
 ## 高性能编程
 
@@ -21,6 +23,7 @@
 
 ## 实践
 
+- [miniblog](https://github.com/onexstack/miniblog)
 - [Go example](https://github.com/polaris1119/The-Golang-Standard-Library-by-Example) 9.3k
   - Go 标准库的使用示例
 - [build-web-application-with-golang](https://github.com/astaxie/build-web-application-with-golang) 42.5k
