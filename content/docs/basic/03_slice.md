@@ -20,7 +20,7 @@ type SliceHeader struct {
 
 注意 `Cap` 也是底层数组的长度。`Data` 是一块连续的内存，可以存储切片 `Cap` 大小的所有元素。
 
-![slice-struct](https://gitee.com/shipengqi/illustrations/raw/main/go/slice-struct.png)
+![slice-struct](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/slice-struct.png)
 
 如图，虽然 slice 的 `Len` 是 5，但是底层数组的长度是 10，也就是 `Cap`。
 
@@ -84,20 +84,20 @@ func main() {
 - `s1 := slice[2:5]` 得到的 `s1` 的容量为 8，因为没有传入 `max`，容量默认是到底层数组的结尾。
 - `s2 := s1[2:6:7]` 得到的 `s2` 的容量为 5（`max - low`）。`s2`，`s1` 和 `slice` 底层数组是同一个，所以 `s2` 中的元素是 `[4,5,6,7]`。
 
-![slice-cut](https://gitee.com/shipengqi/illustrations/raw/main/go/slice-cut.png)
+![slice-cut](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/slice-cut.png)
 
 下面的 `s2 = append(s2, 100)` 追加一个元素，容量够用，不需要扩容，但是这个修改会影响所有指向这个底层数组的切片。
 
-![slice-cut-append](https://gitee.com/shipengqi/illustrations/raw/main/go/slice-cut-append.png)
+![slice-cut-append](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/slice-cut-append.png)
 
 再次追加一个元素 `s2 = append(s2, 200)`，`s2` 的容量不够了，需要扩容，于是 `s2` 申请一块新的连续内存，并将数据拷贝过去，扩容后的容量是原来的 2 倍。
 这时候 `s2` 的 `Data` 指向了新的底层数组，已经和 `s1` 这个 `slice` 没有关系了，所以对 `s2` 的修改不会再影响 `s1`。
 
-![slice-cut-append2](https://gitee.com/shipengqi/illustrations/raw/main/go/slice-cut-append2.png)
+![slice-cut-append2](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/slice-cut-append2.png)
 
 最后 `s1[2] = 20` 也不会再影响 `s2`。
 
-![slice-cut-append3](https://gitee.com/shipengqi/illustrations/raw/main/go/slice-cut-append3.png)
+![slice-cut-append3](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/slice-cut-append3.png)
 
 ## 切片是如何扩容的？ 
 

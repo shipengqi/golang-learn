@@ -14,7 +14,7 @@ weight: 4
 
 哈希表是通过**哈希函数**将 key 转化为数组的下标，然后将数据存储在数组下标对应的位置。查询时，也是同样的使用哈希函数计算出数组下标，从下标对应的位置取出数据。
 
-![map-seek-addr](https://gitee.com/shipengqi/illustrations/raw/main/go/hash-func.png)
+![map-seek-addr](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/hash-func.png)
 
 哈希函数的基本要求：
 
@@ -31,7 +31,7 @@ weight: 4
 
 开放寻址法核心思想是，如果出现了哈希冲突，就重新探测一个空闲位置，将其插入。
 
-![map-seek-addr](https://gitee.com/shipengqi/illustrations/raw/main/go/map-seek-addr.png)
+![map-seek-addr](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/map-seek-addr.png)
 
 上图蓝色表示已经插入的元素，`key9` 哈希后得到的数组下标为 6，但是已经有数据了，产生了冲突。那么就按顺序向后查找直到找到一个空闲的位置，如果到数组的尾部都没有找到空闲的位置，就从头开始继续找。
 上图最终找到位置 1 并插入元素。
@@ -50,7 +50,7 @@ weight: 4
 
 链表法是最常见的哈希冲突的解决办法。在哈希表中，每个桶（bucket）会对应一条链表，所有哈希值相同的元素都放到相同桶对应的链表中。
 
-![map-link](https://gitee.com/shipengqi/illustrations/raw/main/go/map-link.png)
+![map-link](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/map-link.png)
 
 插入时，哈希函数计算后得出存放在几号桶，然后遍历桶中的链表了：
 
@@ -121,14 +121,14 @@ type bmap struct {
 
 `bmap` 就是桶，一个桶里面会最多存储 8 个键值对。
 
-![bmap-struct](https://gitee.com/shipengqi/illustrations/raw/main/go/bmap-struct.png)
+![bmap-struct](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/bmap-struct.png)
 
 1. 在桶内，会根据 key 计算出来的 hash 值的高 8 位来决定 key 存储在桶中的位置。
 2. key 和 value 是分别放在一块连续的内存，这样做的目的是为了节省内存。例如一个 `map[int64]int8` 类型的 map，如果按照 `key1/value1/key2/value2 ...` 这样的形式来存储，那么内存对齐每个 `key/value` 都需要 padding 7 个字节。
 分开连续存储的话，就只需要在最后 padding 一次。
 3. 每个桶只能存储 8 个 `key/value`，如果有更多的 key 放入当前桶，就需要一个溢出桶，通过 `overflow` 指针连接起来。
 
-![hmap](https://gitee.com/shipengqi/illustrations/raw/main/go/hmap.png)
+![hmap](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/hmap.png)
 
 ### 初始化
 
@@ -194,7 +194,7 @@ v, ok := hash[key]
 
 查询过程：
 
-![map-get](https://gitee.com/shipengqi/illustrations/raw/main/go/map-get.png)
+![map-get](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/map-get.png)
 
 #### 1. 计算哈希值
 
@@ -294,7 +294,7 @@ func mapassign(t *maptype, h *hmap, key unsafe.Pointer) unsafe.Pointer {
 
 例如，原来 `B=5`，根据出 key 的哈希值的后 5 位，就能决定它落在哪个 bucket。扩容后的 buckets 数量翻倍，B 变成了 6，因此变成哈希值的后 6 位才能决定 key 落在哪个 bucket。这叫做 `rehash`。
 
-![map-evacuate-bucket-num](https://gitee.com/shipengqi/illustrations/raw/main/go/map-evacuate-bucket-num.png)
+![map-evacuate-bucket-num](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/map-evacuate-bucket-num.png)
 
 因此，某个 key 在迁移前后 bucket 序号可能会改变，取决于 `rehash` 之后的哈希值倒数第 6 位是 0 还是 1。
 

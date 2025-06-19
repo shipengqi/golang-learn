@@ -63,7 +63,7 @@ func main() {
 - 任何类型的指针 `*T` 可以和 `unsafe.Pointer` 相互转换。
 - `uintptr` 可以和 `unsafe.Pointer` 相互转换。
 
-![pointer](https://gitee.com/shipengqi/illustrations/raw/main/go/pointer.png)
+![pointer](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/pointer.png)
 
 指针类型转换示例：
 

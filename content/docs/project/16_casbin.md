@@ -731,7 +731,7 @@ e.SavePolicy()
 ### AutoSave
 
 由于 Casbin 为了提高性能，在 `Enforcer` 中内置了一个**内存缓存**，所有的操作都是在操作内存中的数据，直到调用 `SavePolicy()`。
-AutoSave 功能，是将策略的操作自动保存到存储中，这意味着单个策略规则添加，删除作者更新，都会自动保存，而不需要再调用 `SavePolicy()`。
+`AutoSave` 功能，是将策略的操作自动保存到存储中，这意味着单个策略规则添加，删除或者更新，都会自动保存，而不需要再调用 `SavePolicy()`。
 
 {{< callout type="info" >}}
 AutoSave 功能需要适配器的支持，如果适配器支持，可以使用 `EnableAutoSave()` 开启或者禁用。**默认启用**。
@@ -780,7 +780,7 @@ Casbin 多节点之间的策略数据同步，可以通过 Watcher 机制来实�
 
 官方实现的 [hraft-dispatcher](https://github.com/casbin/hraft-dispatcher) 的架构：
 
-![dispatcher-architecture](https://gitee.com/shipengqi/illustrations/raw/main/go/dispatcher-architecture.svg)
+![dispatcher-architecture](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/dispatcher-architecture.svg)
 
 在 Dispatcher 中能使用适配器，因为 Dispatcher 自带一个适配器。所有策略都由 Dispatcher 维护。不能调用 `LoadPolicy` 和 `SavePolicy` 方法，
 因为这会影响数据的一致性。可以理解为 `Dispatcher = Adapter + Watcher`。

@@ -18,7 +18,7 @@ weight: 1
 
 如何选择自己项目的开源许可证，可以根据下面的图示：
 
-![](https://gitee.com/shipengqi/illustrations/raw/main/go/licenses.png)
+![](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/licenses.png)
 图片来自于阮一峰的网络日志
 
 ## 文档规范

@@ -102,7 +102,7 @@ type Mutex struct {
 
 `state` 是一个复合型的字段，包含多个意义：
 
-![mutex-state](https://gitee.com/shipengqi/illustrations/raw/main/go/mutex-state.png)
+![mutex-state](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/mutex-state.png)
 
 在默认状态下，互斥锁的所有状态位都是 0，`int32` 中的不同位分别表示了不同的状态：
 
