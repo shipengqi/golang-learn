@@ -1,26 +1,182 @@
 ---
 title: 调度器
 weight: 3
-draft: true
 ---
-# 调度器
+
+goroutine 是 Go 实现的用户态线程，主要用来解决操作系统线程两个方面的问题：
+
+1. 创建和切换太重：操作系统线程的创建和切换都需要进入内核，而进入内核所消耗的性能代价比较高，开销较大；
+2. 内存使用太重：一方面，为了尽量避免极端情况下操作系统线程栈的溢出，内核在创建操作系统线程时默认会为其分配一个较大的栈内存（虚拟地址空间，内核并不会一开始就分配这么多的物理内存），然而在绝大多数情况下，系统线程远远用不了这么多内存，这导致了浪费；另一方面，栈内存空间一旦创建和初始化完成之后其大小就不能再有变化，这决定了在某些特殊场景下系统线程栈还是有溢出的风险。
+
+用户态的 goroutine 则轻量得多：
+
+1. goroutine 是用户态线程，其**创建和切换都在用户代码中完成而无需进入操作系统内核**，所以其开销要远远小于系统线程的创建和切换；
+2. goroutine 启动时默认栈大小只有2k，这在多数情况下已经够用了，即使不够用，goroutine 的栈也会自动扩大，同时，如果栈太大了过于浪费它还能自动收缩，这样既没有栈溢出的风险，也不会造成栈内存空间的大量浪费。
+
+## Go 调度器
+
+**goroutine 建立在操作系统线程基础之上，它与操作系统线程之间实现了一个多对多 (`M:N`) 的两级线程模型**。
+
+这里的 `M:N` 是指 **M 个goroutine运行在 N 个操作系统线程之上**。**操作系统内核负责对这 N 个操作系统线程进行调度**，而这 **N 个系统线程又负责对这 M 个 goroutine 进行调度**和运行。
+
+goroutine 调度器的大概工作流程：
+
+```go
+// 程序启动时的初始化代码
+......
+for i = 0; i < N; i++ { // 创建 N 个操作系统线程执行 schedule 函数
+    create_os_thread(schedule) // 创建一个操作系统线程执行 schedule 函数
+}
+
+// schedule 函数实现调度逻辑
+schedule() {
+   for { // 调度循环
+        // 根据某种算法从 M 个 goroutine 中找出一个需要运行的 goroutine
+        g = find_a_runnable_goroutine_from_M_goroutines()
+        run_g(g) // CPU 运行该 goroutine，直到需要调度其它 goroutine 才返回
+        save_status_of_g(g) // 保存 goroutine 的状态，主要是寄存器的值
+    }
+}
+```
+
+1. 程序运行起来之后创建了 N 个由内核调度的操作系统线程去执行 `shedule` 函数。
+2. `schedule` 函数在一个调度循环中反复从 M 个 goroutine 中挑选出一个需要运行的 goroutine 并跳转到该 goroutine 去运行。
+3. 直到需要调度其它 goroutine 时才返回到 `schedule` 函数中通过 `save_status_of_g` 保存刚刚正在运行的 goroutine 的状态然后再次去寻找下一个 goroutine。
+
+{{< callout type="info" >}}
+系统线程对 goroutine 的调度与内核对系统线程的调度原理是一样的，都是**通过保存和修改 CPU 寄存器的值来达到切换线程 或 goroutine 的目的**。
+{{< /callout >}}
+
+## 调度器相关数据结构
+
+### g 结构体（goroutine）
+
+为了实现对 goroutine 的调度，需要引入一个数据结构来保存 CPU 寄存器的值以及 goroutine 的其它一些状态信息，在 Go 调度器源代码中，这个数据结构是一个名叫 **`g` 的结构体**。该结构体的每一个实例对象都代表了一个 goroutine。
+
+调度器代码可以通过 `g` 对象来对 goroutine 进行调度:
+
+- **当 goroutine 被调离 CPU 时，调度器代码负责把 CPU 寄存器的值保存在 `g` 对象的成员变量之中**；
+- **当 goroutine 被调度起来运行时，调度器代码又负责把 `g` 对象的成员变量所保存的寄存器的值恢复到 CPU 的寄存器**。
+
+### schedt 结构体（调度器）
+
+只有 `g` 结构体对象是不够的，还需要一个**存放所有（可运行）goroutine 的容器**，便于工作线程寻找需要被调度起来运行的 goroutine，于是 Go 调度器又引入了 **`schedt` 结构体**：
+
+- 用来保存调度器自身的状态信息；
+- 保存 goroutine 的运行队列。
+
+#### 全局运行队列
+
+每个 Go 程序只有一个调度器，所以在每个 Go 程序中 **`schedt` 结构体只有一个实例对象**，该实例对象在源代码中被定义成了一个共享的全局变量，这样每个工作线程都可以访问它以及它所拥有的 goroutine 运行队列，我们称这个运行队列为**全局运行队列**。
+
+#### 线程运行队列
+
+这个**全局运行队列是每个工作线程都可以访问的，那就涉及到并发的问题**，因此需要加锁。但是在高并发的场景下，加锁是会导致性能问题的。于是调度器又为**每个工作线程引入了一个私有的局部 goroutine 运行队列**，工作线程优先使用自己的局部运行队列，只有必要时才会去访问全局运行队列，这大大减少了锁冲突，提高了工作线程的并发性。**局部运行队列被包含在 `p` 结构体**的实例对象之中，每一个运行着 Go 代码的**工作线程都会与一个 `p` 结构体的实例对象关联在一起**。
+
+### m 结构体（工作线程）
+
+**每个工作线程都有唯一的一个 `m` 结构体的实例对象与之对应**，`m` 结构体对象除了记录着工作线程的诸如栈的起止位置、当前正在执行的 goroutine 以及是否空闲等等状态信息之外，还通过指针维持着与 `p` 结构体的实例对象之间的绑定关系。于是，通过 `m` 既可以找到与之对应的工作线程正在运行的 goroutine，又可以找到工作线程的局部运行队列等资源。
+
+### GPM 模型
+
+![gpm]()
+
+灰色的 `g` 表示处于运行队列之中正在等待被调度起来运行的 goroutine。
+
+**每个 `m` 都绑定了一个 `p`，每个 `p` 都有一个私有的本地 goroutine 队列，`m` 对应的线程从本地和全局 goroutine 队列中获取 goroutine 并运行**。
+
+#### 工作线程如何绑定到 m 结构体实例对象
+
+多个工作线程和多个 `m` 需要一一对应，如何实现？**线程本地存储**。线程本地存储其实就是线程私有的全局变量，这正是我们需要的。只要**每个工作线程拥有了各自私有的 `m` 结构体全局变量，就能在不同的工作线程中使用相同的全局变量名来访问不同的 `m` 结构体对象**。
+
+每个**工作线程在刚刚被创建出来进入调度循环之前就利用线程本地存储机制为该工作线程实现了一个指向 `m` 结构体实例对象的私有全局变量**，这样在之后的代码中就**使用该全局变量来访问自己的 `m` 结构体对象以及与 `m` 相关联的 `p` 和 `g` 对象**。
+
+调度伪代码：
+
+```go
+// 程序启动时的初始化代码
+......
+for i = 0; i < N; i++ { // 创建 N 个操作系统线程执行 schedule 函数
+    create_os_thread(schedule) // 创建一个操作系统线程执行 schedule 函数
+}
+
+// 定义一个线程私有全局变量，注意它是一个指向m结构体对象的指针
+// ThreadLocal 用来定义线程私有全局变量
+ThreadLocal self *m
+
+// schedule 函数实现调度逻辑
+schedule() {
+    // 创建和初始化 m 结构体对象，并赋值给私有全局变量 self
+    self = initm()   
+    for { // 调度循环
+        if(self.p.runqueue is empty) { // 本地运行队列为空
+            // 从全局运行队列中找出一个需要运行的 goroutine
+            g = find_a_runnable_goroutine_from_global_runqueue()
+        } else {
+            // 从私有的本地运行队列中找出一个需要运行的 goroutine
+            g = find_a_runnable_goroutine_from_local_runqueue()
+        }
+        run_g(g) // CPU 运行该 goroutine，直到需要调度其它 goroutine 才返回
+        save_status_of_g(g) // 保存 goroutine 的状态，主要是寄存器的值
+     }
+} 
+```
+
+### 重要的结构体
+
+这些结构体的定义全部在 `runtime/runtime2.go` 源码文件中：
+
+#### stack 结构体
+
+记录 goroutine 所使用的栈的信息，包括栈顶和栈底位置：
+
+```go
+// Stack describes a Go execution stack.
+// The bounds of the stack are exactly [lo, hi),
+// with no implicit data structures on either side.
+// 用于记录 goroutine 使用的栈的起始和结束位置
+type stack struct{ 
+    lo uintptr   // 栈顶，低地址
+    hi uintptr   // 栈底，高地址
+}
+```
+
+#### gobuf 结构体
+
+用于保存 goroutine 的调度信息，主要包括 CPU 的几个寄存器的值：
+
+```go
+type gobuf struct {
+    sp  uintptr  // 保存 CPU 的 rsp 寄存器的值
+    pc  uintptr  // 保存 CPU 的 rip 寄存器的值
+    g   guintptr // 记录当前这个 gobuf 对象属于哪个 goroutine
+    ctxt unsafe.Pointer
+  
+   // 保存系统调用的返回值，因为从系统调用返回之后如果 p 被其它工作线程抢占，
+   // 则这个 goroutine 会被放入全局运行队列被其它工作线程调度，其它线程需要知道系统调用的返回值。
+    ret sys.Uintreg
+    lr  uintptr
+    bp  uintptr// for GOEXPERIMENT=framepointer
+}
+```
+
+#### g 结构体
+
+代表一个 goroutine，该结构体保存了 goroutine 的所有信息，包括栈，`gobuf` 结构体和其它的一些状态信息：
 
 ```go
 type g struct {
-	// Stack parameters.
-	// stack describes the actual stack memory: [stack.lo, stack.hi).
-	// stackguard0 is the stack pointer compared in the Go stack growth prologue.
-	// It is stack.lo+StackGuard normally, but can be StackPreempt to trigger a preemption.
-	// stackguard1 is the stack pointer compared in the C stack growth prologue.
-	// It is stack.lo+StackGuard on g0 and gsignal stacks.
-	// It is ~0 on other goroutine stacks, to trigger a call to morestackc (and crash).
+	// goroutine 使用的栈
 	stack       stack   // offset known to runtime/cgo
+	// 下面两个成员用于栈溢出检查，实现栈的自动伸缩，抢占调度也会用到 stackguard0
 	stackguard0 uintptr // offset known to liblink
 	stackguard1 uintptr // offset known to liblink
 
 	_panic         *_panic // innermost panic - offset known to liblink
 	_defer         *_defer // innermost defer
+    // 当前与 g 绑定的 m
 	m              *m      // current m; offset known to arm liblink
+	// 保存调度信息，主要是几个寄存器的值
 	sched          gobuf
 	syscallsp      uintptr        // if status==Gsyscall, syscallsp = sched.sp to use during gc
 	syscallpc      uintptr        // if status==Gsyscall, syscallpc = sched.pc to use during gc
@@ -29,141 +185,91 @@ type g struct {
 	atomicstatus   uint32
 	stackLock      uint32 // sigprof/scang lock; TODO: fold in to atomicstatus
 	goid           int64
+	// schedlink 字段指向全局运行队列中的下一个 g，所有位于全局运行队列中的 g 形成一个链表
 	schedlink      guintptr
+	// g 被阻塞之后的近似时间
 	waitsince      int64      // approx time when the g become blocked
+	// g 被阻塞的原因
 	waitreason     waitReason // if status==Gwaiting
-	preempt        bool       // preemption signal, duplicates stackguard0 = stackpreempt
-	paniconfault   bool       // panic (instead of crash) on unexpected fault address
-	preemptscan    bool       // preempted g does scan for gc
-	gcscandone     bool       // g has scanned stack; protected by _Gscan bit in status
-	gcscanvalid    bool       // false at start of gc cycle, true if G has not run since last scan; TODO: remove?
-	throwsplit     bool       // must not split stack
-	raceignore     int8       // ignore race detection events
-	sysblocktraced bool       // StartTrace has emitted EvGoInSyscall about this goroutine
-	sysexitticks   int64      // cputicks when syscall has returned (for tracing)
-	traceseq       uint64     // trace event sequencer
-	tracelastp     puintptr   // last P emitted an event for this goroutine
-	lockedm        muintptr
-	sig            uint32
-	writebuf       []byte
-	sigcode0       uintptr
-	sigcode1       uintptr
-	sigpc          uintptr
-	gopc           uintptr         // pc of go statement that created this goroutine
-	ancestors      *[]ancestorInfo // ancestor information goroutine(s) that created this goroutine (only used if debug.tracebackancestors)
-	startpc        uintptr         // pc of goroutine function
-	racectx        uintptr
-	waiting        *sudog         // sudog structures this g is waiting on (that have a valid elem ptr); in lock order
-	cgoCtxt        []uintptr      // cgo traceback context
-	labels         unsafe.Pointer // profiler labels
-	timer          *timer         // cached timer for time.Sleep
-	selectDone     uint32         // are we participating in a select and did someone win the race?
-
-	// Per-G GC state
-
-	// gcAssistBytes is this G's GC assist credit in terms of
-	// bytes allocated. If this is positive, then the G has credit
-	// to allocate gcAssistBytes bytes without assisting. If this
-	// is negative, then the G must correct this by performing
-	// scan work. We track this in bytes to make it fast to update
-	// and check for debt in the malloc hot path. The assist ratio
-	// determines how this corresponds to scan work debt.
-	gcAssistBytes int64
+	// 抢占调度标志，如果需要抢占调度，设置 preempt 为 true
+	preempt        bool       // preemption signal, duplicates 
+	// ...
 }
+```
 
+#### m 结构体
+
+代表工作线程，保存了 `m` 自身使用的栈信息，当前正在运行的 goroutine 以及与 `m` 绑定的 `p` 等信息：
+
+`g` 需要调度到 `m` 上才能运行，`m` 是真正工作的人。
+
+**当 `m` 没有工作可做的时候，在它休眠前，会“自旋”地来找工作：检查全局队列，查看 network poller，试图执行 gc 任务，或者“偷”工作**。
+
+```go
 type m struct {
+	// g0 主要用来记录工作线程使用的栈信息，在执行调度代码时需要使用这个栈
+    // 执行用户 goroutine 代码时，使用用户 goroutine 自己的栈，调度时会发生栈的切换
 	g0      *g     // goroutine with scheduling stack
-	morebuf gobuf  // gobuf arg to morestack
-	divmod  uint32 // div/mod denominator for arm - known to liblink
+    // ...
 
-	// Fields not known to debuggers.
-	procid        uint64       // for debuggers, but offset not hard-coded
-	gsignal       *g           // signal-handling g
-	goSigStack    gsignalStack // Go-allocated signal handling stack
-	sigmask       sigset       // storage for saved signal mask
+	// 通过 TLS 实现 m 结构体对象与工作线程之间的绑定
 	tls           [6]uintptr   // thread-local storage (for x86 extern register)
 	mstartfn      func()
+	// 指向正在运行的 gorutine 对象
 	curg          *g       // current running goroutine
 	caughtsig     guintptr // goroutine running during fatal signal
+	
+    // 当前工作线程绑定的 p
 	p             puintptr // attached p for executing go code (nil if not executing go code)
 	nextp         puintptr
-	oldp          puintptr // the p that was attached before executing a syscall
-	id            int64
-	mallocing     int32
-	throwing      int32
-	preemptoff    string // if != "", keep curg running on this m
-	locks         int32
-	dying         int32
-	profilehz     int32
+	oldp          puintptr // the p that was attached before executing a 
+	// ...
+	// spinning 状态：表示当前工作线程正在试图从其它工作线程的本地运行队列偷取goroutine
+	// 
 	spinning      bool // m is out of work and is actively looking for work
+	// m 正阻塞在 note 上
 	blocked       bool // m is blocked on a note
-	newSigstack   bool // minit on C thread called sigaltstack
-	printlock     int8
+	// ...
+	// 正在执行 cgo 调用
 	incgo         bool   // m is executing a cgo call
-	freeWait      uint32 // if == 0, safe to free g0 and delete m (atomic)
-	fastrand      [2]uint32
-	needextram    bool
-	traceback     uint8
-	ncgocall      uint64      // number of cgo calls in total
-	ncgo          int32       // number of cgo calls currently in progress
-	cgoCallersUse uint32      // if non-zero, cgoCallers in use temporarily
-	cgoCallers    *cgoCallers // cgo traceback if crashing in cgo call
+	// ...
+	// 没有 goroutine 需要运行时，工作线程睡眠在这个 park 成员上，其它线程通过这个 park 唤醒该工作线程
 	park          note
+	// 记录所有工作线程的一个链表
 	alllink       *m // on allm
-	schedlink     muintptr
-	mcache        *mcache
-	lockedg       guintptr
-	createstack   [32]uintptr // stack that created this thread.
-	lockedExt     uint32      // tracking for external LockOSThread
-	lockedInt     uint32      // tracking for internal lockOSThread
-	nextwaitm     muintptr    // next m waiting for lock
-	waitunlockf   func(*g, unsafe.Pointer) bool
-	waitlock      unsafe.Pointer
-	waittraceev   byte
-	waittraceskip int
-	startingtrace bool
-	syscalltick   uint32
+	// ...
+	// Linux 平台 thread 的值就是操作系统线程 ID
 	thread        uintptr // thread handle
 	freelink      *m      // on sched.freem
-
-	// these are here because they are too large to be on the stack
-	// of low-level NOSPLIT functions.
-	libcall   libcall
-	libcallpc uintptr // for cpu profiler
-	libcallsp uintptr
-	libcallg  guintptr
-	syscall   libcall // stores syscall parameters on windows
-
-	vdsoSP uintptr // SP for traceback while in VDSO call (0 if not in call)
-	vdsoPC uintptr // PC for traceback while in VDSO call
-
-	dlogPerM
-
-	mOS
+	// ...
 }
+```
 
+#### p 结构体
+
+保存工作线程执行 Go 代码时所必需的资源，比如 goroutine 的运行队列，内存分配用到的缓存等等。
+
+```go
 type p struct {
-	id          int32
-	status      uint32 // one of pidle/prunning/...
-	link        puintptr
-	schedtick   uint32     // incremented on every scheduler call
-	syscalltick uint32     // incremented on every system call
-	sysmontick  sysmontick // last tick observed by sysmon
+	// ...
+	     
+    // 在 allp 中的索引
+    id          int32
+    // 每次调用 schedule 时会加一
+    schedtick   uint32
+	// 每次系统调用时加一
+    syscalltick uint32
+    // 用于 sysmon 线程记录被监控 p 的系统调用时间和运行时间
+    sysmontick  sysmontick // last tick observed by sysmon
+	// 指向绑定的 m，如果 p 是 idle 的话，那这个指针是 nil
 	m           muintptr   // back-link to associated m (nil if idle)
-	mcache      *mcache
-	raceprocctx uintptr
-
-	deferpool    [5][]*_defer // pool of available defer structs of different sizes (see panic.go)
-	deferpoolbuf [5][32]*_defer
-
-	// Cache of goroutine ids, amortizes accesses to runtime·sched.goidgen.
-	goidcache    uint64
-	goidcacheend uint64
+    // ...
 
 	// Queue of runnable goroutines. Accessed without lock.
-	runqhead uint32
-	runqtail uint32
-	runq     [256]guintptr
+	// 本地 goroutine 运行队列
+	runqhead uint32 // 队列头
+	runqtail uint32 // 队列尾
+	runq     [256]guintptr // 使用数组实现的循环队列
 	// runnext, if non-nil, is a runnable G that was ready'd by
 	// the current G and should be run next instead of what's in
 	// runq if there's time remaining in the running G's time
@@ -175,51 +281,97 @@ type p struct {
 	// goroutines to the end of the run queue.
 	runnext guintptr
 
-	// Available G's (status == Gdead)
-	gFree struct {
-		gList
-		n int32
-	}
-
-	sudogcache []*sudog
-	sudogbuf   [128]*sudog
-
-	tracebuf traceBufPtr
-
-	// traceSweep indicates the sweep events should be traced.
-	// This is used to defer the sweep start event until a span
-	// has actually been swept.
-	traceSweep bool
-	// traceSwept and traceReclaimed track the number of bytes
-	// swept and reclaimed by sweeping in the current sweep loop.
-	traceSwept, traceReclaimed uintptr
-
-	palloc persistentAlloc // per-P to avoid mutex
-
-	_ uint32 // Alignment for atomic fields below
-
-	// Per-P GC state
-	gcAssistTime         int64    // Nanoseconds in assistAlloc
-	gcFractionalMarkTime int64    // Nanoseconds in fractional mark worker (atomic)
-	gcBgMarkWorker       guintptr // (atomic)
-	gcMarkWorkerMode     gcMarkWorkerMode
-
-	// gcMarkWorkerStartTime is the nanotime() at which this mark
-	// worker started.
-	gcMarkWorkerStartTime int64
-
-	// gcw is this P's GC work buffer cache. The work buffer is
-	// filled by write barriers, drained by mutator assists, and
-	// disposed on certain GC state transitions.
-	gcw gcWork
-
-	// wbBuf is this P's GC write barrier buffer.
-	//
-	// TODO: Consider caching this in the running G.
-	wbBuf wbBuf
-
-	runSafePointFn uint32 // if 1, run sched.safePointFn at next safe point
-
-	pad cpu.CacheLinePad
+    // 空闲的 g
+    gfree    *g
+	// ...
 }
 ```
+
+#### schedt 结构体
+
+保存调度器的状态信息和 goroutine 的全局运行队列：
+
+```go
+type schedt struct {
+    // ...
+ 
+   // 由空闲的工作线程组成链表
+    midle       muintptr // idle m's waiting for work
+   // 空闲的工作线程的数量
+    nmidle        int32 // number of idle m's waiting for work
+    nmidlelocked  int32 // number of locked m's waiting for work
+    mnext         int64 // number of m's that have been created and next M ID
+    // 最多只能创建 maxmcount 个工作线程
+    maxmcount    int32 // maximum number of m's allowed (or die)
+    nmsys        int32 // number of system m's not counted for deadlock
+    nmfreed      int64 // cumulative number of freed m's
+ 
+    ngsys        uint32 // number of system goroutines; updated atomically
+ 
+    // 由空闲的 p 结构体对象组成的链表
+    pidle     puintptr // idle p's
+   // 空闲的 p 结构体对象的数量
+    npidle     uint32
+    nmspinning uint32 // See "Worker thread parking/unparking" comment in proc.go.
+ 
+    // Global runnable queue.
+   // goroutine 全局运行队列
+    runq       gQueue
+    runqsize   int32
+ 
+    ......
+ 
+    // Global cache of dead G's.
+   // gFree 是所有已经退出的 goroutine 对应的 g 结构体对象组成的链表
+   // 用于缓存 g 结构体对象，避免每次创建 goroutine 时都重新分配内存
+    gFree struct{
+        lock        mutex
+        stack       gList // Gs with stacks
+        noStack     gList // Gs without stacks
+        n           int32
+    }
+  
+    ......
+}
+```
+
+### 重要的全局变量
+
+```go
+
+allgs    []*g   // 保存所有的 g
+allm     *m     // 所有的 m 构成的一个链表，包括下面的 m0
+allp     []*p  // 保存所有的 p，len(allp) == gomaxprocs
+ 
+ncpu         int32  // 系统中 cpu 核的数量，程序启动时由 runtime 代码初始化
+gomaxprocs   int32  // p 的最大值，默认等于 ncpu，但可以通过 GOMAXPROCS 修改
+ 
+sched     schedt    // 调度器结构体对象，记录了调度器的工作状态
+ 
+m0 m        // 代表进程的主线程
+g0  g       // m0 的 g0，也就是 m0.g0 = &g0
+```
+
+## 调度器初始化
+
+```go
+package main
+ 
+import "fmt"
+ 
+func main() {
+    fmt.Println("Hello World!")
+}
+```
+
+程序的启动过程：
+
+1. 从磁盘上把可执行程序读入内存；
+2. 创建进程和主线程；
+3. 为主线程分配栈空间；
+4. 把由用户在命令行输入的参数拷贝到主线程的栈；
+5. 把主线程放入操作系统的运行队列等待被调度执起来运行。
+
+主线程第一次被调度起来执行第一条指令之前，函数栈如下：
+
+![main-thread-init-stack]()
