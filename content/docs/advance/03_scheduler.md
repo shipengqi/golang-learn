@@ -628,4 +628,100 @@ func procresize(nprocs int32) *p {
 
 ## 创建 main goroutine
 
+`go` 关键字启动一个 goroutine 时，最终会被编译器转换成 `newproc` 函数：
+
+```go
+func newproc(fn *funcval) {
+    // 函数调用参数入栈顺序是从右向左，而且栈是从高地址向低地址增长的
+	gp := getg()
+	pc := sys.GetCallerPC()
+	systemstack(func() {
+		newg := newproc1(fn, gp, pc, false, waitReasonZero)
+
+		pp := getg().m.p.ptr()
+		runqput(pp, newg, true)
+
+		if mainStarted {
+			wakep()
+		}
+	})
+}
+```
+
+1. `newproc1` 函数的第一个参数 `fn` 是新创建的 goroutine 需要执行的函数；
+2. `newproc1` 根据传入参数初始化一个 `g` 结构体。
+  
+```go
+func newproc1(fn *funcval, callergp *g, callerpc uintptr, parked bool, waitreason waitReason) *g {
+    // ...
+	mp := acquirem() // disable preemption because we hold M and P in local vars.
+	pp := mp.p.ptr()
+	newg := gfget(pp) // 从 p 的本地缓冲里获取一个没有使用的 g，初始化时没有，返回nil
+
+	if newg == nil {
+        // new 一个 g 结构体对象，然后从堆上为其分配栈，并设置 g 的 stack 成员和两个stackgard 成员
+		newg = malg(_StackMin)
+		casgstatus(newg, _Gidle, _Gdead) // 初始化 g 的状态为 _Gdead
+		allgadd(newg) // 放入全局变量 allgs 切片中
+	}
+	// ...
+    // 把 newg.sched 结构体成员的所有成员设置为 0
+    memclrNoHeapPointers(unsafe.Pointer(&newg.sched), unsafe.Sizeof(newg.sched))
+    
+    //设置 newg 的 sched 成员，调度器需要依靠这些字段才能把 goroutine 调度到 CPU 上运行。
+    newg.sched.sp = sp // newg 的栈顶
+    newg.stktopsp = sp
+    // newg.sched.pc 表示当 newg 被调度起来运行时从这个地址开始执行指令
+    // 把 pc 设置成了 goexit 这个函数偏移 1（sys.PCQuantum 等于 1）的位置
+    newg.sched.pc = funcPC(goexit) + sys.PCQuantum // +PCQuantum so that previous instruction is in same function
+    newg.sched.g = guintptr(unsafe.Pointer(newg))
+
+    gostartcallfn(&newg.sched, fn) // 调整 sched 成员和 newg 的栈
+}
+```
+
+`runtime.gfget` 中包含两部分逻辑，它会根据处理器中 `gFree` 列表中 goroutine 的数量做出不同的决策：
+
+- 当 `p` 的 goroutine 列表为空时，会将 `sched` 调度器持有的空闲 goroutine 转移到当前 `p` 上，直到 `gFree` 列表中的 goroutine 数量达到 32；
+- 当 `p` 的 goroutine 数量充足时，会从列表头部返回一个 goroutine；
+
+```go
+func gfget(pp *p) *g {
+retry:
+	if pp.gFree.empty() && (!sched.gFree.stack.empty() || !sched.gFree.noStack.empty()) {
+		lock(&sched.gFree.lock)
+		// Move a batch of free Gs to the P.
+		for pp.gFree.n < 32 {
+			// Prefer Gs with stacks.
+			gp := sched.gFree.stack.pop()
+			if gp == nil {
+				gp = sched.gFree.noStack.pop()
+				if gp == nil {
+					break
+				}
+			}
+			sched.gFree.n--
+			pp.gFree.push(gp)
+			pp.gFree.n++
+		}
+		unlock(&sched.gFree.lock)
+		goto retry
+	}
+    gp := pp.gFree.pop()
+	if gp == nil {
+		return nil
+	}
+    // ...
+}
+```
+
+当 `p` 的 `gFree` 和调度器的 `gFree` 列表都不存在结构体时，调用 `runtime.malg` 初始化新的 `g`。
+
+拿到 `g` 之后，调用 `runtime.runqput` 会将 goroutine 放到运行队列上，这既可能是全局的运行队列，也可能是 `p` 本地的运行队列：
+
+1. 当 `next` 为 `true` 时，将 goroutine 设置到处理器的 `runnext `作为下一个处理器执行的任务；
+2. 当 `next` 为 `false` 并且本地运行队列还有剩余空间时，将 goroutine 加入处理器持有的本地运行队列；
+3. 当处理器的本地运行队列已经没有剩余空间时就会把本地队列中的一部分 goroutine 和待加入的 goroutine 通过 `runtime.runqputslow` 添加到调度器持有的全局运行队列上；
+
+
 ## 调度循环
