@@ -26,3 +26,5 @@ title: Go Learning
 - [Go 程序员面试笔试宝典](https://golang.design/go-questions/)
 - [Go 语言必知必会](https://golang.dbwu.tech/)
 - [Go 语言高性能编程](https://geektutu.com/post/high-performance-go.html)
+- [qcrao 博客 Go 系列文章](https://qcrao.com/)
+- [阿波张调度器系列教程](https://www.cnblogs.com/abozhang/tag/goroutine%E8%B0%83%E5%BA%A6%E5%99%A8/)

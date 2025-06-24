@@ -11,7 +11,73 @@ goroutine 是 Go 实现的用户态线程，主要用来解决操作系统线程
 用户态的 goroutine 则轻量得多：
 
 1. goroutine 是用户态线程，其**创建和切换都在用户代码中完成而无需进入操作系统内核**，所以其开销要远远小于系统线程的创建和切换；
-2. goroutine 启动时默认栈大小只有2k，这在多数情况下已经够用了，即使不够用，goroutine 的栈也会自动扩大，同时，如果栈太大了过于浪费它还能自动收缩，这样既没有栈溢出的风险，也不会造成栈内存空间的大量浪费。
+2. goroutine 启动时默认栈大小只有 2k，这在多数情况下已经够用了，即使不够用，goroutine 的栈也会自动扩大，同时，如果栈太大了过于浪费它还能自动收缩，这样既没有栈溢出的风险，也不会造成栈内存空间的大量浪费。
+
+## Go 调度的本质
+
+Go 调度的本质是一个**生产-消费流程**。`m` 拿到 goroutine 并运行它的过程就是一个消费过程。
+
+![scheduler-queue](./scheduler-queue.png)
+
+生产出的 goroutine 就放在可运行队列中。可运行队列是分为三级：
+
+1. `runnext`：实际上只能指向一个 goroutine。
+2. `local`：每个 P 都有一个本地队列
+3. `global`：全局队列
+
+**先看 runnext，再看 local queue，再看 global queue。当然，如果实在找不到，就去其他 `p` 去偷**。
+
+**goroutine 放到哪个可运行队列？**
+
+1. 如果 `runnext` 为空，那么 goroutine 就会顺利地放入 `runnext`，`runnext` 优先级最高，最先被消费。
+2. `runnext` 不为空，那就先负责把 `runnext` 上的 old goroutine 踢走，再把 new goroutine 放上来。
+3. `runnext` 中被踢走的 goroutine，在 local queue 不满时，则将它放入 local queue；否则意味着 local queue 已满，需要减负，会将它和当前 p 的 local queue 中的一半 goroutine 一起放到 global queue 中。
+
+```go
+package main
+
+import (
+	"fmt"
+	"runtime"
+	"time"
+)
+
+func main() {
+    runtime.GOMAXPROCS(1)
+    for i := 0; i < 10; i++ {
+        i := i
+        go func() {
+            fmt.Println(i)
+        }()
+    }
+
+    var ch = make(chan int)
+    <- ch
+}
+
+// 输出
+// 9
+// 0
+// 1
+// 2
+// 3
+// 4
+// 5
+// 6
+// 7
+// 8
+// fatal error: all goroutines are asleep - deadlock!
+
+// goroutine 1 [chan receive]:
+// main.main()
+// 	C:/Code/my-repos/example.v1/advance/scheduler/v1/main.go:18 +0x6c
+```
+
+ 输出的顺序：`9, 0, 1, 2, 3, 4, 5, 6, 7, 8`。这就是因为只有一个 `p`，每次生产出来的 goroutine 都会第一时间塞到 `runnext`，而 `i` 从 `1` 开始，`runnext` 已经有 goroutine 在了，所以这时会把 old goroutine 移到 `p` 的本队队列中去，再把 new goroutine 放到 runnext。之后会重复这个过程。
+
+因此这后当一次 `i` 为 `9` 时，新 goroutine 被塞到 runnext，其余 goroutine 都在本地队列。
+
+之后，main goroutine 执行了一个读 channel 的语句，这是一个好的调度时机：main goroutine 挂起，运行 `p` 的 `runnext` 和本地可运行队列里的 gorotuine。
 
 ## Go 调度器
 
@@ -79,7 +145,7 @@ schedule() {
 
 ### GPM 模型
 
-![gpm]()
+<img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/gpm.png" alt="gpm" style="width:60%;" />
 
 灰色的 `g` 表示处于运行队列之中正在等待被调度起来运行的 goroutine。
 
@@ -119,7 +185,7 @@ schedule() {
         run_g(g) // CPU 运行该 goroutine，直到需要调度其它 goroutine 才返回
         save_status_of_g(g) // 保存 goroutine 的状态，主要是寄存器的值
      }
-} 
+}
 ```
 
 ### 重要的结构体
@@ -247,6 +313,8 @@ type m struct {
 
 #### p 结构体
 
+p 是 processor 的意思。
+
 保存工作线程执行 Go 代码时所必需的资源，比如 goroutine 的运行队列，内存分配用到的缓存等等。
 
 ```go
@@ -270,15 +338,11 @@ type p struct {
 	runqhead uint32 // 队列头
 	runqtail uint32 // 队列尾
 	runq     [256]guintptr // 使用数组实现的循环队列
-	// runnext, if non-nil, is a runnable G that was ready'd by
-	// the current G and should be run next instead of what's in
-	// runq if there's time remaining in the running G's time
-	// slice. It will inherit the time left in the current time
-	// slice. If a set of goroutines is locked in a
-	// communicate-and-wait pattern, this schedules that set as a
-	// unit and eliminates the (potentially large) scheduling
-	// latency that otherwise arises from adding the ready'd
-	// goroutines to the end of the run queue.
+  
+    // runnext 非空时，代表的是一个 runnable 状态的 G，
+    // 这个 G 被当前 G 修改为 ready 状态，相比 runq 中的 G 有更高的优先级。
+    // 如果当前 G 还有剩余的可用时间，那么就应该运行这个 G
+    // 运行之后，该 G 会继承当前 G 的剩余时间
 	runnext guintptr
 
     // 空闲的 g
@@ -349,7 +413,7 @@ gomaxprocs   int32  // p 的最大值，默认等于 ncpu，但可以通过 GOMA
 sched     schedt    // 调度器结构体对象，记录了调度器的工作状态
  
 m0 m        // 代表进程的主线程
-g0  g       // m0 的 g0，也就是 m0.g0 = &g0
+g0 g        // m0 的 g0，也就是 m0.g0 = &g0
 ```
 
 ## 调度器初始化
@@ -374,4 +438,194 @@ func main() {
 
 主线程第一次被调度起来执行第一条指令之前，函数栈如下：
 
-![main-thread-init-stack]()
+<img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/main-thread-init-stack.png" alt="main-thread-init-stack" style="width:50%;" />
+
+运行时通过 [runtime.schedinit](https://github.com/golang/go/blob/6796ebb2cb66b316a07998cdcd69b1c486b8579e/src/runtime/proc.go#L798) 初始化调度器：
+
+```go
+func schedinit() {
+    // ...
+    // getg 函数在源代码中没有对应的定义，由编译器插入类似下面两行代码
+    // get_tls(CX) 
+    // MOVQ g(CX), BX; 
+    // BX 存器里面现在放的是当前 g 结构体对象的地址
+	gp := getg()
+	// ...
+
+	sched.maxmcount = 10000
+
+    mcommoninit(gp.m, -1)
+
+	// ...
+	sched.lastpoll = uint64(nanotime())
+	procs := ncpu
+	if n, ok := atoi32(gogetenv("GOMAXPROCS")); ok && n > 0 {
+		procs = n
+	}
+	if procresize(procs) != nil {
+		throw("unknown runnable goroutine during bootstrap")
+	}
+    // ...
+}
+```
+
+1. `g0` 的地址已经被设置到了线程本地存储之中，通过 `getg` 函数（`getg` 函数是编译器实现的，源代码中是找不到其定义）从线程本地存储中获取当前正在运行的 `g`。
+2. `mcommoninit` 对 `m0` 进行必要的初始化。
+3. 调用 `procresize` 初始化系统需要用到的 `p` 结构体对象。它的数量决定了最多可以有都少个 goroutine 同时并行运行。
+4. `sched.maxmcount = 10000` 一个 Go 程序最多可以创建 10000 个线程。
+5. 线程数可以通过 `GOMAXPROCS` 变量控制。
+
+### 初始化 m0
+
+[`mcommoninit`](https://github.com/golang/go/blob/6796ebb2cb66b316a07998cdcd69b1c486b8579e/src/runtime/proc.go#L942) 初始化 `m0`：
+
+```go
+func mcommoninit(mp *m, id int64) {
+   gp := getg() //初始化过程中_g_ = g0
+ 
+    // g0 stack won't make sense for user (and is not necessary unwindable).
+    if gp != gp.m.g0 { // 函数调用栈 traceback，不需要关心
+		callers(1, mp.createstack[:])
+	}
+
+    lock(&sched.lock)
+	if id >= 0 {
+		mp.id = id
+	} else {
+		mp.id = mReserveID()
+	}
+    // random 初始化
+	mrandinit(mp)
+    // 创建用于信号处理的 gsignal，只是简单的从堆上分配一个 g 结构体对象,然后把栈设置好就返回了
+	mpreinit(mp)
+	if mp.gsignal != nil {
+		mp.gsignal.stackguard1 = mp.gsignal.stack.lo + stackGuard
+	}
+
+	// Add to allm so garbage collector doesn't free g->m
+	// when it is just in a register or thread-local storage.
+    // 把 m0 加入到 allm 全局链表中
+	mp.alllink = allm
+
+	// NumCgoCall() and others iterate over allm w/o schedlock,
+	// so we need to publish it safely.
+	atomicstorep(unsafe.Pointer(&allm), unsafe.Pointer(mp))
+	unlock(&sched.lock)
+
+	// Allocate memory to hold a cgo traceback if the cgo call crashes.
+	if iscgo || GOOS == "solaris" || GOOS == "illumos" || GOOS == "windows" {
+		mp.cgoCallers = new(cgoCallers)
+	}
+	mProfStackInit(mp)
+}
+```
+
+这里并未对 `m0` 做什么关于调度相关的初始化，可以简单的认为这个函数只是把 `m0` 放入全局链表 `allm` 之中就返回了。
+
+### 初始化 allp
+
+```go
+func procresize(nprocs int32) *p {
+    // ...
+
+    // 系统初始化时 gomaxprocs = 0
+	old := gomaxprocs
+    // ...
+
+	// Grow allp if necessary.
+	if nprocs > int32(len(allp)) { // 初始化时 len(allp) == 0
+		// Synchronize with retake, which could be running
+		// concurrently since it doesn't run on a P.
+		lock(&allpLock)
+		if nprocs <= int32(cap(allp)) {
+			allp = allp[:nprocs]
+		} else {  // 初始化时进入此分支，创建 allp 切片
+			nallp := make([]*p, nprocs)
+			// Copy everything up to allp's cap so we
+			// never lose old allocated Ps.
+			copy(nallp, allp[:cap(allp)])
+			allp = nallp
+		}
+        // ...
+		unlock(&allpLock)
+	}
+
+	// initialize new P's
+    // 循环创建 nprocs 个 p 并完成基本初始化
+	for i := old; i < nprocs; i++ {
+		pp := allp[i]
+		if pp == nil {
+			pp = new(p) // 调用内存分配器从堆上分配一个 struct p
+		}
+		pp.init(i)
+		atomicstorep(unsafe.Pointer(&allp[i]), unsafe.Pointer(pp))
+	}
+
+	gp := getg()
+	if gp.m.p != 0 && gp.m.p.ptr().id < nprocs { // 初始化时 m0->p 还未初始化，所以不会执行这个分支
+		// continue to use the current P
+		gp.m.p.ptr().status = _Prunning
+		gp.m.p.ptr().mcache.prepareForSweep()
+	} else { // 初始化时执行这个分支
+		// release the current P and acquire allp[0].
+		//
+		// We must do this before destroying our current P
+		// because p.destroy itself has write barriers, so we
+		// need to do that from a valid P.
+		if gp.m.p != 0 { // 初始化时这里不执行
+			trace := traceAcquire()
+			if trace.ok() {
+				// Pretend that we were descheduled
+				// and then scheduled again to keep
+				// the trace consistent.
+				trace.GoSched()
+				trace.ProcStop(gp.m.p.ptr())
+				traceRelease(trace)
+			}
+			gp.m.p.ptr().m = 0
+		}
+		gp.m.p = 0
+		pp := allp[0]
+		pp.m = 0
+		pp.status = _Pidle
+		acquirep(pp) // 把 p 和 m0 关联起来，其实是这两个 strct 的成员相互赋值
+		trace := traceAcquire()
+		if trace.ok() {
+			trace.GoStart()
+			traceRelease(trace)
+		}
+	}
+
+	// g.m.p is now set, so we no longer need mcache0 for bootstrapping.
+	mcache0 = nil
+
+	// ...
+
+    // 循环把所有空闲的 p 放入空闲链表
+	var runnablePs *p
+	for i := nprocs - 1; i >= 0; i-- {
+		pp := allp[i]
+		if gp.m.p.ptr() == pp { // allp[0] 跟 m0 关联了，所以是不能放到空闲链表
+			continue
+		}
+		pp.status = _Pidle
+		if runqempty(pp) { // 初始化时除了 allp[0] 其它 p 全部执行这个分支，放入空闲链表
+			pidleput(pp, now)
+		} else {
+            // ...
+		}
+	}
+    // ...
+}
+```
+
+1. 使用 `make([]*p, nprocs)` 初始化全局变量 `allp`，即 `allp = make([]*p, nprocs)`；
+2. 循环创建并初始化 `nprocs` 个 `p` 结构体对象并依次保存在 `allp` 切片之中；
+3. 把 `m0` 和 `allp[0]` 绑定在一起，即 `m0.p = allp[0]`, `allp[0].m = m0`；
+4. 把除了 `allp[0]` 之外的所有 `p` 放入到全局变量 `sched` 的 `pidle` 空闲队列之中。
+
+`procresize` 函数执行完后，调度器相关的初始化工作就基本结束了。
+
+## 创建 main goroutine
+
+## 调度循环

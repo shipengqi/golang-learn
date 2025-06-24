@@ -391,7 +391,7 @@ Go 汇编还引入了几个没有任何硬件寄存器与之对应的**虚拟寄
 
 Linux 按照特权等级，把进程的运行空间分为**内核空间**和**用户空间**，分别对应着下图中， CPU 特权等级的 Ring 0 和 Ring 3。
 
-![system-kernel]()
+<img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/system-kernel.png" alt="system-kernel" style="width:50%;" />
 
 - **内核空间（Ring 0）具有最高权限，可以直接访问所有资源**；
 - **用户空间（Ring 3）只能访问受限资源，不能直接访问内存等硬件设备，必须通过系统调用陷入到内核中，才能访问这些特权资源**。
