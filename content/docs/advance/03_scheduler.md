@@ -17,7 +17,7 @@ goroutine 是 Go 实现的用户态线程，主要用来解决操作系统线程
 
 Go 调度的本质是一个**生产-消费流程**。`m` 拿到 goroutine 并运行它的过程就是一个消费过程。
 
-![scheduler-queue](./scheduler-queue.png)
+![scheduler-queue](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/scheduler-queue.png)
 
 生产出的 goroutine 就放在可运行队列中。可运行队列是分为三级：
 
