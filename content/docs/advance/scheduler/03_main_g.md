@@ -3,7 +3,11 @@ title: 初始化 main goroutine
 weight: 3
 ---
 
-`go` 关键字启动一个 goroutine 时，最终会被编译器转换成 `newproc` 函数：
+## 创建 main goroutine
+
+`schedinit` 完成调度系统初始化后，返回到 `rt0_go` 函数中开始调用 `newproc()` 创建一个新的 goroutine 用于执行 mainPC 所对应的 `runtime·main` 函数。
+
+另外 `go` 关键字启动一个 goroutine 时，最终会被编译器转换成 `newproc` 函数。
 
 ```go
 func newproc(fn *funcval) {
@@ -98,6 +102,7 @@ retry:
 2. 当 `next` 为 `false` 并且本地运行队列还有剩余空间时，将 goroutine 加入处理器持有的本地运行队列；
 3. 当处理器的本地运行队列已经没有剩余空间时就会把本地队列中的一部分 goroutine 和待加入的 goroutine 通过 `runtime.runqputslow` 添加到调度器持有的全局运行队列上；
 
+## 从 g0 切换到 main goroutine
 
 从 `newproc` 继续往下执行 `mstart0`，继续调用 `mstart1` 函数：
 
@@ -259,7 +264,105 @@ func execute(gp *g, inheritTime bool) {
 `gogo` 函数是通过汇编语言编写的：
 
 ```asm
+TEXT gogo<>(SB), NOSPLIT, $0
+	get_tls(CX)
+	// 把要运行的 g 的指针放入线程本地存储，这样后面的代码就可以通过线程本地存储
+	// 获取到当前正在执行的 goroutine 的 g 结构体对象，从而找到与之关联的 m 和 p
+	MOVQ	DX, g(CX)
+	MOVQ	DX, R14		// set the g register
+	// 把 CPU 的 SP 寄存器设置为 sched.sp，完成了栈的切换
+	MOVQ	gobuf_sp(BX), SP	// restore SP
+	// 恢复调度上下文到 CPU 相关寄存器
+	MOVQ	gobuf_ret(BX), AX
+	MOVQ	gobuf_ctxt(BX), DX
+	MOVQ	gobuf_bp(BX), BP
+	// 清空 sched 的值，因为我们已把相关值放入 CPU 对应的寄存器了，不再需要，这样做可以少 gc 的工作量
+	MOVQ	$0, gobuf_sp(BX)	// clear to help garbage collector
+	MOVQ	$0, gobuf_ret(BX)
+	MOVQ	$0, gobuf_ctxt(BX)
+	MOVQ	$0, gobuf_bp(BX)
+	// 把 sched.pc 值放入 BX 寄存器
+	MOVQ	gobuf_pc(BX), BX
+	// JMP 把 BX 寄存器的包含的地址值放入 CPU 的 IP 寄存器，于是，CPU 跳转到该地址继续执行指令
+	JMP	BX
 ```
 
-1. `execute` 函数在调用 `gogo` 时把 `gp` 的 `sched` 成员的地址作为实参传递了过来。
-2. 
+`gogo` 函数就只做了两件事：
+
+1. 把 `gp.sched` 的成员恢复到 CPU 的寄存器完成状态以及栈的切换；
+2. 跳转到 `gp.sched.pc` 所指的指令地址（`runtime.main`）处执行。
+
+现在已经从 `g0` 切换到了 `gp` 这个 goroutine（main goroutine），它的入口函数是 `runtime.main`：
+
+```go
+// The main goroutine.
+func main() {
+	mp := getg().m // g = main goroutine，不再是 g0 了
+
+	// Racectx of m0->g0 is used only as the parent of the main goroutine.
+	// It must not be used for anything else.
+	mp.g0.racectx = 0
+
+	// Max stack size is 1 GB on 64-bit, 250 MB on 32-bit.
+	// Using decimal instead of binary GB and MB because
+	// they look nicer in the stack overflow failure message.
+	if goarch.PtrSize == 8 { // 64 位系统上每个 goroutine 的栈最大可达 1G，也就是说 gorputine 的栈虽然可以自动扩展，但它并不是无限扩展的
+		maxstacksize = 1000000000
+	} else {
+		maxstacksize = 250000000
+	}
+
+	// An upper limit for max stack size. Used to avoid random crashes
+	// after calling SetMaxStack and trying to allocate a stack that is too big,
+	// since stackalloc works with 32-bit sizes.
+	maxstackceiling = 2 * maxstacksize
+
+	// Allow newproc to start new Ms.
+	mainStarted = true
+
+	if haveSysmon {
+		// 现在执行的是 main goroutine，所以使用的是 main goroutine 的栈，需要切换到 g0 栈去执行 newm()
+		systemstack(func() {
+			// 创建监控线程，该线程独立于调度器，不需要跟 p 关联即可运行
+			newm(sysmon, nil, -1)
+		})
+	}
+
+	// ...
+
+	gcenable() // 开启垃圾回收器
+    
+	// ...
+
+    // main 包的初始化函数，也是由编译器实现，会递归的调用 import 进来的包的初始化函数
+	for m := &firstmoduledata; m != nil; m = m.next {
+		doInit(m.inittasks)
+	}
+
+    // 调用 main.main 函数
+	fn := main_main // make an indirect call, as the linker doesn't know the address of the main package when laying down the runtime
+	fn()
+	
+	// ...
+
+    // 进入系统调用，退出进程，可以看出 main goroutine 并未返回，而是直接进入系统调用退出进程了
+	exit(0)
+	// 保护性代码，如果 exit 意外返回，下面的代码也会让该进程 crash 死掉
+	for {
+		var x *int32
+		*x = 0
+	}
+}
+```
+
+1. 启动一个 sysmon 系统监控线程，该线程负责整个程序的 gc、抢占调度以及 netpoll 等功能的监控。
+2. 执行 runtime 包的初始化；
+3. 执行 main 包以及 main 包 import 的所有包的初始化；
+4. 执行 `main.main` 函数；
+5. 从 `main.main` 函数返回后调用 `exit` 系统调用退出进程；
+
+### goexit 函数
+
+`runtime.main` 是 main goroutine 的入口函数，是在 `schedule()-> execute()-> gogo()` 这个调用链的 `gogo` 函数中用汇编代码直接跳转过来的，而且运行完后会直接退出。但是在 **`newproc1` 创建 goroutine 的时候已经在其栈上放好了一个返回地址，伪造成 `goexit` 函数调用了 goroutine 的入口函数，这里怎么没有用到这个返回地址啊？**
+
+因为那是为非 main goroutine 准备的，**非 main goroutine 执行完成后就会返回到 `goexit` 继续执行**，而 main goroutine 执行完成后整个进程就结束了。

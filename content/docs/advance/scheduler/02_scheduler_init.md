@@ -25,6 +25,128 @@ func main() {
 
 <img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/main-thread-init-stack.png" alt="main-thread-init-stack" style="width:50%;" />
 
+## 程序入口
+
+```bash
+[root@shcCDFrh75vm7 ~]# dlv exec ./hello
+Type 'help' for list of commands.
+(dlv) disass
+TEXT _rt0_amd64_linux(SB) /usr/local/go/src/runtime/rt0_linux_amd64.s
+=>      rt0_linux_amd64.s:8     0x463940        e9fbc8ffff      jmp $_rt0_amd64
+(dlv) si
+> _rt0_amd64() /usr/local/go/src/runtime/asm_amd64.s:16 (PC: 0x460240)
+Warning: debugging optimized function
+TEXT _rt0_amd64(SB) /usr/local/go/src/runtime/asm_amd64.s
+=>      asm_amd64.s:16  0x460240        488b3c24        mov rdi, qword ptr [rsp]
+        asm_amd64.s:17  0x460244        488d742408      lea rsi, ptr [rsp+0x8]
+        asm_amd64.s:18  0x460249        e912000000      jmp $runtime.rt0_go
+```
+
+使用 dlv 调试程序可以看到程度的入口早 `runtime/rt0_linux_amd64.s` 文件的第 8 行，执行 `jmp $_rt0_amd64` 跳转到 `runtime/asm_amd64.s` 中的 `_rt0_amd64`。
+
+`runtime/asm_amd64.s`：
+
+```asm
+TEXT _rt0_amd64(SB),NOSPLIT,$-8
+	MOVQ	0(SP), DI	// argc
+	LEAQ	8(SP), SI	// argv
+	JMP	runtime·rt0_go(SB)
+```
+
+前两行指令把操作系统内核传递过来的参数 `argc` 和 `argv` 数组的地址分别放在 `DI` 和 `SI` 寄存器中。第三行指令跳转到 `rt0_go` 去执行。
+
+```asm
+TEXT runtime·rt0_go(SB),NOSPLIT|NOFRAME|TOPFRAME,$0
+    // copy arguments forward on an even stack
+	MOVQ	DI, AX		// argc
+	MOVQ	SI, BX		// argv
+    SUBQ $(5*8), SP // 3args 2auto
+    ANDQ $~15, SP   // 调整栈顶寄存器使其按 16 字节对齐
+    MOVQ AX, 16(SP) // argc 放在 SP + 16字节处
+    MOVQ BX, 24(SP) // argv 放在 SP + 24字节处
+```
+
+第 4 条指令用于调整栈顶寄存器的值使其按 16 字节对齐，也就是让栈顶寄存器 SP 指向的内存的地址为 16 的倍数，**之所以要按 16 字节对齐，是因为 CPU 有一组 SSE 指令，这些指令中出现的内存地址必须是 16 的倍数**，最后两条指令把 `argc` 和 `argv` 搬到新的位置。
+
+## 初始化 g0
+
+后面的代码，开始初始化全局变量 `g0`，**`g0` 的主要作用是提供一个栈供 runtime 代码执行**：
+
+```asm
+// create istack out of the given (operating system) stack.
+// _cgo_init may update stackguard.
+MOVQ	$runtime·g0(SB), DI // g0 的地址放入 DI 寄存器
+LEAQ	(-64*1024)(SP), BX
+MOVQ	BX, g_stackguard0(DI)
+MOVQ	BX, g_stackguard1(DI)
+MOVQ	BX, (g_stack+stack_lo)(DI)
+MOVQ	SP, (g_stack+stack_hi)(DI)
+```
+
+上面的代码主要是**从系统线程的栈空分出一部分当作 `g0` 的栈**，然后初始化 `g0` 的栈信息和 `stackgard`。
+
+![g0-stack]()
+
+## 主线程与 m0 绑定
+
+设置好 `g0` 栈之后，跳过 CPU 型号检查以及 cgo 初始化相关的代码，直接从 258 行继续分析。
+
+```asm
+// 初始化 tls (thread local storage, 线程本地存储)
+LEAQ	runtime·m0+m_tls(SB), DI // DI=&m0.tls，取 m0 的 tls 成员的地址到 DI 寄存器
+CALL	runtime·settls(SB)       // 调用 settls 设置线程本地存储，settls 函数的参数在 DI 寄存器中
+
+// store through it, to make sure it works
+// 验证 settls 是否可以正常工作，如果有问题则 abort 退出程序
+get_tls(BX)
+MOVQ	$0x123, g(BX)
+MOVQ	runtime·m0+m_tls(SB), AX
+CMPQ	AX, $0x123
+JEQ 2(PC)
+CALL	runtime·abort(SB)
+```
+
+1. 先调用 `settls` 函数初始化主线程的线程本地存储 (TLS)，目的是把 `m0` 与主线程关联在一起。
+2. 证 TLS 功能是否正常，如果不正常则直接 `abort` 退出程序。
+
+`settls` 函数在 `runtime/sys_linx_amd64.s` 文件中：
+
+```asm
+// set tls base to DI
+TEXT runtime·settls(SB),NOSPLIT,$32
+#ifdef GOOS_android
+	// Android stores the TLS offset in runtime·tls_g.
+	SUBQ	runtime·tls_g(SB), DI
+#else
+    // DI 寄存器中存放的是 m.tls[0] 的地址，m 的 tls 成员是一个数组
+	// 把 DI 寄存器中的地址加 8，存放的就是 m.tls[1] 的地址了
+	ADDQ	$8, DI	// ELF wants to use -8(FS)
+#endif
+	MOVQ	DI, SI
+	MOVQ	$0x1002, DI	// ARCH_SET_FS
+	MOVQ	$SYS_arch_prctl, AX
+	SYSCALL
+	CMPQ	AX, $0xfffffffffffff001
+	JLS	2(PC)
+	MOVL	$0xf1, 0xf1  // crash
+	RET
+```
+
+上面的 `arch_prctl` 系统调用把 `m0.tls[1]` 的地址设置成了 `fs` 段的段基址。CPU 中有个叫 `fs` 的段寄存器。这样通过 `m0.tls[1]` 就可以访问到线程的 TLS 区域了。工作线程代码也可以通过 fs 寄存器来找到 `m.tls`。
+
+CPU 的 FS 寄存器主要用于线程本地存储（TLS），用于在每个线程中快速访问“当前线程的本地数据”。
+
+`rt0_go` 下面的代码会**把 g0 的地址放入主线程的线程本地存储中**，然后通过：
+
+```go
+m0.g0 = &g0
+g0.m = &m0
+```
+
+把 `m0` 和 `g0` 绑定在一起，这样，之后在主线程中通过 `get_tls` 可以获取到 `g0`，通过 `g0` 的 `m` 成员又可以找到 `m0`，于是这里就实现了 `m0` 和 `g0` 与主线程之间的关联。
+
+## 初始化 m0
+
 运行时通过 [runtime.schedinit](https://github.com/golang/go/blob/6796ebb2cb66b316a07998cdcd69b1c486b8579e/src/runtime/proc.go#L798) 初始化调度器：
 
 ```go
@@ -59,8 +181,6 @@ func schedinit() {
 3. 调用 `procresize` 初始化系统需要用到的 `p` 结构体对象。它的数量决定了最多可以有都少个 goroutine 同时并行运行。
 4. `sched.maxmcount = 10000` 一个 Go 程序最多可以创建 10000 个线程。
 5. 线程数可以通过 `GOMAXPROCS` 变量控制。
-
-## 初始化 m0
 
 [`mcommoninit`](https://github.com/golang/go/blob/6796ebb2cb66b316a07998cdcd69b1c486b8579e/src/runtime/proc.go#L942) 初始化 `m0`：
 
