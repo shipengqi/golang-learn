@@ -1,0 +1,15 @@
+.img-zoom {
+  transition: transform 0.25s ease;
+}
+   
+.img-zoom:hover {
+  -ms-transform: scale(1.5); /* IE 9 */
+  -webkit-transform: scale(1.5); /* Safari 3-8 */
+  transform: scale(1.5); 
+}
+
+.img-zoom.lg:hover {
+  -ms-transform: scale(2.0); /* IE 9 */
+  -webkit-transform: scale(2.0); /* Safari 3-8 */
+  transform: scale(2.0); 
+}

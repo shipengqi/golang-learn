@@ -3,10 +3,10 @@ title: SingleFlight
 weight: 11
 ---
 
-Go 的扩展库 `golang.org/x/sync` 提供了 `singleflight` 包，它的作用在处理多个 goroutine 同时调用同一个函数的时候，只让一个 goroutine 去调用这个函数，等到这个 goroutine 返回结果时，再把结
-果返回给这几个 goroutine，这样可以减少并发调用的数量。
+Go 的扩展库 `golang.org/x/sync` 提供了 `singleflight` 包，它的作用在处理多个 goroutine 同时调用同一个函数的时候，只让一个 goroutine 去调用这个函数，等到这个 goroutine 返回结果时，再把结果返回给这几个 goroutine，这样可以减少并发调用的数量。
 
 一个常见的使用场景：在使用 Redis 对数据库中的数据进行缓存，如果发生缓存击穿，大量的流量都会打到后端数据库上，导致后端服务响应延时等问题。
+
 `singleflight` 可以将对同一个 key 的多个请求合并为一个，减轻后端服务的压力。
 
 ## 使用

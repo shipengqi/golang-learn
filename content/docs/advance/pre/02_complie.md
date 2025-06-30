@@ -81,10 +81,12 @@ add %rdx,%rax        // 直接寻址。rax = rax + rdx
 
 <img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/stack-ret.png" alt="stack-ret" style="width:50%;" />
 
-{{< callout type="info" >}}
-`retq` 指令从堆栈中弹出返回地址（即 `0x40055e`），将弹出的地址被加载到 rip 寄存器中。
+图中**返回地址**就是 `0x40055e`。
 
-函数执行完以后，局部变量会被销毁，rsp 寄存器也会恢复到函数调用前的状态。`retq` 只需要调整偏移量 `rsp + 8` 就能拿到返回地址。
+{{< callout type="info" >}}
+`retq` 指令从堆栈中弹出返回地址（即 `0x40055e`），将弹出的地址加载到 rip 寄存器中。
+
+函数执行完以后，局部变量会被销毁，rsp 寄存器也会恢复到函数调用前的状态。`retq` 只需要调整偏移量 `rsp + 8` （64 位操作系统应该是 `rsp + 16`）就能拿到返回地址。
 {{< /callout >}}
 
 

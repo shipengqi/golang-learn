@@ -168,7 +168,7 @@ rsp 寄存器一般用来存放函数调用栈的栈顶地址，而 rbp 寄存�
 #### 函数栈帧
 
 1. 每个未运行完的函数都有对应的栈帧。
-2. 栈帧保存了函数的额返回地址和局部变量。
+2. 栈帧保存了函数的返回地址和局部变量。
 
 #### 栈帧创建于销毁过程
 
@@ -221,11 +221,11 @@ int main()
 <img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/add-calc.png" alt="add-calc" width="280px">
 
 {{< callout type="info" >}}
-假设返回地址和参数都是 4 字节，那么参数寻址就是 `rbp + 偏移量`：
+假设上一栈帧的 rbp 和参数都是 4 字节，那么参数寻址就是 `rbp + 偏移量`：
 
-- `ebp+4`：返回地址
-- `ebp+8`：参数 a
-- `ebp+12`：参数 b
+- `rbp+4`：上一栈帧的 rbp
+- `rbp+8`：参数 a
+- `rbp+12`：参数 b
 {{< /callout >}}
 
 
@@ -249,7 +249,8 @@ int main()
 
 <img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/main-stack.png" alt="main-stack" width="380px">
 
-绿色部分就是 `main` 函数的栈帧。至此栈帧的创建与销毁结束，函数调用完成。
+绿色部分就是 `main` 函数的栈帧（这里的 `a=1,b=1` 是 `main` 栈帧的局部变量）。至此栈帧的创建与销毁结束，函数调用完成。
+
 
 ### Go 汇编寄存器
 

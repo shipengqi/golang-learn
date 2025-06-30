@@ -13,6 +13,7 @@ Go 运行时错误会引起 `painc` 异常。
 用 Go 提供的错误机制，而不是 `panic`，尽量避免程序的崩溃。
 
 ### panic 函数
+
 `panic` 函数接受任何值作为参数。当某些不应该发生的场景发生时，我们就应该调用 `panic`。
 
 ### panic 详情中都有什么
@@ -137,16 +138,16 @@ func main() {
 
 ## panic 和 recover 原理
 
-panic 能够改变程序的控制流，函数调用panic 时会立刻停止执行函数的其他代码，并在执行结束后在当前 Goroutine 中递归执行调用方的延迟函数调用 defer；
+panic 能够改变程序的控制流，函数调用panic 时会立刻停止执行函数的其他代码，并在执行结束后在当前 goroutine 中递归执行调用方的延迟函数调用 defer；
 recover 可以中止 panic 造成的程序崩溃。它是一个只能在 defer 中发挥作用的函数，在其他作用域中调用不会发挥任何作用；
 
-- panic 只会触发当前 Goroutine 的延迟函数调用；
+- panic 只会触发当前 goroutine 的延迟函数调用；
 - recover 只有在 defer 函数中调用才会生效；
 - panic 允许在 defer 中嵌套多次调用；
 
-defer 关键字对应的 runtime.deferproc 会将延迟调用函数与调用方所在 Goroutine 进行关联。所以当程序发生崩溃时只会调用当前 Goroutine 的延迟调用函数也是非常合理的。
+defer 关键字对应的 runtime.deferproc 会将延迟调用函数与调用方所在 goroutine 进行关联。所以当程序发生崩溃时只会调用当前 goroutine 的延迟调用函数也是非常合理的。
 
-多个 Goroutine 之间没有太多的关联，一个 Goroutine 在 panic 时也不应该执行其他 Goroutine 的延迟函数。
+多个 goroutine 之间没有太多的关联，一个 goroutine 在 panic 时也不应该执行其他 goroutine 的延迟函数。
 
 recover 只有在发生 panic 之后调用才会生效。需要在 defer 中使用 recover 关键字。
 
@@ -171,7 +172,7 @@ type _panic struct {
 runtime.gopanic，该函数的执行过程包含以下几个步骤：
 
 1. 创建新的 runtime._panic 结构并添加到所.在 Goroutine_panic 链表的最前面；
-2. 在循环中不断从当前 Goroutine 的 _defer .中链表获取 runtime._defer 并调用 runtime.reflectcall 运行延迟调用函数；
+2. 在循环中不断从当前 goroutine 的 _defer .中链表获取 runtime._defer 并调用 runtime.reflectcall 运行延迟调用函数；
 3. 调用 runtime.fatalpanic 中止整个程序；
 
 ### 崩溃恢复
@@ -189,7 +190,7 @@ func gorecover(argp uintptr) interface{} {
 }
 ```
 
-如果当前 Goroutine 没有调用 panic，那么该函数会直接返回 nil，这也是崩溃恢复在非 defer 中调用会失效的原因。
+如果当前 goroutine 没有调用 panic，那么该函数会直接返回 nil，这也是崩溃恢复在非 defer 中调用会失效的原因。
 
 在正常情况下，它会修改 runtime._panic 结构体的 recovered 字段，runtime.gorecover 函数本身不包含恢复程序的逻辑，程序的恢复也是由 runtime.gopanic 函数负责的：
 
@@ -228,7 +229,7 @@ func gopanic(e interface{}) {
 将 panic 和 recover 分别转换成 runtime.gopanic 和 runtime.gorecover；
 将 defer 转换成 deferproc 函数；
 在调用 defer 的函数末尾调用 deferreturn 函数；
-在运行过程中遇到 gopanic 方法时，会从 Goroutine 的链表依次取出 _defer 结构体并执行；
+在运行过程中遇到 gopanic 方法时，会从 goroutine 的链表依次取出 _defer 结构体并执行；
 如果调用延迟执行函数时遇到了 gorecover 就会将 _panic.recovered 标记成 true 并返回 panic 的参数；
 在这次调用结束之后，gopanic 会从 _defer 结构体中取出程序计数器 pc 和栈指针 sp 并调用 recovery 函数进行恢复程序；
 recovery 会根据传入的 pc 和 sp 跳转回 deferproc；

@@ -225,7 +225,7 @@ Time: Dec 6, 2023 at 2:45pm (CST)
 
 ```
 
-#### Goroutine Profiling
+#### goroutine Profiling
 
 ```sh
 $ go tool pprof http://localhost:8080/debug/pprof/goroutine

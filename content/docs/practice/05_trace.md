@@ -97,7 +97,7 @@ $ go tool trace trace.out
     - Threads：显示执行期间有多少个系统线程在运行，包含正在调用 SysCall （InSysCall）和运行中（Running）两种状态。
 3. `PROCS`：每个 Processor 显示一行。默认显示系统内核数量，可以使用 `runtime.GOMAXPROCS(n)` 来控制数量。
     - `GC`：显示执行期间垃圾回收执行的次数和时间。**每次执行 GC，堆内存都会被释放一部分**。
-    - 协程和事件：显示在每个虚拟处理器上有什么 Goroutine 正在运行，而连线行为代表事件关联。
+    - 协程和事件：显示在每个虚拟处理器上有什么 goroutine 正在运行，而连线行为代表事件关联。
 
 > 快捷键：w（放大），s（缩小），a（左移），d（右移）。
 
@@ -130,7 +130,7 @@ $ go tool trace trace.out
 
 ![view-trace-folw-events](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/view-trace-folw-events.png)
 
-点击具体的 Goroutine 可以查看详细信息：
+点击具体的 goroutine 可以查看详细信息：
 
 - `Start`：开始时间
 - `Wall Duration`：持续时间
@@ -145,7 +145,7 @@ $ go tool trace trace.out
 
 点击 `Flow events` 选择 `All`，可以查看程序运行中的事件流情况。
 
-### Goroutine analysis
+### goroutine analysis
 
 进入 `Goroutine analysis` 可查看整个运行过程中，每个函数块有多少个 goroutine 在跑，并且观察每个的 goroutine 的运行开销都花费在哪个阶段。
 

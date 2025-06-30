@@ -7,7 +7,24 @@ weight: 3
 
 `schedinit` 完成调度系统初始化后，返回到 `rt0_go` 函数中开始调用 `newproc()` 创建一个新的 goroutine 用于执行 mainPC 所对应的 `runtime·main` 函数。
 
-另外 `go` 关键字启动一个 goroutine 时，最终会被编译器转换成 `newproc` 函数。
+```asm
+// ...
+CALL	runtime·schedinit(SB)
+
+// create a new goroutine to start program
+MOVQ	$runtime·mainPC(SB), AX		// entry
+PUSHQ	AX
+CALL	runtime·newproc(SB)
+POPQ	AX
+
+// start this M
+CALL	runtime·mstart(SB)
+
+CALL	runtime·abort(SB)	// mstart should never return
+RET
+```
+
+另外 `go` 关键字启动一个 goroutine 时，最终也会被编译器转换成 `newproc` 函数。
 
 ```go
 func newproc(fn *funcval) {
@@ -38,7 +55,7 @@ func newproc1(fn *funcval, callergp *g, callerpc uintptr, parked bool, waitreaso
 	newg := gfget(pp) // 从 p 的本地缓冲里获取一个没有使用的 g，初始化时没有，返回nil
 
 	if newg == nil {
-        // new 一个 g 结构体对象，然后从堆上为其分配栈，并设置 g 的 stack 成员和两个stackgard 成员
+        // new 一个 g 结构体对象，然后从堆上为其分配栈，并设置 g 的 stack 成员和两个 stackgard 成员
 		newg = malg(_StackMin)
 		casgstatus(newg, _Gidle, _Gdead) // 初始化 g 的状态为 _Gdead
 		allgadd(newg) // 放入全局变量 allgs 切片中
@@ -47,7 +64,7 @@ func newproc1(fn *funcval, callergp *g, callerpc uintptr, parked bool, waitreaso
     // 把 newg.sched 结构体成员的所有成员设置为 0
     memclrNoHeapPointers(unsafe.Pointer(&newg.sched), unsafe.Sizeof(newg.sched))
     
-    //设置 newg 的 sched 成员，调度器需要依靠这些字段才能把 goroutine 调度到 CPU 上运行。
+    // 设置 newg 的 sched 成员，调度器需要依靠这些字段才能把 goroutine 调度到 CPU 上运行。
     newg.sched.sp = sp // newg 的栈顶
     newg.stktopsp = sp
     // newg.sched.pc 表示当 newg 被调度起来运行时从这个地址开始执行指令
@@ -61,8 +78,8 @@ func newproc1(fn *funcval, callergp *g, callerpc uintptr, parked bool, waitreaso
 
 `runtime.gfget` 中包含两部分逻辑，它会根据处理器中 `gFree` 列表中 goroutine 的数量做出不同的决策：
 
-- 当 `p` 的 goroutine 列表为空时，会将 `sched` 调度器持有的空闲 goroutine 转移到当前 `p` 上，直到 `gFree` 列表中的 goroutine 数量达到 32；
-- 当 `p` 的 goroutine 数量充足时，会从列表头部返回一个 goroutine；
+- 当 `p` 的 `gfree` 数量充足时，会从列表头部返回一个 goroutine；
+- 当 `p` 的 `gfree` 列表为空时，会将调度器持有的空闲 goroutine 转移到当前 `p` 上，直到 `gfree` 列表中的 goroutine 数量达到 32；
 
 ```go
 func gfget(pp *p) *g {
@@ -94,13 +111,13 @@ retry:
 }
 ```
 
-当 `p` 的 `gFree` 和调度器的 `gFree` 列表都不存在结构体时，调用 `runtime.malg` 初始化新的 `g`。
+**当 `p` 的 `gfree` 和调度器的 `gFree` 列表都不存在结构体时，调用 `runtime.malg` 初始化新的 `g`**。
 
-拿到 `g` 之后，调用 `runtime.runqput` 会将 goroutine 放到运行队列上，这既可能是全局的运行队列，也可能是 `p` 本地的运行队列：
+拿到 `g` 之后，调用 `runtime.runqput` 会将 goroutine 放到运行队列 `runq` 上，这既可能是全局的运行队列，也可能是 `p` 本地的运行队列：
 
 1. 当 `next` 为 `true` 时，将 goroutine 设置到处理器的 `runnext `作为下一个处理器执行的任务；
 2. 当 `next` 为 `false` 并且本地运行队列还有剩余空间时，将 goroutine 加入处理器持有的本地运行队列；
-3. 当处理器的本地运行队列已经没有剩余空间时就会把本地队列中的一部分 goroutine 和待加入的 goroutine 通过 `runtime.runqputslow` 添加到调度器持有的全局运行队列上；
+3. 当 `p` 的**本地运行队列已经没有剩余空间时就会把本地队列中的一部分 goroutine 和待加入的 goroutine 通过 `runtime.runqputslow` 添加到调度器持有的全局运行队列上**；
 
 ## 从 g0 切换到 main goroutine
 
@@ -182,7 +199,7 @@ func mstart1() {
 		fn()
 	}
 
-	if gp.m != &m0 { // m0 已经绑定了 allp[0]，不是 m0 的话还没有 p，所以需要获取一个 p
+	if gp.m != &m0 { // m0 已经绑定了 allp[0]，如果不是 m0 的话，这时还没有 p，所以需要获取一个 p
 		acquirep(gp.m.nextp.ptr())
 		gp.m.nextp = 0
 	}
@@ -191,9 +208,9 @@ func mstart1() {
 }
 ```
 
-1. `mstart1` 函数先保存 `g0` 的调度信息
+1. `mstart1` 函数先保存 `g0` 的调度信息。
 2. `GetCallerPC()` 返回的是 `mstart0` 调用 `mstart1` 时被 `call` 指令压栈的返回地址。
-3. `GetCallerSP()` 函数返回的是调用 `mstart1` 函数之前 `mstart0` 函数的栈顶地址
+3. `GetCallerSP()` 函数返回的是调用 `mstart1` 函数之前 `mstart0` 函数的栈顶地址。
 
 所以 **`mstart1` 最主要做的就是保存当前正在运行的 `g` 的下一条指令的地址和栈顶地址**。
 
@@ -201,8 +218,8 @@ func mstart1() {
 
 {{< callout type="info" >}}
 上面的 `mstart1` 函数中：
-- `g0.sched.sp` 指向了 `mstart1` 函数执行完成后的返回地址，该地址保存在了 `mstart0` 函数的栈帧之中；
-- `g0.sched.pc` 指向的是 `mstart0` 函数中调用 `mstart1` 函数之后的 `if mStackIsSystemAllocated()` 语句。
+
+- `g0.sched.pc` 指向的是 `mstart0` 函数中调用 `mstart1` 函数之后下一个指令（也就是 `if mStackIsSystemAllocated()` 语句）的地址。
 
 从 `mstart0` 函数可以看到，`if mStackIsSystemAllocated()` 语句之后就要退出线程了。为什么要这么做？
 
@@ -258,7 +275,7 @@ func execute(gp *g, inheritTime bool) {
 ```
 
 1. `execute` 函数的第一个参数 `gp` 即是需要调度起来运行的 goroutine，这里首先把 `gp` 的状态从 `_Grunnable` 修改为 `_Grunning`
-2. 然后把 `gp` 和 `m` 关联起来，这样通过 `m` 就可以找到当前工作线程正在执行哪个goroutine，反之亦然。
+2. 然后把 `gp` 和 `m` 关联起来，这样通过 `m` 就可以找到当前工作线程正在执行哪个 goroutine，反之亦然。
 3. 调用 `gogo` 函数完成从 `g0` 到 `gp` 的的切换。
 
 `gogo` 函数是通过汇编语言编写的：
@@ -363,6 +380,24 @@ func main() {
 
 ### goexit 函数
 
-`runtime.main` 是 main goroutine 的入口函数，是在 `schedule()-> execute()-> gogo()` 这个调用链的 `gogo` 函数中用汇编代码直接跳转过来的，而且运行完后会直接退出。但是在 **`newproc1` 创建 goroutine 的时候已经在其栈上放好了一个返回地址，伪造成 `goexit` 函数调用了 goroutine 的入口函数，这里怎么没有用到这个返回地址啊？**
+main goroutine 调用 exit 直接退出进程了！！
+
+`runtime.main` 是 main goroutine 的入口函数，是在 `schedule()-> execute()-> gogo()` 这个调用链的 `gogo` 函数中用汇编代码直接跳转过来的，而且运行完后会直接退出。
+
+goexit 函数为什么没有调用？
+
+但是在 **`newproc1` 创建 goroutine 的时候已经在其栈上放好了一个返回地址，伪造成 `goexit` 函数调用了 goroutine 的入口函数，这里怎么没有用到这个返回地址啊？**
+
+`newproc1` 函数部分插入 goexit：
+
+```go
+`newg.sched.pc = funcPC(goexit) + sys.PCQuantum`
+```
 
 因为那是为非 main goroutine 准备的，**非 main goroutine 执行完成后就会返回到 `goexit` 继续执行**，而 main goroutine 执行完成后整个进程就结束了。
+
+## 流程图
+
+<div class="img-zoom lg">
+  <img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/go-main-run-flow.png" alt=go-main-run-flow">
+</div>

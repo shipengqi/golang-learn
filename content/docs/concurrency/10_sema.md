@@ -60,27 +60,25 @@ func sync_runtime_SemacquireMutex(addr *uint32, lifo bool, skipframes int) {
 
 ```go
 func semacquire1(addr *uint32, lifo bool, profile semaProfileFlags, skipframes int, reason waitReason) {
+	// 检查当前 goroutine 是否在 G 栈上
 	gp := getg()
 	if gp != gp.m.curg {
 		throw("semacquire not on the G stack")
 	}
 
 	// Easy case.
-	// 信号量大于 0，直接返回
+	// 快速路径：信号量大于 0，直接返回，信号量 -1
 	if cansemacquire(addr) {
 		return
 	}
 
 	// Harder case:
-	// 构造一个 sudog
+	// 慢路径：从池中获取 sudog 结构（避免频繁内存分配）
+	// sudog 表示一个等待中的 goroutine
 	s := acquireSudog()
 	// 将信号量的地址放到到 semtable 中
 	// 返回一个 semaRoot 类型
 	root := semtable.rootFor(addr)
-	t0 := int64(0)
-	s.releasetime = 0
-	s.acquiretime = 0
-	s.ticket = 0
 	// ...
 	for {
 		lockWithRank(&root.lock, lockRankRoot)
@@ -92,10 +90,12 @@ func semacquire1(addr *uint32, lifo bool, profile semaProfileFlags, skipframes i
 			unlock(&root.lock)
 			break
 		}
-		// 将当前 goroutine 放入到 semaRoot 的等待者队列
+		// 将 sudog 放入到 semaRoot 的等待者队列
+		// queue 会将 sudog 和 g 关联起来
 		root.queue(addr, s, lifo)
 		// 挂起当前 goroutine
 		goparkunlock(&root.lock, reason, traceBlockSync, 4+skipframes)
+		// 被唤醒后重新检查
 		if s.ticket != 0 || cansemacquire(addr) {
 			break
 		}
@@ -103,6 +103,7 @@ func semacquire1(addr *uint32, lifo bool, profile semaProfileFlags, skipframes i
 	if s.releasetime > 0 {
 		blockevent(s.releasetime-t0, 3+skipframes)
 	}
+	// 释放 sudog 放回池内
 	releaseSudog(s)
 }
 ```
@@ -129,6 +130,7 @@ func cansemacquire(addr *uint32) bool {
 ```go
 // src/runtime/sema.go
 type semaRoot struct {
+	// 保护本结构的自旋锁（非 Go 级别的 mutex，是更底层的锁定机制）
 	lock  mutex
 	treap *sudog        // 等待者队列（平衡树）的根节点
     nwait atomic.Uint32 // 等待者的数量
@@ -144,6 +146,13 @@ type semTable [semTabSize]struct {
 // rootFor 本质上就是将 semaRoot 与信号量绑定
 func (t *semTable) rootFor(addr *uint32) *semaRoot {
     return &t[(uintptr(unsafe.Pointer(addr))>>3)%semTabSize].root
+}
+
+
+func (root *semaRoot) queue(addr *uint32, s *sudog, lifo bool) {
+	// 释放信号量时，唤醒 g 需要用到
+	s.g = getg()
+	// ...
 }
 ```
 
@@ -173,7 +182,6 @@ func semrelease1(addr *uint32, handoff bool, skipframes int) {
 	}
 
 	// Harder case
-	
 	lockWithRank(&root.lock, lockRankRoot)
 	// 再次检查等待者计数
 	if root.nwait.Load() == 0 {
@@ -181,7 +189,7 @@ func semrelease1(addr *uint32, handoff bool, skipframes int) {
 		unlock(&root.lock)
 		return
 	}
-	// 队当前信号量上的 sudog
+	// 出队当前信号量上的 sudog
 	s, t0, tailtime := root.dequeue(addr)
 	if s != nil {
 		// 等待者计数 -1
@@ -196,6 +204,14 @@ func semrelease1(addr *uint32, handoff bool, skipframes int) {
 			goyield()
 		}
 	}
+}
+```
+`goparkunlock` 的实现：
+
+```go
+func goparkunlock(lock *mutex, reason waitReason, traceReason traceBlockReason, traceskip int) {
+	// 调用 gopark 函数，将 goroutine 阻塞
+	gopark(parkunlock_c, unsafe.Pointer(lock), reason, traceReason, traceskip)
 }
 ```
 

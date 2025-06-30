@@ -27,9 +27,18 @@ TEXT runtime·goexit(SB),NOSPLIT|TOPFRAME|NOFRAME,$0-0
 2. 然后把 `g` 的一些字段清空成 0 值；
 3. 调用 `dropg` 函数解除 `g` 和 `m` 之间的关系，其实就是设置 `g->m = nil, m->currg = nil`；
 4. 把 `g` 放入 `p` 的 `freeg` 队列缓存起来供下次创建 `g` 时快速获取而不用从内存分配。`freeg` 就是 `g` 的一个对象池；
-5. 调用 `schedule` 函数再次进行调度；
+5. **调用 `schedule` 函数再次进行调度**；
 
 工作线程再次调用了 `schedule` 函数进入新一轮的调度循环。
+
+```go
+func goexit0(gp *g) {
+	gdestroy(gp)
+	schedule()
+}
+```
+
+调用链：
 
 ```
 schedule() -> execute() -> gogo() -> g2() -> goexit() -> goexit1() -> mcall() -> goexit0() -> schedule()
@@ -39,7 +48,7 @@ schedule() -> execute() -> gogo() -> g2() -> goexit() -> goexit1() -> mcall() ->
 
 1. 从全局运行队列中寻找 goroutine。为了保证调度的公平性，每个工作线程每经过 61 次调度就需要优先尝试从全局运行队列中找出一个 goroutine 来运行，这样才能保证位于全局运行队列中的 goroutine 得到调度的机会。全局运行队列是所有工作线程都可以访问的，所以在访问它之前需要加锁。
 2. 从工作线程本地运行队列中寻找 goroutine。如果不需要或不能从全局运行队列中获取到 goroutine 则从本地运行队列中获取。
-3. 
+3. 尝试通过 netpoll 快速获取 I/O 就绪任务
 4. 从其它工作线程的运行队列中偷取 goroutine。如果上一步也没有找到需要运行的 goroutine，则从其他工作线程的运行队列中偷取 goroutine，在偷取之前会再次尝试从全局运行队列和当前线程的本地运行队列中查找需要运行的 goroutine。
 
 ```go
@@ -115,15 +124,14 @@ func findRunnable() (gp *g, inheritTime, tryWakeP bool) {
 
 这里使用的 `for` 循环加原子操作 CAS （`atomic.CasRel`）来保证只有一个线程能窃取成功。`atomic.CasRel(&pp.runqhead, h, h+n)` 中 `runqhead` 是本地丢列的头指针。
 
-### 调度时机
+## 调度时机
 
 触发调度的几个路径：
 
-- 主动挂起 — `runtime.gopark` -> `runtime.park_m`
-- 系统调用 — `runtime.exitsyscall` -> `runtime.exitsyscall0`
-- 协作式调度 — `runtime.Gosched` -> `runtime.gosched_m` -> `runtime.goschedImpl`
-- 系统监控 — `runtime.sysmon` -> `runtime.retake` -> `runtime.preemptone`
-
+- 主动挂起 — `runtime.gopark` -> `runtime.park_m`。
+- 系统调用 — `runtime.exitsyscall` -> `runtime.exitsyscall0`。
+- 协作式调度 — `runtime.Gosched` -> `runtime.gosched_m` -> `runtime.goschedImpl`。
+- 系统监控 — `runtime.sysmon` -> `runtime.retake` -> `runtime.preemptone`。
 
 ### 主动挂起
 
@@ -131,8 +139,7 @@ func findRunnable() (gp *g, inheritTime, tryWakeP bool) {
 
 ```go
 func park_m(gp *g) {
-	_g_ := getg()
-
+	// ...
 	casgstatus(gp, _Grunning, _Gwaiting)
 	dropg()
 
@@ -140,11 +147,11 @@ func park_m(gp *g) {
 }
 ```
 
-1. 将当前 Goroutine 的状态从 `_Grunning` 切换至 `_Gwaiting`
-2. 调用 `runtime.dropg` 移除线程和 Goroutine 之间的关联
+1. 将当前 goroutine 的状态从 `_Grunning` 切换至 `_Gwaiting`。
+2. 调用 `runtime.dropg` 移除 `m` 和 `g` 之间的关联。
 3. 调用 `runtime.schedule` 触发新一轮的调度。
 
-当 Goroutine 等待的特定条件满足后，运行时会调用 `runtime.goready` 将因为调用 `runtime.gopark` 而陷入休眠的 Goroutine 唤醒。
+当 goroutine 等待的特定条件满足后，运行时会调用 `runtime.goready` 将因为调用 `runtime.gopark` 而陷入休眠的 goroutine 唤醒。
 
 ```go
 func goready(gp *g, traceskip int) {
@@ -154,23 +161,49 @@ func goready(gp *g, traceskip int) {
 }
 
 func ready(gp *g, traceskip int, next bool) {
-	_g_ := getg()
-
+	// ...
+	mp := acquirem() // disable preemption because it can be holding p in a local var
+    // ...
 	casgstatus(gp, _Gwaiting, _Grunnable)
-	runqput(_g_.m.p.ptr(), gp, next)
+	runqput(mp.p.ptr(), gp, next)
 	if atomic.Load(&sched.npidle) != 0 && atomic.Load(&sched.nmspinning) == 0 {
 		wakep()
 	}
+	// ...
 }
 ```
 
-1. 将 Goroutine 的 `_Gwaiting` 状态切换至 `_Grunnable`。
+1. 将 goroutine 的 `_Gwaiting` 状态切换至 `_Grunnable`。
 2. 将其加入处理器的运行队列中，等待调度器的调度。
 
 
+{{< callout type="info" >}}
+`gopark` 需要调用 `schedule` 而 `goready` 不需要，原因：
+
+- `gopark` 将 `g` 从 `Grunning` 变为 `Gwaiting`，必须让出 `m`，找新 `g` 来运行。
+- `goready` 将 `g` 从 `Gwaiting` 变为 `Grunnable`，只需将 `g` 放入 `runq` 队列即可。
+
+正常结束的非 main goroutine 会返回到 `goexit` 函数，切换到 `g0` 继续执行 `shcedule`。
+
+**`gopark`（`mcall`）和 `goready`（`systemstack`）都会切换到 `g0` 栈去执行**。
+{{< /callout >}}
+
+#### 使用场景
+
+
+- channel 阻塞（`hchan.sendq` 向 channel 发送数据而被阻塞的 goroutine 队列，`hchan.recvq` 读取 channel 的数据而被阻塞的 goroutine 队列）-> `gopark/goready`。
+- `sync.Metux` -> 信号量（`semaRoot.treap` 等待着队列）-> `gopark/goready`。
+- `sync.WaitGroup` -> 信号量（`semaRoot.treap` 等待着队列）-> `gopark/goready`。
+- `sync.Cond` -> `gopark/goready`。
+- `golang.org/x/sync/singleflight` -> `sync.Metux` -> 信号量（`semaRoot.treap` 等待着队列）-> `gopark/goready`。
+- `golang.org/x/sync/errgroup` -> `sync.WaitGroup` -> 信号量（`semaRoot.treap` 等待着队列）-> `gopark/goready`。
+
+
+上面的几种方式，都有一个被阻塞的 goroutine 队列， `goready` 唤醒时，可以直接使用阻塞队列中的 `g` 对象。
+
 ### 系统调用
 
-系统调用也会触发运行时调度器的调度，Goroutine 有一个 `_Gsyscall` 状态用来表示系统调用。
+系统调用也会触发运行时调度器的调度，goroutine 有一个 `_Gsyscall` 状态用来表示系统调用。
 
 Go 通过汇编语言封装了系统调用：
 
@@ -190,36 +223,44 @@ ok:
 	RET
 ```
 
-1. `runtime.entersyscall` 完成 Goroutine 进入系统调用前的准备工作。
+1. `runtime.entersyscall` 完成 goroutine 进入系统调用前的准备工作。
 2. `INVOKE_SYSCALL` 系统调用指令。
-3. `runtime.exitsyscall` 为当前 Goroutine 重新分配资源。
+3. `runtime.exitsyscall` 为当前 goroutine 重新分配资源。
+4. 释放当前 `m` 上的锁，**锁被释放后，当前线程会陷入系统调用等待返回**，在锁被释放后，**会有其他 goroutine 抢占 `p`**（这是后面 `exitsyscall` 会有两种路径的原因）。
 
 #### runtime.entersyscall
 
 `runtime.entersyscall` 主要做以下几件事：
 
-1. 保存当前 Goroutine 的上下文信息，程序计数器 PC 和栈指针 SP 中的内容。
-2. 切换当前 Goroutine 为 `_Gsyscall` 状态。
-3. 将 Goroutine 的 `p` 和 `m` 暂时分离并更新 `p` 的状态到 `_Psyscall`；
+1. 保存当前 goroutine 的上下文信息，程序计数器 PC 和栈指针 SP 中的内容。
+2. 切换当前 goroutine 为 `_Gsyscall` 状态。
+3. 将 goroutine 的 `p` 和 `m` 暂时分离并更新 `p` 的状态到 `_Psyscall`；
 
+{{< callout type="info" >}}
+这里的当前 goroutine 并没有和 `m` 解绑，只是 `p` 和 `m` 解绑。当前 goroutine 的保存上下文信息是执行系统调用前的 PC 和 SP 等。
+
+然后 `m` 陷入了阻塞，等待系统调用返回。
+
+返回之后才会将当前 goroutine 切换至 `_Grunnable` 状态，并移除 `m` 和当前 goroutine 的关联，放入运行队列，触发 `runtime.schedule` 调度。
+{{< /callout >}}
 
 #### runtime.exitsyscall
 
-系统调用结束后，会调用退出系统调用的函数 `runtime.exitsyscall` 为当前 Goroutine 重新分配资源，该函数有两个不同的执行路径：
+系统调用结束后，会调用退出系统调用的函数 `runtime.exitsyscall` 为当前 goroutine 重新分配资源，该函数有两个不同的执行路径：
 
 1. 调用 `runtime.exitsyscallfast`；
-2. 切换至调度器的 Goroutine 并调用 `runtime.exitsyscall0`；
+2. 切换至 `g0` 并调用 `runtime.exitsyscall0`，将当前 goroutine 切换至 `_Grunnable` 状态；
 
-这两种不同的路径会分别通过不同的方法查找一个用于执行当前 Goroutine 处理器 `p`。
+对于当前 goroutine 放入哪个运行队列有两种策略：
 
-1. 如果 Goroutine 的执行系统调用前就绑定的 `p` 仍处于 `_Psyscall` 状态，会直接调用 `wirep` 将 Goroutine 与处理器进行关联；
-2. 如果调度器中存在闲置的 `p`，会调用 `runtime.acquirep` 使用闲置的 `p` 处理当前 Goroutine；
+1. 如果当前 goroutine 的执行系统调用前就绑定的 `p` 仍处于 `_Psyscall` 状态，会直接调用 `wirep` 将 goroutine 与处理器进行关联；
+2. 如果调度器中存在闲置的 `p`，会调用 `runtime.acquirep` 使用闲置的 `p` 处理当前 goroutine；
 
-最后都会调用 `runtime.schedule` 触发调度器的调度。
+**最后都会调用 `runtime.schedule` 触发调度器的调度**。
 
 ### 协作式调度
 
-**`runtime.Gosched` 函数会主动让出处理器**，允许其他 Goroutine 运行。**该函数无法挂起 Goroutine，调度器可能会将当前 Goroutine 调度到其他线程上**。
+**`runtime.Gosched` 函数会主动让出处理器**，允许其他 goroutine 运行。**该函数无法挂起 goroutine，调度器可能会将当前 goroutine 调度到其他线程上**。
 
 ```go
 func Gosched() {
@@ -242,11 +283,45 @@ func goschedImpl(gp *g) {
 }
 ```
 
-经过连续几次跳转，最终在 `g0` 的栈上调用 `runtime.goschedImpl`，运行时会更新 Goroutine 的状态到 `_Grunnable`，让出当前的处理器并将 Goroutine 重新放回全局队列，在最后，该函数会调用 `runtime.schedule` 触发调度。
+经过连续几次跳转，最终在 `g0` 的栈上调用 `runtime.goschedImpl`：
+
+1. 运行时会更新 goroutine 的状态到 `_Grunnable`。
+2. 让出当前的处理器并将 goroutine 重新放回全局队列。
+3. 在最后，该函数会调用 `runtime.schedule` 触发调度。
+
+### 总结
+
+goroutine 的调度，总体就是一个循环，伪代码：
+
+```go
+// --------------------------------
+// 线程部分
+
+// 定义一个线程私有全局变量，注意它是一个指向 m 结构体对象的指针
+// ThreadLocal 用来定义线程私有全局变量
+ThreadLocal self *m
+
+// schedule 函数实现调度逻辑
+schedule() {
+    // 创建和初始化 m 结构体对象，并赋值给私有全局变量 self
+    self = initm()   
+    for { // 调度循环
+        g = find_a_runnable_goroutine_from_local_runqueue()
+        run_g(g) // CPU 运行该 goroutine，直到需要调度其它 goroutine 才返回
+        save_status_of_g(g) // 保存 goroutine 的状态，主要是寄存器的值
+     }
+}
+```
+
+- 正常执行结束的 goroutine，会返回到 `goexit` 函数，然后切换到 `g0` 栈继续执行 `schedule` 函数。
+- 调用 `gopark` 的 goroutine，将状态设置为 `_Gwaiting`，然后切换到 `g0` 栈继续执行 `schedule` 函数。当前 goroutine 会放到某个队列中，方便 `goready` 时唤醒。唤醒时将状态设置为 `_Grunnable`，并放入可运行队列。
+- 调用 `Gosched` 函数会让出处理器并将 goroutine 重新放回全局队列。状态仍然是 `_Grunnable`。可能会被调度到其他的 `p`。然后切换到 `g0` 栈继续执行 `schedule` 函数。
+- 执行系统调用的 goroutine，将状态设置为 `_Gsyscall`。当前 goroutine 仍然和 `m` 绑定，`m` 被阻塞，系统调用返回时，将状态设置为 `_Grunnable`，并将 goroutine 放到可运行队列。然后切换到 `g0` 栈继续执行 `schedule` 函数。
+- 被抢占调度的 goroutine，将状态设置为 `_Grunnable`，并放入可运行队列。然后切换到 `g0` 栈继续执行 `schedule` 函数。
 
 ## 线程管理
 
-`runtime.LockOSThread` 和 `runtime.UnlockOSThread` 可以绑定 Goroutine 和线程完成一些比较特殊的操作。
+`runtime.LockOSThread` 和 `runtime.UnlockOSThread` 可以绑定 goroutine 和线程完成一些比较特殊的操作。
 
 ```go
 func LockOSThread() {
@@ -265,9 +340,9 @@ func dolockOSThread() {
 }
 ```
 
-`runtime.dolockOSThread` 会分别设置线程的 `lockedg` 字段和 Goroutine 的 `lockedm` 字段，这两行代码会绑定线程和 Goroutine。
+`runtime.dolockOSThread` 会分别设置线程的 `lockedg` 字段和 goroutine 的 `lockedm` 字段，这两行代码会绑定线程和 goroutine。
 
-`runtime.UnlockOSThread` 用户解绑 Goroutine 和线程。
+`runtime.UnlockOSThread` 用户解绑 goroutine 和线程。
 
 ### 线程生命周期
 

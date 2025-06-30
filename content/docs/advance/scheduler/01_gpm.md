@@ -88,6 +88,9 @@ for i = 0; i < N; i++ { // 创建 N 个操作系统线程执行 schedule 函数
     create_os_thread(schedule) // 创建一个操作系统线程执行 schedule 函数
 }
 
+// --------------------------------
+// 线程部分
+
 // 定义一个线程私有全局变量，注意它是一个指向m结构体对象的指针
 // ThreadLocal 用来定义线程私有全局变量
 ThreadLocal self *m
@@ -129,6 +132,11 @@ type stack struct{
 }
 ```
 
+1. 为 goroutine 提供**独立的、受保护的栈**。这是**函数调用基础**。
+2. 记录当前栈边界，实现按需**动态扩容**，当栈空间不足时触发扩容（分段栈或连续栈）。
+3. 在 goroutine 被抢占或主动让出时，需要使用 `stack` 结构体**保存 goroutine 的栈信息**，以便在 goroutine 再次被调度起来运行时**恢复栈信息**。
+
+
 #### gobuf 结构体
 
 用于保存 goroutine 的调度信息，主要包括 CPU 的几个寄存器的值：
@@ -147,6 +155,8 @@ type gobuf struct {
     bp  uintptr// for GOEXPERIMENT=framepointer
 }
 ```
+
+**当 goroutine 需要被抢占或主动让出 CPU 时，就需要使用 `gobuf` 结构体保存 goroutine 的上下文信息。当 goroutine 再次被调度起来运行时，就需要从 `gobuf` 结构体中恢复上下文信息**。
 
 #### g 结构体
 
@@ -321,10 +331,14 @@ type schedt struct {
 }
 ```
 
+- `midle` 由空闲的工作线程组成链表。
+- `pidle` 由空闲的 p 结构体对象组成的链表。
+- `gFree` 所有已经退出的 goroutine 对应的 g 结构体对象组成的链表。相当于一个 g 结构体对象的缓存，避免每次创建  goroutine 时都重新分配内存。
+- `runq` goroutine 全局运行队列。
+
 ### 重要的全局变量
 
 ```go
-
 allgs    []*g   // 保存所有的 g
 allm     *m     // 所有的 m 构成的一个链表，包括下面的 m0
 allp     []*p  // 保存所有的 p，len(allp) == gomaxprocs
