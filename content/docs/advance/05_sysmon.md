@@ -247,7 +247,7 @@ func retake(now int64) uint32 {
 #### 信号抢占的流程
 
 ```
-sysmon(检测超时) → preemptone() → preemptM() → 发送SIGURG → 
+sysmon(检测超时) → preemptone() → preemptM() → 发送 SIGURG → 
 信号处理程序 → asyncPreempt → asyncPreempt2 → mcall(gopreempt_m) → 抢占 goroutine → 执行调度
 ```
 
