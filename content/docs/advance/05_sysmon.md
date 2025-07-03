@@ -251,7 +251,7 @@ sysmon(检测超时) → preemptone() → preemptM() → 发送 SIGURG →
 信号处理程序 → asyncPreempt → asyncPreempt2 → mcall(gopreempt_m) → 抢占 goroutine → 执行调度
 ```
 
-#### 垃圾回收
+### 垃圾回收
 
 在最后，系统监控还会决定是否需要触发强制垃圾回收，`runtime.sysmon` 会构建 `runtime.gcTrigger` 并调用 `runtime.gcTrigger.test` 方法判断是否需要触发垃圾回收：
 
