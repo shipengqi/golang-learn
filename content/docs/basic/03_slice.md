@@ -38,7 +38,7 @@ type SliceHeader struct {
    ```go
    arr :=[]int{1,2,3}
    ```
-3. 使用下标截取数组或者切片的一部分，这里可以传入三个参数 `[low:high:max]`，`max - low` 是新的切片的容量 cap。
+3. 使用下标截取数组或者切片的一部分，这里可以传入**三个参数 `[low:high:max]`，`max - low` 是新的切片的容量 `cap`**。
    ```go
    numbers := []int{0,1,2,3,4,5,6,7,8}
    s := numbers[1:4] // [1 2 3]
@@ -81,7 +81,7 @@ func main() {
 
 示例中：
 
-- `s1 := slice[2:5]` 得到的 `s1` 的容量为 8，因为没有传入 `max`，容量默认是到底层数组的结尾。
+- `s1 := slice[2:5]` 得到的 `s1` 的容量为 8，因为**没有传入 `max`，容量默认是到底层数组的结尾**。
 - `s2 := s1[2:6:7]` 得到的 `s2` 的容量为 5（`max - low`）。`s2`，`s1` 和 `slice` 底层数组是同一个，所以 `s2` 中的元素是 `[4,5,6,7]`。
 
 ![slice-cut](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/slice-cut.png)
@@ -109,8 +109,8 @@ func main() {
 
 Go 1.18 后切片的扩容策略：
 
-- 如果当前切片的容量（`oldcap`）小于 256，新切片的容量（`newcap`）为原来的 2 倍.
-- 如果当前切片的容量大于 256，计算新切片的容量的公式 `newcap = oldcap+(oldcap+3*256)/4`
+- 如果当前切片的容量（`oldcap`）小于 256，新切片的容量（`newcap`）为原来的 2 倍。
+- 如果当前切片的容量大于 256，计算新切片的容量的公式 `newcap = oldcap+(oldcap+3*256)/4`。
 
 ## 切片传入函数
 

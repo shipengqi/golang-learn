@@ -65,6 +65,22 @@ func main() {
 
 ![pointer](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/pointer.png)
 
+{{< callout type="info" >}}
+**`unsafe.Pointer` 不能直接进行数学运算，但可以把它转换成 `uintptr`，对 `uintptr` 类型进行数学运算，再转换成 `unsafe.Pointer` 类型**。
+
+例如 `string` 和 `byte[]` 类型的转换。实现零拷贝。
+
+```go
+func string2bytes(s string) []byte {
+	return *(*[]byte)(unsafe.Pointer(&s))
+}
+func bytes2string(b []byte) string{
+	return *(*string)(unsafe.Pointer(&b))
+}
+```
+{{< /callout >}}
+
+
 指针类型转换示例：
 
 ```go

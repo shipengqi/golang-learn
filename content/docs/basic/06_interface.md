@@ -1,34 +1,24 @@
 ---
 title: 接口
 weight: 6
-draft: true
 ---
 
 Go 支持接口数据类型，接口是一组方法的集合，任何其他类型只要实现了这些方法就是实现了这个接口，无须显示声明。
 
 **接口只有当有两个或两个以上的具体类型必须以相同的方式进行处理时才需要**。比如写单元测试，需要 mock 一个类型时，就可以使用接口，mock 的类型和被测试的类型都实现同一个接口即可。
 
-## 原理
+# Todo
 
-接口的结构体 `iface` 和 `eface`：
+网络轮询、接口、defer、panic、range 的最新版本、复习所有 Go 1
+学习 k8s，Docker,keel 代码 1
+学习 kafka 1
+学习 Linux Perf 1
+算法基础，前端安全优化,node事件循环 1
+复习 Mongo、RabbitMQ、MySQL、Redis 间隔一天
+实战架构
+rpc？
 
-```go
-// src/runtime/runtime2.go#L204
-type iface struct {
-	tab  *itab
-	data unsafe.Pointer
-}
-
-type eface struct {
-	_type *_type
-	data  unsafe.Pointer
-}
-```
-
-- `iface` 表示了包含一组方法的接口。
-- `eface` 表示空接口，也就是 `interface{}`。空接口在使用中很常见，所以在实现时专门定义了一个类型。
-
-### 结构体嵌入接口类型
+## 结构体嵌入接口类型
 
 Go 语言的结构体还可以嵌入接口类型。
 
@@ -77,8 +67,7 @@ func main() {
 }
 ```
 
-`reverse` 结构体内嵌了一个名为 `Interface` 的 `interface`，并且实现 `Less` 函数，但是
-却没有实现 `Len`, `Swap` 函数。
+`reverse` 结构体内嵌了一个名为 `Interface` 的 `interface`，并且实现 `Less` 函数，但是却没有实现 `Len`, `Swap` 函数。
 
 为什么这么设计？
 
