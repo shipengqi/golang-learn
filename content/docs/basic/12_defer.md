@@ -42,15 +42,15 @@ func deferproc(siz int32, fn *funcval) {
 
 runtime.newdefer 的作用是获得一个 runtime._defer 结构体，有三种方式：
 
-- 从调度器的延迟调用缓存池 sched.deferpool 中取出结构体并将该结构体追加到当前 Goroutine 的缓存池中；
-- 从 Goroutine 的延迟调用缓存池 pp.deferpool 中取出结构体；
+- 从调度器的延迟调用缓存池 sched.deferpool 中取出结构体并将该结构体追加到当前 goroutine 的缓存池中；
+- 从 goroutine 的延迟调用缓存池 pp.deferpool 中取出结构体；
 - 通过 runtime.mallocgc 在堆上创建一个新的结构体；
 
 无论使用哪种方式，只要获取到 runtime._defer 结构体，它都会被追加到所在 Goroutine_defer 链表的最前面。
 
 defer 关键字的插入顺序是从后向前的，而 defer 关键字执行是从前向后的，这也是为什么后调用的 defer 会优先执行。
 
-runtime.deferreturn 会从 Goroutine 的 _defer 链表中取出最前面的 runtime._defer 结构体并调用 runtime.jmpdefer 函数传入需要执行的函数和参数：
+runtime.deferreturn 会从 goroutine 的 _defer 链表中取出最前面的 runtime._defer 结构体并调用 runtime.jmpdefer 函数传入需要执行的函数和参数：
 
 ```go
 func deferreturn(arg0 uintptr) {

@@ -29,7 +29,7 @@ wg.Wait()
 - `Done`：用来将 `WaitGroup` 的计数值减 1，其实就是调用了 `Add(-1)`。
 - `Wait`：调用这个方法的 `goroutine` 会一直阻塞，直到 `WaitGroup` 的计数值变为 0。
 
-不要把 `Add` 和 `Wait` 方法的调用放在不同的 goroutine 中执行，以免 `Add` 还未执行，`Wait` 已经退出：
+**不要把 `Add` 和 `Wait` 方法的调用放在不同的 goroutine 中执行**，以免 `Add` 还未执行，`Wait` 已经退出：
 
 ```go
 var wg sync.WaitGroup
@@ -40,6 +40,33 @@ go func(){
 
 wg.Wait()
 fmt.Println("exit.")
+```
+
+### 1.25 Go 方法
+
+新增 Go 方法：
+
+```go
+func (wg *WaitGroup) Go(f func()) {
+    wg.Add(1)
+    go func() {
+        defer wg.Done()
+        f()
+    }()
+}
+```
+
+简单的封装了 `wg.Add(1)` 和 `wg.Done()`。
+
+使用：
+
+```go
+for _, request := range requests {
+    wg.Go(func() {
+        // res, err := service.call(request)
+    }
+}
+wg.Wait()
 ```
 
 ### sync.WaitGroup 类型值中计数器的值可以小于 0 么？
@@ -89,7 +116,7 @@ $ go vet proc.go
 
 `state1` 包含一个总共占用 12 字节的数组，这个数组会存储当前结构体的状态，在 64 位与 32 位的机器上表现也非常不同。
 
-![waitgroup-state1](https://gitee.com/shipengqi/illustrations/raw/main/go/waitgroup-state1.png)
+![waitgroup-state1](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/waitgroup-state1.png)
 
 `state` 方法用来从 `state1` 字段中取出它的状态和信号量。
 

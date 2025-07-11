@@ -14,7 +14,7 @@ weight: 4
 
 哈希表是通过**哈希函数**将 key 转化为数组的下标，然后将数据存储在数组下标对应的位置。查询时，也是同样的使用哈希函数计算出数组下标，从下标对应的位置取出数据。
 
-![map-seek-addr](https://gitee.com/shipengqi/illustrations/raw/main/go/hash-func.png)
+![map-seek-addr](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/hash-func.png)
 
 哈希函数的基本要求：
 
@@ -31,7 +31,7 @@ weight: 4
 
 开放寻址法核心思想是，如果出现了哈希冲突，就重新探测一个空闲位置，将其插入。
 
-![map-seek-addr](https://gitee.com/shipengqi/illustrations/raw/main/go/map-seek-addr.png)
+![map-seek-addr](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/map-seek-addr.png)
 
 上图蓝色表示已经插入的元素，`key9` 哈希后得到的数组下标为 6，但是已经有数据了，产生了冲突。那么就按顺序向后查找直到找到一个空闲的位置，如果到数组的尾部都没有找到空闲的位置，就从头开始继续找。
 上图最终找到位置 1 并插入元素。
@@ -50,7 +50,7 @@ weight: 4
 
 链表法是最常见的哈希冲突的解决办法。在哈希表中，每个桶（bucket）会对应一条链表，所有哈希值相同的元素都放到相同桶对应的链表中。
 
-![map-link](https://gitee.com/shipengqi/illustrations/raw/main/go/map-link.png)
+![map-link](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/map-link.png)
 
 插入时，哈希函数计算后得出存放在几号桶，然后遍历桶中的链表了：
 
@@ -102,7 +102,7 @@ type mapextra struct {
 }
 ```
 
-`hmap.buckets` 就是指向一个 `bmap` 数组。`bmap` 的结构体：
+**`hmap.buckets` 就是指向一个 `bmap` 数组**。`bmap` 的结构体：
 
 ```go
 type bmap struct {
@@ -119,16 +119,15 @@ type bmap struct {
 }
 ```
 
-`bmap` 就是桶，一个桶里面会最多存储 8 个键值对。
+`bmap` 就是桶，**一个桶里面会最多存储 8 个键值对**。
 
-![bmap-struct](https://gitee.com/shipengqi/illustrations/raw/main/go/bmap-struct.png)
+![bmap-struct](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/bmap-struct.png)
 
-1. 在桶内，会根据 key 计算出来的 hash 值的高 8 位来决定 key 存储在桶中的位置。
-2. key 和 value 是分别放在一块连续的内存，这样做的目的是为了节省内存。例如一个 `map[int64]int8` 类型的 map，如果按照 `key1/value1/key2/value2 ...` 这样的形式来存储，那么内存对齐每个 `key/value` 都需要 padding 7 个字节。
-分开连续存储的话，就只需要在最后 padding 一次。
-3. 每个桶只能存储 8 个 `key/value`，如果有更多的 key 放入当前桶，就需要一个溢出桶，通过 `overflow` 指针连接起来。
+1. 在桶内，会**根据 key 计算出来的 hash 值的高 8 位来决定 key 存储在桶中的位置**（桶内的键值对，根据类型的大小就可以计算出偏移量）。
+2. **key 和 value 是分别放在一块连续的内存，这样做的目的是为了节省内存**。例如一个 `map[int64]int8` 类型的 map，如果按照 `key1/value1/key2/value2 ...` 这样的形式来存储，那么**内存对齐**每个 `key/value` 都需要 padding 7 个字节。分开连续存储的话，就只需要在最后 padding 一次。
+3. 每个桶只能存储 8 个 `key/value`，如果有更多的 key 放入当前桶，就需要一个溢出桶，通过 `overflow` 指针连接起来（**链表法**）。
 
-![hmap](https://gitee.com/shipengqi/illustrations/raw/main/go/hmap.png)
+![hmap](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/hmap.png)
 
 ### 初始化
 
@@ -194,7 +193,7 @@ v, ok := hash[key]
 
 查询过程：
 
-![map-get](https://gitee.com/shipengqi/illustrations/raw/main/go/map-get.png)
+![map-get](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/map-get.png)
 
 #### 1. 计算哈希值
 
@@ -202,11 +201,12 @@ v, ok := hash[key]
 
 #### 2. 计算这个 key 要放在哪个桶
 
-根据哈希值的 `B` （`hmap.B`）个 bit 位来计算，也就是 `00011`，十进制的值是 `3`，那么就是 `3` 号桶。 
+**根据哈希值的 `B` （`hmap.B`）个 bit 位来计算，也就是 `00011`，十进制的值是 `3`，那么就是 `3` 号桶。** 
 
 #### 3. 计算这个 key 在桶内的位置
 
-根据哈希值的高 8 位，也就是 `10010111`，十进制的值是 `151`，先用 `151` 和桶内存储的 `tophash` 比较，再比较桶内的存储的 key 和传入的 key，这种方式可以优化桶内的读写速度。 
+根据哈希值的高 8 位，也就是 `10010111`，十进制的值是 `151`，**先用 `151` 和桶内存储的 `tophash` 比较，`tophash` 一致的话，再比较桶内的存储的 key 和传入的 key，这种方式可以优化桶内的读写速度（`tophash` 不一致就不需要比较了）**。 
+
 
 ```go
 // src/runtime/map.go#L434 mapaccess1
@@ -226,17 +226,63 @@ for i := uintptr(0); i < bucketCnt; i++ {
 }
 ```
 
-> 计算在几号桶用的是后 `B` 位，`tophash` 使用的是高 8 位，这种方式可以避免一个桶内出现大量相同的 `tophash`，影响读写的性能。
+{{< callout type="info" >}}
+计算在几号桶用的是后 `B` 位，`tophash` 使用的是高 8 位，分别用前后的不同位数，避免了冲突。**这种方式可以避免一个桶内出现大量相同的 `tophash`**，影响读写的性能。
+{{< /callout >}}
 
-如果当前桶中没有找到 key，而且存在溢出桶，那么会接着遍历所有的溢出桶中的数据。
+如果当前桶中没有找到 key，而且**存在溢出桶，那么会接着遍历所有的溢出桶中的数据**。
 
 ### 写入
 
 写入 map 和查询 map 的实现原理类似，计算哈希值和存放在哪个桶，然后遍历当前桶和溢出桶的数据：
 
-- 如果当前 key 不存在，则通过偏移量存储到桶中
-- 如果已经存在，则返回 value 的内存地址，赋值操作是在编译期执行的。
-- 如果桶已满，则会创建新桶或者使用空闲的溢出桶，添加到已有桶的末尾，`noverflow` 计数加 1。
+- 如果当前 key 不存在，则通过偏移量存储到桶中。
+- 如果已经存在，则返回 value 的内存地址，然后修改 value。
+- 如果桶已满，则会创建新桶或者使用空闲的溢出桶，新桶添加到已有桶的末尾，`noverflow` 计数加 1。将键值对添加到桶中。
+
+{{< callout type="info" >}}
+前面说的找到 key 的位置，进行赋值操作，实际上并不准确。看 `mapassign` 函数的原型：
+
+`func mapassign(t *maptype, h *hmap, key unsafe.Pointer) unsafe.Pointer`
+
+`mapassign` 函数返回的指针就是指向的 key 所对应的 value 值位置，有了地址，就很好操作赋值了。在汇编中赋值。
+{{< /callout >}}
+
+### 删除
+
+删除 map 中的 `key/value`：
+
+```go
+delete(hashmap, key)
+```
+
+`delete` 关键字的唯一作用就是将某一个 `key/value` 从哈希表中删除。会被编译器被转换成 `mapdelete` 方法。删除操作先是找到 key 的位置，清空 `key/value`，然后将 `hmap.count - 1`，并且对应的 `tophash` 设置为 `Empty`。
+
+底层执行函数 `mapdelete`：
+
+```go
+func mapdelete(t *maptype, h *hmap, key unsafe.Pointer)
+```
+
+和上面的定位 key 的逻辑一样，找到对应位置后，对 key 或者 value 进行“清零”操作：
+
+```go
+// 对 key 清零
+if t.indirectkey {
+	*(*unsafe.Pointer)(k) = nil
+} else {
+	typedmemclr(t.key, k)
+}
+
+// 对 value 清零
+if t.indirectvalue {
+	*(*unsafe.Pointer)(v) = nil
+} else {
+	typedmemclr(t.elem, v)
+}
+```
+
+最后，将 `count` 值减 1，将对应位置的 `tophash` 值置成 `Empty`。
 
 ### 扩容
 
@@ -258,35 +304,29 @@ func mapassign(t *maptype, h *hmap, key unsafe.Pointer) unsafe.Pointer {
 }
 ```
 
+触发扩容的条件：
+
 1. 装载因子超过阈值 6.5。
 2. 溢出桶的数量过多：
    - 当 `B < 15` 时，如果溢出桶的数量超多 `2^B` 则触发扩容。
    - 当 `B >= 15` 时，如果溢出桶的数量超过 `2^15` 则触发扩容。
 
+触发的条件不同扩容的方式也分为两种：
+
+1. 如果这次**扩容是溢出的桶太多导致的，那么这次扩容就是“等量扩容” `sameSizeGrow`**。
+2. 另一种就是装载因子超过阈值导致翻倍扩容了。
+
 #### 为什么溢出桶过多需要进行扩容？
 
 什么情况下会出现装载因子很小不超过阈值，但是溢出桶过多的情况？
 
-先插入很多元素，导致创建了很多桶，但是未达到阈值，并没有触发扩容。之后再删除元素，降低元素的总量。反复执行前面的步骤，但是又不会触发扩容，就会导致创建了很多溢出桶，但是 map 中的 key 分布的很分散。导致查询和插入的效率很低。
-
-#### 渐进式扩容
-
-扩容需要把原有的 buckets 中的数据迁移到新的 buckets 中。如果一个哈希表当前大小为 1GB，扩容为原来的两倍大小，那就需要对 1GB 的数据重新计算哈希值，并且从原来的内存空间搬移到新的内存空间，这是非常耗时的操作。
-
-所以 map 的扩容采用的是一种**渐进式**的方式，将迁移的操作穿插在插入操作的过程中，分批完成。
-
-大概思路就是：
-
-当有新的 `key/value` 要插入时，将这个 `key/value` 插入到新 buckets 中，并且从老的 buckets 中拿出一个 `key/value` 放入到新 buckets。每次插入一个 `key/value`，都重复上面的过程。经过多次插入操作之后，老的 buckets 中的数据就一点一点全部迁移到新的 buckets 中了。
-这样不用一次性将数据迁移，插入操作就都变得很快了。
-
-对于查询操作，为了兼容了新、老 buckets 中的数据，会先从新 buckets 中查找，如果没有找到，再去老的 buckets 中查找。
+先插入很多元素，导致创建了很多桶，但是未达到阈值，并没有触发扩容。之后再删除元素，降低元素的总量。反复执行前面的步骤，但是又不会触发扩容，就会导致创建了很多溢出桶，但是 map 中的 key 分布的很分散。导致查询和插入的效率很低。还可能导致内存泄漏。
 
 ##### 对于条件 2 溢出桶的数量过多
 
 申请的新的 buckets 数量和原有的 buckets 数量是**相等的**，进行的是**等量扩容**。由于 buckets 数量不变，所以原有的数据在几号桶，迁移之后仍然在几号桶。比如原来在 0 号 bucket，到新的地方后，仍然放在 0 号 bucket。
 
-扩容完成后，溢出桶没有了，key 都集中到了一个 bucket，更为紧凑了，提高了查找的效率。
+**扩容完成后，溢出桶没有了，key 都集中到了一个 bucket，更为紧凑了，提高了查找的效率**。
 
 ##### 对于条件 1 当装载因子超过阈值后
 
@@ -294,15 +334,21 @@ func mapassign(t *maptype, h *hmap, key unsafe.Pointer) unsafe.Pointer {
 
 例如，原来 `B=5`，根据出 key 的哈希值的后 5 位，就能决定它落在哪个 bucket。扩容后的 buckets 数量翻倍，B 变成了 6，因此变成哈希值的后 6 位才能决定 key 落在哪个 bucket。这叫做 `rehash`。
 
-![map-evacuate-bucket-num](https://gitee.com/shipengqi/illustrations/raw/main/go/map-evacuate-bucket-num.png)
+![map-evacuate-bucket-num](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/map-evacuate-bucket-num.png)
 
 因此，某个 key 在迁移前后 bucket 序号可能会改变，取决于 `rehash` 之后的哈希值倒数第 6 位是 0 还是 1。
 
-扩容完成后，老 buckets 中的 key 分裂到了 2 个新的 bucket。
+**扩容完成后，老 buckets 中的 key 分裂到了 2 个新的 bucket**。
+
+#### 渐进式扩容
+
+扩容需要把原有的 buckets 中的数据迁移到新的 buckets 中。如果一个哈希表当前大小为 1GB，扩容为原来的两倍大小，那就需要对 1GB 的数据**重新计算哈希值（rehash）**，并且从原来的内存空间搬移到新的内存空间，这是非常耗时的操作。
+
+所以 map 的扩容采用的是一种**渐进式**的方式，将迁移的操作穿插在插入操作的过程中，分批完成。
 
 ##### 迁移实现
 
-Go map 扩容的实现在 `hashGrow` 函数中，`hashGrow` 只申请新的 buckets，但并没有马上将原有的 `key/value` 迁移新的 buckets 中：
+Go map 扩容的实现在 `hashGrow` 函数中，`hashGrow` 只申请新的 buckets，并未参与真正的数据迁移：
 
 ```go
 func hashGrow(t *maptype, h *hmap) {
@@ -354,6 +400,7 @@ func mapdelete(t *maptype, h *hmap, key unsafe.Pointer) {
     // ... 
 	bucket := hash & bucketMask(h.B)
 	if h.growing() {
+		// 真正的迁移在 growWork 中
 		growWork(t, h, bucket)
 	}
     // ... 
@@ -365,35 +412,98 @@ func (h *hmap) growing() bool {
 }
 ```
 
-`growWork`：
+也就是说**数据的迁移过程一般发生在插入或修改、删除 key 的时候**。在扩容完毕后 (预分配内存)，不会马上就进行迁移。而是采取写时复制的方式，**当有访问到具体 bucket 时，才会逐渐的将 `oldbucket` 迁移到新 bucket 中**。
+
+`growWork` 函数：
 
 ```go
 func growWork(t *maptype, h *hmap, bucket uintptr) {
-	// 确认迁移的老的 bucket 对应正在使用的 bucket
+	// 迁移
 	evacuate(t, h, bucket&h.oldbucketmask())
 
-	// 额外再迁移一个 bucket，加快迁移进度
+	// 还没有迁移完成，额外再迁移一个 bucket，加快迁移进度
 	if h.growing() {
 		evacuate(t, h, h.nevacuate)
 	}
 }
 ```
 
-真正的迁移在 `evacuate` 函数中，它会对传入桶中的数据进行再分配。`evacuate` 函数每次只完成一个 bucket 的迁移工作（包括这个 bucket 链接的溢出桶），它会遍历 bucket （包括溢出桶）中得到所有 `key/value` 并迁移。
-已迁移的 `key/value` 对应的 `tophash` 会被设置为 `evacuatedEmpty`，表示已经迁移。
+`evacuate` 函数大致迁移过程如下：
 
-### 删除
-
-删除 map 中的 `key/value`：
+1. 先判断当前 bucket 是不是已经迁移，没有迁移就做迁移操作：
 
 ```go
-delete(hashmap, key)
+b := (*bmap)(add(h.oldbuckets, oldbucket*uintptr(t.bucketsize)))
+newbit := h.noldbuckets()
+// 判断旧桶是否已经被迁移了
+if !evacuated(b) {
+	// 旧桶没有被搬迁
+	// do...  // 做转移操作
+	// 遍历所有的 bucket，包括 overflow buckets
+	// b 是老的 bucket 地址
+	for ; b != nil; b = b.overflow(t) {
+		// ...
+	}
+	// ...
+}
 ```
 
-`delete` 关键字的唯一作用就是将某一个 `key/value` 从哈希表中删除。会被编译器被转换成 `mapdelete` 方法。删除操作先是找到 key 的位置，清空 `key/value`，然后将 `hmap.count - 1`，并且对应的 `tophash` 设置为 `Empty`。
+真正的迁移在 `evacuate` 函数中，它会对传入桶中的数据进行再分配。`evacuate` 函数每次只完成一个 bucket 的迁移工作（包括这个 bucket 链接的溢出桶），它会遍历 bucket （包括溢出桶）中得到所有 `key/value` 并迁移。已迁移的 `key/value` 对应的 `tophash` 会被设置为 `evacuatedEmpty`，表示已经迁移。
 
 ### map 为什么是无序的
 
 map 在扩容后，`key/value` 会进行迁移，在同一个桶中的 key，有些会迁移到别的桶中，有些 key 原地不动，导致遍历 map 就无法保证顺序。
 
-Go 底层的实现简单粗暴，直接生成一个随机数，这个随机数决定从哪里开始遍历，因此**每次 `for range map` 的结果都是不一样的。那是因为它的起始位置根本就不固定**。
+Go 底层的实现简单粗暴，并不是固定地从 0 号 bucket 开始遍历，而是直接生成一个随机数，这个随机数决定从哪里开始遍历，因此**每次 `for range map` 的结果都是不一样的。那是因为它的起始位置根本就不固定**。
+
+
+### 对 map 元素取地址
+
+Go 无法对 map 的 key 或 value 进行取址。
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	m := make(map[string]int)
+
+	fmt.Println(&m["foo"])
+}
+```
+
+上面的代码不能通过编译：
+
+```
+./main.go:8:14: cannot take the address of m["foo"]
+```
+
+#### 使用 `unsafe.Pointer` 获取 key 或 value 的地址
+
+可以使用 `unsafe.Pointer` 等获取到了 key 或 value 的地址，也不能长期持有，因为一旦发生扩容，key 和 value 的位置就会改变，之前保存的地址也就失效了。
+
+### 比较 map
+
+比较只能是遍历 `map` 的每个元素。`map1 == map2` 这种编译是不通过的。
+
+### map 不是并发安全的
+
+在查找、赋值、遍历、删除的过程中都会检测写标志，一旦发现写标志位为 `1`，则直接 panic。
+
+赋值和删除函数在检测完写标志是复位之后，先将写标志位设置位 `1`，才会进行之后的操作。
+
+```go
+// 检测写标志
+if h.flags&hashWriting == 0 {
+	throw("concurrent map writes")
+}
+
+// 设置写标志
+h.flags |= hashWriting
+```
+
+
+
+
+

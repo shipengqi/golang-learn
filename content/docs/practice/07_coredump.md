@@ -151,14 +151,14 @@ Type 'help' for list of commands.
 
 ```
 (dlv) goroutines
-* Goroutine 1 - User: ./main.go:11 main.main (0x47023e) (thread 27507)
-  Goroutine 2 - User: /usr/local/go/src/runtime/proc.go:399 runtime.gopark (0x439ffc) [force gc (idle)]
-  Goroutine 3 - User: /usr/local/go/src/runtime/proc.go:399 runtime.gopark (0x439ffc) [GC sweep wait]
-  Goroutine 4 - User: /usr/local/go/src/runtime/proc.go:399 runtime.gopark (0x439ffc) [GC scavenge wait]
+* goroutine 1 - User: ./main.go:11 main.main (0x47023e) (thread 27507)
+  goroutine 2 - User: /usr/local/go/src/runtime/proc.go:399 runtime.gopark (0x439ffc) [force gc (idle)]
+  goroutine 3 - User: /usr/local/go/src/runtime/proc.go:399 runtime.gopark (0x439ffc) [GC sweep wait]
+  goroutine 4 - User: /usr/local/go/src/runtime/proc.go:399 runtime.gopark (0x439ffc) [GC scavenge wait]
 [4 goroutines]
 ```
 
-Goroutine 1 是 main goroutine，也是导致崩溃的 goroutine，输入 `goroutine 1` 切换到 Goroutine 1 的栈帧：
+Goroutine 1 是 main goroutine，也是导致崩溃的 goroutine，输入 `goroutine 1` 切换到 goroutine 1 的栈帧：
 
 ```
 (dlv) goroutine 1

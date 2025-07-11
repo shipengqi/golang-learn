@@ -31,7 +31,7 @@ Git Flow 存在两种长期分支：
 
 > 这三种短期分支会在开发完成后合并到 develop 或者 master，然后删除。
 
-![git-flow](https://gitee.com/shipengqi/illustrations/raw/main/go/git-flow.png)
+![git-flow](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/git-flow.png)
 
 Git flow 的优点是每个分支分工明确，可以最大程度减少它们之间的相互影响。但是需要同时维护两个长期分支，相对比较复杂，需要经常在 `master` 分支 `develop` 分支进行切换。
 

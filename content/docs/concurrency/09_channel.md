@@ -49,9 +49,9 @@ ch = make(chan int, 3)
 `close` 表示这个 channel 不会再继续发送数据，所以要**在发送者所在的 goroutine 去关闭 channel**。
 
 {{< callout type="warning" >}}
-关闭一个 `nil` 的 channel 会导致 panic。<br>
-重复关闭 channel 会导致 panic。<br>
-向已关闭的 channel 发送值会导致 panic。<br>
+- 关闭一个 `nil` 的 channel 会导致 panic。
+- 重复关闭 channel 会导致 panic。
+- 向已关闭的 channel 发送值会导致 panic。
 {{< /callout >}}
 
 
