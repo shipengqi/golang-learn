@@ -214,7 +214,7 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;p>注意 &lt;code>Cap&lt;/code> 也是底层数组的长度。&lt;code>Data&lt;/code> 是一块连续的内存，可以存储切片 &lt;code>Cap&lt;/code> 大小的所有元素。&lt;/p>
-&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/slice-struct.png" alt="slice-struct" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/slice-struct.png" alt="slice-struct" loading="lazy" />&lt;/p>
 &lt;p>如图，虽然 slice 的 &lt;code>Len&lt;/code> 是 5，但是底层数组的长度是 10，也就是 &lt;code>Cap&lt;/code>。&lt;/p>
 &lt;h2>初始化&lt;span class="hx-absolute -hx-mt-20" id="初始化">&lt;/span>
 &lt;a href="#%e5%88%9d%e5%a7%8b%e5%8c%96" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>初始化切片有三种方式：&lt;/p>
@@ -247,7 +247,7 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;/li>
-&lt;li>使用下标截取数组或者切片的一部分，这里可以传入三个参数 &lt;code>[low:high:max]&lt;/code>，&lt;code>max - low&lt;/code> 是新的切片的容量 cap。
+&lt;li>使用下标截取数组或者切片的一部分，这里可以传入&lt;strong>三个参数 &lt;code>[low:high:max]&lt;/code>，&lt;code>max - low&lt;/code> 是新的切片的容量 &lt;code>cap&lt;/code>&lt;/strong>。
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="nx">numbers&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="p">[]&lt;/span>&lt;span class="kt">int&lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">3&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">4&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">5&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">6&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">7&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">8&lt;/span>&lt;span class="p">}&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nx">s&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">numbers&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="mi">4&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="c1">// [1 2 3]
@@ -311,25 +311,25 @@ title="Copy code"
 &lt;/div>
 &lt;p>示例中：&lt;/p>
 &lt;ul>
-&lt;li>&lt;code>s1 := slice[2:5]&lt;/code> 得到的 &lt;code>s1&lt;/code> 的容量为 8，因为没有传入 &lt;code>max&lt;/code>，容量默认是到底层数组的结尾。&lt;/li>
+&lt;li>&lt;code>s1 := slice[2:5]&lt;/code> 得到的 &lt;code>s1&lt;/code> 的容量为 8，因为&lt;strong>没有传入 &lt;code>max&lt;/code>，容量默认是到底层数组的结尾&lt;/strong>。&lt;/li>
 &lt;li>&lt;code>s2 := s1[2:6:7]&lt;/code> 得到的 &lt;code>s2&lt;/code> 的容量为 5（&lt;code>max - low&lt;/code>）。&lt;code>s2&lt;/code>，&lt;code>s1&lt;/code> 和 &lt;code>slice&lt;/code> 底层数组是同一个，所以 &lt;code>s2&lt;/code> 中的元素是 &lt;code>[4,5,6,7]&lt;/code>。&lt;/li>
 &lt;/ul>
-&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/slice-cut.png" alt="slice-cut" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/slice-cut.png" alt="slice-cut" loading="lazy" />&lt;/p>
 &lt;p>下面的 &lt;code>s2 = append(s2, 100)&lt;/code> 追加一个元素，容量够用，不需要扩容，但是这个修改会影响所有指向这个底层数组的切片。&lt;/p>
-&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/slice-cut-append.png" alt="slice-cut-append" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/slice-cut-append.png" alt="slice-cut-append" loading="lazy" />&lt;/p>
 &lt;p>再次追加一个元素 &lt;code>s2 = append(s2, 200)&lt;/code>，&lt;code>s2&lt;/code> 的容量不够了，需要扩容，于是 &lt;code>s2&lt;/code> 申请一块新的连续内存，并将数据拷贝过去，扩容后的容量是原来的 2 倍。
 这时候 &lt;code>s2&lt;/code> 的 &lt;code>Data&lt;/code> 指向了新的底层数组，已经和 &lt;code>s1&lt;/code> 这个 &lt;code>slice&lt;/code> 没有关系了，所以对 &lt;code>s2&lt;/code> 的修改不会再影响 &lt;code>s1&lt;/code>。&lt;/p>
-&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/slice-cut-append2.png" alt="slice-cut-append2" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/slice-cut-append2.png" alt="slice-cut-append2" loading="lazy" />&lt;/p>
 &lt;p>最后 &lt;code>s1[2] = 20&lt;/code> 也不会再影响 &lt;code>s2&lt;/code>。&lt;/p>
-&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/slice-cut-append3.png" alt="slice-cut-append3" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/slice-cut-append3.png" alt="slice-cut-append3" loading="lazy" />&lt;/p>
 &lt;h2>切片是如何扩容的？&lt;span class="hx-absolute -hx-mt-20" id="切片是如何扩容的">&lt;/span>
 &lt;a href="#%e5%88%87%e7%89%87%e6%98%af%e5%a6%82%e4%bd%95%e6%89%a9%e5%ae%b9%e7%9a%84" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>append&lt;/code> 是用来向 slice 追加元素的，并&lt;strong>返回一个新的 slice&lt;/strong>。&lt;/p>
 &lt;p>&lt;code>append&lt;/code> 实际上就是向底层数组添加元素，但是数组的长度是固定的：&lt;/p>
 &lt;p>当追加元素后切片的大小大于容量，runtime 会对切片进行扩容，这时会申请一块新的连续的内存空间，然后将原数据拷贝到新的内存空间，并且将 &lt;code>append&lt;/code> 的元素添加到新的底层数组中，并返回这个新的切片。&lt;/p>
 &lt;p>Go 1.18 后切片的扩容策略：&lt;/p>
 &lt;ul>
-&lt;li>如果当前切片的容量（&lt;code>oldcap&lt;/code>）小于 256，新切片的容量（&lt;code>newcap&lt;/code>）为原来的 2 倍.&lt;/li>
-&lt;li>如果当前切片的容量大于 256，计算新切片的容量的公式 &lt;code>newcap = oldcap+(oldcap+3*256)/4&lt;/code>&lt;/li>
+&lt;li>如果当前切片的容量（&lt;code>oldcap&lt;/code>）小于 256，新切片的容量（&lt;code>newcap&lt;/code>）为原来的 2 倍。&lt;/li>
+&lt;li>如果当前切片的容量大于 256，计算新切片的容量的公式 &lt;code>newcap = oldcap+(oldcap+3*256)/4&lt;/code>。&lt;/li>
 &lt;/ul>
 &lt;h2>切片传入函数&lt;span class="hx-absolute -hx-mt-20" id="切片传入函数">&lt;/span>
 &lt;a href="#%e5%88%87%e7%89%87%e4%bc%a0%e5%85%a5%e5%87%bd%e6%95%b0" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Go 是值传递。那么传入一个切片，切片会不会被函数中的操作改变？&lt;/p>
@@ -389,7 +389,7 @@ title="Copy code"
 &lt;a href="#%e5%93%88%e5%b8%8c%e8%a1%a8%e7%9a%84%e8%ae%be%e8%ae%a1%e5%8e%9f%e7%90%86" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>哈希表其实是数组的扩展。哈希表是利用数组可以根据下标随机访问（时间复杂度是 &lt;code>O(1)&lt;/code>）这一特性来实现快速查找的。&lt;/p>
 &lt;h3>哈希函数&lt;span class="hx-absolute -hx-mt-20" id="哈希函数">&lt;/span>
 &lt;a href="#%e5%93%88%e5%b8%8c%e5%87%bd%e6%95%b0" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>哈希表是通过&lt;strong>哈希函数&lt;/strong>将 key 转化为数组的下标，然后将数据存储在数组下标对应的位置。查询时，也是同样的使用哈希函数计算出数组下标，从下标对应的位置取出数据。&lt;/p>
-&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/hash-func.png" alt="map-seek-addr" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/hash-func.png" alt="map-seek-addr" loading="lazy" />&lt;/p>
 &lt;p>哈希函数的基本要求：&lt;/p>
 &lt;ol>
 &lt;li>哈希函数计算出来的值是一个非负整数。&lt;/li>
@@ -400,7 +400,7 @@ title="Copy code"
 &lt;p>常用的处理哈希冲突的方法有两种：&lt;strong>开放寻址法&lt;/strong>和&lt;strong>链表法&lt;/strong>。&lt;/p>
 &lt;h3>开放寻址法&lt;span class="hx-absolute -hx-mt-20" id="开放寻址法">&lt;/span>
 &lt;a href="#%e5%bc%80%e6%94%be%e5%af%bb%e5%9d%80%e6%b3%95" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>开放寻址法核心思想是，如果出现了哈希冲突，就重新探测一个空闲位置，将其插入。&lt;/p>
-&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/map-seek-addr.png" alt="map-seek-addr" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/map-seek-addr.png" alt="map-seek-addr" loading="lazy" />&lt;/p>
 &lt;p>上图蓝色表示已经插入的元素，&lt;code>key9&lt;/code> 哈希后得到的数组下标为 6，但是已经有数据了，产生了冲突。那么就按顺序向后查找直到找到一个空闲的位置，如果到数组的尾部都没有找到空闲的位置，就从头开始继续找。
 上图最终找到位置 1 并插入元素。&lt;/p>
 &lt;p>查找的逻辑和插入类似，从哈希函数计算出来的下标位置开始查找，比较数组中下标位置的元素和要查找的元素。如果相等，则说明就是要找的元素；否则就顺序往后依次查找。直到找到数组中的空闲位置，还没有找到，就说明要查找的元素并没有在哈希表中。&lt;/p>
@@ -419,7 +419,7 @@ title="Copy code"
 &lt;p>装载因子越大，说明空闲位置越少，冲突越多，哈希表的性能会下降。&lt;/p>
 &lt;h3>链表法&lt;span class="hx-absolute -hx-mt-20" id="链表法">&lt;/span>
 &lt;a href="#%e9%93%be%e8%a1%a8%e6%b3%95" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>链表法是最常见的哈希冲突的解决办法。在哈希表中，每个桶（bucket）会对应一条链表，所有哈希值相同的元素都放到相同桶对应的链表中。&lt;/p>
-&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/map-link.png" alt="map-link" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/map-link.png" alt="map-link" loading="lazy" />&lt;/p>
 &lt;p>插入时，哈希函数计算后得出存放在几号桶，然后遍历桶中的链表了：&lt;/p>
 &lt;ul>
 &lt;li>找到键相同的键值对，则更新键对应的值；&lt;/li>
@@ -481,7 +481,7 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>&lt;code>hmap.buckets&lt;/code> 就是指向一个 &lt;code>bmap&lt;/code> 数组。&lt;code>bmap&lt;/code> 的结构体：&lt;/p>
+&lt;p>&lt;strong>&lt;code>hmap.buckets&lt;/code> 就是指向一个 &lt;code>bmap&lt;/code> 数组&lt;/strong>。&lt;code>bmap&lt;/code> 的结构体：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">type&lt;/span> &lt;span class="nx">bmap&lt;/span> &lt;span class="kd">struct&lt;/span> &lt;span class="p">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">tophash&lt;/span> &lt;span class="p">[&lt;/span>&lt;span class="nx">bucketCnt&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="kt">uint8&lt;/span>
@@ -504,15 +504,14 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>&lt;code>bmap&lt;/code> 就是桶，一个桶里面会最多存储 8 个键值对。&lt;/p>
-&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/bmap-struct.png" alt="bmap-struct" loading="lazy" />&lt;/p>
+&lt;p>&lt;code>bmap&lt;/code> 就是桶，&lt;strong>一个桶里面会最多存储 8 个键值对&lt;/strong>。&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/bmap-struct.png" alt="bmap-struct" loading="lazy" />&lt;/p>
 &lt;ol>
-&lt;li>在桶内，会根据 key 计算出来的 hash 值的高 8 位来决定 key 存储在桶中的位置。&lt;/li>
-&lt;li>key 和 value 是分别放在一块连续的内存，这样做的目的是为了节省内存。例如一个 &lt;code>map[int64]int8&lt;/code> 类型的 map，如果按照 &lt;code>key1/value1/key2/value2 ...&lt;/code> 这样的形式来存储，那么内存对齐每个 &lt;code>key/value&lt;/code> 都需要 padding 7 个字节。
-分开连续存储的话，就只需要在最后 padding 一次。&lt;/li>
-&lt;li>每个桶只能存储 8 个 &lt;code>key/value&lt;/code>，如果有更多的 key 放入当前桶，就需要一个溢出桶，通过 &lt;code>overflow&lt;/code> 指针连接起来。&lt;/li>
+&lt;li>在桶内，会&lt;strong>根据 key 计算出来的 hash 值的高 8 位来决定 key 存储在桶中的位置&lt;/strong>（桶内的键值对，根据类型的大小就可以计算出偏移量）。&lt;/li>
+&lt;li>&lt;strong>key 和 value 是分别放在一块连续的内存，这样做的目的是为了节省内存&lt;/strong>。例如一个 &lt;code>map[int64]int8&lt;/code> 类型的 map，如果按照 &lt;code>key1/value1/key2/value2 ...&lt;/code> 这样的形式来存储，那么&lt;strong>内存对齐&lt;/strong>每个 &lt;code>key/value&lt;/code> 都需要 padding 7 个字节。分开连续存储的话，就只需要在最后 padding 一次。&lt;/li>
+&lt;li>每个桶只能存储 8 个 &lt;code>key/value&lt;/code>，如果有更多的 key 放入当前桶，就需要一个溢出桶，通过 &lt;code>overflow&lt;/code> 指针连接起来（&lt;strong>链表法&lt;/strong>）。&lt;/li>
 &lt;/ol>
-&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/hmap.png" alt="hmap" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/hmap.png" alt="hmap" loading="lazy" />&lt;/p>
 &lt;h3>初始化&lt;span class="hx-absolute -hx-mt-20" id="初始化">&lt;/span>
 &lt;a href="#%e5%88%9d%e5%a7%8b%e5%8c%96" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>初始化 &lt;code>map&lt;/code>：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
@@ -591,13 +590,13 @@ title="Copy code"
 &lt;/div>
 &lt;p>这两种查询方式会被转换成 &lt;a href="https://github.com/golang/go/blob/8da6405e0db80fa0a4136fb816c7ca2db716c2b2/src/runtime/map.go#L396" target="_blank" rel="noopener">&lt;code>mapaccess1&lt;/code>&lt;/a> 和 &lt;code>mapaccess2&lt;/code> 函数，两个函数基本一样，不过 &lt;code>mapaccess2&lt;/code> 函数的返回值多了一个 &lt;code>bool&lt;/code> 类型。&lt;/p>
 &lt;p>查询过程：&lt;/p>
-&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/map-get.png" alt="map-get" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/map-get.png" alt="map-get" loading="lazy" />&lt;/p>
 &lt;h4>1. 计算哈希值&lt;span class="hx-absolute -hx-mt-20" id="1-计算哈希值">&lt;/span>
 &lt;a href="#1-%e8%ae%a1%e7%ae%97%e5%93%88%e5%b8%8c%e5%80%bc" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>通过哈希函数和种子获取当前 key 的 64 位的哈希值（64 位机）。以上图哈希值：&lt;code>11010111 | 110000110110110010001111001010100010010110010101001 │ 00011&lt;/code> 为例。&lt;/p>
 &lt;h4>2. 计算这个 key 要放在哪个桶&lt;span class="hx-absolute -hx-mt-20" id="2-计算这个-key-要放在哪个桶">&lt;/span>
-&lt;a href="#2-%e8%ae%a1%e7%ae%97%e8%bf%99%e4%b8%aa-key-%e8%a6%81%e6%94%be%e5%9c%a8%e5%93%aa%e4%b8%aa%e6%a1%b6" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>根据哈希值的 &lt;code>B&lt;/code> （&lt;code>hmap.B&lt;/code>）个 bit 位来计算，也就是 &lt;code>00011&lt;/code>，十进制的值是 &lt;code>3&lt;/code>，那么就是 &lt;code>3&lt;/code> 号桶。&lt;/p>
+&lt;a href="#2-%e8%ae%a1%e7%ae%97%e8%bf%99%e4%b8%aa-key-%e8%a6%81%e6%94%be%e5%9c%a8%e5%93%aa%e4%b8%aa%e6%a1%b6" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>&lt;strong>根据哈希值的 &lt;code>B&lt;/code> （&lt;code>hmap.B&lt;/code>）个 bit 位来计算，也就是 &lt;code>00011&lt;/code>，十进制的值是 &lt;code>3&lt;/code>，那么就是 &lt;code>3&lt;/code> 号桶。&lt;/strong>&lt;/p>
 &lt;h4>3. 计算这个 key 在桶内的位置&lt;span class="hx-absolute -hx-mt-20" id="3-计算这个-key-在桶内的位置">&lt;/span>
-&lt;a href="#3-%e8%ae%a1%e7%ae%97%e8%bf%99%e4%b8%aa-key-%e5%9c%a8%e6%a1%b6%e5%86%85%e7%9a%84%e4%bd%8d%e7%bd%ae" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>根据哈希值的高 8 位，也就是 &lt;code>10010111&lt;/code>，十进制的值是 &lt;code>151&lt;/code>，先用 &lt;code>151&lt;/code> 和桶内存储的 &lt;code>tophash&lt;/code> 比较，再比较桶内的存储的 key 和传入的 key，这种方式可以优化桶内的读写速度。&lt;/p>
+&lt;a href="#3-%e8%ae%a1%e7%ae%97%e8%bf%99%e4%b8%aa-key-%e5%9c%a8%e6%a1%b6%e5%86%85%e7%9a%84%e4%bd%8d%e7%bd%ae" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>根据哈希值的高 8 位，也就是 &lt;code>10010111&lt;/code>，十进制的值是 &lt;code>151&lt;/code>，&lt;strong>先用 &lt;code>151&lt;/code> 和桶内存储的 &lt;code>tophash&lt;/code> 比较，&lt;code>tophash&lt;/code> 一致的话，再比较桶内的存储的 key 和传入的 key，这种方式可以优化桶内的读写速度（&lt;code>tophash&lt;/code> 不一致就不需要比较了）&lt;/strong>。&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// src/runtime/map.go#L434 mapaccess1
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="k">for&lt;/span> &lt;span class="nx">i&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">uintptr&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">);&lt;/span> &lt;span class="nx">i&lt;/span> &lt;span class="p">&amp;lt;&lt;/span> &lt;span class="nx">bucketCnt&lt;/span>&lt;span class="p">;&lt;/span> &lt;span class="nx">i&lt;/span>&lt;span class="o">++&lt;/span> &lt;span class="p">{&lt;/span>
@@ -623,17 +622,80 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;blockquote>
-&lt;p>计算在几号桶用的是后 &lt;code>B&lt;/code> 位，&lt;code>tophash&lt;/code> 使用的是高 8 位，这种方式可以避免一个桶内出现大量相同的 &lt;code>tophash&lt;/code>，影响读写的性能。&lt;/p>
-&lt;/blockquote>
-&lt;p>如果当前桶中没有找到 key，而且存在溢出桶，那么会接着遍历所有的溢出桶中的数据。&lt;/p>
+&lt;div class="hx-overflow-x-auto hx-mt-6 hx-flex hx-rounded-lg hx-border hx-py-2 ltr:hx-pr-4 rtl:hx-pl-4 contrast-more:hx-border-current contrast-more:dark:hx-border-current hx-border-blue-200 hx-bg-blue-100 hx-text-blue-900 dark:hx-border-blue-200/30 dark:hx-bg-blue-900/30 dark:hx-text-blue-200">
+&lt;div class="ltr:hx-pl-3 ltr:hx-pr-2 rtl:hx-pr-3 rtl:hx-pl-2">&lt;div class="hx-select-none hx-text-xl" style="font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';">ℹ️&lt;/div>&lt;/div>
+&lt;div class="hx-w-full hx-min-w-0 hx-leading-7">
+&lt;div class="hx-mt-6 hx-leading-7 first:hx-mt-0">计算在几号桶用的是后 &lt;code>B&lt;/code> 位，&lt;code>tophash&lt;/code> 使用的是高 8 位，分别用前后的不同位数，避免了冲突。&lt;strong>这种方式可以避免一个桶内出现大量相同的 &lt;code>tophash&lt;/code>&lt;/strong>，影响读写的性能。&lt;/div>
+&lt;/div>
+&lt;/div>
+&lt;p>如果当前桶中没有找到 key，而且&lt;strong>存在溢出桶，那么会接着遍历所有的溢出桶中的数据&lt;/strong>。&lt;/p>
 &lt;h3>写入&lt;span class="hx-absolute -hx-mt-20" id="写入">&lt;/span>
 &lt;a href="#%e5%86%99%e5%85%a5" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>写入 map 和查询 map 的实现原理类似，计算哈希值和存放在哪个桶，然后遍历当前桶和溢出桶的数据：&lt;/p>
 &lt;ul>
-&lt;li>如果当前 key 不存在，则通过偏移量存储到桶中&lt;/li>
-&lt;li>如果已经存在，则返回 value 的内存地址，赋值操作是在编译期执行的。&lt;/li>
-&lt;li>如果桶已满，则会创建新桶或者使用空闲的溢出桶，添加到已有桶的末尾，&lt;code>noverflow&lt;/code> 计数加 1。&lt;/li>
+&lt;li>如果当前 key 不存在，则通过偏移量存储到桶中。&lt;/li>
+&lt;li>如果已经存在，则返回 value 的内存地址，然后修改 value。&lt;/li>
+&lt;li>如果桶已满，则会创建新桶或者使用空闲的溢出桶，新桶添加到已有桶的末尾，&lt;code>noverflow&lt;/code> 计数加 1。将键值对添加到桶中。&lt;/li>
 &lt;/ul>
+&lt;div class="hx-overflow-x-auto hx-mt-6 hx-flex hx-rounded-lg hx-border hx-py-2 ltr:hx-pr-4 rtl:hx-pl-4 contrast-more:hx-border-current contrast-more:dark:hx-border-current hx-border-blue-200 hx-bg-blue-100 hx-text-blue-900 dark:hx-border-blue-200/30 dark:hx-bg-blue-900/30 dark:hx-text-blue-200">
+&lt;div class="ltr:hx-pl-3 ltr:hx-pr-2 rtl:hx-pr-3 rtl:hx-pl-2">&lt;div class="hx-select-none hx-text-xl" style="font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';">ℹ️&lt;/div>&lt;/div>
+&lt;div class="hx-w-full hx-min-w-0 hx-leading-7">
+&lt;div class="hx-mt-6 hx-leading-7 first:hx-mt-0">&lt;p>前面说的找到 key 的位置，进行赋值操作，实际上并不准确。看 &lt;code>mapassign&lt;/code> 函数的原型：&lt;/p>
+&lt;p>&lt;code>func mapassign(t *maptype, h *hmap, key unsafe.Pointer) unsafe.Pointer&lt;/code>&lt;/p>
+&lt;p>&lt;code>mapassign&lt;/code> 函数返回的指针就是指向的 key 所对应的 value 值位置，有了地址，就很好操作赋值了。在汇编中赋值。&lt;/p>
+&lt;/div>
+&lt;/div>
+&lt;/div>
+&lt;h3>删除&lt;span class="hx-absolute -hx-mt-20" id="删除">&lt;/span>
+&lt;a href="#%e5%88%a0%e9%99%a4" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>删除 map 中的 &lt;code>key/value&lt;/code>：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="nb">delete&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">hashmap&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">key&lt;/span>&lt;span class="p">)&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;code>delete&lt;/code> 关键字的唯一作用就是将某一个 &lt;code>key/value&lt;/code> 从哈希表中删除。会被编译器被转换成 &lt;code>mapdelete&lt;/code> 方法。删除操作先是找到 key 的位置，清空 &lt;code>key/value&lt;/code>，然后将 &lt;code>hmap.count - 1&lt;/code>，并且对应的 &lt;code>tophash&lt;/code> 设置为 &lt;code>Empty&lt;/code>。&lt;/p>
+&lt;p>底层执行函数 &lt;code>mapdelete&lt;/code>：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">mapdelete&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">t&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">maptype&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">h&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">hmap&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">key&lt;/span> &lt;span class="nx">unsafe&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Pointer&lt;/span>&lt;span class="p">)&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>和上面的定位 key 的逻辑一样，找到对应位置后，对 key 或者 value 进行“清零”操作：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 对 key 清零
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="k">if&lt;/span> &lt;span class="nx">t&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">indirectkey&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="o">*&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="nx">unsafe&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Pointer&lt;/span>&lt;span class="p">)(&lt;/span>&lt;span class="nx">k&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="kc">nil&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span> &lt;span class="k">else&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">typedmemclr&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">t&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">key&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">k&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 对 value 清零
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="k">if&lt;/span> &lt;span class="nx">t&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">indirectvalue&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="o">*&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="nx">unsafe&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Pointer&lt;/span>&lt;span class="p">)(&lt;/span>&lt;span class="nx">v&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="kc">nil&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span> &lt;span class="k">else&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">typedmemclr&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">t&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">elem&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">v&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>最后，将 &lt;code>count&lt;/code> 值减 1，将对应位置的 &lt;code>tophash&lt;/code> 值置成 &lt;code>Empty&lt;/code>。&lt;/p>
 &lt;h3>扩容&lt;span class="hx-absolute -hx-mt-20" id="扩容">&lt;/span>
 &lt;a href="#%e6%89%a9%e5%ae%b9" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>随着 map 中写入的 &lt;code>key/value&lt;/code> 增多，装载因子会越来越大，哈希冲突的概率越来越大，性能会跟着下降。如果大量的 key 都落入到同一个桶中，哈希表会退化成链表，查询的时间复杂度会从 &lt;code>O(1)&lt;/code> 退化到 &lt;code>O(n)&lt;/code>。&lt;/p>
 &lt;p>所以当装载因子大到一定程度之后，哈希表就不得不进行扩容。&lt;/p>
@@ -657,6 +719,7 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
+&lt;p>触发扩容的条件：&lt;/p>
 &lt;ol>
 &lt;li>装载因子超过阈值 6.5。&lt;/li>
 &lt;li>溢出桶的数量过多：
@@ -666,27 +729,28 @@ title="Copy code"
 &lt;/ul>
 &lt;/li>
 &lt;/ol>
+&lt;p>触发的条件不同扩容的方式也分为两种：&lt;/p>
+&lt;ol>
+&lt;li>如果这次&lt;strong>扩容是溢出的桶太多导致的，那么这次扩容就是“等量扩容” &lt;code>sameSizeGrow&lt;/code>&lt;/strong>。&lt;/li>
+&lt;li>另一种就是装载因子超过阈值导致翻倍扩容了。&lt;/li>
+&lt;/ol>
 &lt;h4>为什么溢出桶过多需要进行扩容？&lt;span class="hx-absolute -hx-mt-20" id="为什么溢出桶过多需要进行扩容">&lt;/span>
 &lt;a href="#%e4%b8%ba%e4%bb%80%e4%b9%88%e6%ba%a2%e5%87%ba%e6%a1%b6%e8%bf%87%e5%a4%9a%e9%9c%80%e8%a6%81%e8%bf%9b%e8%a1%8c%e6%89%a9%e5%ae%b9" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>什么情况下会出现装载因子很小不超过阈值，但是溢出桶过多的情况？&lt;/p>
-&lt;p>先插入很多元素，导致创建了很多桶，但是未达到阈值，并没有触发扩容。之后再删除元素，降低元素的总量。反复执行前面的步骤，但是又不会触发扩容，就会导致创建了很多溢出桶，但是 map 中的 key 分布的很分散。导致查询和插入的效率很低。&lt;/p>
-&lt;h4>渐进式扩容&lt;span class="hx-absolute -hx-mt-20" id="渐进式扩容">&lt;/span>
-&lt;a href="#%e6%b8%90%e8%bf%9b%e5%bc%8f%e6%89%a9%e5%ae%b9" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>扩容需要把原有的 buckets 中的数据迁移到新的 buckets 中。如果一个哈希表当前大小为 1GB，扩容为原来的两倍大小，那就需要对 1GB 的数据重新计算哈希值，并且从原来的内存空间搬移到新的内存空间，这是非常耗时的操作。&lt;/p>
-&lt;p>所以 map 的扩容采用的是一种&lt;strong>渐进式&lt;/strong>的方式，将迁移的操作穿插在插入操作的过程中，分批完成。&lt;/p>
-&lt;p>大概思路就是：&lt;/p>
-&lt;p>当有新的 &lt;code>key/value&lt;/code> 要插入时，将这个 &lt;code>key/value&lt;/code> 插入到新 buckets 中，并且从老的 buckets 中拿出一个 &lt;code>key/value&lt;/code> 放入到新 buckets。每次插入一个 &lt;code>key/value&lt;/code>，都重复上面的过程。经过多次插入操作之后，老的 buckets 中的数据就一点一点全部迁移到新的 buckets 中了。
-这样不用一次性将数据迁移，插入操作就都变得很快了。&lt;/p>
-&lt;p>对于查询操作，为了兼容了新、老 buckets 中的数据，会先从新 buckets 中查找，如果没有找到，再去老的 buckets 中查找。&lt;/p>
+&lt;p>先插入很多元素，导致创建了很多桶，但是未达到阈值，并没有触发扩容。之后再删除元素，降低元素的总量。反复执行前面的步骤，但是又不会触发扩容，就会导致创建了很多溢出桶，但是 map 中的 key 分布的很分散。导致查询和插入的效率很低。还可能导致内存泄漏。&lt;/p>
 &lt;h5>对于条件 2 溢出桶的数量过多&lt;span class="hx-absolute -hx-mt-20" id="对于条件-2-溢出桶的数量过多">&lt;/span>
 &lt;a href="#%e5%af%b9%e4%ba%8e%e6%9d%a1%e4%bb%b6-2-%e6%ba%a2%e5%87%ba%e6%a1%b6%e7%9a%84%e6%95%b0%e9%87%8f%e8%bf%87%e5%a4%9a" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h5>&lt;p>申请的新的 buckets 数量和原有的 buckets 数量是&lt;strong>相等的&lt;/strong>，进行的是&lt;strong>等量扩容&lt;/strong>。由于 buckets 数量不变，所以原有的数据在几号桶，迁移之后仍然在几号桶。比如原来在 0 号 bucket，到新的地方后，仍然放在 0 号 bucket。&lt;/p>
-&lt;p>扩容完成后，溢出桶没有了，key 都集中到了一个 bucket，更为紧凑了，提高了查找的效率。&lt;/p>
+&lt;p>&lt;strong>扩容完成后，溢出桶没有了，key 都集中到了一个 bucket，更为紧凑了，提高了查找的效率&lt;/strong>。&lt;/p>
 &lt;h5>对于条件 1 当装载因子超过阈值后&lt;span class="hx-absolute -hx-mt-20" id="对于条件-1-当装载因子超过阈值后">&lt;/span>
 &lt;a href="#%e5%af%b9%e4%ba%8e%e6%9d%a1%e4%bb%b6-1-%e5%bd%93%e8%a3%85%e8%bd%bd%e5%9b%a0%e5%ad%90%e8%b6%85%e8%bf%87%e9%98%88%e5%80%bc%e5%90%8e" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h5>&lt;p>申请的新的 buckets 数量和原有的 buckets 数量的 &lt;strong>2 倍&lt;/strong>，也就是 &lt;code>B+1&lt;/code>。桶的数量改变了，那么 key 的哈希值要重新计算，才能决定它到底落在哪个 bucket。&lt;/p>
 &lt;p>例如，原来 &lt;code>B=5&lt;/code>，根据出 key 的哈希值的后 5 位，就能决定它落在哪个 bucket。扩容后的 buckets 数量翻倍，B 变成了 6，因此变成哈希值的后 6 位才能决定 key 落在哪个 bucket。这叫做 &lt;code>rehash&lt;/code>。&lt;/p>
-&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/map-evacuate-bucket-num.png" alt="map-evacuate-bucket-num" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/map-evacuate-bucket-num.png" alt="map-evacuate-bucket-num" loading="lazy" />&lt;/p>
 &lt;p>因此，某个 key 在迁移前后 bucket 序号可能会改变，取决于 &lt;code>rehash&lt;/code> 之后的哈希值倒数第 6 位是 0 还是 1。&lt;/p>
-&lt;p>扩容完成后，老 buckets 中的 key 分裂到了 2 个新的 bucket。&lt;/p>
+&lt;p>&lt;strong>扩容完成后，老 buckets 中的 key 分裂到了 2 个新的 bucket&lt;/strong>。&lt;/p>
+&lt;h4>渐进式扩容&lt;span class="hx-absolute -hx-mt-20" id="渐进式扩容">&lt;/span>
+&lt;a href="#%e6%b8%90%e8%bf%9b%e5%bc%8f%e6%89%a9%e5%ae%b9" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>扩容需要把原有的 buckets 中的数据迁移到新的 buckets 中。如果一个哈希表当前大小为 1GB，扩容为原来的两倍大小，那就需要对 1GB 的数据&lt;strong>重新计算哈希值（rehash）&lt;/strong>，并且从原来的内存空间搬移到新的内存空间，这是非常耗时的操作。&lt;/p>
+&lt;p>所以 map 的扩容采用的是一种&lt;strong>渐进式&lt;/strong>的方式，将迁移的操作穿插在插入操作的过程中，分批完成。&lt;/p>
 &lt;h5>迁移实现&lt;span class="hx-absolute -hx-mt-20" id="迁移实现">&lt;/span>
-&lt;a href="#%e8%bf%81%e7%a7%bb%e5%ae%9e%e7%8e%b0" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h5>&lt;p>Go map 扩容的实现在 &lt;code>hashGrow&lt;/code> 函数中，&lt;code>hashGrow&lt;/code> 只申请新的 buckets，但并没有马上将原有的 &lt;code>key/value&lt;/code> 迁移新的 buckets 中：&lt;/p>
+&lt;a href="#%e8%bf%81%e7%a7%bb%e5%ae%9e%e7%8e%b0" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h5>&lt;p>Go map 扩容的实现在 &lt;code>hashGrow&lt;/code> 函数中，&lt;code>hashGrow&lt;/code> 只申请新的 buckets，并未参与真正的数据迁移：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">hashGrow&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">t&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">maptype&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">h&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">hmap&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">bigger&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">uint8&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">)&lt;/span>
@@ -743,7 +807,8 @@ title="Copy code"
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// ...
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">bucket&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">hash&lt;/span> &lt;span class="o">&amp;amp;&lt;/span> &lt;span class="nf">bucketMask&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">B&lt;/span>&lt;span class="p">)&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">growing&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">growWork&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">t&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">h&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">bucket&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 真正的迁移在 growWork 中
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nf">growWork&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">t&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">h&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">bucket&lt;/span>&lt;span class="p">)&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// ...
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="p">}&lt;/span>
@@ -761,13 +826,14 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>&lt;code>growWork&lt;/code>：&lt;/p>
+&lt;p>也就是说&lt;strong>数据的迁移过程一般发生在插入或修改、删除 key 的时候&lt;/strong>。在扩容完毕后 (预分配内存)，不会马上就进行迁移。而是采取写时复制的方式，&lt;strong>当有访问到具体 bucket 时，才会逐渐的将 &lt;code>oldbucket&lt;/code> 迁移到新 bucket 中&lt;/strong>。&lt;/p>
+&lt;p>&lt;code>growWork&lt;/code> 函数：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">growWork&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">t&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">maptype&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">h&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">hmap&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">bucket&lt;/span> &lt;span class="kt">uintptr&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 确认迁移的老的 bucket 对应正在使用的 bucket
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 迁移
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nf">evacuate&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">t&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">h&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">bucket&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">oldbucketmask&lt;/span>&lt;span class="p">())&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 额外再迁移一个 bucket，加快迁移进度
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 还没有迁移完成，额外再迁移一个 bucket，加快迁移进度
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">growing&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">evacuate&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">t&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">h&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">nevacuate&lt;/span>&lt;span class="p">)&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
@@ -781,12 +847,24 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>真正的迁移在 &lt;code>evacuate&lt;/code> 函数中，它会对传入桶中的数据进行再分配。&lt;code>evacuate&lt;/code> 函数每次只完成一个 bucket 的迁移工作（包括这个 bucket 链接的溢出桶），它会遍历 bucket （包括溢出桶）中得到所有 &lt;code>key/value&lt;/code> 并迁移。
-已迁移的 &lt;code>key/value&lt;/code> 对应的 &lt;code>tophash&lt;/code> 会被设置为 &lt;code>evacuatedEmpty&lt;/code>，表示已经迁移。&lt;/p>
-&lt;h3>删除&lt;span class="hx-absolute -hx-mt-20" id="删除">&lt;/span>
-&lt;a href="#%e5%88%a0%e9%99%a4" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>删除 map 中的 &lt;code>key/value&lt;/code>：&lt;/p>
+&lt;p>&lt;code>evacuate&lt;/code> 函数大致迁移过程如下：&lt;/p>
+&lt;ol>
+&lt;li>先判断当前 bucket 是不是已经迁移，没有迁移就做迁移操作：&lt;/li>
+&lt;/ol>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="nb">delete&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">hashmap&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">key&lt;/span>&lt;span class="p">)&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="nx">b&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="nx">bmap&lt;/span>&lt;span class="p">)(&lt;/span>&lt;span class="nf">add&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">oldbuckets&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">oldbucket&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="nb">uintptr&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">t&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">bucketsize&lt;/span>&lt;span class="p">)))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nx">newbit&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">noldbuckets&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 判断旧桶是否已经被迁移了
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="k">if&lt;/span> &lt;span class="p">!&lt;/span>&lt;span class="nf">evacuated&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">b&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 旧桶没有被搬迁
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// do... // 做转移操作
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 遍历所有的 bucket，包括 overflow buckets
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// b 是老的 bucket 地址
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">for&lt;/span> &lt;span class="p">;&lt;/span> &lt;span class="nx">b&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="kc">nil&lt;/span>&lt;span class="p">;&lt;/span> &lt;span class="nx">b&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">b&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">overflow&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">t&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -796,10 +874,67 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>&lt;code>delete&lt;/code> 关键字的唯一作用就是将某一个 &lt;code>key/value&lt;/code> 从哈希表中删除。会被编译器被转换成 &lt;code>mapdelete&lt;/code> 方法。删除操作先是找到 key 的位置，清空 &lt;code>key/value&lt;/code>，然后将 &lt;code>hmap.count - 1&lt;/code>，并且对应的 &lt;code>tophash&lt;/code> 设置为 &lt;code>Empty&lt;/code>。&lt;/p>
+&lt;p>真正的迁移在 &lt;code>evacuate&lt;/code> 函数中，它会对传入桶中的数据进行再分配。&lt;code>evacuate&lt;/code> 函数每次只完成一个 bucket 的迁移工作（包括这个 bucket 链接的溢出桶），它会遍历 bucket （包括溢出桶）中得到所有 &lt;code>key/value&lt;/code> 并迁移。已迁移的 &lt;code>key/value&lt;/code> 对应的 &lt;code>tophash&lt;/code> 会被设置为 &lt;code>evacuatedEmpty&lt;/code>，表示已经迁移。&lt;/p>
 &lt;h3>map 为什么是无序的&lt;span class="hx-absolute -hx-mt-20" id="map-为什么是无序的">&lt;/span>
 &lt;a href="#map-%e4%b8%ba%e4%bb%80%e4%b9%88%e6%98%af%e6%97%a0%e5%ba%8f%e7%9a%84" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>map 在扩容后，&lt;code>key/value&lt;/code> 会进行迁移，在同一个桶中的 key，有些会迁移到别的桶中，有些 key 原地不动，导致遍历 map 就无法保证顺序。&lt;/p>
-&lt;p>Go 底层的实现简单粗暴，直接生成一个随机数，这个随机数决定从哪里开始遍历，因此&lt;strong>每次 &lt;code>for range map&lt;/code> 的结果都是不一样的。那是因为它的起始位置根本就不固定&lt;/strong>。&lt;/p></description></item><item><title>函数</title><link>https://shipengqi.github.io/golang-learn/docs/basic/05_function/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/basic/05_function/</guid><description>
+&lt;p>Go 底层的实现简单粗暴，并不是固定地从 0 号 bucket 开始遍历，而是直接生成一个随机数，这个随机数决定从哪里开始遍历，因此&lt;strong>每次 &lt;code>for range map&lt;/code> 的结果都是不一样的。那是因为它的起始位置根本就不固定&lt;/strong>。&lt;/p>
+&lt;h3>对 map 元素取地址&lt;span class="hx-absolute -hx-mt-20" id="对-map-元素取地址">&lt;/span>
+&lt;a href="#%e5%af%b9-map-%e5%85%83%e7%b4%a0%e5%8f%96%e5%9c%b0%e5%9d%80" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Go 无法对 map 的 key 或 value 进行取址。&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">package&lt;/span> &lt;span class="nx">main&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="s">&amp;#34;fmt&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">main&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">m&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">make&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kd">map&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="kt">string&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="kt">int&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">m&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="s">&amp;#34;foo&amp;#34;&lt;/span>&lt;span class="p">])&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>上面的代码不能通过编译：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>./main.go:8:14: cannot take the address of m[&amp;#34;foo&amp;#34;]&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h4>使用 &lt;code>unsafe.Pointer&lt;/code> 获取 key 或 value 的地址&lt;span class="hx-absolute -hx-mt-20" id="使用-unsafepointer-获取-key-或-value-的地址">&lt;/span>
+&lt;a href="#%e4%bd%bf%e7%94%a8-unsafepointer-%e8%8e%b7%e5%8f%96-key-%e6%88%96-value-%e7%9a%84%e5%9c%b0%e5%9d%80" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>可以使用 &lt;code>unsafe.Pointer&lt;/code> 等获取到了 key 或 value 的地址，也不能长期持有，因为一旦发生扩容，key 和 value 的位置就会改变，之前保存的地址也就失效了。&lt;/p>
+&lt;h3>比较 map&lt;span class="hx-absolute -hx-mt-20" id="比较-map">&lt;/span>
+&lt;a href="#%e6%af%94%e8%be%83-map" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>比较只能是遍历 &lt;code>map&lt;/code> 的每个元素。&lt;code>map1 == map2&lt;/code> 这种编译是不通过的。&lt;/p>
+&lt;h3>map 不是并发安全的&lt;span class="hx-absolute -hx-mt-20" id="map-不是并发安全的">&lt;/span>
+&lt;a href="#map-%e4%b8%8d%e6%98%af%e5%b9%b6%e5%8f%91%e5%ae%89%e5%85%a8%e7%9a%84" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>在查找、赋值、遍历、删除的过程中都会检测写标志，一旦发现写标志位为 &lt;code>1&lt;/code>，则直接 panic。&lt;/p>
+&lt;p>赋值和删除函数在检测完写标志是复位之后，先将写标志位设置位 &lt;code>1&lt;/code>，才会进行之后的操作。&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 检测写标志
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="k">if&lt;/span> &lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">flags&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">hashWriting&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">throw&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;concurrent map writes&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 设置写标志
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="nx">h&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">flags&lt;/span> &lt;span class="o">|=&lt;/span> &lt;span class="nx">hashWriting&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div></description></item><item><title>函数</title><link>https://shipengqi.github.io/golang-learn/docs/basic/05_function/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/basic/05_function/</guid><description>
 &lt;h2>参数传递&lt;span class="hx-absolute -hx-mt-20" id="参数传递">&lt;/span>
 &lt;a href="#%e5%8f%82%e6%95%b0%e4%bc%a0%e9%80%92" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>函数的参数传递有两种方式：&lt;/p>
 &lt;ul>
@@ -810,7 +945,7 @@ title="Copy code"
 &lt;div class="hx-overflow-x-auto hx-mt-6 hx-flex hx-rounded-lg hx-border hx-py-2 ltr:hx-pr-4 rtl:hx-pl-4 contrast-more:hx-border-current contrast-more:dark:hx-border-current hx-border-blue-200 hx-bg-blue-100 hx-text-blue-900 dark:hx-border-blue-200/30 dark:hx-bg-blue-900/30 dark:hx-text-blue-200">
 &lt;div class="ltr:hx-pl-3 ltr:hx-pr-2 rtl:hx-pr-3 rtl:hx-pl-2">&lt;div class="hx-select-none hx-text-xl" style="font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';">ℹ️&lt;/div>&lt;/div>
 &lt;div class="hx-w-full hx-min-w-0 hx-leading-7">
-&lt;div class="hx-mt-6 hx-leading-7 first:hx-mt-0">拷贝指针，也就是会同时出现两个指针指向原有的内存空间。&lt;/div>
+&lt;div class="hx-mt-6 hx-leading-7 first:hx-mt-0">&lt;strong>拷贝指针，也就是会同时出现两个指针指向原有的内存空间&lt;/strong>。&lt;/div>
 &lt;/div>
 &lt;/div>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
@@ -867,7 +1002,460 @@ title="Copy code"
 &lt;/ul>
 &lt;h3>传值还是传指针？&lt;span class="hx-absolute -hx-mt-20" id="传值还是传指针">&lt;/span>
 &lt;a href="#%e4%bc%a0%e5%80%bc%e8%bf%98%e6%98%af%e4%bc%a0%e6%8c%87%e9%92%88" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>表面上看，指针参数性能会更好，但是要注意被复制的指针会延长目标对象的生命周期，还可能导致它被分配到堆上，其性能消耗要加上堆内存分配和垃圾回收的成本。&lt;/p>
-&lt;p>&lt;strong>在栈上复制小对象，要比堆上分配内存要快的多。如果复制成本高，或者需要修改原对象，使用指针更好&lt;/strong>。&lt;/p></description></item><item><title>指针</title><link>https://shipengqi.github.io/golang-learn/docs/basic/09_pointer/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/basic/09_pointer/</guid><description>
+&lt;p>&lt;strong>在栈上复制小对象，要比堆上分配内存要快的多。如果复制成本高，或者需要修改原对象，使用指针更好&lt;/strong>。&lt;/p></description></item><item><title>接口</title><link>https://shipengqi.github.io/golang-learn/docs/basic/06_interface/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/basic/06_interface/</guid><description>
+&lt;p>Go 支持接口数据类型，接口是一组方法的集合，任何其他类型只要实现了这些方法就是实现了这个接口，无须显示声明。&lt;/p>
+&lt;p>&lt;strong>接口只有当有两个或两个以上的具体类型必须以相同的方式进行处理时才需要&lt;/strong>。比如写单元测试，需要 mock 一个类型时，就可以使用接口，mock 的类型和被测试的类型都实现同一个接口即可。&lt;/p>
+&lt;h2>结构体嵌入接口类型&lt;span class="hx-absolute -hx-mt-20" id="结构体嵌入接口类型">&lt;/span>
+&lt;a href="#%e7%bb%93%e6%9e%84%e4%bd%93%e5%b5%8c%e5%85%a5%e6%8e%a5%e5%8f%a3%e7%b1%bb%e5%9e%8b" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Go 语言的结构体还可以嵌入接口类型。&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">type&lt;/span> &lt;span class="nx">Interface&lt;/span> &lt;span class="kd">interface&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">Len&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="kt">int&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">Less&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">i&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">j&lt;/span> &lt;span class="kt">int&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="kt">bool&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">Swap&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">i&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">j&lt;/span> &lt;span class="kt">int&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// Array 实现 Interface 接口
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="kd">type&lt;/span> &lt;span class="nx">Array&lt;/span> &lt;span class="p">[]&lt;/span>&lt;span class="kt">int&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="nx">arr&lt;/span> &lt;span class="nx">Array&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="nf">Len&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="kt">int&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="nb">len&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">arr&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="nx">arr&lt;/span> &lt;span class="nx">Array&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="nf">Less&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">i&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">j&lt;/span> &lt;span class="kt">int&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="kt">bool&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="nx">arr&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="nx">i&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="p">&amp;lt;&lt;/span> &lt;span class="nx">arr&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="nx">j&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="nx">arr&lt;/span> &lt;span class="nx">Array&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="nf">Swap&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">i&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">j&lt;/span> &lt;span class="kt">int&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">arr&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="nx">i&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="nx">arr&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="nx">j&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">arr&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="nx">j&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="nx">arr&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="nx">i&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 匿名接口(anonymous interface)
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="kd">type&lt;/span> &lt;span class="nx">reverse&lt;/span> &lt;span class="kd">struct&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">Interface&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 重写(override)
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="kd">func&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="nx">r&lt;/span> &lt;span class="nx">reverse&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="nf">Less&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">i&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">j&lt;/span> &lt;span class="kt">int&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="kt">bool&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="nx">r&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Interface&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Less&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">j&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">i&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 构造 reverse Interface
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="kd">func&lt;/span> &lt;span class="nf">Reverse&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">data&lt;/span> &lt;span class="nx">Interface&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="nx">Interface&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">reverse&lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="nx">data&lt;/span>&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">main&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">arr&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">Array&lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">2&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">3&lt;/span>&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">rarr&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nf">Reverse&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">arr&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">arr&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Less&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">rarr&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Less&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;code>reverse&lt;/code> 结构体内嵌了一个名为 &lt;code>Interface&lt;/code> 的 &lt;code>interface&lt;/code>，并且实现 &lt;code>Less&lt;/code> 函数，但是却没有实现 &lt;code>Len&lt;/code>, &lt;code>Swap&lt;/code> 函数。&lt;/p>
+&lt;p>为什么这么设计？&lt;/p>
+&lt;p>通过这种方法可以让 &lt;strong>&lt;code>reverse&lt;/code> 实现 &lt;code>Interface&lt;/code> 这个接口类型，并且仅实现某个指定的方法，而不需要实现这个接口下的所有方法&lt;/strong>。&lt;/p>
+&lt;p>对比一下传统的组合匿名结构体实现重写的写法：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">type&lt;/span> &lt;span class="nx">Interface&lt;/span> &lt;span class="kd">interface&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">Len&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="kt">int&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">Less&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">i&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">j&lt;/span> &lt;span class="kt">int&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="kt">bool&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">Swap&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">i&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">j&lt;/span> &lt;span class="kt">int&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">type&lt;/span> &lt;span class="nx">Array&lt;/span> &lt;span class="p">[]&lt;/span>&lt;span class="kt">int&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="nx">arr&lt;/span> &lt;span class="nx">Array&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="nf">Len&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="kt">int&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="nb">len&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">arr&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="nx">arr&lt;/span> &lt;span class="nx">Array&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="nf">Less&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">i&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">j&lt;/span> &lt;span class="kt">int&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="kt">bool&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="nx">arr&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="nx">i&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="p">&amp;lt;&lt;/span> &lt;span class="nx">arr&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="nx">j&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="nx">arr&lt;/span> &lt;span class="nx">Array&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="nf">Swap&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">i&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">j&lt;/span> &lt;span class="kt">int&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">arr&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="nx">i&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="nx">arr&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="nx">j&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">arr&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="nx">j&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="nx">arr&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="nx">i&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 匿名struct
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="kd">type&lt;/span> &lt;span class="nx">reverse&lt;/span> &lt;span class="kd">struct&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">Array&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 重写
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="kd">func&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="nx">r&lt;/span> &lt;span class="nx">reverse&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="nf">Less&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">i&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">j&lt;/span> &lt;span class="kt">int&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="kt">bool&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="nx">r&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Array&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Less&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">j&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">i&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 构造 reverse Interface
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="kd">func&lt;/span> &lt;span class="nf">Reverse&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">data&lt;/span> &lt;span class="nx">Array&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="nx">Interface&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">reverse&lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="nx">data&lt;/span>&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">main&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">arr&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">Array&lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">2&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">3&lt;/span>&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">rarr&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nf">Reverse&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">arr&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">arr&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Less&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">1&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">rarr&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Less&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">1&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>匿名接口的优点，&lt;strong>匿名接口的方式不依赖具体实现，可以对任意实现了该接口的类型进行重写&lt;/strong>。&lt;/p></description></item><item><title>反射</title><link>https://shipengqi.github.io/golang-learn/docs/basic/07_reflect/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/basic/07_reflect/</guid><description>
+&lt;p>Go 提供了一种机制在运行时更新变量和检查它们的值、调用它们的方法，但是在&lt;strong>编译时并不知道这些变量的具体类型&lt;/strong>，这称为反射机制。&lt;/p>
+&lt;p>使用反射的常见场景有以下两种：&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>不能明确接口调用哪个函数&lt;/strong>，需要根据传入的参数在运行时决定。&lt;/li>
+&lt;li>&lt;strong>不能明确传入函数的参数类型&lt;/strong>，需要在运行时处理任意对象。&lt;/li>
+&lt;/ul>
+&lt;p>不推荐使用反射的理由：&lt;/p>
+&lt;ul>
+&lt;li>代码可读性差。&lt;/li>
+&lt;li>Go 在编译过程中，编译器能提前发现一些类型错误，但是对于反射代码是无能为力的。所以包含反射相关的代码，很可能会运行很久，才会出错，这时候经常是直接 panic，可能会造成严重的后果。&lt;/li>
+&lt;li>反射对性能影响比较大。所以，对于一个项目中处于运行效率关键位置的代码，尽量避免使用反射特性。&lt;/li>
+&lt;/ul>
+&lt;h2>types 和 interface&lt;span class="hx-absolute -hx-mt-20" id="types-和-interface">&lt;/span>
+&lt;a href="#types-%e5%92%8c-interface" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Go 中，每个变量都有一个静态类型，在编译阶段就确定了的，比如 &lt;code>int, float64, []int&lt;/code> 等等。注意，&lt;strong>这个类型是声明时候的类型，不是底层数据类型&lt;/strong>。&lt;/p>
+&lt;p>例如：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">type&lt;/span> &lt;span class="nx">MyInt&lt;/span> &lt;span class="kt">int&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">var&lt;/span> &lt;span class="nx">i&lt;/span> &lt;span class="kt">int&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">var&lt;/span> &lt;span class="nx">j&lt;/span> &lt;span class="nx">MyInt&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>尽管 &lt;code>i&lt;/code>，&lt;code>j&lt;/code> 的底层类型都是 &lt;code>int&lt;/code>，但它们是&lt;strong>不同的静态类型&lt;/strong>，除非进行类型转换，否则，&lt;code>i&lt;/code> 和 &lt;code>j&lt;/code> 不能同时出现在等号两侧。&lt;code>j&lt;/code> 的静态类型就是 &lt;code>MyInt&lt;/code>。&lt;/p>
+&lt;p>反射主要与 &lt;code>interface{}&lt;/code> 类型相关。&lt;/p>
+&lt;p>&lt;code>interface&lt;/code> 的底层结构：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">type&lt;/span> &lt;span class="nx">iface&lt;/span> &lt;span class="kd">struct&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">tab&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">itab&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">data&lt;/span> &lt;span class="nx">unsafe&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Pointer&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">type&lt;/span> &lt;span class="nx">itab&lt;/span> &lt;span class="kd">struct&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">inter&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">interfacetype&lt;/span> &lt;span class="c1">// 表示接口类型，静态类型
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">_type&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">_type&lt;/span> &lt;span class="c1">// 表示具体实现了该接口的类型，动态类型
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">link&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">itab&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">hash&lt;/span> &lt;span class="kt">uint32&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">bad&lt;/span> &lt;span class="kt">bool&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">inhash&lt;/span> &lt;span class="kt">bool&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">unused&lt;/span> &lt;span class="p">[&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="kt">byte&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fun&lt;/span> &lt;span class="p">[&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="kt">uintptr&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>实际上，&lt;code>iface&lt;/code> 描述的是非空接口，它包含方法；与之相对的是 &lt;code>eface&lt;/code>，描述的是&lt;strong>空接口&lt;/strong>，不包含任何方法，&lt;strong>Go 里有的类型都 “实现了” 空接口&lt;/strong>。&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">type&lt;/span> &lt;span class="nx">eface&lt;/span> &lt;span class="kd">struct&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">_type&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">_type&lt;/span> &lt;span class="c1">// 表示空接口所承载的具体的实体类型
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">data&lt;/span> &lt;span class="nx">unsafe&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Pointer&lt;/span> &lt;span class="c1">// 具体的值
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h3>动态类型和静态类型&lt;span class="hx-absolute -hx-mt-20" id="动态类型和静态类型">&lt;/span>
+&lt;a href="#%e5%8a%a8%e6%80%81%e7%b1%bb%e5%9e%8b%e5%92%8c%e9%9d%99%e6%80%81%e7%b1%bb%e5%9e%8b" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;div class="hx-overflow-x-auto hx-mt-6 hx-flex hx-rounded-lg hx-border hx-py-2 ltr:hx-pr-4 rtl:hx-pl-4 contrast-more:hx-border-current contrast-more:dark:hx-border-current hx-border-blue-200 hx-bg-blue-100 hx-text-blue-900 dark:hx-border-blue-200/30 dark:hx-bg-blue-900/30 dark:hx-text-blue-200">
+&lt;div class="ltr:hx-pl-3 ltr:hx-pr-2 rtl:hx-pr-3 rtl:hx-pl-2">&lt;div class="hx-select-none hx-text-xl" style="font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';">ℹ️&lt;/div>&lt;/div>
+&lt;div class="hx-w-full hx-min-w-0 hx-leading-7">
+&lt;div class="hx-mt-6 hx-leading-7 first:hx-mt-0">&lt;strong>接口变量可以存储任何实现了该接口的变量&lt;/strong>。&lt;/div>
+&lt;/div>
+&lt;/div>
+&lt;p>Go 中最常见的 &lt;code>Reader&lt;/code> 和 &lt;code>Writer&lt;/code> 接口：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">type&lt;/span> &lt;span class="nx">Reader&lt;/span> &lt;span class="kd">interface&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">Read&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">p&lt;/span> &lt;span class="p">[]&lt;/span>&lt;span class="kt">byte&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="nx">n&lt;/span> &lt;span class="kt">int&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">err&lt;/span> &lt;span class="kt">error&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">type&lt;/span> &lt;span class="nx">Writer&lt;/span> &lt;span class="kd">interface&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">Write&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">p&lt;/span> &lt;span class="p">[]&lt;/span>&lt;span class="kt">byte&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="nx">n&lt;/span> &lt;span class="kt">int&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">err&lt;/span> &lt;span class="kt">error&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>接下来，就是接口之间的各种转换和赋值了：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">var&lt;/span> &lt;span class="nx">r&lt;/span> &lt;span class="nx">io&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Reader&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nx">tty&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">err&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">os&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">OpenFile&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;/Users/s/Desktop/test&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">os&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">O_RDWR&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">if&lt;/span> &lt;span class="nx">err&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="kc">nil&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="kc">nil&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">err&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nx">r&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">tty&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;ol>
+&lt;li>&lt;code>io.Reader&lt;/code> 是 &lt;code>r&lt;/code> 的静态类型。它的动态类型为 &lt;code>nil&lt;/code>。&lt;/li>
+&lt;li>&lt;code>r = tty&lt;/code> 将 &lt;code>r&lt;/code> 的动态类型变成 &lt;code>*os.File&lt;/code>。&lt;/li>
+&lt;/ol>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/go-interface-reflect.png" alt="go-interface-reflect" loading="lazy" />&lt;/p>
+&lt;p>&lt;code>*os.File&lt;/code> 其实还实现了 &lt;code>io.Writer&lt;/code> 接口：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">var&lt;/span> &lt;span class="nx">w&lt;/span> &lt;span class="nx">io&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Writer&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nx">w&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">r&lt;/span>&lt;span class="p">.(&lt;/span>&lt;span class="nx">io&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Writer&lt;/span>&lt;span class="p">)&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>之所以用断言，而不能直接赋值，是因为 &lt;code>r&lt;/code> 的&lt;strong>静态类型&lt;/strong>是 &lt;code>io.Reader&lt;/code>，并没有实现 &lt;code>io.Writer&lt;/code> 接口。断言能否成功，看 &lt;code>r&lt;/code> 的&lt;strong>动态类型&lt;/strong>是否符合要求。&lt;/p>
+&lt;h3>空接口类型&lt;span class="hx-absolute -hx-mt-20" id="空接口类型">&lt;/span>
+&lt;a href="#%e7%a9%ba%e6%8e%a5%e5%8f%a3%e7%b1%bb%e5%9e%8b" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">var&lt;/span> &lt;span class="nx">empty&lt;/span> &lt;span class="kd">interface&lt;/span>&lt;span class="p">{}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nx">empty&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">r&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/go-empty-interface.png" alt="go-empty-interface" loading="lazy" />&lt;/p>
+&lt;p>由于 &lt;code>empty&lt;/code> 是一个空接口，因此所有的类型都实现了它，&lt;code>w&lt;/code> 可以直接赋给它，不需要执行断言操作。&lt;/p>
+&lt;h2>reflect 包&lt;span class="hx-absolute -hx-mt-20" id="reflect-包">&lt;/span>
+&lt;a href="#reflect-%e5%8c%85" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>反射的相关函数在 &lt;code>reflect&lt;/code> 包中。&lt;code>reflect&lt;/code> 包里定义了一个接口和一个结构体，即 &lt;code>reflect.Type&lt;/code> 和 &lt;code>reflect.Value&lt;/code>&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>reflect.Type&lt;/code> 是一个接口，主要提供关于类型相关的信息，所以它和 &lt;code>_type&lt;/code> 关联比较紧密；&lt;/li>
+&lt;li>&lt;code>reflect.Value&lt;/code> 是一个一个结构体变量，包含类型信息以及实际值。结合 &lt;code>_type&lt;/code> 和 &lt;code>data&lt;/code> 两者，因此可以用来获取甚至改变类型的值。&lt;/li>
+&lt;li>&lt;code>func TypeOf(i interface{}) Type&lt;/code> 函数可以用来获取 &lt;code>reflect.Type&lt;/code>。&lt;/li>
+&lt;li>&lt;code>func ValueOf(i interface{}) Value&lt;/code> 函数可以用来获取 &lt;code>reflect.Value&lt;/code>。&lt;/li>
+&lt;/ul>
+&lt;h3>TypeOf&lt;span class="hx-absolute -hx-mt-20" id="typeof">&lt;/span>
+&lt;a href="#typeof" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>reflect.TypeOf&lt;/code> 获取值的类型信息。&lt;/p>
+&lt;p>&lt;code>reflect.TypeOf&lt;/code> 接受任意的 &lt;code>interface{}&lt;/code> 类型, 并以返回其动态类型 &lt;code>reflect.Type&lt;/code>：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="nx">t&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">reflect&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">TypeOf&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">3&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="c1">// a reflect.Type
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">t&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">String&lt;/span>&lt;span class="p">())&lt;/span> &lt;span class="c1">// &amp;#34;int&amp;#34;
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">t&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="c1">// &amp;#34;int&amp;#34;
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">type&lt;/span> &lt;span class="nx">X&lt;/span> &lt;span class="kt">int&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">main&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="kd">var&lt;/span> &lt;span class="nx">a&lt;/span> &lt;span class="nx">X&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="mi">20&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">t&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">reflect&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">TypeOf&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">a&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">t&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Name&lt;/span>&lt;span class="p">(),&lt;/span> &lt;span class="nx">t&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Kind&lt;/span>&lt;span class="p">())&lt;/span> &lt;span class="c1">// X int
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>上面的代码，&lt;strong>注意区分 &lt;code>Type&lt;/code> 和 &lt;code>Kind&lt;/code>，前者表示真实类型（静态类型），后者表示底层类型（动态类型）&lt;/strong>。所以在判断类型时，要选择正确的方式。&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">type&lt;/span> &lt;span class="nx">X&lt;/span> &lt;span class="kt">int&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">type&lt;/span> &lt;span class="nx">Y&lt;/span> &lt;span class="kt">int&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">main&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="kd">var&lt;/span> &lt;span class="nx">a&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">b&lt;/span> &lt;span class="nx">X&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="mi">10&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">20&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="kd">var&lt;/span> &lt;span class="nx">c&lt;/span> &lt;span class="nx">Y&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="mi">30&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">ta&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">tb&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">tc&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">reflect&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">TypeOf&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">a&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="nx">reflect&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">TypeOf&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">b&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="nx">reflect&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">TypeOf&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">c&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">ta&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="nx">tb&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">ta&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="nx">tc&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="c1">// true false
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">ta&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Kind&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="nx">tc&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Kind&lt;/span>&lt;span class="p">())&lt;/span> &lt;span class="c1">// true
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h4>原理&lt;span class="hx-absolute -hx-mt-20" id="原理">&lt;/span>
+&lt;a href="#%e5%8e%9f%e7%90%86" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>&lt;code>TypeOf&lt;/code> 源码：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">TypeOf&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">i&lt;/span> &lt;span class="kd">interface&lt;/span>&lt;span class="p">{})&lt;/span> &lt;span class="nx">Type&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">eface&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="nx">emptyInterface&lt;/span>&lt;span class="p">)(&lt;/span>&lt;span class="nx">unsafe&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Pointer&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">i&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="nf">toType&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">eface&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">typ&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">toType&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">t&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">rtype&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="nx">Type&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">t&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="kc">nil&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="kc">nil&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="nx">t&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;ul>
+&lt;li>&lt;code>emptyInterface&lt;/code> 和上面提到的 &lt;code>eface&lt;/code>是一回事，并且在不同的源码包：前者在 &lt;code>reflect&lt;/code> 包，后者在 &lt;code>runtime&lt;/code> 包&lt;/li>
+&lt;li>&lt;code>eface.typ&lt;/code> 就是动态类型。&lt;/li>
+&lt;li>&lt;code>toType&lt;/code> 只是做了一个类型转换。&lt;/li>
+&lt;/ul>
+&lt;h3>ValueOf&lt;span class="hx-absolute -hx-mt-20" id="valueof">&lt;/span>
+&lt;a href="#valueof" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>reflect.ValueOf&lt;/code> 专注于对象实例数据读写。&lt;/p>
+&lt;p>&lt;code>reflect.ValueOf&lt;/code> 接受任意的 &lt;code>interface{}&lt;/code> 类型, 并以 &lt;code>reflect.Value&lt;/code> 形式返回其动态值：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="nx">v&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">reflect&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">ValueOf&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">3&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="c1">// a reflect.Value
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">v&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="c1">// &amp;#34;3&amp;#34;
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Printf&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;%v\n&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">v&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="c1">// &amp;#34;3&amp;#34;
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">v&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">String&lt;/span>&lt;span class="p">())&lt;/span> &lt;span class="c1">// &amp;lt;int Value&amp;gt;
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">type&lt;/span> &lt;span class="nx">Person&lt;/span> &lt;span class="kd">struct&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">Name&lt;/span> &lt;span class="kt">string&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">Age&lt;/span> &lt;span class="kt">int&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nx">p&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">Person&lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="s">&amp;#34;Alice&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">30&lt;/span>&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nx">v&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">reflect&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">ValueOf&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">p&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">v&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Field&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">).&lt;/span>&lt;span class="nf">String&lt;/span>&lt;span class="p">())&lt;/span> &lt;span class="c1">// 输出: Alice
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">v&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Field&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">).&lt;/span>&lt;span class="nf">Int&lt;/span>&lt;span class="p">())&lt;/span> &lt;span class="c1">// 输出: 30
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">v&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">String&lt;/span>&lt;span class="p">())&lt;/span> &lt;span class="c1">// &amp;lt;main.Person Value&amp;gt;
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h3>DeepEqual&lt;span class="hx-absolute -hx-mt-20" id="deepequal">&lt;/span>
+&lt;a href="#deepequal" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">DeepEqual&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">x&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">y&lt;/span> &lt;span class="kd">interface&lt;/span>&lt;span class="p">{})&lt;/span> &lt;span class="kt">bool&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;code>reflect.DeepEqual&lt;/code> 函数的参数是两个 &lt;code>interface&lt;/code>，也就是可以输入任意类型，输出 &lt;code>true&lt;/code> 或者 &lt;code>flase&lt;/code> &lt;strong>表示输入的两个变量是否是“深度”相等&lt;/strong>。&lt;/p>
+&lt;p>&lt;strong>如果是不同的类型，即使是底层类型相同，相应的值也相同，那么两者也不是“深度”相等&lt;/strong>。&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">type&lt;/span> &lt;span class="nx">MyInt&lt;/span> &lt;span class="kt">int&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">type&lt;/span> &lt;span class="nx">YourInt&lt;/span> &lt;span class="kt">int&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">main&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">m&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nf">MyInt&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">y&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nf">YourInt&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">reflect&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">DeepEqual&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">m&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">y&lt;/span>&lt;span class="p">))&lt;/span> &lt;span class="c1">// false
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;code>m, y&lt;/code> 底层都是 &lt;code>int&lt;/code>，而且值都是 1，但是两者静态类型不同，前者是 &lt;code>MyInt&lt;/code>，后者是 &lt;code>YourInt&lt;/code>，因此两者不是“深度”相等。&lt;/p>
+&lt;p>&lt;code>DeepEqual&lt;/code> 的比较情形：&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>类型&lt;/th>
+&lt;th>深度相等情形&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>Array&lt;/code>&lt;/td>
+&lt;td>相同索引处的元素“深度”相等&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>Struct&lt;/code>&lt;/td>
+&lt;td>相应字段，包含导出和不导出，“深度”相等&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>Func&lt;/code>&lt;/td>
+&lt;td>只有两者都是 &lt;code>nil&lt;/code> 时&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>Interfac&lt;/code>e&lt;/td>
+&lt;td>两者存储的具体值“深度”相等&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>Map&lt;/code>&lt;/td>
+&lt;td>1、都为 &lt;code>nil&lt;/code>；2、非空、长度相等，指向同一个 &lt;code>map&lt;/code> 实体对象，或者相应的 key 指向的 value “深度”相等&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>Pointer&lt;/code>&lt;/td>
+&lt;td>1、使用 &lt;code>==&lt;/code> 比较的结果相等；2、指向的实体“深度”相等&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>Slice&lt;/code>&lt;/td>
+&lt;td>1、都为 &lt;code>nil&lt;/code>；2、非空、长度相等，首元素指向同一个底层数组的相同元素，即 &lt;code>&amp;amp;x[0] == &amp;amp;y[0]&lt;/code> 或者 相同索引处的元素“深度”相等&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>numbers&lt;/code>, &lt;code>bools&lt;/code>, &lt;code>strings&lt;/code>, and &lt;code>channels&lt;/code>&lt;/td>
+&lt;td>使用 &lt;code>==&lt;/code> 比较的结果为真&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>一般情况下，&lt;code>DeepEqual&lt;/code> 的实现只需要递归地调用 &lt;code>==&lt;/code> 就可以比较两个变量是否是真的“深度”相等。&lt;/p>
+&lt;p>有一些异常情况：比如 &lt;code>func&lt;/code> 类型是不可比较的类型，只有在两个 &lt;code>func&lt;/code> 类型都是 &lt;code>nil&lt;/code> 的情况下，才是“深度”相等；&lt;code>float&lt;/code> 类型，由于精度的原因，也是不能使用 &lt;code>==&lt;/code> 比较的；包含 &lt;code>func&lt;/code> 类型或者 &lt;code>float&lt;/code> 类型的 &lt;code>struct&lt;/code>，&lt;code>interface&lt;/code>， &lt;code>array&lt;/code> 等。&lt;/p>
+&lt;h2>反射的三大定律&lt;span class="hx-absolute -hx-mt-20" id="反射的三大定律">&lt;/span>
+&lt;a href="#%e5%8f%8d%e5%b0%84%e7%9a%84%e4%b8%89%e5%a4%a7%e5%ae%9a%e5%be%8b" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ol>
+&lt;li>反射是一种检测存储在 &lt;code>interface&lt;/code> 中的类型和值机制。这可以通过 &lt;code>TypeOf&lt;/code> 函数和 &lt;code>ValueOf&lt;/code> 函数得到。&lt;/li>
+&lt;li>第二条实际上和第一条是相反的机制，它将 &lt;code>ValueOf&lt;/code> 的返回值通过 &lt;code>Interface()&lt;/code> 函数反向转变成 &lt;code>interface&lt;/code> 变量。&lt;/li>
+&lt;li>如果需要操作一个反射变量，那么它必须是可设置的。&lt;/li>
+&lt;/ol></description></item><item><title>指针</title><link>https://shipengqi.github.io/golang-learn/docs/basic/09_pointer/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/basic/09_pointer/</guid><description>
 &lt;p>&lt;strong>指针和内存地址不能混为一谈&lt;/strong>。内存地址是内存中每个字节单元的唯一编号，而指针是一个实体。指针也会分配内存空间，相当于一个保存内存地址的整形变量。&lt;/p>
 &lt;h2>指针的限制&lt;span class="hx-absolute -hx-mt-20" id="指针的限制">&lt;/span>
 &lt;a href="#%e6%8c%87%e9%92%88%e7%9a%84%e9%99%90%e5%88%b6" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;h3>指针不能参与运算&lt;span class="hx-absolute -hx-mt-20" id="指针不能参与运算">&lt;/span>
@@ -926,7 +1514,31 @@ title="Copy code"
 &lt;li>任何类型的指针 &lt;code>*T&lt;/code> 可以和 &lt;code>unsafe.Pointer&lt;/code> 相互转换。&lt;/li>
 &lt;li>&lt;code>uintptr&lt;/code> 可以和 &lt;code>unsafe.Pointer&lt;/code> 相互转换。&lt;/li>
 &lt;/ul>
-&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/pointer.png" alt="pointer" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/pointer.png" alt="pointer" loading="lazy" />&lt;/p>
+&lt;div class="hx-overflow-x-auto hx-mt-6 hx-flex hx-rounded-lg hx-border hx-py-2 ltr:hx-pr-4 rtl:hx-pl-4 contrast-more:hx-border-current contrast-more:dark:hx-border-current hx-border-blue-200 hx-bg-blue-100 hx-text-blue-900 dark:hx-border-blue-200/30 dark:hx-bg-blue-900/30 dark:hx-text-blue-200">
+&lt;div class="ltr:hx-pl-3 ltr:hx-pr-2 rtl:hx-pr-3 rtl:hx-pl-2">&lt;div class="hx-select-none hx-text-xl" style="font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';">ℹ️&lt;/div>&lt;/div>
+&lt;div class="hx-w-full hx-min-w-0 hx-leading-7">
+&lt;div class="hx-mt-6 hx-leading-7 first:hx-mt-0">&lt;p>&lt;strong>&lt;code>unsafe.Pointer&lt;/code> 不能直接进行数学运算，但可以把它转换成 &lt;code>uintptr&lt;/code>，对 &lt;code>uintptr&lt;/code> 类型进行数学运算，再转换成 &lt;code>unsafe.Pointer&lt;/code> 类型&lt;/strong>。&lt;/p>
+&lt;p>例如 &lt;code>string&lt;/code> 和 &lt;code>byte[]&lt;/code> 类型的转换。实现零拷贝。&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">string2bytes&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">s&lt;/span> &lt;span class="kt">string&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">[]&lt;/span>&lt;span class="kt">byte&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="p">[]&lt;/span>&lt;span class="kt">byte&lt;/span>&lt;span class="p">)(&lt;/span>&lt;span class="nx">unsafe&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Pointer&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">s&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">bytes2string&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">b&lt;/span> &lt;span class="p">[]&lt;/span>&lt;span class="kt">byte&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="kt">string&lt;/span>&lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="kt">string&lt;/span>&lt;span class="p">)(&lt;/span>&lt;span class="nx">unsafe&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Pointer&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">b&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;/div>
+&lt;/div>
+&lt;/div>
 &lt;p>指针类型转换示例：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">package&lt;/span> &lt;span class="nx">main&lt;/span>

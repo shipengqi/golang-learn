@@ -1,1 +1,394 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Go Learning – 🔍 底层原理</title><link>https://shipengqi.github.io/golang-learn/docs/advance/</link><description>Recent content in 🔍 底层原理 on Go Learning</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><atom:link href="https://shipengqi.github.io/golang-learn/docs/advance/index.xml" rel="self" type="application/rss+xml"/></channel></rss>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Go Learning – 🔍 底层原理</title><link>https://shipengqi.github.io/golang-learn/docs/advance/</link><description>Recent content in 🔍 底层原理 on Go Learning</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><atom:link href="https://shipengqi.github.io/golang-learn/docs/advance/index.xml" rel="self" type="application/rss+xml"/><item><title>前置知识</title><link>https://shipengqi.github.io/golang-learn/docs/advance/pre/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/advance/pre/</guid><description/></item><item><title>调度器</title><link>https://shipengqi.github.io/golang-learn/docs/advance/scheduler/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/advance/scheduler/</guid><description>
+&lt;p>goroutine 是 Go 实现的用户态线程，主要用来解决操作系统线程两个方面的问题：&lt;/p>
+&lt;ol>
+&lt;li>创建和切换太重：操作系统线程的创建和切换都需要进入内核，而进入内核所消耗的性能代价比较高，开销较大；&lt;/li>
+&lt;li>内存使用太重：一方面，为了尽量避免极端情况下操作系统线程栈的溢出，内核在创建操作系统线程时默认会为其分配一个较大的栈内存（虚拟地址空间，内核并不会一开始就分配这么多的物理内存），然而在绝大多数情况下，系统线程远远用不了这么多内存，这导致了浪费；另一方面，栈内存空间一旦创建和初始化完成之后其大小就不能再有变化，这决定了在某些特殊场景下系统线程栈还是有溢出的风险。&lt;/li>
+&lt;/ol>
+&lt;p>用户态的 goroutine 则轻量得多：&lt;/p>
+&lt;ol>
+&lt;li>goroutine 是用户态线程，其&lt;strong>创建和切换都在用户代码中完成而无需进入操作系统内核&lt;/strong>，所以其开销要远远小于系统线程的创建和切换；&lt;/li>
+&lt;li>goroutine 启动时默认栈大小只有 2k，这在多数情况下已经够用了，即使不够用，goroutine 的栈也会自动扩大，同时，如果栈太大了过于浪费它还能自动收缩，这样既没有栈溢出的风险，也不会造成栈内存空间的大量浪费。&lt;/li>
+&lt;/ol>
+&lt;h2>Go 调度的本质&lt;span class="hx-absolute -hx-mt-20" id="go-调度的本质">&lt;/span>
+&lt;a href="#go-%e8%b0%83%e5%ba%a6%e7%9a%84%e6%9c%ac%e8%b4%a8" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Go 调度的本质是一个&lt;strong>生产-消费流程&lt;/strong>。&lt;code>m&lt;/code> 拿到 goroutine 并运行它的过程就是一个消费过程。&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/scheduler-queue.png" alt="scheduler-queue" loading="lazy" />&lt;/p>
+&lt;p>生产出的 goroutine 就放在可运行队列中。可运行队列是分为三级：&lt;/p>
+&lt;ol>
+&lt;li>&lt;code>runnext&lt;/code>：实际上只能指向一个 goroutine。&lt;/li>
+&lt;li>&lt;code>local&lt;/code>：每个 &lt;code>p&lt;/code> 都有一个本地队列&lt;/li>
+&lt;li>&lt;code>global&lt;/code>：全局队列&lt;/li>
+&lt;/ol>
+&lt;p>&lt;strong>先看 runnext，再看 local queue，再看 global queue。当然，如果实在找不到，就去其他 &lt;code>p&lt;/code> 去偷&lt;/strong>。&lt;/p>
+&lt;p>&lt;strong>goroutine 放到哪个可运行队列？&lt;/strong>&lt;/p>
+&lt;ol>
+&lt;li>&lt;strong>如果 &lt;code>runnext&lt;/code> 为空，那么 goroutine 就会顺利地放入 &lt;code>runnext&lt;/code>，&lt;code>runnext&lt;/code> 优先级最高，最先被消费&lt;/strong>。&lt;/li>
+&lt;li>&lt;strong>&lt;code>runnext&lt;/code> 不为空，那就先负责把 &lt;code>runnext&lt;/code> 上的 old goroutine 踢走，再把 new goroutine 放上来&lt;/strong>。&lt;/li>
+&lt;li>&lt;code>runnext&lt;/code> 中被踢走的 goroutine，&lt;strong>在 local queue 不满时，则将它放入 local queue&lt;/strong>；否则意味着 &lt;strong>local queue 已满&lt;/strong>，需要减负，会将&lt;strong>它和当前 &lt;code>p&lt;/code> 的 local queue 中的一半 goroutine 一起放到 global queue 中&lt;/strong>。&lt;/li>
+&lt;/ol>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">package&lt;/span> &lt;span class="nx">main&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="p">(&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s">&amp;#34;fmt&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s">&amp;#34;runtime&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s">&amp;#34;time&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">main&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">runtime&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">GOMAXPROCS&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="nx">i&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">;&lt;/span> &lt;span class="nx">i&lt;/span> &lt;span class="p">&amp;lt;&lt;/span> &lt;span class="mi">10&lt;/span>&lt;span class="p">;&lt;/span> &lt;span class="nx">i&lt;/span>&lt;span class="o">++&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">i&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">i&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">go&lt;/span> &lt;span class="kd">func&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">i&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="kd">var&lt;/span> &lt;span class="nx">ch&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nb">make&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kd">chan&lt;/span> &lt;span class="kt">int&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="o">&amp;lt;-&lt;/span> &lt;span class="nx">ch&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 输出
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 9
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 0
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 1
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 2
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 3
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 4
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 5
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 6
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 7
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 8
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// fatal error: all goroutines are asleep - deadlock!
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// goroutine 1 [chan receive]:
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// main.main()
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// C:/Code/my-repos/example.v1/advance/scheduler/v1/main.go:18 +0x6c
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>输出的顺序：&lt;code>9, 0, 1, 2, 3, 4, 5, 6, 7, 8&lt;/code>。这就是因为只有一个 &lt;code>p&lt;/code>，每次生产出来的 goroutine 都会第一时间塞到 &lt;code>runnext&lt;/code>，而 &lt;code>i&lt;/code> 从 &lt;code>1&lt;/code> 开始，&lt;code>runnext&lt;/code> 已经有 goroutine 在了，所以这时会把 old goroutine 移到 &lt;code>p&lt;/code> 的本队队列中去，再把 new goroutine 放到 &lt;code>runnext&lt;/code>。之后会重复这个过程。&lt;/p>
+&lt;p>因此这后当一次 &lt;code>i&lt;/code> 为 &lt;code>9&lt;/code> 时，新 goroutine 被塞到 &lt;code>runnext&lt;/code>，其余 goroutine 都在本地队列。&lt;/p>
+&lt;p>之后，main goroutine 执行了一个读 channel 的语句，这是一个好的调度时机：main goroutine 挂起，运行 &lt;code>p&lt;/code> 的 &lt;code>runnext&lt;/code> 和本地可运行队列里的 gorotuine。&lt;/p></description></item><item><title>内存管理</title><link>https://shipengqi.github.io/golang-learn/docs/advance/mm/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/advance/mm/</guid><description/></item><item><title>系统监控</title><link>https://shipengqi.github.io/golang-learn/docs/advance/05_sysmon/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/advance/05_sysmon/</guid><description>
+&lt;p>Go 的系统监控 (sysmon) 是一个独立的特殊线程，它在后台持续运行，负责处理各种运行时系统的维护任务和监控工作。它在内部启动了一个不会中止的循环，在循环的内部会轮询网络、抢占长期运行或者处于系统调用的 goroutine 以及触发垃圾回收，通过这些行为，它能够让系统的运行状态变得更健康。&lt;/p>
+&lt;p>&lt;code>runtime.main&lt;/code> 函数：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="k">if&lt;/span> &lt;span class="nx">haveSysmon&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 现在执行的是 main goroutine，所以使用的是 main goroutine 的栈，需要切换到 g0 栈去执行 newm()
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nf">systemstack&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kd">func&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 创建专用监控线程，该线程独立于调度器，不需要跟 p 关联即可运行
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nf">newm&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">sysmon&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="kc">nil&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="o">-&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">})&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h2>监控循环&lt;span class="hx-absolute -hx-mt-20" id="监控循环">&lt;/span>
+&lt;a href="#%e7%9b%91%e6%8e%a7%e5%be%aa%e7%8e%af" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// runtime/proc.go
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="kd">func&lt;/span> &lt;span class="nf">sysmon&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">lock&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">sched&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">lock&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">sched&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">nmsys&lt;/span>&lt;span class="o">++&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">checkdead&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="c1">// 检查是否存在死锁
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nf">unlock&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">sched&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">lock&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">lasttrace&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">int64&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">idle&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="c1">// how many cycles in succession we had not wokeup somebody
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">delay&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">uint32&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 动态调整休眠时间
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nx">idle&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">delay&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="mi">20&lt;/span> &lt;span class="c1">// 20μs
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="p">}&lt;/span> &lt;span class="k">else&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nx">idle&lt;/span> &lt;span class="p">&amp;gt;&lt;/span> &lt;span class="mi">50&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">delay&lt;/span> &lt;span class="o">*=&lt;/span> &lt;span class="mi">2&lt;/span> &lt;span class="c1">// 指数退避
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">delay&lt;/span> &lt;span class="p">&amp;gt;&lt;/span> &lt;span class="mi">10&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="mi">1000&lt;/span> &lt;span class="p">{&lt;/span> &lt;span class="c1">// 上限 10ms
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">delay&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="mi">10&lt;/span> &lt;span class="o">*&lt;/span> &lt;span class="mi">1000&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">usleep&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">delay&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>系统监控在每次循环开始时都会通过 &lt;code>usleep&lt;/code> 挂起当前线程，该函数的参数是微秒。&lt;/p>
+&lt;ol>
+&lt;li>初始的休眠时间是 20μs；&lt;/li>
+&lt;li>最长的休眠时间是 10ms；&lt;/li>
+&lt;li>当系统监控在 50 个循环中都没有唤醒 goroutine 时，休眠时间在每个循环都会倍增；&lt;/li>
+&lt;/ol>
+&lt;p>它除了会检查死锁之外，还会在循环中完成以下的工作：&lt;/p>
+&lt;ul>
+&lt;li>运行计时器 — 获取下一个需要被触发的计时器；&lt;/li>
+&lt;li>轮询网络 — 获取需要处理的到期文件描述符；&lt;/li>
+&lt;li>抢占处理器 — 抢占运行时间较长的或者处于系统调用的 goroutine；&lt;/li>
+&lt;li>垃圾回收 — 在满足条件时触发垃圾收集回收内存；&lt;/li>
+&lt;/ul>
+&lt;h3>运行计时器&lt;span class="hx-absolute -hx-mt-20" id="运行计时器">&lt;/span>
+&lt;a href="#%e8%bf%90%e8%a1%8c%e8%ae%a1%e6%97%b6%e5%99%a8" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>在系统监控的循环中，通过 &lt;code>runtime.nanotime&lt;/code> 和 &lt;code>runtime.timeSleepUntil&lt;/code> 获取当前时间和计时器下一次需要唤醒的时间。&lt;/p>
+&lt;p>系统监控再下面的情况下会陷入休眠：&lt;/p>
+&lt;ol>
+&lt;li>&lt;strong>当前调度器需要执行垃圾回收&lt;/strong>。&lt;/li>
+&lt;li>所有处理器都处于闲置状态时。&lt;/li>
+&lt;li>没有需要触发的计时器。&lt;/li>
+&lt;/ol>
+&lt;p>休眠的时间会依据强制 GC 的周期 &lt;code>forcegcperiod&lt;/code> 和计时器下次触发的时间确定。&lt;/p>
+&lt;h3>轮询网络&lt;span class="hx-absolute -hx-mt-20" id="轮询网络">&lt;/span>
+&lt;a href="#%e8%bd%ae%e8%af%a2%e7%bd%91%e7%bb%9c" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>如果上一次轮询网络已经过去了 10ms，那么系统监控还会在循环中轮询网络，检查是否有待执行的文件描述符。&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// runtime/proc.go
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="kd">func&lt;/span> &lt;span class="nf">sysmon&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">for&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">lastpoll&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">int64&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">atomic&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Load64&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">sched&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">lastpoll&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nf">netpollinited&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="o">&amp;amp;&amp;amp;&lt;/span> &lt;span class="nx">lastpoll&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="o">&amp;amp;&amp;amp;&lt;/span> &lt;span class="nx">lastpoll&lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="mi">10&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="mi">1000&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="mi">1000&lt;/span> &lt;span class="p">&amp;lt;&lt;/span> &lt;span class="nx">now&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">atomic&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Cas64&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">sched&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">lastpoll&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nb">uint64&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">lastpoll&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="nb">uint64&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">now&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">list&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nf">netpoll&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="p">!&lt;/span>&lt;span class="nx">list&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">empty&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">incidlelocked&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">injectglist&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">list&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">incidlelocked&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>非阻塞地调用 &lt;code>runtime.netpoll&lt;/code> 检查待执行的文件描述符并通过 &lt;code>runtime.injectglist&lt;/code> 将所有处于就绪状态的 goroutine 加入全局运行队列中：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">injectglist&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">glist&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">gList&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">glist&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">empty&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">lock&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">sched&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">lock&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="kd">var&lt;/span> &lt;span class="nx">n&lt;/span> &lt;span class="kt">int&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="nx">n&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">;&lt;/span> &lt;span class="p">!&lt;/span>&lt;span class="nx">glist&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">empty&lt;/span>&lt;span class="p">();&lt;/span> &lt;span class="nx">n&lt;/span>&lt;span class="o">++&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">gp&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">glist&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">pop&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">casgstatus&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">gp&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">_Gwaiting&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">_Grunnable&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">globrunqput&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">gp&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">unlock&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">sched&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">lock&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="p">;&lt;/span> &lt;span class="nx">n&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="o">&amp;amp;&amp;amp;&lt;/span> &lt;span class="nx">sched&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">npidle&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">;&lt;/span> &lt;span class="nx">n&lt;/span>&lt;span class="o">--&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">startm&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kc">nil&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="kc">false&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="o">*&lt;/span>&lt;span class="nx">glist&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">gList&lt;/span>&lt;span class="p">{}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>该函数会将所有 goroutine 的状态从 &lt;code>_Gwaiting&lt;/code> 切换至 &lt;code>_Grunnable&lt;/code> 并加入全局运行队列等待运行，如果当前程序中存在空闲的 &lt;code>p&lt;/code>，会通过 &lt;code>runtime.startm&lt;/code> 启动线程来执行这些任务。&lt;/p>
+&lt;h3>抢占处理&lt;span class="hx-absolute -hx-mt-20" id="抢占处理">&lt;/span>
+&lt;a href="#%e6%8a%a2%e5%8d%a0%e5%a4%84%e7%90%86" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>系统监控会在循环中调用 &lt;code>runtime.retake&lt;/code> 抢占处于运行或者系统调用中的 &lt;code>p&lt;/code>：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// runtime/proc.go
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="kd">func&lt;/span> &lt;span class="nf">sysmon&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">for&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// retake P&amp;#39;s blocked in syscalls
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// and preempt long running G&amp;#39;s
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nf">retake&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">now&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">idle&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="mi">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span> &lt;span class="k">else&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">idle&lt;/span>&lt;span class="o">++&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;code>reatke&lt;/code> 函数：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">type&lt;/span> &lt;span class="nx">sysmontick&lt;/span> &lt;span class="kd">struct&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">schedtick&lt;/span> &lt;span class="kt">uint32&lt;/span> &lt;span class="c1">// p 的调度次数
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">schedwhen&lt;/span> &lt;span class="kt">int64&lt;/span> &lt;span class="c1">// p 的上次调度时间
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">syscalltick&lt;/span> &lt;span class="kt">uint32&lt;/span> &lt;span class="c1">// 系统调用次数
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">syscallwhen&lt;/span> &lt;span class="kt">int64&lt;/span> &lt;span class="c1">// 上次系统调用时间
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">retake&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">now&lt;/span> &lt;span class="kt">int64&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="kt">uint32&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">n&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="mi">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// Prevent allp slice changes. This lock will be completely
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// uncontended unless we&amp;#39;re already stopping the world.
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nf">lock&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">allpLock&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 遍历所有的 p
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">for&lt;/span> &lt;span class="nx">i&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">;&lt;/span> &lt;span class="nx">i&lt;/span> &lt;span class="p">&amp;lt;&lt;/span> &lt;span class="nb">len&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">allp&lt;/span>&lt;span class="p">);&lt;/span> &lt;span class="nx">i&lt;/span>&lt;span class="o">++&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">pp&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">allp&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="nx">i&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">pp&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="kc">nil&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// This can happen if procresize has grown
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// allp but not yet created new Ps.
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">continue&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">pd&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">pp&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">sysmontick&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">s&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">pp&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">status&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">sysretake&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="kc">false&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 当 p 处于 _Prunning 或者 _Psyscall 状态时，如果上一次触发调度的时间已经过去了 10ms，通过 runtime.preemptone 抢占当前 p
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nx">s&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="nx">_Prunning&lt;/span> &lt;span class="o">||&lt;/span> &lt;span class="nx">s&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="nx">_Psyscall&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// Preempt G if it&amp;#39;s running on the same schedtick for
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// too long. This could be from a single long-running
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// goroutine or a sequence of goroutines run via
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// runnext, which share a single schedtick time slice.
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">t&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">int64&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">pp&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">schedtick&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="c1">// schedtick 表示 p 的调度次数
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nb">int64&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">pd&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">schedtick&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="nx">t&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">pd&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">schedtick&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nb">uint32&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">t&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">pd&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">schedwhen&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">now&lt;/span> &lt;span class="c1">// schedwhen 表示 p 上次调度时间
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="p">}&lt;/span> &lt;span class="k">else&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nx">pd&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">schedwhen&lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="nx">forcePreemptNS&lt;/span> &lt;span class="o">&amp;lt;=&lt;/span> &lt;span class="nx">now&lt;/span> &lt;span class="p">{&lt;/span> &lt;span class="c1">// 上一次触发调度的时间已经超过了 10ms
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nf">preemptone&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">pp&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// In case of syscall, preemptone() doesn&amp;#39;t
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// work, because there is no M wired to P.
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">sysretake&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="kc">true&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 当 p 处于 _Psyscall 状态时
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nx">s&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="nx">_Psyscall&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// On the one hand we don&amp;#39;t want to retake Ps if there is no other work to do,
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// but on the other hand we want to retake them eventually
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// because they can prevent the sysmon thread from deep sleep.
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 判断当亲 p 的运行队列是否为空
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 是否存在空闲的 p
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 系统调用时间是否超过了 10ms
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nf">runqempty&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">pp&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">&amp;amp;&amp;amp;&lt;/span> &lt;span class="nx">sched&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">nmspinning&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Load&lt;/span>&lt;span class="p">()&lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="nx">sched&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">npidle&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Load&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">&amp;gt;&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="o">&amp;amp;&amp;amp;&lt;/span> &lt;span class="nx">pd&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">syscallwhen&lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="mi">10&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="mi">1000&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="mi">1000&lt;/span> &lt;span class="p">&amp;gt;&lt;/span> &lt;span class="nx">now&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">continue&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// Drop allpLock so we can take sched.lock.
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nf">unlock&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">allpLock&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// Need to decrement number of idle locked M&amp;#39;s
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// (pretending that one more is running) before the CAS.
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// Otherwise the M from which we retake can exit the syscall,
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// increment nmidle and report deadlock.
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nf">incidlelocked&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">trace&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nf">traceAcquire&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">atomic&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Cas&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">pp&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">status&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">s&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">_Pidle&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">trace&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">ok&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">trace&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">ProcSteal&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">pp&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="kc">false&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">traceRelease&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">trace&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">n&lt;/span>&lt;span class="o">++&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">pp&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">syscalltick&lt;/span>&lt;span class="o">++&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">handoffp&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">pp&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span> &lt;span class="k">else&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nx">trace&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">ok&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">traceRelease&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">trace&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">incidlelocked&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">lock&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">allpLock&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">unlock&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">allpLock&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="nb">uint32&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">n&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;ol>
+&lt;li>当处 &lt;code>p&lt;/code> 处于 &lt;code>_Prunning&lt;/code> 或者 &lt;code>_Psyscall&lt;/code> 状态时，如果上一次触发调度的时间已经过去了 10ms，通过 &lt;code>runtime.preemptone&lt;/code> 抢占当前 &lt;code>p&lt;/code>；&lt;/li>
+&lt;li>当 &lt;code>p&lt;/code> 处于 &lt;code>_Psyscall&lt;/code> 状态时，在满足以下两种情况下会调用 &lt;code>runtime.handoffp&lt;/code> 让出 &lt;code>p&lt;/code> 的使用权：
+&lt;ul>
+&lt;li>&lt;strong>当 &lt;code>p&lt;/code> 的运行队列不为空或者不存在空闲的 &lt;code>p&lt;/code> 时&lt;/strong>（运行队列不为空说明还有 goroutine 等待运行；没有空闲的 &lt;code>p&lt;/code> 说明有点忙）；&lt;/li>
+&lt;li>&lt;strong>当系统调用时间超过了 10ms 时&lt;/strong>；&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>被抢占的 goroutine，状态从 &lt;code>Grunning&lt;/code> 变为 &lt;code>Grunnable&lt;/code>，然后被放回全局运行队列。&lt;/li>
+&lt;/ol>
+&lt;p>&lt;code>preemptone&lt;/code> 函数的主要流程：&lt;/p>
+&lt;ol>
+&lt;li>设置当前 goroutine 的抢占标志 &lt;code>gp.preempt&lt;/code> 为 &lt;code>true&lt;/code>；&lt;/li>
+&lt;li>异步抢占,发送 &lt;code>SIGURG&lt;/code> 信号;&lt;/li>
+&lt;li>信号处理程序保存上下文;&lt;/li>
+&lt;li>执行调度;&lt;/li>
+&lt;/ol>
+&lt;p>&lt;code>handoffp&lt;/code> 函数的主要流程：&lt;/p>
+&lt;ol>
+&lt;li>解除 &lt;code>p&lt;/code> 和 &lt;code>m&lt;/code> 的绑定关系，设置 &lt;code>p&lt;/code> 状态为&lt;code> _Pidle&lt;/code>；&lt;/li>
+&lt;li>启动一个新的 &lt;code>m&lt;/code>，绑定到 &lt;code>p&lt;/code> 上；&lt;/li>
+&lt;li>切换到新的 &lt;code>m&lt;/code> 运行，执行调度；&lt;/li>
+&lt;/ol>
+&lt;h4>信号抢占的流程&lt;span class="hx-absolute -hx-mt-20" id="信号抢占的流程">&lt;/span>
+&lt;a href="#%e4%bf%a1%e5%8f%b7%e6%8a%a2%e5%8d%a0%e7%9a%84%e6%b5%81%e7%a8%8b" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>sysmon(检测超时) → preemptone() → preemptM() → 发送 SIGURG →
+信号处理程序 → asyncPreempt → asyncPreempt2 → mcall(gopreempt_m) → 抢占 goroutine → 执行调度&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h3>垃圾回收&lt;span class="hx-absolute -hx-mt-20" id="垃圾回收">&lt;/span>
+&lt;a href="#%e5%9e%83%e5%9c%be%e5%9b%9e%e6%94%b6" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>在最后，系统监控还会决定是否需要触发强制垃圾回收，&lt;code>runtime.sysmon&lt;/code> 会构建 &lt;code>runtime.gcTrigger&lt;/code> 并调用 &lt;code>runtime.gcTrigger.test&lt;/code> 方法判断是否需要触发垃圾回收：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">sysmon&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">for&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nx">t&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="nx">gcTrigger&lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="nx">kind&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="nx">gcTriggerTime&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">now&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="nx">now&lt;/span>&lt;span class="p">});&lt;/span> &lt;span class="nx">t&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">test&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="o">&amp;amp;&amp;amp;&lt;/span> &lt;span class="nx">atomic&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Load&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">forcegc&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">idle&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">lock&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">forcegc&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">lock&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">forcegc&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">idle&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="mi">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="kd">var&lt;/span> &lt;span class="nx">list&lt;/span> &lt;span class="nx">gList&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">list&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">push&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">forcegc&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">g&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">injectglist&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">list&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">unlock&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">forcegc&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">lock&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>如果需要触发垃圾回收，会&lt;strong>将用于垃圾回收的 goroutine 加入全局队列，让调度器选择合适的 &lt;code>p&lt;/code> 去执行&lt;/strong>。&lt;/p></description></item></channel></rss>

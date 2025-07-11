@@ -1,0 +1,757 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Go Learning – 前置知识</title><link>https://shipengqi.github.io/golang-learn/docs/advance/pre/</link><description>Recent content in 前置知识 on Go Learning</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><atom:link href="https://shipengqi.github.io/golang-learn/docs/advance/pre/index.xml" rel="self" type="application/rss+xml"/><item><title>计算机内存和寄存器</title><link>https://shipengqi.github.io/golang-learn/docs/advance/pre/01_mem/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/advance/pre/01_mem/</guid><description>
+&lt;h2>计算机为什么需要内存&lt;span class="hx-absolute -hx-mt-20" id="计算机为什么需要内存">&lt;/span>
+&lt;a href="#%e8%ae%a1%e7%ae%97%e6%9c%ba%e4%b8%ba%e4%bb%80%e4%b9%88%e9%9c%80%e8%a6%81%e5%86%85%e5%ad%98" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>计算机是运行程序的载体，进程由可执行代码被执行后产生。那么计算机在运行程序的过程中为什么需要内存呢？&lt;/p>
+&lt;h3>代码的本质&lt;span class="hx-absolute -hx-mt-20" id="代码的本质">&lt;/span>
+&lt;a href="#%e4%bb%a3%e7%a0%81%e7%9a%84%e6%9c%ac%e8%b4%a8" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>简单来看代码主要包含两部分：&lt;/p>
+&lt;ul>
+&lt;li>指令部分：中央处理器 CPU 可执行的指令&lt;/li>
+&lt;li>数据部分：常量等&lt;/li>
+&lt;/ul>
+&lt;p>代码包含了指令，代码被转化为可执行二进制文件，被执行后加载到内存中，中央处理器 CPU 通过内存获取指令：&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/code-in-memory.png" alt="code-in-memory" loading="lazy" />&lt;/p>
+&lt;h3>程序的运行过程&lt;span class="hx-absolute -hx-mt-20" id="程序的运行过程">&lt;/span>
+&lt;a href="#%e7%a8%8b%e5%ba%8f%e7%9a%84%e8%bf%90%e8%a1%8c%e8%bf%87%e7%a8%8b" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>可执行代码文件被执行之后，代码中的待执行指令被加载到了内存当中。&lt;/p>
+&lt;p>CPU 执行指令可以简单的分为三步：&lt;/p>
+&lt;ol>
+&lt;li>取指：CPU 控制单元从内存中获取指令&lt;/li>
+&lt;li>译指：CPU 控制单元解析从内存中获取指令&lt;/li>
+&lt;li>执行：CPU 运算单元负责执行具体的指令操作&lt;/li>
+&lt;/ol>
+&lt;h3>内存的作用&lt;span class="hx-absolute -hx-mt-20" id="内存的作用">&lt;/span>
+&lt;a href="#%e5%86%85%e5%ad%98%e7%9a%84%e4%bd%9c%e7%94%a8" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;ul>
+&lt;li>暂存二进制可执行代码文件中的指令、预置数据(常量)等&lt;/li>
+&lt;li>暂存指令执行过程中的中间数据&lt;/li>
+&lt;li>等等&lt;/li>
+&lt;/ul>
+&lt;h3>为什么需要栈内存&lt;span class="hx-absolute -hx-mt-20" id="为什么需要栈内存">&lt;/span>
+&lt;a href="#%e4%b8%ba%e4%bb%80%e4%b9%88%e9%9c%80%e8%a6%81%e6%a0%88%e5%86%85%e5%ad%98" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>进程在运行过程中会产生很多临时数据，要关注两个问题：&lt;/p>
+&lt;ul>
+&lt;li>内存的分配&lt;/li>
+&lt;li>内存的回收&lt;/li>
+&lt;/ul>
+&lt;p>最简单、高效地分配和回收方式&lt;strong>线性分配&lt;/strong>。线性分配分配的内存是一段连续的区域。栈内存就是使用线性分配的方式进行内存管理的。&lt;/p>
+&lt;p>&lt;strong>栈内存&lt;/strong>的简易管理过程：&lt;/p>
+&lt;ol>
+&lt;li>栈内存分配逻辑：current - alloc&lt;/li>
+&lt;/ol>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/mem-alloc.png" alt="mem-alloc" loading="lazy" />&lt;/p>
+&lt;ol start="2">
+&lt;li>栈内存释放逻辑：current + alloc&lt;/li>
+&lt;/ol>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/mem-release.png" alt="mem-release" loading="lazy" />&lt;/p>
+&lt;p>通过利用&lt;strong>栈内存&lt;/strong>，&lt;strong>CPU 在执行指令过程中可以高效的存储临时变量&lt;/strong>。其次：&lt;/p>
+&lt;ul>
+&lt;li>栈内存的分配过程：类似&lt;strong>栈&lt;/strong>的&lt;strong>入栈&lt;/strong>过程。&lt;/li>
+&lt;li>栈内存的释放过程：类似&lt;strong>栈&lt;/strong>的&lt;strong>出栈&lt;/strong>过程。&lt;/li>
+&lt;/ul>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/mem-stack.png" alt="mem-stack" loading="lazy" />&lt;/p>
+&lt;p>&lt;strong>栈内存的分配和释放类似一个栈结构，所以叫做栈内存&lt;/strong>。&lt;/p>
+&lt;h3>为什么需要堆内存&lt;span class="hx-absolute -hx-mt-20" id="为什么需要堆内存">&lt;/span>
+&lt;a href="#%e4%b8%ba%e4%bb%80%e4%b9%88%e9%9c%80%e8%a6%81%e5%a0%86%e5%86%85%e5%ad%98" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>如果函数 A 内的变量 &lt;code>too&lt;/code> 是个指针且被函数外的代码依赖，如果 &lt;code>too&lt;/code> 变量指向的内存被回收了，那么这个指针就成了野指针不安全。&lt;/p>
+&lt;p>&lt;strong>什么是野指针？&lt;/strong>&lt;/p>
+&lt;p>&lt;strong>野指针就是指向一个已被释放的内存地址的指针&lt;/strong>。野指针指向的内存地址&lt;strong>可能是其他变量的内存地址，也可能是无效的内存地址&lt;/strong>。野指针指向的内存地址可能会被其他程序占用，也可能会被操作系统回收。如果程序继续访问野指针指向的内存地址，就会导致程序崩溃或者数据错误。&lt;/p>
+&lt;p>怎么解决这个问题？&lt;/p>
+&lt;p>这就是&lt;strong>堆内存&lt;/strong>存在的意义，Go 语言会在代码编译期间通过&lt;strong>逃逸分析&lt;/strong>把&lt;strong>分配在栈上的变量分配到堆上去&lt;/strong>。&lt;strong>堆内存再通过垃圾回收器回收&lt;/strong>。&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/mem-escape.png" alt="mem-escape" loading="lazy" />&lt;/p>
+&lt;h3>虚拟内存&lt;span class="hx-absolute -hx-mt-20" id="虚拟内存">&lt;/span>
+&lt;a href="#%e8%99%9a%e6%8b%9f%e5%86%85%e5%ad%98" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>程序实际操作的都是虚拟内存，最终由 CPU 通过内存管理单元 MMU (Memory Manage Unit) 把虚拟内存的地址转化为实际的物理内存地址。&lt;/p>
+&lt;p>虚拟内存是一种内存管理技术，它：&lt;/p>
+&lt;ul>
+&lt;li>为&lt;strong>每个进程提供独立的、连续的地址空间&lt;/strong>&lt;/li>
+&lt;li>防止了进程直接对物理内存的操作 (如果进程可以直接操作物理内存，那么存在某个进程篡改其他进程数据的可能)&lt;/li>
+&lt;li>提升物理内存的利用率，当进程真正要使用物理内存时再分配&lt;/li>
+&lt;li>通过分页机制将虚拟地址映射到物理地址&lt;/li>
+&lt;li>虚拟内存和物理内存是通过 MMU (管理单元内存 Memory Management Unit) 映射的&lt;/li>
+&lt;/ul>
+&lt;p>对于 &lt;strong>Go，不管是栈内存还是堆内存，都是对虚拟内存的操作&lt;/strong>。&lt;/p>
+&lt;h3>内存管理组成部分&lt;span class="hx-absolute -hx-mt-20" id="内存管理组成部分">&lt;/span>
+&lt;a href="#%e5%86%85%e5%ad%98%e7%ae%a1%e7%90%86%e7%bb%84%e6%88%90%e9%83%a8%e5%88%86" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>内存管理一般包含三个不同的组件，分别是用户程序（Mutator）、分配器（Allocator）和收集器（Collector）。&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>用户程序&lt;/strong>：用户程序是指正在运行的程序，它可以是一个操作系统、一个数据库系统、一个 Web 浏览器等等。用户程序需要访问内存来存储数据和执行指令。&lt;/li>
+&lt;li>&lt;strong>分配器&lt;/strong>：分配器会负责从堆中初始化相应的内存区域（栈内存是由编译器自动分配回收的）。&lt;/li>
+&lt;li>&lt;strong>收集器&lt;/strong>：负责回收堆中不再使用的对象和内存空间。&lt;/li>
+&lt;/ul>
+&lt;h2>寄存器&lt;span class="hx-absolute -hx-mt-20" id="寄存器">&lt;/span>
+&lt;a href="#%e5%af%84%e5%ad%98%e5%99%a8" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>寄存器是 CPU 内部的存储单元，用于存放从&lt;strong>内存读取而来的数据（包括指令）和 CPU 运算的中间结果&lt;/strong>。&lt;/p>
+&lt;p>之所以要使用寄存器来临时存放数据而不是直接操作内存，一是因为 CPU 的工作原理决定了&lt;strong>有些操作运算只能在 CPU 内部进行&lt;/strong>，二是因为 &lt;strong>CPU 读写寄存器的速度比读写内存的速度快得多&lt;/strong>。&lt;/p>
+&lt;div class="hx-overflow-x-auto hx-mt-6 hx-flex hx-rounded-lg hx-border hx-py-2 ltr:hx-pr-4 rtl:hx-pl-4 contrast-more:hx-border-current contrast-more:dark:hx-border-current hx-border-blue-200 hx-bg-blue-100 hx-text-blue-900 dark:hx-border-blue-200/30 dark:hx-bg-blue-900/30 dark:hx-text-blue-200">
+&lt;div class="ltr:hx-pl-3 ltr:hx-pr-2 rtl:hx-pr-3 rtl:hx-pl-2">&lt;div class="hx-select-none hx-text-xl" style="font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';">ℹ️&lt;/div>&lt;/div>
+&lt;div class="hx-w-full hx-min-w-0 hx-leading-7">
+&lt;div class="hx-mt-6 hx-leading-7 first:hx-mt-0">寄存器，是 CPU 内置的容量小、但速度极快的内存。而程序计数器，则是用来存储 CPU 正在执行的指令位置、或者即将执行的下一条指令位置。它们都是 CPU 在运行任何任务前，必须的依赖环境，因此也被叫做 &lt;strong>CPU 上下文&lt;/strong>。&lt;/div>
+&lt;/div>
+&lt;/div>
+&lt;p>CPU 厂商为每个寄存器都取了一个名字，比如 AMD64 CPU 中的 rax, rbx, rcx, rdx 等等，这样就可以很方便的在汇编代码中使用寄存器的名字来进行编程。&lt;/p>
+&lt;p>示例，Go 代码：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="nx">c&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">a&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="nx">b&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>在 AMD64 Linux 平台下，使用 go 编译器编译它可得到如下 &lt;code>AT&amp;amp;T&lt;/code> 格式的汇编代码：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-asm" data-lang="asm">&lt;span class="line">&lt;span class="cl">&lt;span class="nf">mov&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="nv">%rsp&lt;/span>&lt;span class="p">),&lt;/span>&lt;span class="nv">%rdx&lt;/span> &lt;span class="c1">// 把变量 a 的值从内存中读取到寄存器 rdx 中
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="nf">mov&lt;/span> &lt;span class="mi">0x8&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nv">%rsp&lt;/span>&lt;span class="p">),&lt;/span>&lt;span class="nv">%rax&lt;/span> &lt;span class="c1">// 把变量 b 的值从内存中读取到寄存器 rax 中
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="nf">add&lt;/span> &lt;span class="nv">%rdx&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="nv">%rax&lt;/span> &lt;span class="c1">// 把寄存器 rdx 和 rax 中的值相加，并把结果放回 rax 寄存器中
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="nf">mov&lt;/span> &lt;span class="nv">%rax&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="mi">0x10&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nv">%rsp&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="err">//&lt;/span> &lt;span class="err">把寄存器&lt;/span> &lt;span class="no">rax&lt;/span> &lt;span class="err">中的值写回变量&lt;/span> &lt;span class="no">c&lt;/span> &lt;span class="err">所在的内存&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>上面的一行 go 语言代码被编译成了 4 条汇编指令，指令中出现的 rax，rdx 和 rsp 都是寄存器的名字（&lt;code>AT&amp;amp;T&lt;/code>格式的汇编代码中所有寄存器名字前面都有一个 &lt;code>%&lt;/code>符号）。&lt;/p>
+&lt;p>&lt;strong>汇编代码&lt;/strong>其实比较简单，它所做的工作不外乎就是&lt;strong>把数据在内存和寄存器中搬来搬去或做一些基础的数学和逻辑运算&lt;/strong>。&lt;/p>
+&lt;p>不同体系结构的CPU，其内部寄存器的数量、种类以及名称可能大不相同。&lt;/p>
+&lt;p>以 AMD64 架构的 CPU 为例，常用的三类寄存器：&lt;/p>
+&lt;ol>
+&lt;li>&lt;strong>通用寄存器&lt;/strong>：用来存放一般性的数据，用途没有做特殊规定，程序员和编译器可以自定义其用途。&lt;/li>
+&lt;/ol>
+&lt;p>16 个通用寄存器，分别是：&lt;/p>
+&lt;ul>
+&lt;li>rax, rbx, rcx, rdx&lt;/li>
+&lt;li>rsp（栈顶寄存器）, rbp（栈基址寄存器）&lt;/li>
+&lt;li>rsi, rdi&lt;/li>
+&lt;li>r8, r9, r10, r11, r12, r13, r14, r15&lt;/li>
+&lt;/ul>
+&lt;ol start="2">
+&lt;li>&lt;strong>程序计数寄存器（rip）&lt;/strong>：也叫做 PC 寄存器或者 IP 寄存器。&lt;strong>存放下一条即将执行的指令的地址&lt;/strong>。&lt;/li>
+&lt;li>&lt;strong>段寄存器&lt;/strong>：fs 和 gs 寄存器。&lt;strong>一般用它来实现线程本地存储（TLS）&lt;/strong>&lt;/li>
+&lt;/ol>
+&lt;p>除了 fs 和 gs 段寄存器是 16 位的，其它都是 64 位的，也就是 8 个字节，其中的 16 个通用寄存器还可以作为 &lt;code>32/16/8&lt;/code> 位寄存器使用。只是使用时需要换一个名字，比如可以用 eax 这个名字来表示一个 32 位的寄存器，它使用的是 rax 寄存器的低 32 位。&lt;/p>
+&lt;h3>程序计数寄存器（rip）&lt;span class="hx-absolute -hx-mt-20" id="程序计数寄存器rip">&lt;/span>
+&lt;a href="#%e7%a8%8b%e5%ba%8f%e8%ae%a1%e6%95%b0%e5%af%84%e5%ad%98%e5%99%a8rip" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>rip 寄存器里面存放的是 CPU 即将执行的下一条指令在内存中的地址。例如下面的汇编代码：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-asm" data-lang="asm">&lt;span class="line">&lt;span class="cl">&lt;span class="err">0&lt;/span>&lt;span class="nl">x0000000000400770:&lt;/span> &lt;span class="nf">add&lt;/span> &lt;span class="nv">%rdx&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="nv">%rax&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="err">0&lt;/span>&lt;span class="nl">x0000000000400773:&lt;/span> &lt;span class="nf">mov&lt;/span> &lt;span class="no">$0x0&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="nv">%ecx&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>假设当前 CPU 正在执行第一条指令，这条指令在内存中的地址是 &lt;code>0x0000000000400770&lt;/code>，紧接它后面的下一条指令的地址是 &lt;code>0x0000000000400773&lt;/code>，所以此时 rip 寄存器里面存放的值是 &lt;code>0x0000000000400773&lt;/code>。&lt;/p>
+&lt;p>&lt;strong>rip 寄存器的值是 CPU 自动控制的，CPU 也提供了几条可以间接修改 rip 寄存器的指令&lt;/strong>。&lt;/p>
+&lt;h3>栈顶寄存器（rsp）和栈基址寄存器（rbp）&lt;span class="hx-absolute -hx-mt-20" id="栈顶寄存器rsp和栈基址寄存器rbp">&lt;/span>
+&lt;a href="#%e6%a0%88%e9%a1%b6%e5%af%84%e5%ad%98%e5%99%a8rsp%e5%92%8c%e6%a0%88%e5%9f%ba%e5%9d%80%e5%af%84%e5%ad%98%e5%99%a8rbp" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>rsp 寄存器一般用来存放函数调用栈的栈顶地址，而 rbp 寄存器通常用来存放函数的栈帧起始地址，编译器一般&lt;strong>使用这两个寄存器加一定偏移的方式来访问函数局部变量或函数参数&lt;/strong>。&lt;/p>
+&lt;h4>函数栈帧&lt;span class="hx-absolute -hx-mt-20" id="函数栈帧">&lt;/span>
+&lt;a href="#%e5%87%bd%e6%95%b0%e6%a0%88%e5%b8%a7" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;ol>
+&lt;li>每个未运行完的函数都有对应的栈帧。&lt;/li>
+&lt;li>栈帧保存了函数的返回地址和局部变量。&lt;/li>
+&lt;/ol>
+&lt;h4>栈帧创建于销毁过程&lt;span class="hx-absolute -hx-mt-20" id="栈帧创建于销毁过程">&lt;/span>
+&lt;a href="#%e6%a0%88%e5%b8%a7%e5%88%9b%e5%bb%ba%e4%ba%8e%e9%94%80%e6%af%81%e8%bf%87%e7%a8%8b" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>假设代码：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-cpp" data-lang="cpp">&lt;span class="line">&lt;span class="cl">&lt;span class="cp">#include&amp;lt;stdio.h&amp;gt;
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cp">&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kt">int&lt;/span> &lt;span class="nf">add&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kt">int&lt;/span> &lt;span class="n">a&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="kt">int&lt;/span> &lt;span class="n">b&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="kt">int&lt;/span> &lt;span class="n">c&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">c&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">a&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="n">b&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="n">c&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kt">int&lt;/span> &lt;span class="nf">main&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="kt">int&lt;/span> &lt;span class="n">a&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">1&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="kt">int&lt;/span> &lt;span class="n">b&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="mi">1&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="kt">int&lt;/span> &lt;span class="n">sum&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">sum&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">add&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">a&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">b&lt;/span>&lt;span class="p">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>调用 &lt;code>add(a, b)&lt;/code> 之前，栈的情况如下：&lt;/p>
+&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/rbp-rsp.png" alt="rbp-rsp" width="280px">
+&lt;ol>
+&lt;li>函数调用涉及到传参，因此&lt;strong>在调用函数之前，需要先将传入的参数保存&lt;/strong>，以方便函数的调用，因此需要将 &lt;code>add&lt;/code> 函数的 &lt;code>a=1&lt;/code>，&lt;code>b=2&lt;/code> 入栈保存。&lt;/li>
+&lt;/ol>
+&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/add-before.png" alt="add-before" width="280px">
+&lt;ol start="2">
+&lt;li>函数调用前，要创建新的栈帧，rsp 和 rbp 都要改变，为了&lt;strong>函数调用结束后，栈顶恢复到调用前的位置，因此需要先将 rbp 寄存器的值保存到栈中&lt;/strong>。&lt;/li>
+&lt;/ol>
+&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/add-save-rbp.png" alt="add-save-rbp" width="280px">
+&lt;ol start="3">
+&lt;li>创建创建所需调用函数的栈帧，使 rbp 指向当前 rsp 的位置，根据 &lt;code>add&lt;/code> 函数的参数个数，创建合适的栈帧大小。&lt;/li>
+&lt;/ol>
+&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/add-change-rbp.png" alt="add-change-rbp" width="280px">
+&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/add-create-stack.png" alt="add-create-stack" width="280px">
+&lt;ol start="4">
+&lt;li>保存局部变量。将 &lt;code>add&lt;/code> 函数中创建的变量 &lt;code>int c = 0&lt;/code> 放入刚刚开辟的栈帧空间中。&lt;/li>
+&lt;/ol>
+&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/add-save-var.png" alt="add-save-var" width="280px">
+&lt;ol start="5">
+&lt;li>参数运算。根据形参与局部变量，进行对应的运算，这里执行 &lt;code>c = a + b&lt;/code>, 得到 &lt;code>c = 2&lt;/code>,放入刚才 &lt;code>c&lt;/code> 对应的位置。&lt;/li>
+&lt;/ol>
+&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/add-calc.png" alt="add-calc" width="280px">
+&lt;div class="hx-overflow-x-auto hx-mt-6 hx-flex hx-rounded-lg hx-border hx-py-2 ltr:hx-pr-4 rtl:hx-pl-4 contrast-more:hx-border-current contrast-more:dark:hx-border-current hx-border-blue-200 hx-bg-blue-100 hx-text-blue-900 dark:hx-border-blue-200/30 dark:hx-bg-blue-900/30 dark:hx-text-blue-200">
+&lt;div class="ltr:hx-pl-3 ltr:hx-pr-2 rtl:hx-pr-3 rtl:hx-pl-2">&lt;div class="hx-select-none hx-text-xl" style="font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';">ℹ️&lt;/div>&lt;/div>
+&lt;div class="hx-w-full hx-min-w-0 hx-leading-7">
+&lt;div class="hx-mt-6 hx-leading-7 first:hx-mt-0">&lt;p>假设上一栈帧的 rbp 和参数都是 4 字节，那么参数寻址就是 &lt;code>rbp + 偏移量&lt;/code>：&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>rbp+4&lt;/code>：上一栈帧的 rbp&lt;/li>
+&lt;li>&lt;code>rbp+8&lt;/code>：参数 a&lt;/li>
+&lt;li>&lt;code>rbp+12&lt;/code>：参数 b&lt;/li>
+&lt;/ul>&lt;/div>
+&lt;/div>
+&lt;/div>
+&lt;ol start="6">
+&lt;li>函数返回。&lt;code>add&lt;/code> 函数执行完成，需要将 &lt;code>add&lt;/code> 创建的函数栈销毁，以返回到 &lt;code>main&lt;/code> 函数中继续执行。在销毁 &lt;code>add&lt;/code> 函数栈之前，要先将 &lt;code>add&lt;/code> 函数的返回值 &lt;code>c = 2&lt;/code> 保存起来，存储到 rax 寄存器中。&lt;/li>
+&lt;/ol>
+&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/add-save-result.png" alt="add-save-result" width="380px">
+&lt;ol start="7">
+&lt;li>销毁 &lt;code>add&lt;/code> 函数栈。&lt;/li>
+&lt;/ol>
+&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/add-destroy-stack.png" alt="add-destroy-stack" width="380px">
+&lt;ol start="8">
+&lt;li>rbp 寄存器拿到之前存储的上一栈帧栈底的值，回到相应的位置，于此同时，栈空间内存储的 rbp 的值没有用了，也将被销毁。&lt;/li>
+&lt;/ol>
+&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/add-destroy-rbp.png" alt="add-destroy-rbp" width="380px">
+&lt;ol start="9">
+&lt;li>销毁形参。&lt;/li>
+&lt;/ol>
+&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/add-destroy-arg.png" alt="add-destroy-arg" width="380px">
+&lt;ol start="10">
+&lt;li>&lt;code>main&lt;/code> 函数拿到返回值。&lt;code>main&lt;/code> 函数是一个函数，它有自己的栈帧。因此所谓的前一栈帧实际上就是调用 &lt;code>add&lt;/code> 函数的 &lt;code>main&lt;/code> 函数的栈帧。因此要让 &lt;code>main&lt;/code> 函数拿到返回值，只需要把 rax 寄存器中的值放入 &lt;code>main&lt;/code> 栈帧中 &lt;code>sum&lt;/code> 对应的位置就行。&lt;/li>
+&lt;/ol>
+&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/main-stack.png" alt="main-stack" width="380px">
+&lt;p>绿色部分就是 &lt;code>main&lt;/code> 函数的栈帧（这里的 &lt;code>a=1,b=1&lt;/code> 是 &lt;code>main&lt;/code> 栈帧的局部变量）。至此栈帧的创建与销毁结束，函数调用完成。&lt;/p>
+&lt;h3>Go 汇编寄存器&lt;span class="hx-absolute -hx-mt-20" id="go-汇编寄存器">&lt;/span>
+&lt;a href="#go-%e6%b1%87%e7%bc%96%e5%af%84%e5%ad%98%e5%99%a8" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Go 汇编格式跟前面讨论过的 AT&amp;amp;T 汇编基本上差不多。&lt;/p>
+&lt;p>Go 汇编语言中使用的寄存器的名字与 AMD64 汇编中的寄存器的名字不一样，它们之间的对应关系如下：&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>go 寄存器&lt;/th>
+&lt;th>amd64 寄存器&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>AX&lt;/td>
+&lt;td>rax&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>BX&lt;/td>
+&lt;td>rbx&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>CX&lt;/td>
+&lt;td>rcx&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>DX&lt;/td>
+&lt;td>rdx&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>SI&lt;/td>
+&lt;td>rsi&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>DI&lt;/td>
+&lt;td>rdi&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>SP&lt;/td>
+&lt;td>rsp&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>BP&lt;/td>
+&lt;td>rbp&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>PC&lt;/td>
+&lt;td>rip&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>R8 ~ R15&lt;/code>&lt;/td>
+&lt;td>&lt;code>r8 ~ r15&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>Go 汇编还引入了几个没有任何硬件寄存器与之对应的&lt;strong>虚拟寄存器&lt;/strong>。这些寄存器一般用来存放内存地址。&lt;/p></description></item><item><title>汇编</title><link>https://shipengqi.github.io/golang-learn/docs/advance/pre/02_complie/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/advance/pre/02_complie/</guid><description>
+&lt;p>汇编语言也是一门计算机编程语言。汇编指令是汇编语言的一部分，&lt;strong>汇编指令和机器指令一一对应，每一条汇编指令都对应着一条机器指令&lt;/strong>。机器指令是二进制格式的，汇编指令使用符号来表示机器指令。&lt;/p>
+&lt;p>不同的 CPU 所支持的机器指令不一样，所以其汇编指令也不同，即使是相同的 CPU，不同的汇编工具和平台所使用的汇编指令格式也有些差别。&lt;/p>
+&lt;p>汇编指令：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-asm" data-lang="asm">&lt;span class="line">&lt;span class="cl">&lt;span class="err">0&lt;/span>&lt;span class="nl">x0000000000400770:&lt;/span> &lt;span class="nf">add&lt;/span> &lt;span class="nv">%rdx&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="nv">%rax&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>编译成机器指令：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">&lt;span class="o">(&lt;/span>gdb&lt;span class="o">)&lt;/span> x/3xb 0x40054d
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">0x40054d: 0x48 0x01 0xd0 &lt;span class="c1"># 机器指令&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="o">(&lt;/span>gdb&lt;span class="o">)&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h2>汇编指令格式&lt;span class="hx-absolute -hx-mt-20" id="汇编指令格式">&lt;/span>
+&lt;a href="#%e6%b1%87%e7%bc%96%e6%8c%87%e4%bb%a4%e6%a0%bc%e5%bc%8f" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>每一条汇编指令通常都由两部分组成：&lt;/p>
+&lt;ol>
+&lt;li>操作码：作码指示 CPU 执行什么操作，比如是执行加法，减法还是读写内存。每条指令都必须要有操作码。&lt;/li>
+&lt;li>操作数：操作数表示指令的操作对象。比如加法操作需要两个加数，这两个加数就是这条指令的操作数。操作数的个数一般是 0 个，1 个或 2 个。&lt;/li>
+&lt;/ol>
+&lt;h2>汇编指令示例&lt;span class="hx-absolute -hx-mt-20" id="汇编指令示例">&lt;/span>
+&lt;a href="#%e6%b1%87%e7%bc%96%e6%8c%87%e4%bb%a4%e7%a4%ba%e4%be%8b" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ol>
+&lt;li>&lt;code>add %rdx,%rax&lt;/code>：将 &lt;code>rdx&lt;/code> 寄存器中的值加到 &lt;code>rax&lt;/code> 寄存器中。&lt;/li>
+&lt;/ol>
+&lt;ul>
+&lt;li>&lt;code>add&lt;/code>，表示执行加法操作，它有两个操作数，&lt;code>rdx&lt;/code> 和 &lt;code>rax&lt;/code>。&lt;/li>
+&lt;li>如果一条指令有两个操作数，那么第一个操作数叫做&lt;strong>源操作数&lt;/strong>，第二个操作数叫做&lt;strong>目的操作数&lt;/strong>，目的操作数表示这条指令执行完后结果应该保存的地方。&lt;/li>
+&lt;li>第二个操作数 &lt;code>rax&lt;/code> 寄存器既是源操作数也是目的操作数，因为 &lt;code>rax&lt;/code> 既是加法操作的两个加数之一，又得存放加法操作的结果。&lt;/li>
+&lt;li>指令执行完后 &lt;code>rax&lt;/code> 寄存器的值发生了改变，指令执行前的值被覆盖而丢失了，如果 &lt;code>rax&lt;/code> 寄存器之前的值还有用，那么就得先用指令把它保存到其它寄存器或内存之中。&lt;/li>
+&lt;/ul>
+&lt;ol start="2">
+&lt;li>&lt;code>callq 0x400526&lt;/code>：调用函数，只有一个操作数，操作数是 &lt;code>0x400526&lt;/code>，它是被调用函数的地址。&lt;/li>
+&lt;li>&lt;code>retq&lt;/code>：没有操作数，表示从被调用函数返回到调用函数继续执行。&lt;/li>
+&lt;/ol>
+&lt;h2>常用指令&lt;span class="hx-absolute -hx-mt-20" id="常用指令">&lt;/span>
+&lt;a href="#%e5%b8%b8%e7%94%a8%e6%8c%87%e4%bb%a4" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;h3>mov&lt;span class="hx-absolute -hx-mt-20" id="mov">&lt;/span>
+&lt;a href="#mov" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>复制源操作数到目的操作数。例：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-asm" data-lang="asm">&lt;span class="line">&lt;span class="cl">&lt;span class="nf">mov&lt;/span> &lt;span class="nv">%rsp&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="nv">%rbp&lt;/span> &lt;span class="err">//&lt;/span> &lt;span class="err">直接寻址，把&lt;/span> &lt;span class="no">rsp&lt;/span> &lt;span class="err">的值拷贝给&lt;/span> &lt;span class="no">rbp&lt;/span>&lt;span class="err">，相当于&lt;/span> &lt;span class="no">rbp&lt;/span> &lt;span class="err">=&lt;/span> &lt;span class="no">rsp&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h3>add/sub 指令&lt;span class="hx-absolute -hx-mt-20" id="addsub-指令">&lt;/span>
+&lt;a href="#addsub-%e6%8c%87%e4%bb%a4" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>加减运算指令。例：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-asm" data-lang="asm">&lt;span class="line">&lt;span class="cl">&lt;span class="nf">sub&lt;/span> &lt;span class="no">$0x350&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="nv">%rsp&lt;/span> &lt;span class="c1">// 源操作数是立即操作数，目的操作数直接寻址。rsp = rsp - 0x350
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="nf">add&lt;/span> &lt;span class="nv">%rdx&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="nv">%rax&lt;/span> &lt;span class="err">//&lt;/span> &lt;span class="err">直接寻址。&lt;/span>&lt;span class="no">rax&lt;/span> &lt;span class="err">=&lt;/span> &lt;span class="no">rax&lt;/span> &lt;span class="err">+&lt;/span> &lt;span class="no">rdx&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;code>$&lt;/code> 符号做前缀，这种操作数叫做&lt;strong>立即操作数&lt;/strong>，表示它是一个常量。&lt;/p>
+&lt;h3>call/ret 指令&lt;span class="hx-absolute -hx-mt-20" id="callret-指令">&lt;/span>
+&lt;a href="#callret-%e6%8c%87%e4%bb%a4" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;ul>
+&lt;li>&lt;code>call 目标地址&lt;/code> 指令执行函数调用，CPU 执行 &lt;code>call&lt;/code> 指令时首先会把 rip 寄存器中的值入栈，然后设置 rip 值为目标地址，又因为 rip 寄存器决定了下一条需要执行的指令，所以当 CPU 执行完当前 &lt;code>call&lt;/code> 指令后就会跳转到目标地址去执行（先把当前 rip 寄存器的值保存起来，因为要调用函数，所以把函数的目的地址放到 rip 寄存器中，这样 CPU 就可以跳转去执行目标地址的函数）。&lt;/li>
+&lt;li>&lt;code>ret&lt;/code> 指令从被调用的函数返回调用函数，它的实现原理是把 &lt;code>call&lt;/code> 指令入栈的返回地址弹出给 rip 寄存器。&lt;/li>
+&lt;/ul>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code># 调用函数片段
+0x0000000000400559: callq 0x400526 &amp;lt;sum&amp;gt;
+0x000000000040055e: mov %eax,-0x4(%rbp)
+--------------------------------------------------
+# 被调用函数片段
+0x0000000000400526: push %rbp
+......
+0x000000000040053f: retq &lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h4>函数调用过程&lt;span class="hx-absolute -hx-mt-20" id="函数调用过程">&lt;/span>
+&lt;a href="#%e5%87%bd%e6%95%b0%e8%b0%83%e7%94%a8%e8%bf%87%e7%a8%8b" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>调用函数使用 &lt;code>callq 0x400526&lt;/code> 指令调用 &lt;code>0x400526&lt;/code> 处的函数，&lt;code>0x400526&lt;/code> 是被调用函数的第一条指令所在的地址。&lt;code>0x40055e&lt;/code> 会先从 rip 寄存器中取出入栈，然后把 rip 寄存器的值更新为 &lt;code>0x400526&lt;/code>。被调用函数在 &lt;code>0x40053f&lt;/code> 处执行 &lt;code>retq&lt;/code> 指令返回调用函数继续执行 &lt;code>0x40055e&lt;/code> 地址处的指令。&lt;/p>
+&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/stack-ret.png" alt="stack-ret" style="width:50%;" />
+&lt;p>图中&lt;strong>返回地址&lt;/strong>就是 &lt;code>0x40055e&lt;/code>。&lt;/p>
+&lt;div class="hx-overflow-x-auto hx-mt-6 hx-flex hx-rounded-lg hx-border hx-py-2 ltr:hx-pr-4 rtl:hx-pl-4 contrast-more:hx-border-current contrast-more:dark:hx-border-current hx-border-blue-200 hx-bg-blue-100 hx-text-blue-900 dark:hx-border-blue-200/30 dark:hx-bg-blue-900/30 dark:hx-text-blue-200">
+&lt;div class="ltr:hx-pl-3 ltr:hx-pr-2 rtl:hx-pr-3 rtl:hx-pl-2">&lt;div class="hx-select-none hx-text-xl" style="font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';">ℹ️&lt;/div>&lt;/div>
+&lt;div class="hx-w-full hx-min-w-0 hx-leading-7">
+&lt;div class="hx-mt-6 hx-leading-7 first:hx-mt-0">&lt;p>&lt;code>retq&lt;/code> 指令从堆栈中弹出返回地址（即 &lt;code>0x40055e&lt;/code>），将弹出的地址加载到 rip 寄存器中。&lt;/p>
+&lt;p>函数执行完以后，局部变量会被销毁，rsp 寄存器也会恢复到函数调用前的状态。&lt;code>retq&lt;/code> 只需要调整偏移量 &lt;code>rsp + 8&lt;/code> （64 位操作系统应该是 &lt;code>rsp + 16&lt;/code>）就能拿到返回地址。&lt;/p>
+&lt;/div>
+&lt;/div>
+&lt;/div>
+&lt;h3>jmp/je/jle/jg/jge 等等 j 开头的指令&lt;span class="hx-absolute -hx-mt-20" id="jmpjejlejgjge-等等-j-开头的指令">&lt;/span>
+&lt;a href="#jmpjejlejgjge-%e7%ad%89%e7%ad%89-j-%e5%bc%80%e5%a4%b4%e7%9a%84%e6%8c%87%e4%bb%a4" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>这些都属于跳转指令，&lt;strong>操作码后面直接跟要跳转到的地址或存有地址的寄存器&lt;/strong>，这些指令与高级编程语言中的 &lt;code>goto&lt;/code> 和 &lt;code>if&lt;/code> 等语句对应。用法示例：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-asm" data-lang="asm">&lt;span class="line">&lt;span class="cl">&lt;span class="nf">jmp&lt;/span> &lt;span class="mi">0x4005f2&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nf">jle&lt;/span> &lt;span class="mi">0x4005ee&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nf">jl&lt;/span> &lt;span class="mi">0x4005b8&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h3>push/pop 指令&lt;span class="hx-absolute -hx-mt-20" id="pushpop-指令">&lt;/span>
+&lt;a href="#pushpop-%e6%8c%87%e4%bb%a4" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>专用于函数调用栈的入栈出栈指令，&lt;strong>这两个指令都会自动修改 rsp 寄存器&lt;/strong>。&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-asm" data-lang="asm">&lt;span class="line">&lt;span class="cl">&lt;span class="nf">push&lt;/span> &lt;span class="err">源操作数&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nf">pop&lt;/span> &lt;span class="err">目的操作数&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;code>push&lt;/code> 入栈时 rsp 寄存器的值先减去 8 把栈位置留出来（移动栈顶指针，因为是由高位到低位，所以是减 8），然后把操作数复制到 rsp 所指位置。&lt;/p>
+&lt;p>&lt;code>push&lt;/code> 指令相当于：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-asm" data-lang="asm">&lt;span class="line">&lt;span class="cl">&lt;span class="nf">sub&lt;/span> &lt;span class="no">$8&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="nv">%rsp&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nf">mov&lt;/span> &lt;span class="err">源操作数&lt;/span>&lt;span class="p">,(&lt;/span>&lt;span class="nv">%rsp&lt;/span>&lt;span class="p">)&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;code>pop&lt;/code> 指令相当于：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-asm" data-lang="asm">&lt;span class="line">&lt;span class="cl">&lt;span class="nf">mov&lt;/span>&lt;span class="p">(&lt;/span> &lt;span class="nv">%rsp&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="err">目的操作数&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nf">add&lt;/span> &lt;span class="no">$8&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="nv">%rsp&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h3>leave 指令&lt;span class="hx-absolute -hx-mt-20" id="leave-指令">&lt;/span>
+&lt;a href="#leave-%e6%8c%87%e4%bb%a4" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>leave&lt;/code> 指令没有操作数，它一般放在函数的尾部 &lt;code>ret&lt;/code> 指令之前，用于调整 rsp 和 rbp，这条指令相当于：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-asm" data-lang="asm">&lt;span class="line">&lt;span class="cl">&lt;span class="nf">mov&lt;/span> &lt;span class="nv">%rbp&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="nv">%rsp&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nf">pop&lt;/span> &lt;span class="nv">%rbp&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div></description></item><item><title>操作系统</title><link>https://shipengqi.github.io/golang-learn/docs/advance/pre/03_os/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/advance/pre/03_os/</guid><description>
+&lt;h2>用户态和内核态&lt;span class="hx-absolute -hx-mt-20" id="用户态和内核态">&lt;/span>
+&lt;a href="#%e7%94%a8%e6%88%b7%e6%80%81%e5%92%8c%e5%86%85%e6%a0%b8%e6%80%81" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Kernel 运行在超级权限模式（Supervisor Mode）下，所以拥有很高的权限。按照权限管理的原则，多数应用程序应该运行在最小权限下。因此，很多&lt;strong>操作系统，将内存分成了两个区域&lt;/strong>：&lt;/p>
+&lt;ul>
+&lt;li>内核空间（Kernal Space），这个空间只有内核程序可以访问；&lt;/li>
+&lt;li>用户空间（User Space），这部分内存专门给应用程序使用。&lt;/li>
+&lt;/ul>
+&lt;p>&lt;strong>内核空间&lt;/strong>和&lt;strong>用户空间&lt;/strong>，分别对应着下图中， CPU 特权等级的 Ring 0 和 Ring 3。&lt;/p>
+&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/system-kernel.png" alt="system-kernel" style="width:33%;" />
+&lt;h3>用户态和内核态&lt;span class="hx-absolute -hx-mt-20" id="用户态和内核态-1">&lt;/span>
+&lt;a href="#%e7%94%a8%e6%88%b7%e6%80%81%e5%92%8c%e5%86%85%e6%a0%b8%e6%80%81-1" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>用户空间中的代码被限制了只能使用一个局部的内存空间，&lt;strong>不能直接访问内存等硬件设备，必须通过系统调用陷入到内核中，才能访问这些特权资源&lt;/strong>，我们说这些程序在&lt;strong>用户态&lt;/strong>（User Mode） 执行。内核空间中的代码可以访问所有内存，我们称这些程序在&lt;strong>内核态&lt;/strong>（Kernal Mode） 执行。&lt;/p>
+&lt;h2>系统调用&lt;span class="hx-absolute -hx-mt-20" id="系统调用">&lt;/span>
+&lt;a href="#%e7%b3%bb%e7%bb%9f%e8%b0%83%e7%94%a8" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;strong>系统调用是指使用类似函数调用的方式调用操作系统提供的 API&lt;/strong>。&lt;/p>
+&lt;p>本质是&lt;strong>用户程序通过特定机制（Trap，Trap 其实也是一种中断）将控制权交给操作系统内核，由内核执行特权操作&lt;/strong>。&lt;/p>
+&lt;p>系统调用的执行分为两部分：&lt;/p>
+&lt;ol>
+&lt;li>用户程序发起请求&lt;/li>
+&lt;/ol>
+&lt;p>通过软中断或专用指令（如 &lt;code>syscall&lt;/code>）触发内核的介入。&lt;/p>
+&lt;p>不是直接执行内核代码，而是&lt;strong>通过中断/指令通知内核：“请帮我执行某个特权操作”&lt;/strong>。&lt;/p>
+&lt;ol start="2">
+&lt;li>内核执行实际操作&lt;/li>
+&lt;/ol>
+&lt;p>CPU 切换到内核态后，内核&lt;strong>根据系统调用号&lt;/strong>（如 &lt;code>SYS_read&lt;/code>）从系统调用表中&lt;strong>找到对应的内核函数（如 &lt;code>sys_read&lt;/code>）&lt;/strong>。&lt;/p>
+&lt;p>内核函数由操作系统实现，直接操作硬件或管理资源（例如从磁盘读取数据到内存）。&lt;/p>
+&lt;p>&lt;strong>执行完毕后，内核将结果返回给用户程序&lt;/strong>。&lt;/p>
+&lt;h3>系统调用的过程有没有发生 CPU 上下文的切换？&lt;span class="hx-absolute -hx-mt-20" id="系统调用的过程有没有发生-cpu-上下文的切换">&lt;/span>
+&lt;a href="#%e7%b3%bb%e7%bb%9f%e8%b0%83%e7%94%a8%e7%9a%84%e8%bf%87%e7%a8%8b%e6%9c%89%e6%b2%a1%e6%9c%89%e5%8f%91%e7%94%9f-cpu-%e4%b8%8a%e4%b8%8b%e6%96%87%e7%9a%84%e5%88%87%e6%8d%a2" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>答案是肯定的。&lt;/p>
+&lt;ol>
+&lt;li>CPU 寄存器里原来用户态的指令位置，需要先保存起来。接着，为了执行内核态代码，CPU 寄存器需要更新为内核态指令的新位置。最后才是跳转到内核态运行内核任务。&lt;/li>
+&lt;li>而系统调用结束后，CPU 寄存器需要恢复原来保存的用户态，然后再切换到用户空间，继续运行进程。&lt;/li>
+&lt;/ol>
+&lt;p>所以，&lt;strong>一次系统调用的过程，其实是发生了两次 CPU 上下文切换（用户态切换到内核态，内核态切换回用户态）&lt;/strong>。&lt;/p>
+&lt;p>&lt;strong>系统调用过程通常称为特权模式切换，而不是上下文切换&lt;/strong>。系统调用过程中，CPU 的上下文切换还是无法避免的。&lt;/p>
+&lt;h3>Go 系统调用&lt;span class="hx-absolute -hx-mt-20" id="go-系统调用">&lt;/span>
+&lt;a href="#go-%e7%b3%bb%e7%bb%9f%e8%b0%83%e7%94%a8" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Go 语言的标准库（如 &lt;code>os&lt;/code>、&lt;code>net&lt;/code>、&lt;code>syscall&lt;/code>）封装了系统调用，但其底层实现涉及：&lt;/p>
+&lt;ul>
+&lt;li>用户代码调用标准库（如 &lt;code>os.Read&lt;/code>、&lt;code>net.Dial&lt;/code>）。&lt;/li>
+&lt;li>标准库调用 &lt;code>syscall&lt;/code> 包，封装系统调用号（如 &lt;code>SYS_READ&lt;/code>、&lt;code>SYS_WRITE&lt;/code>）。&lt;/li>
+&lt;li>Go Runtime 介入，处理系统调用的阻塞和调度问题。&lt;/li>
+&lt;/ul>
+&lt;h2>操作系统进程调度&lt;span class="hx-absolute -hx-mt-20" id="操作系统进程调度">&lt;/span>
+&lt;a href="#%e6%93%8d%e4%bd%9c%e7%b3%bb%e7%bb%9f%e8%bf%9b%e7%a8%8b%e8%b0%83%e5%ba%a6" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;h3>线程调度的方法&lt;span class="hx-absolute -hx-mt-20" id="线程调度的方法">&lt;/span>
+&lt;a href="#%e7%ba%bf%e7%a8%8b%e8%b0%83%e5%ba%a6%e7%9a%84%e6%96%b9%e6%b3%95" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;h4>先到先服务&lt;span class="hx-absolute -hx-mt-20" id="先到先服务">&lt;/span>
+&lt;a href="#%e5%85%88%e5%88%b0%e5%85%88%e6%9c%8d%e5%8a%a1" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>早期的操作系统是一个个处理作业（Job），比如很多保险业务，每处理一个称为一个作业（Job）。处理作业最容易想到的就是&lt;strong>先到先服务&lt;/strong>（First Come First Service，FCFS），也就是先到的作业先被计算，后到的作业，排队进行。&lt;/p>
+&lt;p>这里需要用到一个叫作队列的数据结构，具有&lt;strong>先入先出&lt;/strong>（First In First Out，FIFO）性质。先进入队列的作业，先处理，因此从公平性来说，这个算法非常朴素。另外，一个作业完全完成才会进入下一个作业，&lt;strong>作业之间不会发生切换，从吞吐量上说，是最优的——因为没有额外开销&lt;/strong>。&lt;/p>
+&lt;p>问题：一个 job 如果需要一天的时间，后面是一个用时 10 分钟的 job，10 分钟的 job 要等前面的 job 完成，才能运行，这种情况，先到先服务算法就不适用了。&lt;/p>
+&lt;p>解决办法：&lt;strong>短作业优先&lt;/strong>。&lt;/p>
+&lt;h4>短作业优先&lt;span class="hx-absolute -hx-mt-20" id="短作业优先">&lt;/span>
+&lt;a href="#%e7%9f%ad%e4%bd%9c%e4%b8%9a%e4%bc%98%e5%85%88" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>&lt;strong>预估 job 运行的时间，短的作业优先运行&lt;/strong>。&lt;/p>
+&lt;p>例如，有三个 job，预估运行时间分别是 10 分钟、20 分钟、30 分钟。&lt;/p>
+&lt;ol>
+&lt;li>先运行 10 分钟的 job。&lt;/li>
+&lt;li>然后运行 20 分钟的 job。&lt;/li>
+&lt;li>最后运行 30 分钟的 job。&lt;/li>
+&lt;/ol>
+&lt;p>&lt;strong>长作业和短作业之间也没有切换，从响应时间上说，是最优的&lt;/strong>。&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;pre>&lt;code>平均等待时间 = 总等待时间/任务数&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>平均等待时间和用户满意度是成反比的，等待时间越长，用户越不满意，因此在&lt;strong>大多数情况下，应该优先处理用时少的，从而降低平均等待时长&lt;/strong>。&lt;/p>
+&lt;p>问题：&lt;/p>
+&lt;ol>
+&lt;li>紧急任务如何插队？&lt;/li>
+&lt;li>等待太久的任务如何插队？&lt;/li>
+&lt;li>先执行的大任务导致后面来的小任务没有执行如何处理？比如先处理了一个 1 天才能完成的任务，工作半天后才发现预估时间 1 分钟的任务也到来了。&lt;/li>
+&lt;/ol>
+&lt;p>解决方案：&lt;/p>
+&lt;ul>
+&lt;li>优先级队列&lt;/li>
+&lt;li>抢占&lt;/li>
+&lt;/ul>
+&lt;h4>优先级队列&lt;span class="hx-absolute -hx-mt-20" id="优先级队列">&lt;/span>
+&lt;a href="#%e4%bc%98%e5%85%88%e7%ba%a7%e9%98%9f%e5%88%97" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>优先级队列可以给队列中每个元素一个优先级，&lt;strong>优先级越高的任务就会被先执行&lt;/strong>。&lt;/p>
+&lt;p>优先级队列的一种实现方法就是用到了堆（Heap）这种数据结构，更最简单的实现方法，就是每次扫描一遍整个队列找到优先级最高的任务。也就是说，堆（Heap）可以帮助你在 O(1) 的时间复杂度内查找到最大优先级的元素。&lt;/p>
+&lt;ol>
+&lt;li>对于紧急的任务，就给一个更高的优先级。&lt;/li>
+&lt;li>而对于普通任务，可以在等待时间（W） 和预估执行时间（P） 中，找一个数学关系来描述。比如：&lt;code>优先级 = W/P&lt;/code>。W 越大，或者 P 越小，就越排在前面。&lt;/li>
+&lt;/ol>
+&lt;p>紧急任务如何插队？等待太久的任务如何插队？这两个问题就都解决了。&lt;/p>
+&lt;p>那么看先执行的大任务导致后面来的小任务没有执行的情况如何处理？&lt;/p>
+&lt;p>就需要&lt;strong>抢占&lt;/strong>了。&lt;/p>
+&lt;h4>抢占&lt;span class="hx-absolute -hx-mt-20" id="抢占">&lt;/span>
+&lt;a href="#%e6%8a%a2%e5%8d%a0" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>抢占就是把执行能力分时，分成时间片段。&lt;strong>让每个任务都执行一个时间片段。如果在时间片段内，任务完成，那么就调度下一个任务。如果任务没有执行完成，则中断任务，让任务重新排队，调度下一个任务&lt;/strong>。&lt;/p>
+&lt;div class="hx-overflow-x-auto hx-mt-6 hx-flex hx-rounded-lg hx-border hx-py-2 ltr:hx-pr-4 rtl:hx-pl-4 contrast-more:hx-border-current contrast-more:dark:hx-border-current hx-border-blue-200 hx-bg-blue-100 hx-text-blue-900 dark:hx-border-blue-200/30 dark:hx-bg-blue-900/30 dark:hx-text-blue-200">
+&lt;div class="ltr:hx-pl-3 ltr:hx-pr-2 rtl:hx-pr-3 rtl:hx-pl-2">&lt;div class="hx-select-none hx-text-xl" style="font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';">ℹ️&lt;/div>&lt;/div>
+&lt;div class="hx-w-full hx-min-w-0 hx-leading-7">
+&lt;div class="hx-mt-6 hx-leading-7 first:hx-mt-0">&lt;strong>抢占再结合之前我们提到的优先级队列能力，这就构成了一个基本的线程调度模型&lt;/strong>。&lt;/div>
+&lt;/div>
+&lt;/div>
+&lt;p>还有一些问题可以进一步优化：&lt;/p>
+&lt;ol>
+&lt;li>如果一个线程优先级非常高，其实没必要再抢占，因为无论如何调度，下一个时间片段还是给它。那么这种情况如何实现？&lt;/li>
+&lt;li>如果希望实现最短作业优先的抢占，就必须知道每个线程的执行时间，而这个时间是不可预估的，那么这种情况又应该如何处理？&lt;/li>
+&lt;/ol>
+&lt;h4>多级队列模型&lt;span class="hx-absolute -hx-mt-20" id="多级队列模型">&lt;/span>
+&lt;a href="#%e5%a4%9a%e7%ba%a7%e9%98%9f%e5%88%97%e6%a8%a1%e5%9e%8b" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>&lt;strong>多级队列，就是多个队列执行调度&lt;/strong>。如图：&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/os-priority-queue.png" alt="os-priority-queue" loading="lazy" />&lt;/p>
+&lt;p>两个优先级不同的队列，只要上层队列有任务，下层队列就会让出执行权限。&lt;/p>
+&lt;ul>
+&lt;li>低优先级队列可以考虑 &lt;code>抢占 + 优先级队列&lt;/code> 的方式实现，这样每次执行一个时间片段就可以判断一下高优先级的队列中是否有任务。&lt;/li>
+&lt;li>高优先级队列可以考虑用 &lt;code>非抢占（每个任务执行完才执行下一个）+ 优先级队列&lt;/code> 实现，这样紧急任务优先级有个区分。如果遇到十万火急的情况，就可以优先处理这个任务。&lt;/li>
+&lt;/ul>
+&lt;p>但是还是没有解决短任务先行的问题。&lt;/p>
+&lt;p>可以考虑再增加一些队列，让级别更多：&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/os-multi-queue.png" alt="os-multi-queue" loading="lazy" />&lt;/p>
+&lt;ul>
+&lt;li>紧急任务仍然走高优队列，非抢占执行。&lt;/li>
+&lt;li>&lt;strong>普通任务&lt;/strong>先放到优先级仅次于高优任务的队列中，并且只&lt;strong>分配很小的时间片；如果没有执行完成，说明任务不是很短，就将任务下调一层&lt;/strong>。&lt;/li>
+&lt;li>下面一层，最低优先级的队列中时间片很大，长任务就有更大的时间片可以用。&lt;/li>
+&lt;/ul>
+&lt;p>通过这种方式，短任务会在更高优先级的队列中执行完成，长任务优先级会下调，也就类似实现了最短作业优先的问题。&lt;/p>
+&lt;p>&lt;strong>实际操作中，可以有 n 层，一层层把大任务筛选出来&lt;/strong>。 最长的任务，放到最闲的时间去执行。&lt;/p>
+&lt;div class="hx-overflow-x-auto hx-mt-6 hx-flex hx-rounded-lg hx-border hx-py-2 ltr:hx-pr-4 rtl:hx-pl-4 contrast-more:hx-border-current contrast-more:dark:hx-border-current hx-border-blue-200 hx-bg-blue-100 hx-text-blue-900 dark:hx-border-blue-200/30 dark:hx-bg-blue-900/30 dark:hx-text-blue-200">
+&lt;div class="ltr:hx-pl-3 ltr:hx-pr-2 rtl:hx-pr-3 rtl:hx-pl-2">&lt;div class="hx-select-none hx-text-xl" style="font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';">ℹ️&lt;/div>&lt;/div>
+&lt;div class="hx-w-full hx-min-w-0 hx-leading-7">
+&lt;div class="hx-mt-6 hx-leading-7 first:hx-mt-0">&lt;p>非抢占的先到先服务的模型是最朴素的，公平性和吞吐量可以保证。但是因为希望减少用户的平均等待时间，操作系统往往需要实现抢占。操作系统实现抢占，仍然希望有优先级，希望有最短任务优先。&lt;/p>
+&lt;p>操作系统无法预判每个任务的预估执行时间，就需要使用分级队列。最高优先级的任务可以考虑非抢占的优先级队列。 其他任务放到分级队列模型中执行，从最高优先级时间片段最小向最低优先级时间片段最大逐渐沉淀。这样就同时保证了小任务先行和高优任务最先执行。&lt;/p>
+&lt;/div>
+&lt;/div>
+&lt;/div>
+&lt;h3>进程在什么时候才会被调度到 CPU 上运行？&lt;span class="hx-absolute -hx-mt-20" id="进程在什么时候才会被调度到-cpu-上运行">&lt;/span>
+&lt;a href="#%e8%bf%9b%e7%a8%8b%e5%9c%a8%e4%bb%80%e4%b9%88%e6%97%b6%e5%80%99%e6%89%8d%e4%bc%9a%e8%a2%ab%e8%b0%83%e5%ba%a6%e5%88%b0-cpu-%e4%b8%8a%e8%bf%90%e8%a1%8c" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;ol>
+&lt;li>
+&lt;p>为了保证所有进程可以得到公平调度，&lt;strong>CPU 时间被划分为一段段的时间片&lt;/strong>，这些时间片再被轮流分配给各个进程。这样，当&lt;strong>某个进程的时间片耗尽了，就会被系统挂起（就绪态，Ready），切换到其它正在等待 CPU 的进程运行&lt;/strong>。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>进程在系统资源不足（比如内存不足）时，要等到资源满足后才可以运行&lt;/strong>，这个时候进程也会被挂起（&lt;strong>阻塞态，Blocked&lt;/strong>），并由系统调度其他进程运行。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>当进程通过睡眠函数 &lt;code>sleep&lt;/code> 这样的方法将自己主动挂起时（&lt;strong>可中断的阻塞态，Interruptible Sleep&lt;/strong>），自然也会重新调度。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>当有优先级更高的进程运行时，&lt;strong>为了保证高优先级进程的运行，当前进程会被挂起（就绪态，Ready）&lt;/strong>，由高优先级进程来运行。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>发生硬件中断时，CPU 上的进程会被中断挂起（&lt;strong>可能有两种状态，时间片耗尽了就是就绪态，如果在等待资源，就会进入阻塞态&lt;/strong>），转而执行内核中的中断服务程序。&lt;/p>
+&lt;/li>
+&lt;/ol>
+&lt;h3>进程上下文切换&lt;span class="hx-absolute -hx-mt-20" id="进程上下文切换">&lt;/span>
+&lt;a href="#%e8%bf%9b%e7%a8%8b%e4%b8%8a%e4%b8%8b%e6%96%87%e5%88%87%e6%8d%a2" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>进程是由内核来管理和调度的，进程的切换只能发生在内核态。所以，进程的上下文不仅包括了虚拟内存、栈、全局变量等用户空间的资源，还包括了内核堆栈、寄存器等内核空间的状态。&lt;/p>
+&lt;p>进程的上下文切换比系统调用时多了一步：&lt;/p>
+&lt;ol>
+&lt;li>保存当前进程的内核状态和 CPU 寄存器之前，需要先把该进程的虚拟内存、栈等保存下来；&lt;/li>
+&lt;li>加载了下一进程的内核态后，还需要刷新进程的虚拟内存和用户栈。&lt;/li>
+&lt;/ol>
+&lt;div class="hx-overflow-x-auto hx-mt-6 hx-flex hx-rounded-lg hx-border hx-py-2 ltr:hx-pr-4 rtl:hx-pl-4 contrast-more:hx-border-current contrast-more:dark:hx-border-current hx-border-blue-200 hx-bg-blue-100 hx-text-blue-900 dark:hx-border-blue-200/30 dark:hx-bg-blue-900/30 dark:hx-text-blue-200">
+&lt;div class="ltr:hx-pl-3 ltr:hx-pr-2 rtl:hx-pr-3 rtl:hx-pl-2">&lt;div class="hx-select-none hx-text-xl" style="font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';">ℹ️&lt;/div>&lt;/div>
+&lt;div class="hx-w-full hx-min-w-0 hx-leading-7">
+&lt;div class="hx-mt-6 hx-leading-7 first:hx-mt-0">&lt;strong>每次上下文切换都需要几十纳秒到数微秒的 CPU 时间&lt;/strong>。这个时间还是相当可观的，特别是在&lt;strong>进程上下文切换次数较多的情况下，很容易导致 CPU 将大量时间耗费在寄存器、内核栈以及虚拟内存等资源的保存和恢复上&lt;/strong>，进而大大缩短了真正运行进程的时间。&lt;/div>
+&lt;/div>
+&lt;/div>
+&lt;h3>线程上下文切换&lt;span class="hx-absolute -hx-mt-20" id="线程上下文切换">&lt;/span>
+&lt;a href="#%e7%ba%bf%e7%a8%8b%e4%b8%8a%e4%b8%8b%e6%96%87%e5%88%87%e6%8d%a2" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>线程与进程最大的区别在于，&lt;strong>线程是调度的基本单位，而进程则是资源拥有的基本单位&lt;/strong>。&lt;/p>
+&lt;p>所谓&lt;strong>内核中的任务调度，实际上的调度对象是线程；而进程只是给线程提供了虚拟内存、全局变量等资源&lt;/strong>。&lt;/p>
+&lt;ul>
+&lt;li>当进程只有一个线程时，可以认为进程就等于线程。&lt;/li>
+&lt;li>当进程拥有多个线程时，这些线程会共享相同的虚拟内存和全局变量等资源。这些资源在上下文切换时是不需要修改的。&lt;/li>
+&lt;li>另外，线程也有自己的私有数据，比如栈和寄存器等，这些在上下文切换时也是需要保存的。&lt;/li>
+&lt;/ul>
+&lt;p>线程的上下文切换其实就可以分为两种情况：&lt;/p>
+&lt;ol>
+&lt;li>&lt;strong>两个线程属于不同进程。此时，因为资源不共享，所以切换过程就跟进程上下文切换是一样&lt;/strong>。&lt;/li>
+&lt;li>&lt;strong>两个线程属于同一个进程&lt;/strong>。此时，因为虚拟内存是共享的，所以在&lt;strong>切换时，虚拟内存这些资源就保持不动，只需要切换线程的私有数据、寄存器等不共享的数据&lt;/strong>。&lt;/li>
+&lt;/ol>
+&lt;h3>中断上下文切换&lt;span class="hx-absolute -hx-mt-20" id="中断上下文切换">&lt;/span>
+&lt;a href="#%e4%b8%ad%e6%96%ad%e4%b8%8a%e4%b8%8b%e6%96%87%e5%88%87%e6%8d%a2" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>为了快速&lt;strong>响应硬件的事件，中断处理会打断进程的正常调度和执行&lt;/strong>，转而调用中断处理程序，响应设备事件。而在&lt;strong>打断进程时，就需要将进程当前的状态保存下来&lt;/strong>，这样在中断结束后，进程仍然可以从原来的状态恢复运行。&lt;/p>
+&lt;p>&lt;strong>中断上下文切换并不涉及到进程的用户态&lt;/strong>。所以，即便中断过程打断了一个正处在用户态的进程，也不需要保存和恢复这个进程的虚拟内存、全局变量等用户态资源。&lt;strong>中断上下文，其实只包括内核态中断服务程序执行所必需的状态，包括 CPU 寄存器、内核堆栈、硬件中断参数等&lt;/strong>。&lt;/p>
+&lt;div class="hx-overflow-x-auto hx-mt-6 hx-flex hx-rounded-lg hx-border hx-py-2 ltr:hx-pr-4 rtl:hx-pl-4 contrast-more:hx-border-current contrast-more:dark:hx-border-current hx-border-blue-200 hx-bg-blue-100 hx-text-blue-900 dark:hx-border-blue-200/30 dark:hx-bg-blue-900/30 dark:hx-text-blue-200">
+&lt;div class="ltr:hx-pl-3 ltr:hx-pr-2 rtl:hx-pr-3 rtl:hx-pl-2">&lt;div class="hx-select-none hx-text-xl" style="font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';">ℹ️&lt;/div>&lt;/div>
+&lt;div class="hx-w-full hx-min-w-0 hx-leading-7">
+&lt;div class="hx-mt-6 hx-leading-7 first:hx-mt-0">操作系统没有保存或恢复当前进程的虚拟内存、全局变量等用户态资源，因为这些资源在中断上下文切换过程中保持不变。中断处理程序运行在内核态，不会影响当前进程的虚拟内存映射。&lt;/div>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;strong>对同一个 CPU 来说，中断处理比进程拥有更高的优先级&lt;/strong>。所以中断上下文切换并不会与进程上下文切换同时发生。&lt;/p>
+&lt;p>跟进程上下文切换一样，中断上下文切换也需要消耗 CPU，切换次数过多也会耗费大量的 CPU，甚至严重降低系统的整体性能。所以，当你发现中断次数过多时，就需要注意去排查它是否会给你的系统带来严重的性能问题。&lt;/p>
+&lt;h3>上下文切换时的状态保存&lt;span class="hx-absolute -hx-mt-20" id="上下文切换时的状态保存">&lt;/span>
+&lt;a href="#%e4%b8%8a%e4%b8%8b%e6%96%87%e5%88%87%e6%8d%a2%e6%97%b6%e7%9a%84%e7%8a%b6%e6%80%81%e4%bf%9d%e5%ad%98" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>上下文切换时，需要保存和恢复 CPU 寄存器、内核栈、硬件中断参数等数据。&lt;/p>
+&lt;p>上下文被&lt;strong>保存在内核为该线程分配的 “内核栈” 中，或者结构体中，如 &lt;code>task_struct&lt;/code>（Linux）内的寄存器保存区&lt;/strong>。&lt;/p>
+&lt;p>在 Linux 中，每个线程（task）都有一个&lt;strong>内核维护的结构体 &lt;code>task_struct&lt;/code>，用来记录这个线程的上下文状态&lt;/strong>。&lt;/p>
+&lt;p>寄存器的值并不是随便保存在某块用户内存中，而是：&lt;/p>
+&lt;ol>
+&lt;li>保存到内核栈中（每个线程也有一个内核栈，通常大小为 8KB）。&lt;/li>
+&lt;li>或者在 &lt;code>task_struct&lt;/code> 中的一个子结构体（如 &lt;code>thread_struct&lt;/code>）里保留寄存器备份区。&lt;/li>
+&lt;/ol>
+&lt;p>重新调度线程上 CPU 时，通过调度器维护的指针，例如 &lt;code>task_struct&lt;/code> 指针从内核栈中恢复这些寄存器的值，这样才能让线程从上次的状态继续执行。&lt;/p>
+&lt;h3>操作系统何时在 CPU 上执行&lt;span class="hx-absolute -hx-mt-20" id="操作系统何时在-cpu-上执行">&lt;/span>
+&lt;a href="#%e6%93%8d%e4%bd%9c%e7%b3%bb%e7%bb%9f%e4%bd%95%e6%97%b6%e5%9c%a8-cpu-%e4%b8%8a%e6%89%a7%e8%a1%8c" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>操作系统是一个&lt;strong>事件驱动的核心控制器&lt;/strong>，不会一直占用 CPU，它在下面这些场景中才会执行：&lt;/p>
+&lt;ol>
+&lt;li>系统启动阶段&lt;/li>
+&lt;/ol>
+&lt;ul>
+&lt;li>开机后，BIOS/UEFI 加载引导程序 → 加载 OS 内核 → 内核初始化并接管 CPU。&lt;/li>
+&lt;/ul>
+&lt;ol start="2">
+&lt;li>中断发生时（包括硬件和软件中断）&lt;/li>
+&lt;/ol>
+&lt;ul>
+&lt;li>键盘敲击、时钟中断、网卡收包等 → 内核响应中断处理逻辑。&lt;/li>
+&lt;li>时钟中断触发调度器，操作系统决定哪个进程/线程接下来使用 CPU。&lt;/li>
+&lt;li>例如程序访问未映射的内存页，触发 page fault → 进入内核做缺页处理。&lt;/li>
+&lt;/ul>
+&lt;ol start="3">
+&lt;li>系统调用：系统调用使用了“软件中断指令”，如 &lt;code>int 0x80&lt;/code>，但在内核中，它被归类为“陷阱tra）” 而非 “中断 interrupt”。&lt;/li>
+&lt;/ol>
+&lt;ul>
+&lt;li>包括用户态程序执行系统调用。如文件读写、内存分配、进程创建等，会陷入内核态，内核执行对应的逻辑。&lt;/li>
+&lt;/ul>
+&lt;h2>中断&lt;span class="hx-absolute -hx-mt-20" id="中断">&lt;/span>
+&lt;a href="#%e4%b8%ad%e6%96%ad" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;strong>中断 (Interrupt)&lt;/strong> 是操作系统和硬件之间进行通信的一种方式。它的作用是：&lt;/p>
+&lt;p>当 CPU 正在处理某个任务时，如果有“更紧急”的事件发生，可以暂时打断当前任务，先去处理这个事件，处理完再回来继续干原来的事。&lt;/p>
+&lt;p>一个完整的中断处理机制，通常包括以下几个部分：&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>中断源&lt;/strong>：谁发起了中断？比如：键盘敲击、网络数据到达、磁盘读写完成等。&lt;/li>
+&lt;li>&lt;strong>中断控制器（PIC/APIC）&lt;/strong>：负责管理多个中断源的请求，判断谁优先。&lt;/li>
+&lt;li>&lt;strong>中断向量表&lt;/strong>：中断号 → 中断处理函数的地址映射表。&lt;/li>
+&lt;li>&lt;strong>中断处理程序（ISR）&lt;/strong>：具体处理这个中断的代码逻辑。&lt;/li>
+&lt;/ul>
+&lt;h3>中断分类&lt;span class="hx-absolute -hx-mt-20" id="中断分类">&lt;/span>
+&lt;a href="#%e4%b8%ad%e6%96%ad%e5%88%86%e7%b1%bb" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>类型&lt;/th>
+&lt;th>示例&lt;/th>
+&lt;th>特点&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>外部中断&lt;/td>
+&lt;td>键盘输入、鼠标移动、网卡收包、时钟中断（硬件定时器）&lt;/td>
+&lt;td>来自硬件&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>内部中断&lt;/td>
+&lt;td>除零错误、访问非法地址&lt;/td>
+&lt;td>由 CPU 执行出错触发&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>软件中断&lt;/td>
+&lt;td>系统调用&lt;/td>
+&lt;td>程序主动触发&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>不同类型的实现机制和触发机制不同。但目的和最终效果一样：&lt;strong>都是为了产生一个信号，从而让 CPU 暂止当前正在运行的程序、转而去执行中断处理程序、执行完之后再返回继续执行原程序&lt;/strong>。&lt;/p>
+&lt;h3>时钟中断&lt;span class="hx-absolute -hx-mt-20" id="时钟中断">&lt;/span>
+&lt;a href="#%e6%97%b6%e9%92%9f%e4%b8%ad%e6%96%ad" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>时钟中断（Timer Interrupt）是操作系统中的一个重要机制，它由硬件定时器定期触发。每次时钟中断，操作系统都会执行一系列任务，例如：&lt;/p>
+&lt;ol>
+&lt;li>时间管理（更新系统时间）&lt;/li>
+&lt;li>进程调度，&lt;strong>CPU 实际上只能同时运行一个进程（多核 CPU 也是每个核运行一个进程）&lt;/strong>，通过时钟中断，每隔 10ms 就暂停当前进程，切换到下一个进程运行。这个过程称为 时&lt;strong>间片轮转调度（Round Robin Scheduling）&lt;/strong>。&lt;/li>
+&lt;li>睡眠管理&lt;/li>
+&lt;li>看门狗机制（检测系统死锁）&lt;/li>
+&lt;/ol>
+&lt;p>时钟中断是周期性发生的，&lt;strong>操作系统依赖它来维持时间流动和任务管理&lt;/strong>。如果&lt;strong>没有它，系统将会“停滞”在某个任务中，无法切换进程，也无法正确处理延时任务&lt;/strong>。&lt;/p>
+&lt;h4>时钟中断的触发频率&lt;span class="hx-absolute -hx-mt-20" id="时钟中断的触发频率">&lt;/span>
+&lt;a href="#%e6%97%b6%e9%92%9f%e4%b8%ad%e6%96%ad%e7%9a%84%e8%a7%a6%e5%8f%91%e9%a2%91%e7%8e%87" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>时钟中断的频率由 &lt;strong>PIT 计时器&lt;/strong>设定，通常 OS 选择：&lt;/p>
+&lt;ul>
+&lt;li>10ms（100Hz）：Linux、Windows 默认值&lt;/li>
+&lt;li>1ms（1000Hz）：实时系统（RTOS）&lt;/li>
+&lt;/ul>
+&lt;h2>线程栈&lt;span class="hx-absolute -hx-mt-20" id="线程栈">&lt;/span>
+&lt;a href="#%e7%ba%bf%e7%a8%8b%e6%a0%88" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>在 Linux 操作系统中执行 &lt;code>pthread_create&lt;/code> 系统调用，进程会启动一个新的线程，如果用户没有通过软资源限制 &lt;code>RLIMIT_STACK&lt;/code> 指定线程栈的大小，那么操作系统会根据架构选择不同的默认栈大小。多数架构上默认栈大小都在 &lt;code>2~4MB&lt;/code> 左右，极少数架构会使用 32 MB 的栈。例如 &lt;code>x86_64&lt;/code> 架构是 2MB。&lt;/p>
+&lt;p>线程栈的缺点：&lt;/p>
+&lt;ul>
+&lt;li>这个&lt;strong>固定的栈大小&lt;/strong>在某些场景下不是合适的，如果程序需要同时运行几百个甚至上千个线程，会占用大量的内存空间，这对操作系统来说是一种负担。&lt;/li>
+&lt;li>当函数的调用栈非常深时，固定栈大小也无法满足用户程序的需求。&lt;/li>
+&lt;/ul>
+&lt;p>&lt;strong>每个线程栈空间互不重叠，独立分配，位于进程虚拟地址空间不同区域&lt;/strong>。&lt;/p>
+&lt;p>主线程的栈是进程启动时由内核分配的；&lt;/p>
+&lt;p>子线程的栈由 &lt;code>pthread_create&lt;/code> 时另行分配，不依赖主线程的栈。&lt;/p>
+&lt;h3>goroutine&lt;span class="hx-absolute -hx-mt-20" id="goroutine">&lt;/span>
+&lt;a href="#goroutine" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Go goroutine 的调度系统是建立在操作系统线程之上的。&lt;/p>
+&lt;p>&lt;code>pthread_create&lt;/code> 系统调用创建的线程是&lt;strong>内核态线程&lt;/strong>，Go 实现了&lt;strong>用户态线程&lt;/strong> goroutine。所有的线程都要自己调度（&lt;strong>相当于操作系统调度进程的主线程；进程的主线程进行二级调度，调度自己内部的线程&lt;/strong>）。但是它的额外开销和默认栈大小都比线程小很多。&lt;/p>
+&lt;p>goroutine 的栈空间并不是由操作系统分配，而是 Go 自己管理的：&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>goroutine 的初始栈很小只有 2KB&lt;/strong>。这个&lt;strong>初始栈由 Go runtime 在堆（heap）上分配，不是在线程栈上分配&lt;/strong>！&lt;/li>
+&lt;/ul></description></item></channel></rss>

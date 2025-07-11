@@ -1,0 +1,694 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Go Learning – 内存管理</title><link>https://shipengqi.github.io/golang-learn/docs/advance/mm/</link><description>Recent content in 内存管理 on Go Learning</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><atom:link href="https://shipengqi.github.io/golang-learn/docs/advance/mm/index.xml" rel="self" type="application/rss+xml"/><item><title>内存分配</title><link>https://shipengqi.github.io/golang-learn/docs/advance/mm/01_mm/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/advance/mm/01_mm/</guid><description>
+&lt;h2>内存分配器&lt;span class="hx-absolute -hx-mt-20" id="内存分配器">&lt;/span>
+&lt;a href="#%e5%86%85%e5%ad%98%e5%88%86%e9%85%8d%e5%99%a8" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>编程语言的内存分配器一般包含两种分配方法：&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>线性分配器&lt;/strong>（Sequential Allocator，Bump Allocator）&lt;/li>
+&lt;li>&lt;strong>空闲链表分配器&lt;/strong>（Free-List Allocator）&lt;/li>
+&lt;/ul>
+&lt;h3>线性分配器&lt;span class="hx-absolute -hx-mt-20" id="线性分配器">&lt;/span>
+&lt;a href="#%e7%ba%bf%e6%80%a7%e5%88%86%e9%85%8d%e5%99%a8" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>线性分配（Bump Allocator）是一种高效的内存分配方法，但是有较大的局限性。使用线性分配器时，只需要&lt;strong>在内存中维护一个指向内存特定位置的指针&lt;/strong>，用户程序向分配器申请内存时，分配器只需要&lt;strong>检查剩余的空闲内存、返回分配的内存区域并修改指针在内存中的位置&lt;/strong>。&lt;/p>
+&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/bump-allocator.png" alt="bump-allocator" width="80%">
+&lt;p>虽然&lt;strong>线性分配器实现为它带来了较快的执行速度以及较低的实现复杂&lt;/strong>度，但是线性分配器&lt;strong>无法在内存被释放时重用内存&lt;/strong>。&lt;/p>
+&lt;p>如下图，红色部分是已经被回收的内存，但是无法重新利用：&lt;/p>
+&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/bump-allocator-reclaim-memory.png" alt="bump-allocator-reclaim-memory" width="80%">
+&lt;p>所以线性分配器需要与合适的垃圾回收算法配合使用，例如：标记压缩（Mark-Compact）、复制回收（Copying GC）和分代回收（Generational GC）等算法。它们可以&lt;strong>通过拷贝的方式整理存活对象的碎片，将空闲内存定期合并&lt;/strong>，这样就能利用线性分配器的效率提升内存分配器的性能了。&lt;/p>
+&lt;p>因为线性分配器需要与具有&lt;strong>拷贝特性的垃圾回收算法&lt;/strong>配合，所以 C 和 C++ 等需要&lt;strong>直接对外暴露指针的语言就无法使用线性分配器&lt;/strong>。&lt;/p>
+&lt;h3>空闲链表分配器&lt;span class="hx-absolute -hx-mt-20" id="空闲链表分配器">&lt;/span>
+&lt;a href="#%e7%a9%ba%e9%97%b2%e9%93%be%e8%a1%a8%e5%88%86%e9%85%8d%e5%99%a8" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>空闲链表分配器（Free-List Allocator）&lt;strong>可以重用已经被释放的内存&lt;/strong>，它在内部会维护一个&lt;strong>类似链表的数据结构&lt;/strong>。当用户程序申请内存时，空闲链表分配器会依次遍历空闲的内存块，找到足够大的内存，然后申请新的资源并修改链表。&lt;/p>
+&lt;p>不同的内存块通过指针构成了链表，所以使用这种方式的分配器可以重新利用回收的资源，但是因为&lt;strong>分配内存时需要遍历链表，所以它的时间复杂度是 &lt;code>O(n)&lt;/code>&lt;/strong>。&lt;/p>
+&lt;p>空闲链表分配器选择内存块的策略：&lt;/p>
+&lt;ul>
+&lt;li>首次适应（First-Fit）：&lt;strong>从链表头开始遍历&lt;/strong>，选择第一个大小&lt;strong>大于申请内存&lt;/strong>的内存块；&lt;/li>
+&lt;li>循环首次适应（Next-Fit）：&lt;strong>从上次遍历的结束位置开始遍历&lt;/strong>，选择第一个大小&lt;strong>大于申请内存&lt;/strong>的内存块；&lt;/li>
+&lt;li>最优适应（Best-Fit）：从链表头遍历整个链表，选择&lt;strong>最合适的&lt;/strong>内存块；&lt;/li>
+&lt;li>&lt;strong>隔离适应（Segregated-Fit）：将内存分割成多个链表，每个链表中的内存块大小相同，根据申请的内存大小选择不同的链表&lt;/strong>。&lt;/li>
+&lt;/ul>
+&lt;p>&lt;strong>隔离适应策略&lt;/strong>：&lt;/p>
+&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/segregated-fit.png" alt="segregated-fit" width="80%">
+&lt;p>该策略会将内存分割成由 4、8、16、32 字节的内存块组成的链表，当向内存分配器申请 8 字节的内存时，它找到满足条件的空闲内存块并返回。&lt;strong>隔离适应的分配策略减少了需要遍历的内存块数量&lt;/strong>，提高了内存分配的效率。&lt;/p>
+&lt;h3>分级分配&lt;span class="hx-absolute -hx-mt-20" id="分级分配">&lt;/span>
+&lt;a href="#%e5%88%86%e7%ba%a7%e5%88%86%e9%85%8d" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Go 语言的内存分配器借鉴了线程缓存分配（Thread-Caching Malloc，TCMalloc）的设计。核心理念是&lt;strong>使用多级缓存将对象根据大小分类，并按照类别实施不同的分配策略&lt;/strong>。&lt;/p>
+&lt;p>Go 运行时根据对象的大小将对象分成微对象、小对象和大对象三种：&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>类别&lt;/th>
+&lt;th>大小&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>微对象&lt;/td>
+&lt;td>&lt;code>(0, 16B)&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>小对象&lt;/td>
+&lt;td>&lt;code>[16B, 32KB]&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>大对象&lt;/td>
+&lt;td>&lt;code>(32KB, +∞)&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>&lt;strong>程序中的绝大多数对象的大小都在 32KB 以下&lt;/strong>，所以&lt;strong>分别处理大对象和小对象&lt;/strong>有利于&lt;strong>提高内存分配器的性能&lt;/strong>。&lt;/p>
+&lt;h4>多级缓存&lt;span class="hx-absolute -hx-mt-20" id="多级缓存">&lt;/span>
+&lt;a href="#%e5%a4%9a%e7%ba%a7%e7%bc%93%e5%ad%98" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>内存分配器还会将内存分成不同的级别分别管理，TCMalloc 和 Go 运行时分配器都会引入&lt;strong>线程缓存&lt;/strong>（Thread Cache）、&lt;strong>中心缓存&lt;/strong>（Central Cache）和&lt;strong>页堆&lt;/strong>（Page Heap）三个组件分级管理内存：&lt;/p>
+&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/multi-level-cache.png" alt="multi-level-cache" width="50%">
+&lt;ul>
+&lt;li>&lt;strong>线程缓存&lt;/strong>（&lt;code>mcache&lt;/code>）：每个线程都有一个线程缓存，它能够满足线程上绝大多数的内存分配需求，因为不涉及多线程，所以也不需要使用互斥锁来保护内存，这能够减少锁竞争带来的性能损耗。&lt;/li>
+&lt;li>&lt;strong>中心缓存&lt;/strong>（&lt;code>mcentral&lt;/code>）：当线程缓存不能满足需求时，运行时会使用中心缓存作为&lt;strong>补充解决小对象的内存分配&lt;/strong>。&lt;/li>
+&lt;li>&lt;strong>页堆&lt;/strong>（&lt;code>mheap&lt;/code>）：遇到 32KB 以上的对象时，内存分配器会选择页堆直接分配大内存。&lt;/li>
+&lt;/ul>
+&lt;h3>虚拟内存布局&lt;span class="hx-absolute -hx-mt-20" id="虚拟内存布局">&lt;/span>
+&lt;a href="#%e8%99%9a%e6%8b%9f%e5%86%85%e5%ad%98%e5%b8%83%e5%b1%80" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Go 1.10 以前的版本，堆区的内存空间都是连续的；但是在 1.11 版本，Go 使用稀疏的堆内存空间替代了连续的内存，解决了连续内存带来的限制以及在特殊场景下可能出现的问题。&lt;/p>
+&lt;h3>Go 1.10 的线性内存&lt;span class="hx-absolute -hx-mt-20" id="go-110-的线性内存">&lt;/span>
+&lt;a href="#go-110-%e7%9a%84%e7%ba%bf%e6%80%a7%e5%86%85%e5%ad%98" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Go 在程序启动的时候，会先向操作系统申请一块内存（这只是一段虚拟的地址空间，并不会真正地分配内存），包括三个区域 &lt;code>spans&lt;/code>、&lt;code>bitmap&lt;/code> 和 &lt;code>arena&lt;/code> 分别预留了 512MB、16GB 以及 512GB 的内存空间：&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/go-heap-1.10.png" alt="go-heap-1.10" loading="lazy" />&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>spans&lt;/code>：存储了 &lt;code>runtime.mspan&lt;/code>（内存管理单元）的指针，&lt;strong>每个内存单元会管理几页的内存空间，每页大小为 8KB&lt;/strong>；&lt;/li>
+&lt;li>&lt;code>bitmap&lt;/code>：用于标识 &lt;code>arena&lt;/code> 区域中的那些地址保存了对象，&lt;strong>位图中的每个字节都会表示堆区中的 32 字节是否空闲&lt;/strong>；&lt;/li>
+&lt;li>&lt;code>arena&lt;/code>：真正的堆区，运行时会将 8KB 看做一页，&lt;strong>这些内存页中存储了所有在堆上初始化的对象&lt;/strong>；&lt;/li>
+&lt;/ul>
+&lt;p>找到任意一个地址对应的 &lt;code>runtime.mspan&lt;/code>：&lt;/p>
+&lt;ol>
+&lt;li>根据 &lt;code>arena&lt;/code> 的基地址计算该地址所在的页号。&lt;/li>
+&lt;li>通过 &lt;code>mheap.spans&lt;/code> 数组获得管理该片内存的管理单元 &lt;code>runtime.mspan&lt;/code>（&lt;code>mheap_.spans[page]&lt;/code> 页号就是数组的索引）。&lt;/li>
+&lt;/ol>
+&lt;p>Go 在垃圾回收时会根据指针的地址判断对象是否在堆中，并通过上面的方式到管理该对象的 &lt;code>runtime.mspan&lt;/code>。但是这种方式又一个前提，就是&lt;strong>堆区的内存必须是连续的&lt;/strong>。&lt;/p>
+&lt;p>在 C 和 Go 混合使用时，线性堆内存的问题：&lt;/p>
+&lt;ol>
+&lt;li>分配的内存地址会发生冲突，导致堆的初始化和扩容失败；&lt;/li>
+&lt;li>没有被预留的大块内存可能会被分配给 C 语言的二进制，导致扩容后的堆不连续；&lt;/li>
+&lt;/ol>
+&lt;div class="hx-overflow-x-auto hx-mt-6 hx-flex hx-rounded-lg hx-border hx-py-2 ltr:hx-pr-4 rtl:hx-pl-4 contrast-more:hx-border-current contrast-more:dark:hx-border-current hx-border-blue-200 hx-bg-blue-100 hx-text-blue-900 dark:hx-border-blue-200/30 dark:hx-bg-blue-900/30 dark:hx-text-blue-200">
+&lt;div class="ltr:hx-pl-3 ltr:hx-pr-2 rtl:hx-pr-3 rtl:hx-pl-2">&lt;div class="hx-select-none hx-text-xl" style="font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';">ℹ️&lt;/div>&lt;/div>
+&lt;div class="hx-w-full hx-min-w-0 hx-leading-7">
+&lt;div class="hx-mt-6 hx-leading-7 first:hx-mt-0">&lt;ul>
+&lt;li>线性的堆内存需要预留大块的内存空间，但是申请大块的内存空间而不使用太浪费了。&lt;/li>
+&lt;li>不预留内存空间的话在特殊场景下造成程序崩溃。&lt;/li>
+&lt;/ul>
+&lt;/div>
+&lt;/div>
+&lt;/div>
+&lt;h3>Go 1.11 的稀疏内存方案&lt;span class="hx-absolute -hx-mt-20" id="go-111-的稀疏内存方案">&lt;/span>
+&lt;a href="#go-111-%e7%9a%84%e7%a8%80%e7%96%8f%e5%86%85%e5%ad%98%e6%96%b9%e6%a1%88" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>使用稀疏的内存布局不仅能移除堆大小的上限，还能解决 C 和 Go 混合使用时的地址空间冲突问题。但是基于稀疏内存的内存管理失去了内存的连续性这一特征，使内存管理变得更加复杂：&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/go-heap-1.11.png" alt="go-heap-1.11" loading="lazy" />&lt;/p>
+&lt;p>使用一个 &lt;code>runtime.heapArena&lt;/code> 数组管理所有内存。每个 &lt;code>runtime.heapArena&lt;/code> 管理 64MB 的内存。&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">type&lt;/span> &lt;span class="nx">heapArena&lt;/span> &lt;span class="kd">struct&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">bitmap&lt;/span> &lt;span class="p">[&lt;/span>&lt;span class="nx">heapArenaBitmapBytes&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="kt">byte&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">spans&lt;/span> &lt;span class="p">[&lt;/span>&lt;span class="nx">pagesPerArena&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="nx">mspan&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">pageInUse&lt;/span> &lt;span class="p">[&lt;/span>&lt;span class="nx">pagesPerArena&lt;/span> &lt;span class="o">/&lt;/span> &lt;span class="mi">8&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="kt">uint8&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">pageMarks&lt;/span> &lt;span class="p">[&lt;/span>&lt;span class="nx">pagesPerArena&lt;/span> &lt;span class="o">/&lt;/span> &lt;span class="mi">8&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="kt">uint8&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">pageSpecials&lt;/span> &lt;span class="p">[&lt;/span>&lt;span class="nx">pagesPerArena&lt;/span> &lt;span class="o">/&lt;/span> &lt;span class="mi">8&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="kt">uint8&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">checkmarks&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">checkmarksMap&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">zeroedBase&lt;/span> &lt;span class="kt">uintptr&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;ul>
+&lt;li>&lt;code>heapArena&lt;/code> 中的 &lt;code>bitmap&lt;/code> 和 &lt;code>spans&lt;/code> 和线性内存中的意思一样。&lt;/li>
+&lt;li>&lt;code>zeroedBase&lt;/code> 字段指向了该结构体管理的内存的基地址。&lt;/li>
+&lt;/ul>
+&lt;p>上述设计将原有&lt;strong>的连续大内存切分成稀疏的小内存，而用于管理这些内存的元信息也被切成了小块&lt;/strong>。&lt;/p>
+&lt;h2>内存管理组件&lt;span class="hx-absolute -hx-mt-20" id="内存管理组件">&lt;/span>
+&lt;a href="#%e5%86%85%e5%ad%98%e7%ae%a1%e7%90%86%e7%bb%84%e4%bb%b6" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Go 语言的内存分配器包含内存管理单元（&lt;code>runtime.mspan&lt;/code>）、线程缓存（&lt;code>runtime.mcache&lt;/code>）、中心缓存（&lt;code>runtime.mcentral&lt;/code>）和页堆（&lt;code>runtime.mheap&lt;/code>）几个重要组件。&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/go-mem-component.png" alt="go-mem-component" loading="lazy" />&lt;/p>
+&lt;p>Go 程序会在启动时初始化如上图所示的内存布局。&lt;/p>
+&lt;ol>
+&lt;li>&lt;strong>每一个处理器都会分配一个线程缓存 &lt;code>runtime.mcache&lt;/code> 用于处理微对象和小对象的分配，它们会持有内存管理单元 &lt;code>runtime.mspan&lt;/code>&lt;/strong>。&lt;/li>
+&lt;li>当 &lt;code>mspan&lt;/code> 不存在空闲 &lt;code>object&lt;/code> 时，从 &lt;code>runtime.mheap&lt;/code> 持有的 134 个中心缓存 &lt;code>runtime.mcentral&lt;/code> 中获取新的内存单元。中心缓存属于全局的堆结构体 &lt;code>runtime.mheap&lt;/code>，它会从操作系统中申请内存。&lt;/li>
+&lt;/ol>
+&lt;p>在 amd64 的 Linux 操作系统上，&lt;code>runtime.mheap&lt;/code> 会持有 4,194,304 &lt;code>runtime.heapArena&lt;/code>，每个 &lt;code>runtime.heapArena&lt;/code> 都会管理 64MB 的内存，单个 Go 语言程序的内存上限也就是 256TB。&lt;/p>
+&lt;h3>内存管理单元 msapn&lt;span class="hx-absolute -hx-mt-20" id="内存管理单元-msapn">&lt;/span>
+&lt;a href="#%e5%86%85%e5%ad%98%e7%ae%a1%e7%90%86%e5%8d%95%e5%85%83-msapn" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">type&lt;/span> &lt;span class="nx">mspan&lt;/span> &lt;span class="kd">struct&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">next&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">mspan&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">prev&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">mspan&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">list&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">mSpanList&lt;/span> &lt;span class="c1">// For debugging.
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// mspan 内存的开始位置，N 个连续 page 内存的开始位置
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">startAddr&lt;/span> &lt;span class="kt">uintptr&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 该 span 管理的页数
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">npages&lt;/span> &lt;span class="kt">uintptr&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 空闲 object 链表的开始位置
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">freeindex&lt;/span> &lt;span class="kt">uintptr&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 一共有多少个 object
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">nelems&lt;/span> &lt;span class="kt">uintptr&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 决定 object 的大小、以及当前 mspan 是否需要垃圾回收扫描
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">spanclass&lt;/span> &lt;span class="nx">spanClass&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">allocBits&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">gcBits&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">gcmarkBits&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">gcBits&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">allocCache&lt;/span> &lt;span class="kt">uint64&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">state&lt;/span> &lt;span class="nx">mSpanStateBox&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;ul>
+&lt;li>&lt;code>npages&lt;/code> 就代表了这个 &lt;code>mspan&lt;/code> 是由几个连续的 page 组成。&lt;strong>&lt;code>mspan&lt;/code> 是由 N 个且连续的 page 组成&lt;/strong>，可以是一个 page，也可以是 2 个、3 个或者更多。&lt;/li>
+&lt;li>&lt;strong>相邻的 &lt;code>mspan&lt;/code> 互相引用组成一个双向链表&lt;/strong>。&lt;/li>
+&lt;li>&lt;code>startAddr&lt;/code> 和 &lt;code>npages&lt;/code> 就可以确定该结构体管理的多个页所在的内存，每个页的大小都是 8KB。&lt;/li>
+&lt;li>&lt;code>allocBits&lt;/code> 是一个 bitmap，记录 mspan 中每个对象（object）的分配状态，每个 bit 对应 mspan 中的一个对象。：
+&lt;ul>
+&lt;li>&lt;code>1&lt;/code>：表示对象已被分配（正在使用或未被回收）。&lt;/li>
+&lt;li>&lt;code>0&lt;/code>：表示对象未被分配（空闲，可能在 &lt;code>freelist&lt;/code> 中）。&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;code>gcmarkBits&lt;/code>： 垃圾回收标记位图。&lt;code>1&lt;/code>：对象被标记为存活（可达），&lt;code>0&lt;/code>：对象未被标记（待回收）。标记过程：
+&lt;ul>
+&lt;li>初始状态：所有 bit 为 0（白色）。&lt;/li>
+&lt;li>标记阶段：从根对象出发，递归标记存活对象，将对应 bit 置 1（灰色→黑色）。&lt;/li>
+&lt;li>清扫阶段：对比 &lt;code>allocBits&lt;/code> 和 &lt;code>gcmarkBits&lt;/code>，回收未被标记的对象。&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;code>allocCache&lt;/code>：&lt;code>allocBits&lt;/code> 的补码，可以用于快速查找内存中未被使用的内存。&lt;/li>
+&lt;/ul>
+&lt;h4>Go 是按页 page 8KB 为最小单位分配内存的吗？&lt;span class="hx-absolute -hx-mt-20" id="go-是按页-page-8kb-为最小单位分配内存的吗">&lt;/span>
+&lt;a href="#go-%e6%98%af%e6%8c%89%e9%a1%b5-page-8kb-%e4%b8%ba%e6%9c%80%e5%b0%8f%e5%8d%95%e4%bd%8d%e5%88%86%e9%85%8d%e5%86%85%e5%ad%98%e7%9a%84%e5%90%97" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>不是，如果这样的话会导致内存使用率不高。Go 内存管理器会把 &lt;code>mspan&lt;/code> 再拆解为更小粒度的单位 &lt;code>object&lt;/code>。&lt;/p>
+&lt;p>&lt;strong>所有的空闲 &lt;code>object&lt;/code> 构成一个链表&lt;/strong>，但并不是 &lt;code>LinkedList&lt;/code> 结构而是 &lt;code>FreeList&lt;/code> 结构。&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/go-heap-mspan.png" alt="go-heap-mspan" loading="lazy" />&lt;/p>
+&lt;h4>FreeList&lt;span class="hx-absolute -hx-mt-20" id="freelist">&lt;/span>
+&lt;a href="#freelist" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>&lt;code>FreeList&lt;/code> 采用 &lt;strong>隐式链表&lt;/strong>（Embedded Linked List）设计。&lt;/p>
+&lt;ul>
+&lt;li>没有 &lt;code>Next&lt;/code> 属性，而是通过 &lt;code>object&lt;/code> 内存的前 8 字节来存储下一个空闲对象的地址。&lt;/li>
+&lt;li>分配出去的节点，先将 &lt;code>freeindex&lt;/code> 指向下一个空闲对象再返回，（节点整块内存空间可以被覆盖，包括下一个节点的指针）。&lt;/li>
+&lt;/ul>
+&lt;h4>分配内存&lt;span class="hx-absolute -hx-mt-20" id="分配内存">&lt;/span>
+&lt;a href="#%e5%88%86%e9%85%8d%e5%86%85%e5%ad%98" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>当用户程序或者线程向 &lt;code>runtime.mspan&lt;/code> 申请内存时，它会使用 &lt;code>allocCache&lt;/code> 字段以 &lt;code>object&lt;/code> 为单位在管理的内存中快速查找待分配的空间：&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/go-heap-mspan-alloc.png" alt="go-heap-mspan-alloc" loading="lazy" />&lt;/p>
+&lt;p>如果能在内存中找到空闲的内存单元会直接返回，当内存中不包含空闲的内存时，运行时会以页为单位向堆申请内存。&lt;/p>
+&lt;h4>状态&lt;span class="hx-absolute -hx-mt-20" id="状态">&lt;/span>
+&lt;a href="#%e7%8a%b6%e6%80%81" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>&lt;code>mspan.state&lt;/code> 可能有 4 个状态：&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>mSpanFree&lt;/code>：表示该 &lt;code>mspan&lt;/code> 在空闲堆中。&lt;/li>
+&lt;li>&lt;code>mSpanManual&lt;/code> 和 &lt;code>mSpanInUse&lt;/code>：表示该 &lt;code>mspan&lt;/code> 正在被使用，有部分 &lt;code>object&lt;/code> 被分配出去了。&lt;/li>
+&lt;li>&lt;code>mSpanDead&lt;/code>。&lt;/li>
+&lt;/ul>
+&lt;p>&lt;strong>设置 &lt;code>runtime.mspan&lt;/code> 状态的操作必须是原子性的&lt;/strong>以避免垃圾回收造成的线程竞争问题。&lt;/p>
+&lt;h4>跨度类 spanclass&lt;span class="hx-absolute -hx-mt-20" id="跨度类-spanclass">&lt;/span>
+&lt;a href="#%e8%b7%a8%e5%ba%a6%e7%b1%bb-spanclass" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>&lt;code>runtime.spanClass&lt;/code> 它决定了内存管理单元中存储的对象大小和个数。Go 的内存管理模块中一共包含 67 种跨度类，每一个跨度类都会存储特定大小的对象并且包含特定数量的页数以及对象。&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>class&lt;/th>
+&lt;th>bytes/obj&lt;/th>
+&lt;th>bytes/span&lt;/th>
+&lt;th>objects&lt;/th>
+&lt;th>tail waste&lt;/th>
+&lt;th>max waste&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>1&lt;/td>
+&lt;td>8&lt;/td>
+&lt;td>8192&lt;/td>
+&lt;td>1024&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>87.50%&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>2&lt;/td>
+&lt;td>16&lt;/td>
+&lt;td>8192&lt;/td>
+&lt;td>512&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>43.75%&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>3&lt;/td>
+&lt;td>24&lt;/td>
+&lt;td>8192&lt;/td>
+&lt;td>341&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>29.24%&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>4&lt;/td>
+&lt;td>32&lt;/td>
+&lt;td>8192&lt;/td>
+&lt;td>256&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>46.88%&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>5&lt;/td>
+&lt;td>48&lt;/td>
+&lt;td>8192&lt;/td>
+&lt;td>170&lt;/td>
+&lt;td>32&lt;/td>
+&lt;td>31.52%&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>6&lt;/td>
+&lt;td>64&lt;/td>
+&lt;td>8192&lt;/td>
+&lt;td>128&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>23.44%&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>7&lt;/td>
+&lt;td>80&lt;/td>
+&lt;td>8192&lt;/td>
+&lt;td>102&lt;/td>
+&lt;td>32&lt;/td>
+&lt;td>19.07%&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>…&lt;/td>
+&lt;td>…&lt;/td>
+&lt;td>…&lt;/td>
+&lt;td>…&lt;/td>
+&lt;td>…&lt;/td>
+&lt;td>…&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>67&lt;/td>
+&lt;td>32768&lt;/td>
+&lt;td>32768&lt;/td>
+&lt;td>1&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>12.50%&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>上表展示了对象大小从 8B 到 32KB，总共 67 种跨度类的大小、存储的对象数以及浪费的内存空间。&lt;/p>
+&lt;p>以跨度类为 5 为例，它的 &lt;code>runtime.mspan&lt;/code> 中对象的大小上限为 48 字节、管理 1 个页（8 KB）、最多可以存储 170 个对象。因为内存需要按照页进行管理，所以在尾部会浪费 32 （&lt;code>8192 - 170*48 = 32&lt;/code>）字节的内存。当页中存储的对象都是 33 字节时，最多会浪费 31.52% 的资源（这是比较极端的情况，小于 33 字节的会使用跨度类 4）。&lt;/p>
+&lt;p>&lt;strong>运行时中还包含 ID 为 0 的特殊跨度类，它能够管理大于 32KB 的特殊对象&lt;/strong>。&lt;/p>
+&lt;h5>noscan&lt;span class="hx-absolute -hx-mt-20" id="noscan">&lt;/span>
+&lt;a href="#noscan" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h5>&lt;p>跨度类中除了存储类别的 ID 之外，它还会存储一个 &lt;code>noscan&lt;/code> 标记位。&lt;strong>该标记位表示是否需要垃圾回收&lt;/strong>。&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/go-spanclass.png" alt="go-spanclass" loading="lazy" />&lt;/p>
+&lt;h3>线程缓存 mcache&lt;span class="hx-absolute -hx-mt-20" id="线程缓存-mcache">&lt;/span>
+&lt;a href="#%e7%ba%bf%e7%a8%8b%e7%bc%93%e5%ad%98-mcache" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>runtime.mcache&lt;/code> 是 Go 语言中的线程缓存，它会与线程上的处理器一一绑定，主要用来缓存用户程序申请的微小对象。&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>&lt;code>mcache&lt;/code> 的 &lt;code>tiny&lt;/code> 结构主要负责分配微对象&lt;/strong>&lt;/li>
+&lt;li>&lt;strong>&lt;code>mcache&lt;/code> 的 &lt;code>alloc&lt;/code> 结构主要负责分配小对象&lt;/strong>。&lt;code>alloc&lt;/code> 结构持有 &lt;code>68*2&lt;/code> 个 &lt;code>runtime.mspan&lt;/code>。&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>mcache&lt;/code> 初始化时是不包含 &lt;code>runtime.mspan&lt;/code> 的，只有当用户程序申请内存时才会去获取新的 &lt;code>mspan&lt;/code>。&lt;/p>
+&lt;h4>微分配器 tiny&lt;span class="hx-absolute -hx-mt-20" id="微分配器-tiny">&lt;/span>
+&lt;a href="#%e5%be%ae%e5%88%86%e9%85%8d%e5%99%a8-tiny" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">type&lt;/span> &lt;span class="nx">mcache&lt;/span> &lt;span class="kd">struct&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">tiny&lt;/span> &lt;span class="kt">uintptr&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">tinyoffset&lt;/span> &lt;span class="kt">uintptr&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">local_tinyallocs&lt;/span> &lt;span class="kt">uintptr&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;strong>微分配器只会用于分配非指针类型的内存&lt;/strong>。&lt;/p>
+&lt;p>&lt;code>tiny&lt;/code> 会指向堆中的一片内存，&lt;code>tinyOffset&lt;/code> 是下一个空闲内存所在的偏移量，最后的 &lt;code>local_tinyallocs&lt;/code> 会记录内存分配器中分配的对象个数。&lt;/p>
+&lt;h3>中心缓存 mcentral&lt;span class="hx-absolute -hx-mt-20" id="中心缓存-mcentral">&lt;/span>
+&lt;a href="#%e4%b8%ad%e5%bf%83%e7%bc%93%e5%ad%98-mcentral" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>runtime.mcentral&lt;/code> 是内存分配器的中心缓存，与线程缓存不同，&lt;strong>访问中心缓存中的内存管理单元需要使用互斥锁&lt;/strong>&lt;/p>
+&lt;p>每个中心缓存都会管理某个跨度类的内存管理单元，它会同时持有两个 &lt;code>runtime.spanSet&lt;/code>，分别存储包含空闲对象和不包含空闲对象的内存管理单元。&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">type&lt;/span> &lt;span class="nx">mcentral&lt;/span> &lt;span class="kd">struct&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">spanclass&lt;/span> &lt;span class="nx">spanClass&lt;/span> &lt;span class="c1">// 跨度类
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">partial&lt;/span> &lt;span class="p">[&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="nx">spanSet&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">full&lt;/span> &lt;span class="p">[&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="nx">spanSet&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h3>页堆&lt;span class="hx-absolute -hx-mt-20" id="页堆">&lt;/span>
+&lt;a href="#%e9%a1%b5%e5%a0%86" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>runtime.mheap&lt;/code> 是内存分配的核心结构体，作为一个&lt;strong>全局变量存储&lt;/strong>。堆上初始化的所有对象都由该结构体统一管理，该结构体中包含两组非常重要的字段，其中一个是&lt;strong>全局的中心缓存列表 &lt;code>central&lt;/code>&lt;/strong>，另一个是&lt;strong>管理堆区内存区域的 &lt;code>arenas&lt;/code> 以及相关字段&lt;/strong>。&lt;/p>
+&lt;h3>堆内存分配过程&lt;span class="hx-absolute -hx-mt-20" id="堆内存分配过程">&lt;/span>
+&lt;a href="#%e5%a0%86%e5%86%85%e5%ad%98%e5%88%86%e9%85%8d%e8%bf%87%e7%a8%8b" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;h4>微对象分配&lt;span class="hx-absolute -hx-mt-20" id="微对象分配">&lt;/span>
+&lt;a href="#%e5%be%ae%e5%af%b9%e8%b1%a1%e5%88%86%e9%85%8d" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/micro-object-malloc.png" alt="micro-object-malloc" loading="lazy" />&lt;/p>
+&lt;ol>
+&lt;li>&lt;code>mcache&lt;/code> 的 &lt;code>tiny&lt;/code> 内存充足，则直接分配微对象所需内存。&lt;/li>
+&lt;li>&lt;code>mcache&lt;/code> 的 &lt;code>tiny&lt;/code> 内存不足，先去 &lt;code>mcache&lt;/code> 的 &lt;code>alloc&lt;/code> 申请 16B 给 tiny，再分配微对象所需内存。&lt;/li>
+&lt;/ol>
+&lt;h4>小对象分配&lt;span class="hx-absolute -hx-mt-20" id="小对象分配">&lt;/span>
+&lt;a href="#%e5%b0%8f%e5%af%b9%e8%b1%a1%e5%88%86%e9%85%8d" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/small-object-malloc.png" alt="small-object-malloc" loading="lazy" />&lt;/p>
+&lt;ol>
+&lt;li>&lt;code>mcache&lt;/code> 的 &lt;code>alloc&lt;/code> 充足，则直接分配小对象所需内存。&lt;/li>
+&lt;li>&lt;code>mcache&lt;/code> 的 &lt;code>alloc&lt;/code> 不足，则去中央缓存 &lt;code>mcentral&lt;/code> 获取一个 &lt;code>mspan&lt;/code>，再分配小对象所需内存。&lt;/li>
+&lt;li>&lt;code>mcache&lt;/code> 的 &lt;code>alloc&lt;/code> 不足，且中央缓存 &lt;code>mcentral&lt;/code> 不足，则去逻辑处理器结构的 &lt;code>p.pagecache&lt;/code> 分配。&lt;/li>
+&lt;li>如果 &lt;code>pagecache&lt;/code> 也不足，直接去堆上 &lt;code>mheap&lt;/code> 获取一个 &lt;code>mspan&lt;/code>，再分配小对象所需内存。&lt;/li>
+&lt;/ol>
+&lt;h4>大对象分配&lt;span class="hx-absolute -hx-mt-20" id="大对象分配">&lt;/span>
+&lt;a href="#%e5%a4%a7%e5%af%b9%e8%b1%a1%e5%88%86%e9%85%8d" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>对于大于 32KB 的大对象会单独处理，运行时不会从线程缓存或者中心缓存中获取内存管理单元，而是直接调用 &lt;code>runtime.mcache.allocLarge&lt;/code> 分配大片内存。&lt;/p>
+&lt;p>申请内存时会创建一个跨度类为 &lt;code>0&lt;/code> 的 &lt;code>runtime.spanClass&lt;/code> 并调用 &lt;code>runtime.mheap.alloc&lt;/code> 分配一个管理对应内存的管理单元。&lt;/p></description></item><item><title>垃圾回收</title><link>https://shipengqi.github.io/golang-learn/docs/advance/mm/02_gc/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/advance/mm/02_gc/</guid><description>
+&lt;p>Go 的垃圾回收（GC）器主要使用&lt;strong>并发三色标记算法&lt;/strong>，结合&lt;strong>写屏障&lt;/strong>（write barrier）保证并发阶段的一致性，最终释放无效对象。&lt;/p>
+&lt;h2>什么是 GC&lt;span class="hx-absolute -hx-mt-20" id="什么是-gc">&lt;/span>
+&lt;a href="#%e4%bb%80%e4%b9%88%e6%98%af-gc" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>GC，全称 GarbageCollection，即垃圾回收，是一种自动内存管理的机制。&lt;/p>
+&lt;p>当程序向操作系统申请的内存不再需要时，垃圾回收主动将其回收并供其他代码进行内存申请时候复用，或者将其归还给操作系统，这种针对内存级别资源的自动回收过程，即为垃圾回收。而负责垃圾回收的程序组件，即为垃圾回收器。&lt;/p>
+&lt;p>垃圾回收器的执行过程被划分为两个半独立的组件：&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>赋值器&lt;/strong>（Mutator）：这一名称本质上是在指代用户态的代码。因为对垃圾回收器而言，用户态的代码仅仅只是在修改对象之间的引用关系，也就是在&lt;strong>对象图（对象之间引用关系的一个有向图）上进行操作&lt;/strong>。&lt;/li>
+&lt;li>&lt;strong>回收器&lt;/strong>（Collector）：负责执行垃圾回收的代码。&lt;/li>
+&lt;/ul>
+&lt;h2>常见的 GC 实现方式&lt;span class="hx-absolute -hx-mt-20" id="常见的-gc-实现方式">&lt;/span>
+&lt;a href="#%e5%b8%b8%e8%a7%81%e7%9a%84-gc-%e5%ae%9e%e7%8e%b0%e6%96%b9%e5%bc%8f" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>所有的 GC 算法其存在形式可以归结为追踪（Tracing）和引用计数（Reference Counting）这两种形式的混合运用。&lt;/p>
+&lt;h3>追踪式 GC&lt;span class="hx-absolute -hx-mt-20" id="追踪式-gc">&lt;/span>
+&lt;a href="#%e8%bf%bd%e8%b8%aa%e5%bc%8f-gc" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>从根对象出发，根据对象之间的引用信息，一步步推进直到扫描完毕整个堆并确定需要保留的对象，从而回收所有可回收的对象。Go、 Java、V8 对 JavaScript 的实现等均为追踪式 GC。&lt;/p>
+&lt;h3>引用计数式 GC&lt;span class="hx-absolute -hx-mt-20" id="引用计数式-gc">&lt;/span>
+&lt;a href="#%e5%bc%95%e7%94%a8%e8%ae%a1%e6%95%b0%e5%bc%8f-gc" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>每个对象自身包含一个被引用的计数器，当计数器归零时自动得到回收。因为此方法缺陷较多，在追求高性能时通常不被应用。Python、Objective-C 等均为引用计数式 GC。&lt;/p>
+&lt;h2>标记清除&lt;span class="hx-absolute -hx-mt-20" id="标记清除">&lt;/span>
+&lt;a href="#%e6%a0%87%e8%ae%b0%e6%b8%85%e9%99%a4" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>标记清除（Mark-Sweep）算法是最常见的垃圾收集算法，标记清除收集器是跟踪式垃圾收集器，其执行过程可以分成标记（Mark）和清除（Sweep）两个阶段：&lt;/p>
+&lt;ol>
+&lt;li>标记阶段：从根对象出发查找并标记堆中所有存活的对象；&lt;/li>
+&lt;li>清除阶段：遍历堆中的全部对象，回收未被标记的垃圾对象并将回收的内存加入空闲链表；&lt;/li>
+&lt;/ol>
+&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/go-mark.png" alt="go-mark" width="80%">
+&lt;p>从根对象出发依次遍历对象的子对象并将从根节点可达的对象都标记成存活状态，即 A、C 和 D 三个对象，剩余的 B、E 和 F 三个对象因为从根节点不可达，所以会被当做垃圾。&lt;/p>
+&lt;p>标记阶段结束后会进入清除阶段，在该阶段中收集器会依次遍历堆中的所有对象，释放其中没有被标记的 B、E 和 F 三个对象并将新的空闲内存空间以链表的结构串联起来：&lt;/p>
+&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/go-sweep.png" alt="go-sweep" width="80%">
+&lt;p>这是最传统的标记清除算法，整个过程需要标记对象的存活状态，用户程序在垃圾收集的过程中也不能执行（STW，Stop the world）。&lt;/p>
+&lt;h2>三色抽象&lt;span class="hx-absolute -hx-mt-20" id="三色抽象">&lt;/span>
+&lt;a href="#%e4%b8%89%e8%89%b2%e6%8a%bd%e8%b1%a1" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>为了解决原始标记清除算法带来的长时间 STW，现代的追踪式垃圾收集器会实现三色标记算法的变种以缩短 STW 的时间。&lt;/p>
+&lt;p>三色标记算法将程序中的对象分成白色、黑色和灰色三类：&lt;/p>
+&lt;ul>
+&lt;li>白色对象：潜在的垃圾，其内存可能会被垃圾收集器回收；&lt;/li>
+&lt;li>黑色对象：活跃的对象，包括不存在任何引用外部指针的对象以及从根对象可达的对象；&lt;/li>
+&lt;li>灰色对象：活跃的对象，因为存在指向白色对象的外部指针，垃圾收集器会扫描这些对象的子对象；&lt;/li>
+&lt;/ul>
+&lt;p>在垃圾收集器开始工作时，程序中不存在任何的黑色对象，根对象会被标记成灰色，其他所有对象都是白色。&lt;/p>
+&lt;p>标记过程：&lt;/p>
+&lt;ol>
+&lt;li>从灰色对象的集合中选择一个灰色对象并将其标记成黑色。&lt;/li>
+&lt;li>从黑色对象出发，扫描所有可达对象并标记为灰色，保证该对象和被该对象引用的对象都不会被回收。&lt;/li>
+&lt;li>重复 1，2，直到不存在灰色对象。&lt;/li>
+&lt;/ol>
+&lt;p>&lt;strong>当三色的标记清除的标记阶段结束之后，应用程序的堆中就不存在任何的灰色对象，我们只能看到黑色的存活对象以及白色的垃圾对象，垃圾收集器可以回收这些白色的垃圾&lt;/strong>。&lt;/p>
+&lt;p>因为用户程序可能在标记执行的过程中修改对象的指针，所以三&lt;strong>色标记清除算法本身是不可以并发或者增量执行的，它仍然需要 STW&lt;/strong>。&lt;/p>
+&lt;p>例如下图的三色标记过程中，用户程序建立了从 A 对象到 D 对象的引用，但是因为程序中已经不存在灰色对象指向 D 了，所以 D 对象会被垃圾收集器错误地回收。&lt;/p>
+&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/color-mark.png" alt="color-mark" width="38%">
+&lt;p>本来不应该被回收的对象却被回收了，这在内存管理中是非常严重的错误（悬挂指针、野指针）。想要并发或者增量地标记对象还是需要使用&lt;strong>屏障技术&lt;/strong>。&lt;/p>
+&lt;h2>并发垃圾收集&lt;span class="hx-absolute -hx-mt-20" id="并发垃圾收集">&lt;/span>
+&lt;a href="#%e5%b9%b6%e5%8f%91%e5%9e%83%e5%9c%be%e6%94%b6%e9%9b%86" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>并发（Concurrent）的垃圾收集不仅能够减少程序的最长暂停时间，还能减少整个垃圾收集阶段的时间，通过开启写屏障、&lt;strong>利用多核优势与用户程序并行执行&lt;/strong>。&lt;/p>
+&lt;p>Go 在 v1.5 中引入了并发的垃圾收集器，该垃圾收集器使用了三色抽象和写屏障技术保证垃圾收集器执行的正确性。&lt;/p>
+&lt;h2>屏障技术&lt;span class="hx-absolute -hx-mt-20" id="屏障技术">&lt;/span>
+&lt;a href="#%e5%b1%8f%e9%9a%9c%e6%8a%80%e6%9c%af" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>内存屏障技术是一种&lt;strong>屏障指令，它可以让 CPU 或者编译器在执行内存相关操作时遵循特定的约束&lt;/strong>。&lt;/p>
+&lt;p>要在并发或者增量的标记算法中保证正确性，需要达成以下两种三色不变性（Tri-color invariant）中的一种：&lt;/p>
+&lt;ul>
+&lt;li>强三色不变性：黑色对象不会指向白色对象，只会指向灰色对象或者黑色对象；&lt;/li>
+&lt;li>弱三色不变性：黑色对象指向的白色对象必须包含一条从灰色对象经由多个白色对象的可达路径。&lt;/li>
+&lt;/ul>
+&lt;p>&lt;strong>垃圾收集中的屏障技术更像是一个钩子方法，它是在用户程序读取对象、创建新对象以及更新对象指针时执行的一段代码&lt;/strong>。&lt;/p>
+&lt;p>屏障技术可以分为读屏障（Read barrier）和写屏障（Write barrier）因为读屏障需要在读操作中加入代码片段，对用户程序的性能影响很大，所以编程语言往往都会采用写屏障保证三色不变性。&lt;/p>
+&lt;p>Go 使用了两种写屏障技术，分别是&lt;strong>插入写屏障&lt;/strong>和&lt;strong>删除写屏障&lt;/strong>。&lt;/p>
+&lt;h3>插入写屏障&lt;span class="hx-absolute -hx-mt-20" id="插入写屏障">&lt;/span>
+&lt;a href="#%e6%8f%92%e5%85%a5%e5%86%99%e5%b1%8f%e9%9a%9c" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>写屏障可以保证用户程序和垃圾收集器可以在交替工作的情况下程序执行的正确性。&lt;/p>
+&lt;p>例如，对象新增了引用：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="nx">p&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">child&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">q&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>问题： &lt;code>p&lt;/code> 已被标记为黑色，&lt;code>q&lt;/code> 是新发现的白色对象，没有进入标记队列。如果不处理，GC 会认为 &lt;code>q&lt;/code> 是垃圾，导致&lt;code>黑 → 白&lt;/code>指针存在，违反强三色不变性。&lt;/p>
+&lt;p>插入写屏障做的事：&lt;strong>当黑对象赋值引用指向白对象时，立刻将白对象灰化&lt;/strong>（加入标记队列）。&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="k">if&lt;/span> &lt;span class="nx">GC&lt;/span> &lt;span class="nx">is&lt;/span> &lt;span class="nx">marking&lt;/span> &lt;span class="o">&amp;amp;&amp;amp;&lt;/span> &lt;span class="nx">p&lt;/span> &lt;span class="nx">is&lt;/span> &lt;span class="nx">black&lt;/span> &lt;span class="o">&amp;amp;&amp;amp;&lt;/span> &lt;span class="nx">q&lt;/span> &lt;span class="nx">is&lt;/span> &lt;span class="nx">white&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">shade&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">q&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="c1">// 把 q 放入灰色队列中，等待标记
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nx">p&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">child&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">q&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>插入写屏障&lt;strong>将有存活可能的对象都标记成灰色&lt;/strong>以满足强三色不变性。可能导致有些对象不再存活了，但是垃圾收集器仍然认为对象是存活的，只有在下一个循环才会被回收。&lt;/p>
+&lt;h3>删除写屏障&lt;span class="hx-absolute -hx-mt-20" id="删除写屏障">&lt;/span>
+&lt;a href="#%e5%88%a0%e9%99%a4%e5%86%99%e5%b1%8f%e9%9a%9c" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>例如，对象删除了引用：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="nx">p&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">child&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="kc">nil&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>假设 &lt;code>p&lt;/code> 是黑色，原来 &lt;code>child&lt;/code> 是白色对象 &lt;code>q&lt;/code>，现在被删除。&lt;/p>
+&lt;p>问题：如果不处理，&lt;code>q&lt;/code> 在标记期间，还没来得及灰化，就失去了从根对象的可达路径，GC 将误以为它是垃圾，&lt;strong>黑 → 白引用断裂，发生漏标&lt;/strong>。&lt;/p>
+&lt;p>删除写屏障做的事：&lt;strong>在引用断开前，检查旧值是否是白对象，如果是就把它重新加入标记队列&lt;/strong>。&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="nx">old&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">p&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">child&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">if&lt;/span> &lt;span class="nx">GC&lt;/span> &lt;span class="nx">is&lt;/span> &lt;span class="nx">marking&lt;/span> &lt;span class="o">&amp;amp;&amp;amp;&lt;/span> &lt;span class="nx">p&lt;/span> &lt;span class="nx">is&lt;/span> &lt;span class="nx">black&lt;/span> &lt;span class="o">&amp;amp;&amp;amp;&lt;/span> &lt;span class="nx">old&lt;/span> &lt;span class="nx">is&lt;/span> &lt;span class="nx">white&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">shade&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">old&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="c1">// 保护旧值，把 q 放入灰色队列中，防止它被误回收
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nx">p&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">child&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="kc">nil&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>删除写屏障&lt;strong>在老对象的引用被删除时，将白色的老对象涂成灰色&lt;/strong>，这样删除写屏障就可以保证弱三色不变性。&lt;/p>
+&lt;h3>混合写屏障&lt;span class="hx-absolute -hx-mt-20" id="混合写屏障">&lt;/span>
+&lt;a href="#%e6%b7%b7%e5%90%88%e5%86%99%e5%b1%8f%e9%9a%9c" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>只有写屏障的问题：&lt;/p>
+&lt;p>在 Go v1.7 之前，运行时使用插入写屏障保证强三色不变性，但是运行时&lt;strong>并没有在所有的垃圾收集根对象上开启插入写屏障&lt;/strong>。因为应用程序可能包含成百上千的 goroutine，而垃圾收集的根对象一般包括全局变量和栈对象，如果运行时需要在几百个 goroutine 的栈上都开启写屏障，会带来巨大的额外开销，所以 Go 在实现上选择了&lt;strong>在标记阶段完成时暂停程序、将所有栈对象标记为灰色并重新扫描&lt;/strong>，在活跃 goroutine 非常多的程序中，&lt;strong>重新扫描的过程需要占用 &lt;code>10~100ms&lt;/code> 的时间&lt;/strong>。&lt;/p>
+&lt;p>Go 在 v1.8 引入混合写屏障，移除了栈的重扫描过程。在垃圾收集的标记阶段，还需要&lt;strong>将创建的所有新对象都标记成黑色，防止新分配的栈内存和堆内存中的对象被错误地回收&lt;/strong>，因为栈内存在标记阶段最终都会变为黑色，所以不再需要重新扫描栈空间。&lt;/p>
+&lt;p>许多现代 GC 使用混合写屏障，同时考虑旧值和新值，处理引用变更的所有情况。&lt;/p>
+&lt;p>它包含：&lt;/p>
+&lt;ul>
+&lt;li>插入写屏障逻辑（关注新引用是否为白）&lt;/li>
+&lt;li>删除写屏障逻辑（关注旧引用是否为白）&lt;/li>
+&lt;/ul>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="nf">wb&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">dst&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">oldValue&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">newValue&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">GC&lt;/span> &lt;span class="nx">is&lt;/span> &lt;span class="nx">marking&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">oldValue&lt;/span> &lt;span class="nx">is&lt;/span> &lt;span class="nx">white&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">shade&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">oldValue&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="c1">// 删除写屏障
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">newValue&lt;/span> &lt;span class="nx">is&lt;/span> &lt;span class="nx">white&lt;/span> &lt;span class="o">&amp;amp;&amp;amp;&lt;/span> &lt;span class="nx">dst&lt;/span> &lt;span class="nx">object&lt;/span> &lt;span class="nx">is&lt;/span> &lt;span class="nx">black&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">shade&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">newValue&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="c1">// 插入写屏障
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h2>根对象到底是什么&lt;span class="hx-absolute -hx-mt-20" id="根对象到底是什么">&lt;/span>
+&lt;a href="#%e6%a0%b9%e5%af%b9%e8%b1%a1%e5%88%b0%e5%ba%95%e6%98%af%e4%bb%80%e4%b9%88" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>根对象在垃圾回收的术语中又叫做&lt;strong>根集合&lt;/strong>，它是垃圾回收器在标记过程时最先检查的对象，包括：&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>全局变量&lt;/strong>：程序在编译期就能确定的那些存在于程序整个生命周期的变量。&lt;/li>
+&lt;li>&lt;strong>执行栈&lt;/strong>：每个 goroutine 都包含自己的执行栈，这些执行栈上包含栈上的变量及指向分配的堆内存区块的指针。&lt;/li>
+&lt;li>&lt;strong>寄存器&lt;/strong>：寄存器的值可能表示一个指针，参与计算的这些指针可能指向某些赋值器分配的堆内存区块。&lt;/li>
+&lt;/ul>
+&lt;h2>对象图是什么&lt;span class="hx-absolute -hx-mt-20" id="对象图是什么">&lt;/span>
+&lt;a href="#%e5%af%b9%e8%b1%a1%e5%9b%be%e6%98%af%e4%bb%80%e4%b9%88" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>对象图是指：在 GC 扫描阶段，由程序中的一组&lt;strong>根对象&lt;/strong>出发，通过对象间的指针引用关系，所形成的“对象之间可达性图”。&lt;/p>
+&lt;p>Go 并不会真的在运行时构建一个图结构，而是：&lt;/p>
+&lt;ul>
+&lt;li>编译器在生成代码时会为每个对象生成&lt;strong>类型信息（如哪些字段是指针）&lt;/strong>；&lt;/li>
+&lt;li>GC 在标记阶段通过栈变量、全局变量扫描到指针后，根据类型描述递归访问其他对象；&lt;/li>
+&lt;li>最终形成一棵“由引用关系连接的”逻辑上的图。&lt;/li>
+&lt;/ul>
+&lt;h2>有了 GC，为什么还会发生内存泄露&lt;span class="hx-absolute -hx-mt-20" id="有了-gc为什么还会发生内存泄露">&lt;/span>
+&lt;a href="#%e6%9c%89%e4%ba%86-gc%e4%b8%ba%e4%bb%80%e4%b9%88%e8%bf%98%e4%bc%9a%e5%8f%91%e7%94%9f%e5%86%85%e5%ad%98%e6%b3%84%e9%9c%b2" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;h3>全局对象&lt;span class="hx-absolute -hx-mt-20" id="全局对象">&lt;/span>
+&lt;a href="#%e5%85%a8%e5%b1%80%e5%af%b9%e8%b1%a1" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>当有一个全局对象时，可能不经意间将某个变量附着在其上，且忽略的将其进行释放，则该内存永远不会得到释放。例如：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">var&lt;/span> &lt;span class="nx">cache&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="kd">map&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="kd">interface&lt;/span>&lt;span class="p">{}]&lt;/span>&lt;span class="kd">interface&lt;/span>&lt;span class="p">{}{}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">keepalloc&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="nx">i&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">;&lt;/span> &lt;span class="nx">i&lt;/span> &lt;span class="p">&amp;lt;&lt;/span> &lt;span class="mi">10000&lt;/span>&lt;span class="p">;&lt;/span> &lt;span class="nx">i&lt;/span>&lt;span class="o">++&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">m&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">make&lt;/span>&lt;span class="p">([]&lt;/span>&lt;span class="kt">byte&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">1&lt;/span>&lt;span class="o">&amp;lt;&amp;lt;&lt;/span>&lt;span class="mi">10&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">cache&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="nx">i&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">m&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h3>goroutine 泄漏&lt;span class="hx-absolute -hx-mt-20" id="goroutine-泄漏">&lt;/span>
+&lt;a href="#goroutine-%e6%b3%84%e6%bc%8f" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Goroutine 作为一种逻辑上理解的轻量级线程，需要维护执行用户代码的上下文信息。在运行过程中也需要消耗一定的内存来保存这类信息，而这些内存在目前版本的 Go 中是不会被释放的。因此，如果一个程序持续&lt;strong>不断地产生新的 goroutine、且不结束已经创建的 goroutine&lt;/strong> 并复用这部分内存，就会造成内存泄漏的现象。&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">keepalloc2&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="nx">i&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">;&lt;/span> &lt;span class="nx">i&lt;/span> &lt;span class="p">&amp;lt;&lt;/span> &lt;span class="mi">100000&lt;/span>&lt;span class="p">;&lt;/span> &lt;span class="nx">i&lt;/span>&lt;span class="o">++&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">go&lt;/span> &lt;span class="kd">func&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">select&lt;/span> &lt;span class="p">{}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h3>验证&lt;span class="hx-absolute -hx-mt-20" id="验证">&lt;/span>
+&lt;a href="#%e9%aa%8c%e8%af%81" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">package&lt;/span> &lt;span class="nx">main&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="p">(&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s">&amp;#34;os&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s">&amp;#34;runtime/trace&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">main&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">f&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">_&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">os&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Create&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;trace.out&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">defer&lt;/span> &lt;span class="nx">f&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Close&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">trace&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Start&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">f&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">defer&lt;/span> &lt;span class="nx">trace&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Stop&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">keepalloc&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">keepalloc2&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;img src="" alt="go-heap-test" loading="lazy" />&lt;/p>
+&lt;p>Heap 在持续增长，没有内存被回收，产生了内存泄漏的现象。&lt;/p>
+&lt;p>goroutine 泄漏还可能由 channel 泄漏导致。而 channel 的泄漏本质上与 goroutine 泄漏存在直接联系。Channel 作为一种同步原语，会连接两个不同的 goroutine，如果一个 goroutine 尝试&lt;strong>向一个没有接收方的无缓冲 channel 发送消息&lt;/strong>，则该 &lt;strong>goroutine 会被永久的休眠&lt;/strong>，整个 goroutine 及其执行栈都得不到释放。&lt;/p>
+&lt;h2>GC 实现&lt;span class="hx-absolute -hx-mt-20" id="gc-实现">&lt;/span>
+&lt;a href="#gc-%e5%ae%9e%e7%8e%b0" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;h3>GC 的流程&lt;span class="hx-absolute -hx-mt-20" id="gc-的流程">&lt;/span>
+&lt;a href="#gc-%e7%9a%84%e6%b5%81%e7%a8%8b" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>以 STW 为界限，可以将 GC 划分为五个阶段：&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>阶段&lt;/th>
+&lt;th>说明&lt;/th>
+&lt;th>赋值器状态&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>GCMark&lt;/td>
+&lt;td>标记准备阶段，为并发标记做准备工作，&lt;strong>启动写屏障&lt;/strong>&lt;/td>
+&lt;td>STW&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>GCMark&lt;/td>
+&lt;td>&lt;strong>扫描标记阶段，与赋值器并发执行，写屏障开启状态&lt;/strong>&lt;/td>
+&lt;td>并发&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>GCMarkTermination&lt;/td>
+&lt;td>标记终止阶段，保证一个周期内标记任务完成，停止写屏障&lt;/td>
+&lt;td>STW&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>GCoff&lt;/td>
+&lt;td>内存清扫阶段，将需要回收的内存归还到堆中，写屏障关闭状态&lt;/td>
+&lt;td>并发&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>GCoff&lt;/td>
+&lt;td>内存归还阶段，将过多的内存归还给操作系统，写屏障关闭状态&lt;/td>
+&lt;td>并发&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3>触发 GC 的时机是什么&lt;span class="hx-absolute -hx-mt-20" id="触发-gc-的时机是什么">&lt;/span>
+&lt;a href="#%e8%a7%a6%e5%8f%91-gc-%e7%9a%84%e6%97%b6%e6%9c%ba%e6%98%af%e4%bb%80%e4%b9%88" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Go 语言中对 GC 的触发时机存在两种形式：&lt;/p>
+&lt;ul>
+&lt;li>主动触发，通过调用 &lt;code>runtime.GC()&lt;/code> 来触发 GC，此调用&lt;strong>阻塞式地等待当前 GC 运行完毕&lt;/strong>。&lt;/li>
+&lt;li>被动触发，分为两种方式：
+&lt;ul>
+&lt;li>使用系统监控，当超过两分钟没有产生任何 GC 时，强制触发 GC。&lt;/li>
+&lt;li>使用步调（Pacing）算法，其核心思想是控制内存增长的比例。&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;h2>优化&lt;span class="hx-absolute -hx-mt-20" id="优化">&lt;/span>
+&lt;a href="#%e4%bc%98%e5%8c%96" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>GC 的调优是在特定场景下产生的，并非所有程序都需要针对 GC 进行调优。只有那些对执行延迟非常敏感、 当 GC 的开销成为程序性能瓶颈的程序，才需要针对 GC 进行性能调优。&lt;/p>
+&lt;p>总的来说，可以在现在的开发中处理的有以下几种情况：&lt;/p>
+&lt;ol>
+&lt;li>对停顿敏感：GC 过程中产生的长时间停顿、或由于&lt;strong>需要执行 GC 而没有执行用户代码&lt;/strong>，导致需要立即执行的用户代码执行滞后。&lt;/li>
+&lt;li>对资源消耗敏感：对于频繁分配内存的应用而言，&lt;strong>频繁分配内存增加 GC 的工作量&lt;/strong>，原本可以充分利用 CPU 的应用不得不频繁地执行垃圾回收，影响用户代码对 CPU 的利用率，进而影响用户代码的执行效率。&lt;/li>
+&lt;/ol>
+&lt;p>从这两点来看，所谓 GC 调优的核心思想：&lt;strong>优化内存的申请速度，尽可能的少申请内存，复用已申请的内存。控制、减少、复用&lt;/strong>。&lt;/p>
+&lt;h3>降低并复用已经申请的内存&lt;span class="hx-absolute -hx-mt-20" id="降低并复用已经申请的内存">&lt;/span>
+&lt;a href="#%e9%99%8d%e4%bd%8e%e5%b9%b6%e5%a4%8d%e7%94%a8%e5%b7%b2%e7%bb%8f%e7%94%b3%e8%af%b7%e7%9a%84%e5%86%85%e5%ad%98" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 使用 sync.Pool 复用需要的 buf
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="kd">var&lt;/span> &lt;span class="nx">bufPool&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">sync&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Pool&lt;/span>&lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">New&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="kd">func&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="kd">interface&lt;/span>&lt;span class="p">{}&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="nb">make&lt;/span>&lt;span class="p">([]&lt;/span>&lt;span class="kt">byte&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">10&lt;/span>&lt;span class="o">&amp;lt;&amp;lt;&lt;/span>&lt;span class="mi">20&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">},&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nx">b&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">bufPool&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Get&lt;/span>&lt;span class="p">().([]&lt;/span>&lt;span class="kt">byte&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nx">bufPool&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Put&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">b&lt;/span>&lt;span class="p">)&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h3>调整 GOGC&lt;span class="hx-absolute -hx-mt-20" id="调整-gogc">&lt;/span>
+&lt;a href="#%e8%b0%83%e6%95%b4-gogc" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>GC 的触发原则是由步调算法来控制的，&lt;strong>其关键在于估计下一次需要触发 GC 时，堆的大小&lt;/strong>。如果在遇到海量请求的时，为了避免 GC 频繁触发，&lt;strong>可以通过将 GOGC 的值设置得更大，让 GC 触发的时间变得更晚，从而减少其触发频率&lt;/strong>，进而增加用户代码对机器的使用率。&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">&lt;span class="nv">GOGC&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="m">1000&lt;/span> ./main&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div></description></item></channel></rss>

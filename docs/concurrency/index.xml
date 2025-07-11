@@ -112,40 +112,40 @@ title="Copy code"
 &lt;/div>
 &lt;p>&lt;code>state&lt;/code> 和 &lt;code>sema&lt;/code> 加起来占用 8 个字节。&lt;/p>
 &lt;p>&lt;code>state&lt;/code> 是一个复合型的字段，包含多个意义：&lt;/p>
-&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/mutex-state.png" alt="mutex-state" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/mutex-state.png" alt="mutex-state" loading="lazy" />&lt;/p>
 &lt;p>在默认状态下，互斥锁的所有状态位都是 0，&lt;code>int32&lt;/code> 中的不同位分别表示了不同的状态：&lt;/p>
 &lt;ul>
-&lt;li>&lt;code>locked&lt;/code>：表示这个锁是否被持有&lt;/li>
-&lt;li>&lt;code>woken&lt;/code>：表示是否从有唤醒的 goroutine&lt;/li>
-&lt;li>&lt;code>starving&lt;/code>：表示此锁是否进入饥饿状态&lt;/li>
-&lt;li>&lt;code>waitersCount&lt;/code>：表示等待此锁的 goroutine 的数量&lt;/li>
+&lt;li>&lt;code>locked&lt;/code>：表示互斥锁的锁定状态 (1: 锁定, 0: 未锁定)；&lt;/li>
+&lt;li>&lt;code>woken&lt;/code>：表示是否有被唤醒的 goroutine；&lt;/li>
+&lt;li>&lt;code>starving&lt;/code>：表示当前锁是否进入饥饿状态；&lt;/li>
+&lt;li>&lt;code>waitersCount&lt;/code>：表示等待当前锁的 goroutine 的数量（这个在 Fast path 的判断中会用到）；&lt;/li>
 &lt;/ul>
-&lt;h3>饥饿模式&lt;span class="hx-absolute -hx-mt-20" id="饥饿模式">&lt;/span>
-&lt;a href="#%e9%a5%a5%e9%a5%bf%e6%a8%a1%e5%bc%8f" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>请求锁的 goroutine 有两类，一类是新来请求锁的 goroutine，另一类是被唤醒的等待请求锁的 goroutine。&lt;/p>
-&lt;p>由于新来的 goroutine 也参与竞争锁，极端情况下，等待中的 goroutine 可能一直获取不到锁，这就是&lt;strong>饥饿问题&lt;/strong>。&lt;/p>
-&lt;p>为了解决饥饿，Go 1.9 中为 mutex 增加了&lt;strong>饥饿模式&lt;/strong>。&lt;/p>
-&lt;p>在正常模式下，等待中的 goroutine 会按照先进先出的顺序获取锁。但是如果新来的 goroutine 竞争锁，等待中的 goroutine 大概率是获取不到锁的。一旦 goroutine 超
-过 1ms 没有获取到锁，它就会将当前互斥锁切换到饥饿模式，保证锁的公平性。&lt;/p>
-&lt;p>在饥饿模式中，互斥锁会直接交给等待队列最前面的 goroutine。新来的 goroutine 在该状态下不能获取锁、也不会进入自旋状态，只会在队列的末尾等待。&lt;/p>
+&lt;h3>正常模式和饥饿模式&lt;span class="hx-absolute -hx-mt-20" id="正常模式和饥饿模式">&lt;/span>
+&lt;a href="#%e6%ad%a3%e5%b8%b8%e6%a8%a1%e5%bc%8f%e5%92%8c%e9%a5%a5%e9%a5%bf%e6%a8%a1%e5%bc%8f" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>sync.Mutex&lt;/code> 有两种模式：&lt;strong>正常模式&lt;/strong>和&lt;strong>饥饿模式&lt;/strong>。&lt;/p>
+&lt;ul>
+&lt;li>正常模式下，锁的等待者会按照&lt;strong>先进先出&lt;/strong>的顺序获取锁。&lt;/li>
+&lt;li>Go 1.9 中为 mutex 增加了&lt;strong>饥饿模式&lt;/strong>。饥饿模式是指，刚被唤起的 goroutine 与新创建的 goroutine 竞争时，大概率会获取不到锁。为了减少这种情况，一旦 &lt;strong>goroutine 超过 1ms 没有获取到锁，它就会将当前互斥锁切换到饥饿模式&lt;/strong>，保证锁的公平性。&lt;/li>
+&lt;/ul>
+&lt;p>&lt;strong>在饥饿模式中，互斥锁会直接交给等待队列最前面的 goroutine&lt;/strong>。新来的 goroutine 在该状态下不能获取锁、也不会进入自旋状态，只会在队列的末尾等待。&lt;/p>
 &lt;p>下面两种情况，mutex 会切换为正常模式:&lt;/p>
 &lt;ul>
-&lt;li>一个 goroutine 获得了锁并且它在队列的末尾&lt;/li>
-&lt;li>一个 goroutine 等待的时间少于 1ms&lt;/li>
+&lt;li>一个 goroutine 获得了锁并且它在队列的末尾。&lt;/li>
+&lt;li>一个 goroutine 获得了锁并且等待的时间少于 1ms。&lt;/li>
 &lt;/ul>
 &lt;h3>Lock&lt;span class="hx-absolute -hx-mt-20" id="lock">&lt;/span>
 &lt;a href="#lock" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>Lock&lt;/code> 的实现：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">const&lt;/span> &lt;span class="p">(&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">mutexLocked&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="mi">1&lt;/span> &lt;span class="o">&amp;lt;&amp;lt;&lt;/span> &lt;span class="kc">iota&lt;/span> &lt;span class="c1">// 1
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">mutexWoken&lt;/span> &lt;span class="c1">// 2
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">mutexStarving&lt;/span> &lt;span class="c1">// 4
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">mutexWaiterShift&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="kc">iota&lt;/span> &lt;span class="c1">// 3
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">starvationThresholdNs&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="mf">1e6&lt;/span> &lt;span class="c1">// 1000000
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">mutexLocked&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="mi">1&lt;/span> &lt;span class="o">&amp;lt;&amp;lt;&lt;/span> &lt;span class="kc">iota&lt;/span> &lt;span class="c1">// 1 (二进制: 0001)
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">mutexWoken&lt;/span> &lt;span class="c1">// 2 (二进制: 0010)
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">mutexStarving&lt;/span> &lt;span class="c1">// 4 (二进制: 0100)
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">mutexWaiterShift&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="kc">iota&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">starvationThresholdNs&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="mf">1e6&lt;/span> &lt;span class="c1">// 1000000 (进入饥饿模式的阈值)
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="p">)&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="nx">m&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">Mutex&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="nf">Lock&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// Fast path: grab unlocked mutex.
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 没有 goroutine 持有锁，也没有等待的 goroutine，当前 goroutine 可以直接获得锁
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 锁的状态是 0，没有 goroutine 持有锁，也没有等待的 goroutine，当前 goroutine 可以直接获得锁，设置为 mutexLocked
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nx">atomic&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">CompareAndSwapInt32&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">m&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">state&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">mutexLocked&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">race&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Enabled&lt;/span> &lt;span class="p">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">race&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Acquire&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">unsafe&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Pointer&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">m&lt;/span>&lt;span class="p">))&lt;/span>
@@ -153,7 +153,7 @@ title="Copy code"
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// Slow path (outlined so that the fast path can be inlined)
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 通过自旋等方式竞争锁
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 互斥锁的状态不是 0，尝试通过自旋（Spinnig）或信号量阻塞等方式等待锁的释放
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">m&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">lockSlow&lt;/span>&lt;span class="p">()&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
@@ -164,72 +164,102 @@ title="Copy code"
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">iter&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="c1">// 自旋次数
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">old&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">m&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">state&lt;/span> &lt;span class="c1">// 当前锁的状态
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">for&lt;/span> &lt;span class="p">{&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 锁是非饥饿模式并且还没被释放，尝试自旋
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 情况1: 锁是非饥饿模式并且还没被释放，且可以自旋
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nx">old&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">mutexLocked&lt;/span>&lt;span class="p">|&lt;/span>&lt;span class="nx">mutexStarving&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="nx">mutexLocked&lt;/span> &lt;span class="o">&amp;amp;&amp;amp;&lt;/span> &lt;span class="nf">runtime_canSpin&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">iter&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 尝试设置 mutexWoken 标志来通知解锁，以避免唤醒其他阻塞的 goroutine
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 尝试设置唤醒标志
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 条件:
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 1. 当前 goroutine 还未被唤醒 (!awoke)
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 2. 锁没有设置唤醒标志 (old&amp;amp;mutexWoken == 0)
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 3. 存在等待者 (old&amp;gt;&amp;gt;mutexWaiterShift != 0)
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="p">!&lt;/span>&lt;span class="nx">awoke&lt;/span> &lt;span class="o">&amp;amp;&amp;amp;&lt;/span> &lt;span class="nx">old&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">mutexWoken&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="o">&amp;amp;&amp;amp;&lt;/span> &lt;span class="nx">old&lt;/span>&lt;span class="o">&amp;gt;&amp;gt;&lt;/span>&lt;span class="nx">mutexWaiterShift&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="o">&amp;amp;&amp;amp;&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">atomic&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">CompareAndSwapInt32&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">m&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">state&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">old&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">old&lt;/span>&lt;span class="p">|&lt;/span>&lt;span class="nx">mutexWoken&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">awoke&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="kc">true&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">runtime_doSpin&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 执行自旋，执行 30 次 PAUSE 指令
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nf">runtime_doSpin&lt;/span>&lt;span class="p">()&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">iter&lt;/span>&lt;span class="o">++&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">old&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">m&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">state&lt;/span> &lt;span class="c1">// 再次获取锁的状态，后面会检查锁是否被释放了
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">old&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">m&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">state&lt;/span> &lt;span class="c1">// 重新加载锁的状态
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">continue&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">new&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">old&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">old&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">mutexStarving&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="p">{&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">new&lt;/span> &lt;span class="o">|=&lt;/span> &lt;span class="nx">mutexLocked&lt;/span> &lt;span class="c1">// 非饥饿状态，加锁
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="p">}&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">old&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">mutexLocked&lt;/span>&lt;span class="p">|&lt;/span>&lt;span class="nx">mutexStarving&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="p">{&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">new&lt;/span> &lt;span class="o">+=&lt;/span> &lt;span class="mi">1&lt;/span> &lt;span class="o">&amp;lt;&amp;lt;&lt;/span> &lt;span class="nx">mutexWaiterShift&lt;/span> &lt;span class="c1">// waiter 数量加 1
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="p">}&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">starving&lt;/span> &lt;span class="o">&amp;amp;&amp;amp;&lt;/span> &lt;span class="nx">old&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">mutexLocked&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="p">{&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">new&lt;/span> &lt;span class="o">|=&lt;/span> &lt;span class="nx">mutexStarving&lt;/span> &lt;span class="c1">// 设置饥饿状态
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="p">}&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">awoke&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 情况2: 准备新状态（没有进入自旋）
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">new&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">old&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 如果不是饥饿模式，表示当前 goroutine 要获取锁了，这里还没有真正修改锁的状态
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nx">old&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">mutexStarving&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">new&lt;/span> &lt;span class="o">|=&lt;/span> &lt;span class="nx">mutexLocked&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 如果锁已被持有或处于饥饿模式，增加等待计数，waiter 加 1
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nx">old&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">mutexLocked&lt;/span>&lt;span class="p">|&lt;/span>&lt;span class="nx">mutexStarving&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">new&lt;/span> &lt;span class="o">+=&lt;/span> &lt;span class="mi">1&lt;/span> &lt;span class="o">&amp;lt;&amp;lt;&lt;/span> &lt;span class="nx">mutexWaiterShift&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 如果当前 goroutine 已处于饥饿状态且锁仍被持有
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 则设置饥饿模式标志
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nx">starving&lt;/span> &lt;span class="o">&amp;amp;&amp;amp;&lt;/span> &lt;span class="nx">old&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">mutexLocked&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">new&lt;/span> &lt;span class="o">|=&lt;/span> &lt;span class="nx">mutexStarving&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 如果当前 goroutine 是被唤醒的
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nx">awoke&lt;/span> &lt;span class="p">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// The goroutine has been woken from sleep,
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// so we need to reset the flag in either case.
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nx">new&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">mutexWoken&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="p">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">throw&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;sync: inconsistent mutex state&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">new&lt;/span> &lt;span class="o">&amp;amp;^=&lt;/span> &lt;span class="nx">mutexWoken&lt;/span> &lt;span class="c1">// 新状态清除唤醒标记
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">new&lt;/span> &lt;span class="o">&amp;amp;^=&lt;/span> &lt;span class="nx">mutexWoken&lt;/span> &lt;span class="c1">// 清除唤醒标记 (因为当前 goroutine 要么获取锁，要么再次休眠)
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="p">}&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 设置新状态
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 尝试去更新锁的新状态
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nx">atomic&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">CompareAndSwapInt32&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">m&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">state&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">old&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">new&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 再次检查，原来锁的状态已释放，并且不是饥饿状态，正常请求到了锁，返回
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// CAS 成功并不代表获取了锁，而是代表成功更新了锁的状态，CAS 成功说明当前 goroutine 是获取锁的竞争者
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 更新了锁的状态之后，具体分为两种情况
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 情况1：
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 如果锁原先未被持有，并且不是饥饿模式，成功获取锁，直接返回
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nx">old&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">mutexLocked&lt;/span>&lt;span class="p">|&lt;/span>&lt;span class="nx">mutexStarving&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="p">{&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">break&lt;/span> &lt;span class="c1">// locked the mutex with CAS
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">break&lt;/span> &lt;span class="c1">// 通过 CAS 函数获取了锁
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="p">}&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 处理饥饿状态
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 如果之前就在该队列里面，就加入到队列头
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">queueLifo&lt;/span> &lt;span class="p">:&lt;/span> &lt;span class="nx">waitStartTime&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="mi">0&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">waitStartTime&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="p">{&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">waitStartTime&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nf">runtime_nanotime&lt;/span>&lt;span class="p">()&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// runtime_SemacquireMutex 通过信号量保证资源不会被两个 goroutine 获取
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 情况2：需要排队等待
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 真正的锁获取需要等待前一个持有者释放
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// runtime_SemacquireMutex 通过信号量保证资源不会被两个 goroutine 获取
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// runtime_SemacquireMutex 会在方法中不断尝试获取锁并陷入休眠等待信号量的释放
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 也就是这里会阻塞等待
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 一旦当前 goroutine 可以获取信号量，它就会立刻返回，剩余代码也会继续执行
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 也就是在这里会阻塞等待
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 一旦当前 goroutine 可以获取信号量，它就会立刻返回，剩余代码也会继续执行，尝试获取锁
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nf">runtime_SemacquireMutex&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">m&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">sema&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">queueLifo&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">1&lt;/span>&lt;span class="p">)&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 在正常模式下，这段代码会设置唤醒和饥饿标记、重置迭代次数并重新执行获取锁的循环
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 在饥饿模式下，当前 goroutine 会获得锁，如果等待队列中只存在当前 goroutine，锁还会从饥饿模式中退出
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 走到这里说明锁被释放了，要开始重新尝试获取锁了：
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 在正常模式下，这段代码会设置唤醒和饥饿标记、重置迭代次数并重新执行获取锁的循环，超过 1ms 会将当前 goroutine 设置为饥饿状态
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 在饥饿模式下，当前 goroutine 快要饿死了，直接会获得锁，如果等待队列中只存在当前 goroutine，锁还会从饥饿模式中退出
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 判断是否应该进入饥饿状态
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">starving&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">starving&lt;/span> &lt;span class="o">||&lt;/span> &lt;span class="nf">runtime_nanotime&lt;/span>&lt;span class="p">()&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="nx">waitStartTime&lt;/span> &lt;span class="p">&amp;gt;&lt;/span> &lt;span class="nx">starvationThresholdNs&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">old&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">m&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">state&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">old&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">mutexStarving&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 如果当前锁已经处于饥饿模式
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nx">old&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">mutexStarving&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="p">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">old&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">mutexLocked&lt;/span>&lt;span class="p">|&lt;/span>&lt;span class="nx">mutexWoken&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="o">||&lt;/span> &lt;span class="nx">old&lt;/span>&lt;span class="o">&amp;gt;&amp;gt;&lt;/span>&lt;span class="nx">mutexWaiterShift&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="p">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">throw&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;sync: inconsistent mutex state&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">delta&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">int32&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">mutexLocked&lt;/span> &lt;span class="o">-&lt;/span> &lt;span class="mi">1&lt;/span>&lt;span class="o">&amp;lt;&amp;lt;&lt;/span>&lt;span class="nx">mutexWaiterShift&lt;/span>&lt;span class="p">)&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="p">!&lt;/span>&lt;span class="nx">starving&lt;/span> &lt;span class="o">||&lt;/span> &lt;span class="nx">old&lt;/span>&lt;span class="o">&amp;gt;&amp;gt;&lt;/span>&lt;span class="nx">mutexWaiterShift&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="mi">1&lt;/span> &lt;span class="p">{&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">delta&lt;/span> &lt;span class="o">-=&lt;/span> &lt;span class="nx">mutexStarving&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 设置 locked 位(1)
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 减少一个等待者(-1&amp;lt;&amp;lt;3)
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">delta&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">int32&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">mutexLocked&lt;/span> &lt;span class="o">-&lt;/span> &lt;span class="mi">1&lt;/span>&lt;span class="o">&amp;lt;&amp;lt;&lt;/span>&lt;span class="nx">mutexWaiterShift&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 如果当前 goroutine 不是饥饿状态
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 或者它是最后一个等待者
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 则退出饥饿模式
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="p">!&lt;/span>&lt;span class="nx">starving&lt;/span> &lt;span class="o">||&lt;/span> &lt;span class="nx">old&lt;/span>&lt;span class="o">&amp;gt;&amp;gt;&lt;/span>&lt;span class="nx">mutexWaiterShift&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="mi">1&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">delta&lt;/span> &lt;span class="o">-=&lt;/span> &lt;span class="nx">mutexStarving&lt;/span> &lt;span class="c1">// 清除饥饿标志
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="p">}&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">atomic&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">AddInt32&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">m&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">state&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">delta&lt;/span>&lt;span class="p">)&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">break&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">awoke&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="kc">true&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 不是饥饿模式则继续尝试获取锁
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 下一轮循环大概率会获取到锁，因为现在处于非饥饿模式，下一轮循环也不会饥饿（饥饿模式是在获取信号量后面执行的），锁也被释放了
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 而且信号量唤醒的是等待队列头部的 g
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">awoke&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="kc">true&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">iter&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="mi">0&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span> &lt;span class="k">else&lt;/span> &lt;span class="p">{&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">old&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">m&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">state&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// CAS 失败，重新加载状态，进入下一轮循环
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">old&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">m&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">state&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">race&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Enabled&lt;/span> &lt;span class="p">{&lt;/span>
@@ -246,10 +276,9 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;h4>自旋&lt;span class="hx-absolute -hx-mt-20" id="自旋">&lt;/span>
-&lt;a href="#%e8%87%aa%e6%97%8b" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>自旋是一种多线程同步机制，&lt;strong>当前的进程在进入自旋的过程中会一直保持 CPU 的占用&lt;/strong>，持续检查某个条件是否为真。在多核的 CPU 上，自旋可以避免 goroutine 的切换，
-使用恰当会对性能带来很大的增益，但是使用的不恰当就会拖慢整个程序，所以 goroutine 进入自旋的条件非常苛刻：&lt;/p>
+&lt;a href="#%e8%87%aa%e6%97%8b" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>自旋是一种多线程同步机制，&lt;strong>当前的进程在进入自旋的过程中会一直保持 CPU 的占用&lt;/strong>，持续检查某个条件是否为真。在多核的 CPU 上，自旋可以避免 goroutine 的切换，使用恰当会对性能带来很大的增益，但是使用的不恰当就会拖慢整个程序，所以 goroutine 进入自旋的条件非常苛刻：&lt;/p>
 &lt;ol>
-&lt;li>&lt;code>old&amp;amp;(mutexLocked|mutexStarving) == mutexLocked&lt;/code> 只有在普通模式&lt;/li>
+&lt;li>&lt;code>old&amp;amp;(mutexLocked|mutexStarving) == mutexLocked&lt;/code> 只有在普通模式下才能进入自旋；&lt;/li>
 &lt;li>&lt;code>runtime_canSpin(iter)&lt;/code> 为真：
 &lt;ul>
 &lt;li>运行在多 CPU 的机器上&lt;/li>
@@ -258,7 +287,7 @@ title="Copy code"
 &lt;/ul>
 &lt;/li>
 &lt;/ol>
-&lt;p>进入自旋会调用 &lt;code>runtime_doSpin()&lt;/code>，并执行 30 次的 PAUSE 指令，该指令只会占用 CPU 并消耗 CPU 时间：&lt;/p>
+&lt;p>进入自旋会调用 &lt;code>runtime_doSpin()&lt;/code>，并执行 30 次的 &lt;code>PAUSE&lt;/code> 指令，该指令只会占用 CPU 并消耗 CPU 时间：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">//go:linkname sync_runtime_doSpin sync.runtime_doSpin
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">//go:nosplit
@@ -291,17 +320,18 @@ title="Copy code"
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// Fast path: drop lock bit.
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// new == 0 成功释放锁
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 快速解锁，new == 0 成功释放锁
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">new&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">atomic&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">AddInt32&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">m&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">state&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="o">-&lt;/span>&lt;span class="nx">mutexLocked&lt;/span>&lt;span class="p">)&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">new&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="p">{&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// Outlined slow path to allow inlining the fast path.
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">new&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="p">{&lt;/span> &lt;span class="c1">// 意味着当前锁有等待者，需要唤醒等待者
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// Outlined slow path to allow inlining the fast path.
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// To hide unlockSlow during tracing we skip one extra frame when tracing GoUnblock.
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 慢速解锁
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">m&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">unlockSlow&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">new&lt;/span>&lt;span class="p">)&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="nx">m&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">Mutex&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="nf">unlockSlow&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">new&lt;/span> &lt;span class="kt">int32&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="nx">new&lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="nx">mutexLocked&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">mutexLocked&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="p">{&lt;/span> &lt;span class="c1">// unlock 一个未加锁的锁
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="nx">new&lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="nx">mutexLocked&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">mutexLocked&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="p">{&lt;/span> &lt;span class="c1">// 如果当前互斥锁已经被解锁过了会直接抛出异常
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nf">fatal&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;sync: unlock of unlocked mutex&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">new&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">mutexStarving&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="p">{&lt;/span> &lt;span class="c1">// 正常模式
@@ -469,7 +499,7 @@ title="Copy code"
 &lt;li>&lt;code>Done&lt;/code>：用来将 &lt;code>WaitGroup&lt;/code> 的计数值减 1，其实就是调用了 &lt;code>Add(-1)&lt;/code>。&lt;/li>
 &lt;li>&lt;code>Wait&lt;/code>：调用这个方法的 &lt;code>goroutine&lt;/code> 会一直阻塞，直到 &lt;code>WaitGroup&lt;/code> 的计数值变为 0。&lt;/li>
 &lt;/ul>
-&lt;p>不要把 &lt;code>Add&lt;/code> 和 &lt;code>Wait&lt;/code> 方法的调用放在不同的 goroutine 中执行，以免 &lt;code>Add&lt;/code> 还未执行，&lt;code>Wait&lt;/code> 已经退出：&lt;/p>
+&lt;p>&lt;strong>不要把 &lt;code>Add&lt;/code> 和 &lt;code>Wait&lt;/code> 方法的调用放在不同的 goroutine 中执行&lt;/strong>，以免 &lt;code>Add&lt;/code> 还未执行，&lt;code>Wait&lt;/code> 已经退出：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">var&lt;/span> &lt;span class="nx">wg&lt;/span> &lt;span class="nx">sync&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">WaitGroup&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="k">go&lt;/span> &lt;span class="kd">func&lt;/span>&lt;span class="p">(){&lt;/span>
@@ -479,6 +509,43 @@ title="Copy code"
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nx">wg&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Wait&lt;/span>&lt;span class="p">()&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;exit.&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h3>1.25 Go 方法&lt;span class="hx-absolute -hx-mt-20" id="125-go-方法">&lt;/span>
+&lt;a href="#125-go-%e6%96%b9%e6%b3%95" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>新增 Go 方法：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="nx">wg&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">WaitGroup&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="nf">Go&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">f&lt;/span> &lt;span class="kd">func&lt;/span>&lt;span class="p">())&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">wg&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Add&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">go&lt;/span> &lt;span class="kd">func&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">defer&lt;/span> &lt;span class="nx">wg&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Done&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">f&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>简单的封装了 &lt;code>wg.Add(1)&lt;/code> 和 &lt;code>wg.Done()&lt;/code>。&lt;/p>
+&lt;p>使用：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="k">for&lt;/span> &lt;span class="nx">_&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">request&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="k">range&lt;/span> &lt;span class="nx">requests&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">wg&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Go&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kd">func&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// res, err := service.call(request)
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nx">wg&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Wait&lt;/span>&lt;span class="p">()&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -545,7 +612,7 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;p>&lt;code>state1&lt;/code> 包含一个总共占用 12 字节的数组，这个数组会存储当前结构体的状态，在 64 位与 32 位的机器上表现也非常不同。&lt;/p>
-&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/waitgroup-state1.png" alt="waitgroup-state1" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/waitgroup-state1.png" alt="waitgroup-state1" loading="lazy" />&lt;/p>
 &lt;p>&lt;code>state&lt;/code> 方法用来从 &lt;code>state1&lt;/code> 字段中取出它的状态和信号量。&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 得到 state 的地址和信号量的地址
@@ -1226,7 +1293,7 @@ title="Copy code"
 &lt;ul>
 &lt;li>&lt;a href="https://github.com/valyala/bytebufferpool" target="_blank" rel="noopener">bytebufferpool&lt;/a>&lt;/li>
 &lt;/ul></description></item><item><title>Context</title><link>https://shipengqi.github.io/golang-learn/docs/concurrency/07_context/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/concurrency/07_context/</guid><description>
-&lt;p>Go 1.7 版本中正式引入新标准库 &lt;code>context&lt;/code>。主要的作用是在在一组 goroutine 之间传递共享的值、取消信号、deadline 等。&lt;/p>
+&lt;p>Go 1.7 版本中正式引入新标准库 &lt;code>context&lt;/code>。主要的作用是&lt;strong>在一组 goroutine 之间传递共享的值、取消信号、deadline 等&lt;/strong>。&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">type&lt;/span> &lt;span class="nx">Context&lt;/span> &lt;span class="kd">interface&lt;/span> &lt;span class="p">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">Deadline&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="nx">deadline&lt;/span> &lt;span class="nx">time&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Time&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">ok&lt;/span> &lt;span class="kt">bool&lt;/span>&lt;span class="p">)&lt;/span>
@@ -1244,15 +1311,15 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;ul>
-&lt;li>&lt;code>Deadline&lt;/code> — 返回当前 context 的截止时间。&lt;/li>
-&lt;li>&lt;code>Done&lt;/code> — 返回一个只读的 channel，可用于识别当前 channel 是否已经被关闭，其原因可能是到期，也可能是被取消了。多次调用 &lt;code>Done&lt;/code> 方法会返回同一个 channel。&lt;/li>
-&lt;li>&lt;code>Err&lt;/code> — 返回当前 context 被关闭的原因。
+&lt;li>&lt;code>Deadline&lt;/code>：返回当前 context 的截止时间。&lt;/li>
+&lt;li>&lt;code>Done&lt;/code>：返回一个只读的 channel，可用于识别当前 channel 是否已经被关闭，其原因可能是到期，也可能是被取消了。多次调用 &lt;code>Done&lt;/code> 方法会返回同一个 channel。&lt;/li>
+&lt;li>&lt;code>Err&lt;/code>：返回当前 context 被关闭的原因。
 &lt;ul>
 &lt;li>如果 context 被取消，会返回 &lt;code>Canceled&lt;/code> 错误。&lt;/li>
 &lt;li>如果 context 超时，会返回 &lt;code>DeadlineExceeded&lt;/code> 错误。&lt;/li>
 &lt;/ul>
 &lt;/li>
-&lt;li>&lt;code>Value&lt;/code> — 返回当前 context 对应所存储的 context信息，可以用来传递请求特定的数据。&lt;/li>
+&lt;li>&lt;code>Value&lt;/code>：返回当前 context 对应所存储的 context信息，可以用来传递请求特定的数据。&lt;/li>
 &lt;/ul>
 &lt;p>创建 context：&lt;/p>
 &lt;ul>
@@ -1297,14 +1364,102 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;p>可以多个 goroutine 同时订阅 &lt;code>ctx.Done()&lt;/code> 管道中的消息，一旦接收到取消信号就立刻停止当前正在执行的工作。&lt;/p>
+&lt;h2>什么时候使用 context&lt;span class="hx-absolute -hx-mt-20" id="什么时候使用-context">&lt;/span>
+&lt;a href="#%e4%bb%80%e4%b9%88%e6%97%b6%e5%80%99%e4%bd%bf%e7%94%a8-context" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>一般 &lt;code>channel+select&lt;/code> 可以用来控制 goroutine 的退出。但是由于 channel 不支持广播，所以只能通知一个 goroutine 退出。当衍生了很多 goroutine 时再用 &lt;code>channel+select&lt;/code> 就会比较麻烦。这时就可以通过 &lt;code>context&lt;/code> 来实现。&lt;/p>
+&lt;p>context 之所以可以通知多个 goroutine 退出，是因为 context 是&lt;strong>树形结构&lt;/strong>，当&lt;strong>父 context 被取消，会遍历所有的子 context，调用它们的 &lt;code>cancel()&lt;/code> 方法，递归地取消所有子节点&lt;/strong>。&lt;/p>
+&lt;p>&lt;strong>context 用来解决 goroutine 之间退出通知、元数据传递的功能&lt;/strong>。&lt;/p>
+&lt;h3>防止 goroutine 泄漏&lt;span class="hx-absolute -hx-mt-20" id="防止-goroutine-泄漏">&lt;/span>
+&lt;a href="#%e9%98%b2%e6%ad%a2-goroutine-%e6%b3%84%e6%bc%8f" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>对于有些不会退出的 goroutine，比如无限循环的 goroutine，就需要防止 goroutine 泄漏。&lt;/p>
+&lt;p>增加一个 &lt;code>context&lt;/code>，用于取消 goroutine。&lt;/p>
 &lt;h2>原理&lt;span class="hx-absolute -hx-mt-20" id="原理">&lt;/span>
-&lt;a href="#%e5%8e%9f%e7%90%86" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>context 的最大作用就是在一组 goroutine 构成的树形结构中对信号进行同步，以减少计算资源的浪费。&lt;/p>
-&lt;p>例如，Go 的 HTTP server，处理每一个请求，都是启动一个单独的 goroutine，处理过程中还会启动新的 goroutine 来访问数据库和其他服务。而 context 在不同 Goroutine 之间可以同步请求特定数据、取消信号以及处理
-请求的截止日期。&lt;/p>
-&lt;p>&lt;img src="https://gitee.com/shipengqi/illustrations/raw/main/go/context.png" alt="context" loading="lazy" />&lt;/p>
+&lt;a href="#%e5%8e%9f%e7%90%86" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>context 的最大作用就是在&lt;strong>一组 goroutine 构成的树形结构中对信号进行同步&lt;/strong>，以减少计算资源的浪费。&lt;/p>
+&lt;p>例如，Go 的 HTTP server，处理每一个请求，都是启动一个单独的 goroutine，处理过程中还会启动新的 goroutine 来访问数据库和其他服务。而 context 在不同 goroutine 之间可以同步请求特定数据、取消信号以及处理请求的截止日期。&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/context.png" alt="context" loading="lazy" />&lt;/p>
 &lt;p>每一个 context 都会从 root goroutine 一层层传递到底层。context 可以在上层 goroutine 执行出现错误时，将信号及时同步给下层。&lt;/p>
 &lt;h3>WithCancel&lt;span class="hx-absolute -hx-mt-20" id="withcancel">&lt;/span>
 &lt;a href="#withcancel" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">type&lt;/span> &lt;span class="nx">cancelCtx&lt;/span> &lt;span class="kd">struct&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">Context&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 保护之后的字段
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">mu&lt;/span> &lt;span class="nx">sync&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Mutex&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 当调用 cancel() 方法时，会关闭这个 channel
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">done&lt;/span> &lt;span class="kd">chan&lt;/span> &lt;span class="kd">struct&lt;/span>&lt;span class="p">{}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 子节点
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">children&lt;/span> &lt;span class="kd">map&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="nx">canceler&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="kd">struct&lt;/span>&lt;span class="p">{}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 取消原因
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">err&lt;/span> &lt;span class="kt">error&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="nx">c&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">cancelCtx&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="nf">Done&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="o">&amp;lt;-&lt;/span>&lt;span class="kd">chan&lt;/span> &lt;span class="kd">struct&lt;/span>&lt;span class="p">{}&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">c&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">mu&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Lock&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">c&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">done&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="kc">nil&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">c&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">done&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nb">make&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kd">chan&lt;/span> &lt;span class="kd">struct&lt;/span>&lt;span class="p">{})&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">d&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">c&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">done&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">c&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">mu&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Unlock&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="nx">d&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;ul>
+&lt;li>&lt;code>c.done&lt;/code> 是“懒汉式”创建，只有调用了 &lt;code>Done()&lt;/code> 方法的时候才会被创建。&lt;/li>
+&lt;li>函数返回的是一个&lt;strong>只读的 channel，而且没有地方向这个 channel 里面写数据&lt;/strong>。所以&lt;strong>直接调用读这个 channel，协程会被 block 住。一般通过搭配 select 来使用。一旦关闭，就会立即读出零值&lt;/strong>。&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>cancel()&lt;/code> 是最关键的方法：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="nx">c&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">cancelCtx&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="nf">cancel&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">removeFromParent&lt;/span> &lt;span class="kt">bool&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">err&lt;/span> &lt;span class="kt">error&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 必须要传 err
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nx">err&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="kc">nil&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nb">panic&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;context: internal error: missing cancel error&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 保护后续的字段，因为 context 会被传递给多个 goroutine
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">c&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">mu&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Lock&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">c&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">err&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="kc">nil&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">c&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">mu&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Unlock&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="c1">// 已经被其他 goroutine 取消
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 给 err 字段赋值
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">c&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">err&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">err&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 关闭 channel，通知其他 goroutine
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nx">c&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">done&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="kc">nil&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">c&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">done&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">closedchan&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span> &lt;span class="k">else&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nb">close&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">c&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">done&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 遍历它的所有子节点
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">for&lt;/span> &lt;span class="nx">child&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="k">range&lt;/span> &lt;span class="nx">c&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">children&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 递归地取消所有子节点
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">child&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">cancel&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kc">false&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">err&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 将子节点置空
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">c&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">children&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="kc">nil&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">c&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">mu&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Unlock&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">removeFromParent&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 从父节点中移除自己
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nf">removeChild&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">c&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Context&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">c&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;code>WithCancel()&lt;/code> 函数返回的是一个 &lt;code>cancelCtx&lt;/code> 结构体：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// src/context/context.go#L235
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="kd">func&lt;/span> &lt;span class="nf">WithCancel&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">parent&lt;/span> &lt;span class="nx">Context&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="nx">ctx&lt;/span> &lt;span class="nx">Context&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">cancel&lt;/span> &lt;span class="nx">CancelFunc&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">c&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nf">withCancel&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">parent&lt;/span>&lt;span class="p">)&lt;/span>
@@ -1315,7 +1470,8 @@ title="Copy code"
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">parent&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="kc">nil&lt;/span> &lt;span class="p">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nb">panic&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;cannot create context from nil parent&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">c&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">cancelCtx&lt;/span>&lt;span class="p">{}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 初始化一个子 cancelCtx 结构体
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">c&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">cancelCtx&lt;/span>&lt;span class="p">{}&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 构建 父子 context 之间的关联，当 父 context 被取消时，子 context 也会被取消
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">c&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">propagateCancel&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">parent&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">c&lt;/span>&lt;span class="p">)&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="nx">c&lt;/span>
@@ -1331,7 +1487,7 @@ title="Copy code"
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">select&lt;/span> &lt;span class="p">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">case&lt;/span> &lt;span class="o">&amp;lt;-&lt;/span>&lt;span class="nx">done&lt;/span>&lt;span class="p">:&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// parent context 已经被取消，child 也会立刻被取消
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 做个检查，如果 parent context 已经被取消，child 也会立刻被取消
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">child&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">cancel&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kc">false&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">parent&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Err&lt;/span>&lt;span class="p">(),&lt;/span> &lt;span class="nf">Cause&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">parent&lt;/span>&lt;span class="p">))&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">default&lt;/span>&lt;span class="p">:&lt;/span>
@@ -1349,53 +1505,25 @@ title="Copy code"
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nx">p&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">children&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="kc">nil&lt;/span> &lt;span class="p">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">p&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">children&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nb">make&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kd">map&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="nx">canceler&lt;/span>&lt;span class="p">]&lt;/span>&lt;span class="kd">struct&lt;/span>&lt;span class="p">{})&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">p&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">children&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="nx">child&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="kd">struct&lt;/span>&lt;span class="p">{}{}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// &amp;#34;挂到&amp;#34; 父 context 上
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">p&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">children&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="nx">child&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="kd">struct&lt;/span>&lt;span class="p">{}{}&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">p&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">mu&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Unlock&lt;/span>&lt;span class="p">()&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">a&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">ok&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">parent&lt;/span>&lt;span class="p">.(&lt;/span>&lt;span class="nx">afterFuncer&lt;/span>&lt;span class="p">);&lt;/span> &lt;span class="nx">ok&lt;/span> &lt;span class="p">{&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// parent implements an AfterFunc method.
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">c&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">mu&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Lock&lt;/span>&lt;span class="p">()&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">stop&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">a&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">AfterFunc&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kd">func&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">child&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">cancel&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kc">false&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">parent&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Err&lt;/span>&lt;span class="p">(),&lt;/span> &lt;span class="nf">Cause&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">parent&lt;/span>&lt;span class="p">))&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">})&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">c&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Context&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">stopCtx&lt;/span>&lt;span class="p">{&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">Context&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="nx">parent&lt;/span>&lt;span class="p">,&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">stop&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="nx">stop&lt;/span>&lt;span class="p">,&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">c&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">mu&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Unlock&lt;/span>&lt;span class="p">()&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">goroutines&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Add&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">)&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 没有找到可取消的 parent context
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span> &lt;span class="k">else&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 如果没有找到可取消的父 context。
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 运行一个新的 goroutine 同时监听 parent.Done() 和 child.Done() 两个 channel
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">go&lt;/span> &lt;span class="kd">func&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">select&lt;/span> &lt;span class="p">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">case&lt;/span> &lt;span class="o">&amp;lt;-&lt;/span>&lt;span class="nx">parent&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Done&lt;/span>&lt;span class="p">():&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 在 parent.Done() 关闭时调用 child.cancel 取消 子 context
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">child&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">cancel&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kc">false&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">parent&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Err&lt;/span>&lt;span class="p">(),&lt;/span> &lt;span class="nf">Cause&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">parent&lt;/span>&lt;span class="p">))&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">case&lt;/span> &lt;span class="o">&amp;lt;-&lt;/span>&lt;span class="nx">child&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Done&lt;/span>&lt;span class="p">():&lt;/span> &lt;span class="c1">// 这个空的 case 表示如果子节点自己取消了，那就退出这个 select，父节点的取消信号就不用管了。
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">child&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">cancel&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kc">false&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">parent&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Err&lt;/span>&lt;span class="p">())&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">case&lt;/span> &lt;span class="o">&amp;lt;-&lt;/span>&lt;span class="nx">child&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Done&lt;/span>&lt;span class="p">():&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 这个空的 case 表示如果子节点自己取消了，那就退出这个 select，父节点的取消信号就不用管了。
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 如果去掉这个 case，那么很可能父节点一直不取消，这个 goroutine 就泄漏了
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="p">}&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}()&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="nx">c&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">cancelCtx&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="nf">Done&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="o">&amp;lt;-&lt;/span>&lt;span class="kd">chan&lt;/span> &lt;span class="kd">struct&lt;/span>&lt;span class="p">{}&lt;/span> &lt;span class="p">{&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">c&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">mu&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Lock&lt;/span>&lt;span class="p">()&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 有调用了 Done() 方法的时候才会被创建
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nx">c&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">done&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="kc">nil&lt;/span> &lt;span class="p">{&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">c&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">done&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nb">make&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kd">chan&lt;/span> &lt;span class="kd">struct&lt;/span>&lt;span class="p">{})&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 返回的是一个只读的 channel
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 这个 channel 不会被写入数据，直接调用读这个 channel，协程会被 block 住。
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 一般通过搭配 select 来使用。一旦关闭，就会立即读出零值。
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">d&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">c&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">done&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">c&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">mu&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Unlock&lt;/span>&lt;span class="p">()&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="nx">d&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
@@ -1406,8 +1534,7 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>&lt;code>propagateCancel&lt;/code> 的作用就是向上寻找可以“挂靠”的“可取消”的 context，并且“挂靠”上去。这样，调用上层 &lt;code>cancel&lt;/code> 方法的时候，就可以层层传递，
-将那些挂靠的子 context 同时“取消”。&lt;/p>
+&lt;p>&lt;code>propagateCancel&lt;/code> 的作用就是向上寻找可以“挂靠”的“可取消”的 context，并且“挂靠”上去。这样，调用上层 &lt;code>cancel&lt;/code> 方法的时候，就可以层层传递，将那些挂靠的子 context 同时“取消”。&lt;/p>
 &lt;p>&lt;code>cancelCtx.cancel&lt;/code> 会关闭 context 中的 channel 并向所有的 子 context 同步取消信号：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="nx">c&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">cancelCtx&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="nf">cancel&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">removeFromParent&lt;/span> &lt;span class="kt">bool&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">err&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">cause&lt;/span> &lt;span class="kt">error&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
@@ -1536,10 +1663,12 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;blockquote>
-&lt;p>如果要创建的这个 子 context 的 deadline 比 parent context 的要晚，parent context 到时间了会自动取消，子 context 也会取消，
-导致 子 context 的 deadline 时间还没到就会被取消&lt;/p>
-&lt;/blockquote>
+&lt;div class="hx-overflow-x-auto hx-mt-6 hx-flex hx-rounded-lg hx-border hx-py-2 ltr:hx-pr-4 rtl:hx-pl-4 contrast-more:hx-border-current contrast-more:dark:hx-border-current hx-border-blue-200 hx-bg-blue-100 hx-text-blue-900 dark:hx-border-blue-200/30 dark:hx-bg-blue-900/30 dark:hx-text-blue-200">
+&lt;div class="ltr:hx-pl-3 ltr:hx-pr-2 rtl:hx-pr-3 rtl:hx-pl-2">&lt;div class="hx-select-none hx-text-xl" style="font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';">ℹ️&lt;/div>&lt;/div>
+&lt;div class="hx-w-full hx-min-w-0 hx-leading-7">
+&lt;div class="hx-mt-6 hx-leading-7 first:hx-mt-0">如果要创建的这个&lt;strong>子 context 的 deadline 比 parent context 的要晚，parent context 到时间了会自动取消，子 context 也会取消，导致子 context 的 deadline 时间还没到就会被取消&lt;/strong>。&lt;/div>
+&lt;/div>
+&lt;/div>
 &lt;h3>WithValue&lt;span class="hx-absolute -hx-mt-20" id="withvalue">&lt;/span>
 &lt;a href="#withvalue" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// src/context/context.go#L713
@@ -1553,7 +1682,8 @@ title="Copy code"
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="p">!&lt;/span>&lt;span class="nx">reflectlite&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">TypeOf&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">key&lt;/span>&lt;span class="p">).&lt;/span>&lt;span class="nf">Comparable&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nb">panic&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;key is not comparable&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">valueCtx&lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="nx">parent&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">key&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">val&lt;/span>&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 初始化一个子 valueCtx 结构体
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">return&lt;/span> &lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">valueCtx&lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="nx">parent&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">key&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">val&lt;/span>&lt;span class="p">}&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">type&lt;/span> &lt;span class="nx">valueCtx&lt;/span> &lt;span class="kd">struct&lt;/span> &lt;span class="p">{&lt;/span>
@@ -1566,7 +1696,7 @@ title="Copy code"
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="nx">c&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">val&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 如果 valueCtx 中存储的键值对与传入的参数不匹配
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 就会从 parent context 中查找该键对应的值直到某个 parent context 中返回 nil 或者查找到对应的值。
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 就会一层层的向 parent context 中查找该键对应的值，直到某个 parent context 中返回 nil 或者查找到对应的值。
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">return&lt;/span> &lt;span class="nf">value&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">c&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Context&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">key&lt;/span>&lt;span class="p">)&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
@@ -1813,9 +1943,12 @@ title="Copy code"
 &lt;div class="hx-overflow-x-auto hx-mt-6 hx-flex hx-rounded-lg hx-border hx-py-2 ltr:hx-pr-4 rtl:hx-pl-4 contrast-more:hx-border-current contrast-more:dark:hx-border-current hx-border-yellow-100 hx-bg-yellow-50 hx-text-yellow-900 dark:hx-border-yellow-200/30 dark:hx-bg-yellow-700/30 dark:hx-text-yellow-200">
 &lt;div class="ltr:hx-pl-3 ltr:hx-pr-2 rtl:hx-pr-3 rtl:hx-pl-2">&lt;div class="hx-select-none hx-text-xl" style="font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';">⚠️&lt;/div>&lt;/div>
 &lt;div class="hx-w-full hx-min-w-0 hx-leading-7">
-&lt;div class="hx-mt-6 hx-leading-7 first:hx-mt-0">关闭一个 &lt;code>nil&lt;/code> 的 channel 会导致 panic。&lt;br>
-重复关闭 channel 会导致 panic。&lt;br>
-向已关闭的 channel 发送值会导致 panic。&lt;br>&lt;/div>
+&lt;div class="hx-mt-6 hx-leading-7 first:hx-mt-0">&lt;ul>
+&lt;li>关闭一个 &lt;code>nil&lt;/code> 的 channel 会导致 panic。&lt;/li>
+&lt;li>重复关闭 channel 会导致 panic。&lt;/li>
+&lt;li>向已关闭的 channel 发送值会导致 panic。&lt;/li>
+&lt;/ul>
+&lt;/div>
 &lt;/div>
 &lt;/div>
 &lt;h3>单向 channel&lt;span class="hx-absolute -hx-mt-20" id="单向-channel">&lt;/span>
@@ -2582,27 +2715,25 @@ title="Copy code"
 &lt;p>&lt;code>runtime_Semacquire&lt;/code> 和 &lt;code>runtime_SemacquireMutex&lt;/code> 最终都是调用了 &lt;code>semacquire1&lt;/code> 函数：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">semacquire1&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">addr&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="kt">uint32&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">lifo&lt;/span> &lt;span class="kt">bool&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">profile&lt;/span> &lt;span class="nx">semaProfileFlags&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">skipframes&lt;/span> &lt;span class="kt">int&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">reason&lt;/span> &lt;span class="nx">waitReason&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">gp&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nf">getg&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 检查当前 goroutine 是否在 G 栈上
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">gp&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nf">getg&lt;/span>&lt;span class="p">()&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">gp&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="nx">gp&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">m&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">curg&lt;/span> &lt;span class="p">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">throw&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;semacquire not on the G stack&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// Easy case.
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 信号量大于 0，直接返回
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 快速路径：信号量大于 0，直接返回，信号量 -1
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nf">cansemacquire&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">addr&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// Harder case:
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 构造一个 sudog
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 慢路径：从池中获取 sudog 结构（避免频繁内存分配）
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// sudog 表示一个等待中的 goroutine
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">s&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nf">acquireSudog&lt;/span>&lt;span class="p">()&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 将信号量的地址放到到 semtable 中
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 返回一个 semaRoot 类型
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">root&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">semtable&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">rootFor&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">addr&lt;/span>&lt;span class="p">)&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">t0&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">int64&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">)&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">s&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">releasetime&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="mi">0&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">s&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">acquiretime&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="mi">0&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">s&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">ticket&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="mi">0&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// ...
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">for&lt;/span> &lt;span class="p">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">lockWithRank&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">root&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">lock&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">lockRankRoot&lt;/span>&lt;span class="p">)&lt;/span>
@@ -2614,18 +2745,21 @@ title="Copy code"
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">unlock&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">root&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">lock&lt;/span>&lt;span class="p">)&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">break&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 将当前 goroutine 放入到 semaRoot 的等待者队列
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 将 sudog 放入到 semaRoot 的等待者队列
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// queue 会将 sudog 和 g 关联起来
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">root&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">queue&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">addr&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">s&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">lifo&lt;/span>&lt;span class="p">)&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 挂起当前 goroutine
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nf">goparkunlock&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">root&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">lock&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">reason&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">traceBlockSync&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">4&lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="nx">skipframes&lt;/span>&lt;span class="p">)&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">s&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">ticket&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="o">||&lt;/span> &lt;span class="nf">cansemacquire&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">addr&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 被唤醒后重新检查
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nx">s&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">ticket&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="o">||&lt;/span> &lt;span class="nf">cansemacquire&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">addr&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">break&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">s&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">releasetime&lt;/span> &lt;span class="p">&amp;gt;&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="p">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">blockevent&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">s&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">releasetime&lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="nx">t0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">3&lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="nx">skipframes&lt;/span>&lt;span class="p">)&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">releaseSudog&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">s&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 释放 sudog 放回池内
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nf">releaseSudog&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">s&lt;/span>&lt;span class="p">)&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
@@ -2663,7 +2797,8 @@ title="Copy code"
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// src/runtime/sema.go
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="kd">type&lt;/span> &lt;span class="nx">semaRoot&lt;/span> &lt;span class="kd">struct&lt;/span> &lt;span class="p">{&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">lock&lt;/span> &lt;span class="nx">mutex&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 保护本结构的自旋锁（非 Go 级别的 mutex，是更底层的锁定机制）
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">lock&lt;/span> &lt;span class="nx">mutex&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">treap&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">sudog&lt;/span> &lt;span class="c1">// 等待者队列（平衡树）的根节点
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">nwait&lt;/span> &lt;span class="nx">atomic&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Uint32&lt;/span> &lt;span class="c1">// 等待者的数量
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="p">}&lt;/span>
@@ -2678,7 +2813,14 @@ title="Copy code"
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// rootFor 本质上就是将 semaRoot 与信号量绑定
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="kd">func&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="nx">t&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">semTable&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="nf">rootFor&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">addr&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="kt">uint32&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">semaRoot&lt;/span> &lt;span class="p">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">t&lt;/span>&lt;span class="p">[(&lt;/span>&lt;span class="nb">uintptr&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">unsafe&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Pointer&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">addr&lt;/span>&lt;span class="p">))&lt;/span>&lt;span class="o">&amp;gt;&amp;gt;&lt;/span>&lt;span class="mi">3&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="o">%&lt;/span>&lt;span class="nx">semTabSize&lt;/span>&lt;span class="p">].&lt;/span>&lt;span class="nx">root&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="nx">root&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">semaRoot&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="nf">queue&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">addr&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="kt">uint32&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">s&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">sudog&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">lifo&lt;/span> &lt;span class="kt">bool&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 释放信号量时，唤醒 g 需要用到
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">s&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">g&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nf">getg&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -2719,15 +2861,14 @@ title="Copy code"
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// Harder case
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">lockWithRank&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">root&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">lock&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">lockRankRoot&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nf">lockWithRank&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">root&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">lock&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">lockRankRoot&lt;/span>&lt;span class="p">)&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 再次检查等待者计数
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nx">root&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">nwait&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Load&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="p">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 计数已经被其他 goroutine 消费，不需要唤醒其他 goroutine
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nf">unlock&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">root&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">lock&lt;/span>&lt;span class="p">)&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 队当前信号量上的 sudog
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 出队当前信号量上的 sudog
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">s&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">t0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">tailtime&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">root&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">dequeue&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">addr&lt;/span>&lt;span class="p">)&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">s&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="kc">nil&lt;/span> &lt;span class="p">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 等待者计数 -1
@@ -2742,6 +2883,21 @@ title="Copy code"
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">goyield&lt;/span>&lt;span class="p">()&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;code>goparkunlock&lt;/code> 的实现：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">goparkunlock&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">lock&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">mutex&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">reason&lt;/span> &lt;span class="nx">waitReason&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">traceReason&lt;/span> &lt;span class="nx">traceBlockReason&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">traceskip&lt;/span> &lt;span class="kt">int&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 调用 gopark 函数，将 goroutine 阻塞
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nf">gopark&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">parkunlock_c&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">unsafe&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Pointer&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">lock&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="nx">reason&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">traceReason&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">traceskip&lt;/span>&lt;span class="p">)&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
@@ -2961,10 +3117,9 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div></description></item><item><title>SingleFlight</title><link>https://shipengqi.github.io/golang-learn/docs/concurrency/11_singleflight/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/concurrency/11_singleflight/</guid><description>
-&lt;p>Go 的扩展库 &lt;code>golang.org/x/sync&lt;/code> 提供了 &lt;code>singleflight&lt;/code> 包，它的作用在处理多个 goroutine 同时调用同一个函数的时候，只让一个 goroutine 去调用这个函数，等到这个 goroutine 返回结果时，再把结
-果返回给这几个 goroutine，这样可以减少并发调用的数量。&lt;/p>
-&lt;p>一个常见的使用场景：在使用 Redis 对数据库中的数据进行缓存，如果发生缓存击穿，大量的流量都会打到后端数据库上，导致后端服务响应延时等问题。
-&lt;code>singleflight&lt;/code> 可以将对同一个 key 的多个请求合并为一个，减轻后端服务的压力。&lt;/p>
+&lt;p>Go 的扩展库 &lt;code>golang.org/x/sync&lt;/code> 提供了 &lt;code>singleflight&lt;/code> 包，它的作用在处理多个 goroutine 同时调用同一个函数的时候，只让一个 goroutine 去调用这个函数，等到这个 goroutine 返回结果时，再把结果返回给这几个 goroutine，这样可以减少并发调用的数量。&lt;/p>
+&lt;p>一个常见的使用场景：在使用 Redis 对数据库中的数据进行缓存，如果发生缓存击穿，大量的流量都会打到后端数据库上，导致后端服务响应延时等问题。&lt;/p>
+&lt;p>&lt;code>singleflight&lt;/code> 可以将对同一个 key 的多个请求合并为一个，减轻后端服务的压力。&lt;/p>
 &lt;h2>使用&lt;span class="hx-absolute -hx-mt-20" id="使用">&lt;/span>
 &lt;a href="#%e4%bd%bf%e7%94%a8" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">package&lt;/span> &lt;span class="nx">main&lt;/span>
