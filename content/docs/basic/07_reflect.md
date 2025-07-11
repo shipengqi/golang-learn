@@ -65,7 +65,7 @@ type eface struct {
 ### 动态类型和静态类型
 
 {{< callout type="info" >}}
-**接口变量可以存储任何实现了该接口定义的所有方法的变量**。
+**接口变量可以存储任何实现了该接口的变量**。
 {{< /callout >}}
 
 Go 中最常见的 `Reader` 和 `Writer` 接口：
@@ -94,7 +94,7 @@ r = tty
 1. `io.Reader` 是 `r` 的静态类型。它的动态类型为 `nil`。
 2. `r = tty` 将 `r` 的动态类型变成 `*os.File`。
 
-![go-interface-reflect]()
+![go-interface-reflect](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/go-interface-reflect.png)
 
 `*os.File` 其实还实现了 `io.Writer` 接口：
 
@@ -112,7 +112,7 @@ var empty interface{}
 empty = r
 ```
 
-![go-empty-interface]()
+![go-empty-interface](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/go-empty-interface.png)
 
 由于 `empty` 是一个空接口，因此所有的类型都实现了它，`w` 可以直接赋给它，不需要执行断言操作。
 
