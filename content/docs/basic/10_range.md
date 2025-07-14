@@ -4,37 +4,53 @@ weight: 10
 draft: true
 ---
 
-带有 `range` 子句的 `for` 语句会先把被遍历的字符串值拆成一个**字节序列**（注意是字节序列），然后再试图找出这个字节序列中
-包含的每一个 UTF-8 编码值，或者说每一个 Unicode 字符。
-
-这样的 `for` 语句可以为两个迭代变量赋值。如果存在两个迭代变量，那么赋给第一个变量的值就将会是当前字节序列中的某个 UTF-8 编码
-值的第一个字节所对应的那个索引值。而赋给第二个变量的值则是这个 UTF-8 编码值代表的那个 Unicode 字符，其类型会是 `rune`。
+为什么下面的 `range` 遍历只执行了 3 次？
 
 ```go
-str := "Go 爱好者 "
-for i, c := range str {
-    fmt.Printf("%d: %q [% x]\n", i, c, []byte(string(c)))
+func main() {
+    nums := []int{1, 2, 3}
+    for i := range nums {
+        nums = append(nums, i)
+        fmt.Println(nums)
+    }
+    // 输出：
+    // [1 2 3 0]
+    // [1 2 3 0 1]
+    // [1 2 3 0 1 2]
 }
 ```
 
-完整的打印内容如下：
+因为 `range` 遍历的是切片的副本，而不是切片本身。在遍历的过程中，切片的长度会发生变化，但是遍历的次数在遍历开始时就已经确定了。
 
-```bash
-0: 'G' [47]
-1: 'o' [6f]
-2: '爱' [e7 88 b1]
-5: '好' [e5 a5 bd]
-8: '者' [e8 80 85]
+
+## range 变量作用域问题
+
+```go
+package main
+
+import "sync"
+import "time"
+
+func main() {
+    wg := sync.WaitGroup{}
+    values := []int{1, 2, 3}
+    for _, v := range values {
+        go func() {
+            fmt.Println(v)
+        }()
+    }
+    <-time.Tick(time.Second)
+}
 ```
 
-**注意了，'爱'是由三个字节共同表达的，所以第四个 Unicode 字符'好'对应的索引值并不是 3，而是 2 加 3 后得到的 5**。
+Go 1.22 之前的版本会输出：
 
-<https://studygolang.com/articles/25094>
-<https://studygolang.com/articles/9701>
-<https://talkgo.org/discuss/2019-01-10-anlayze-range/>
+```bash
+3
+3
+3
+```
 
-<https://blog.csdn.net/qq_25870633/article/details/83339538>
-<https://zhuanlan.zhihu.com/p/91044663>
-<https://www.jianshu.com/p/86a99efeece5>
-<https://blog.csdn.net/u011957758/article/details/82230316>
-<https://www.cnblogs.com/howo/p/10507934.html>
+因为在 `range` 循环中获取返回变量的地址都完全相同（虽然有多个值），变量 v 的作用域覆盖了整个循环体，每次循环只是更新了 v 的值，而没有创建新的变量。
+
+Go 1.22 版本修复了这个问题，**循环时的变量作用域被修改为每次循环都创建一个独立的变量**。

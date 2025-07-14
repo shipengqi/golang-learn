@@ -104,7 +104,7 @@ fmt.Print(b1.String())
 
 推荐使用 `strings.Builder` 来拼接字符串。
 
-`strings.Builder` 性能上比 `bytes.Buffer` 略快，一个比较重要的区别在于，`bytes.Buffer` 转化为字符串时重新申请了一块空间，存放生成的字符串变量，而 `strings.Builder` 直接将底层的 `[]byte` 转换成了字符串类型并返回。
+`strings.Builder` 性能上比 `bytes.Buffer` 略快，一个比较重要的区别在于，**`bytes.Buffer` 转化为字符串时重新申请了一块空间，存放生成的字符串变量，而 `strings.Builder` 直接将底层的 `[]byte` 转换成了字符串类型并返回**。
 
 `bytes.Buffer`：
 
@@ -162,3 +162,14 @@ x2 = true     // 甚至可以存储 bool 类型
 - 通道类型（channel）：零值是 `nil`。
 - 函数类型：零值是 `nil`。
 - 接口类型：零值是 `nil`。
+
+## 值类型和引用类型
+
+- 值类型包括数值类型、布尔类型、字符串、数组等。
+- 引用类型包括 `slice`、`map`、`channel`、`interface`、`function`、指针等。
+
+{{< callout type="info" >}}
+值类型和引用类型的区别：
+- 值类型的变量在赋值时会进行数据拷贝，变量间互不影响；而引用类型的变量在赋值时会进行引用拷贝，变量。
+- 值类型的变量在函数参数传递时也是值拷贝，而引用类型的变量在函数参数传递时是引用拷贝。变量间共享一块内存，操作其中一个变量，会影响到其他变量。
+{{< /callout >}}

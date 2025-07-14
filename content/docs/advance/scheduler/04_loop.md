@@ -195,6 +195,7 @@ func ready(gp *g, traceskip int, next bool) {
 - `sync.Metux` -> 信号量（`semaRoot.treap` 等待着队列）-> `gopark/goready`。
 - `sync.WaitGroup` -> 信号量（`semaRoot.treap` 等待着队列）-> `gopark/goready`。
 - `sync.Cond` -> `gopark/goready`。
+- `golang.org/x/sync/semaphore` -> channel 阻塞、通知。
 - `golang.org/x/sync/singleflight` -> `sync.Metux` -> 信号量（`semaRoot.treap` 等待着队列）-> `gopark/goready`。
 - `golang.org/x/sync/errgroup` -> `sync.WaitGroup` -> 信号量（`semaRoot.treap` 等待着队列）-> `gopark/goready`。
 
