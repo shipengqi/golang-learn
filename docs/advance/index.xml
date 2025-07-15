@@ -75,7 +75,86 @@ title="Copy code"
 &lt;/div>
 &lt;p>输出的顺序：&lt;code>9, 0, 1, 2, 3, 4, 5, 6, 7, 8&lt;/code>。这就是因为只有一个 &lt;code>p&lt;/code>，每次生产出来的 goroutine 都会第一时间塞到 &lt;code>runnext&lt;/code>，而 &lt;code>i&lt;/code> 从 &lt;code>1&lt;/code> 开始，&lt;code>runnext&lt;/code> 已经有 goroutine 在了，所以这时会把 old goroutine 移到 &lt;code>p&lt;/code> 的本队队列中去，再把 new goroutine 放到 &lt;code>runnext&lt;/code>。之后会重复这个过程。&lt;/p>
 &lt;p>因此这后当一次 &lt;code>i&lt;/code> 为 &lt;code>9&lt;/code> 时，新 goroutine 被塞到 &lt;code>runnext&lt;/code>，其余 goroutine 都在本地队列。&lt;/p>
-&lt;p>之后，main goroutine 执行了一个读 channel 的语句，这是一个好的调度时机：main goroutine 挂起，运行 &lt;code>p&lt;/code> 的 &lt;code>runnext&lt;/code> 和本地可运行队列里的 gorotuine。&lt;/p></description></item><item><title>内存管理</title><link>https://shipengqi.github.io/golang-learn/docs/advance/mm/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/advance/mm/</guid><description/></item><item><title>系统监控</title><link>https://shipengqi.github.io/golang-learn/docs/advance/05_sysmon/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/advance/05_sysmon/</guid><description>
+&lt;p>之后，main goroutine 执行了一个读 channel 的语句，这是一个好的调度时机：main goroutine 挂起，运行 &lt;code>p&lt;/code> 的 &lt;code>runnext&lt;/code> 和本地可运行队列里的 gorotuine。&lt;/p></description></item><item><title>内存管理</title><link>https://shipengqi.github.io/golang-learn/docs/advance/mm/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/advance/mm/</guid><description/></item><item><title>网络轮询器</title><link>https://shipengqi.github.io/golang-learn/docs/advance/04_netpooler/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/advance/04_netpooler/</guid><description>
+&lt;p>Go 语言在网络轮询器中使用 I/O 多路复用模型处理 I/O 操作。&lt;/p>
+&lt;h2>I/O 模型&lt;span class="hx-absolute -hx-mt-20" id="io-模型">&lt;/span>
+&lt;a href="#io-%e6%a8%a1%e5%9e%8b" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;h3>阻塞 I/O&lt;span class="hx-absolute -hx-mt-20" id="阻塞-io">&lt;/span>
+&lt;a href="#%e9%98%bb%e5%a1%9e-io" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>阻塞 I/O 是最常见的 I/O 模型，在默认情况下，当通过 &lt;code>read&lt;/code> 或者 &lt;code>write&lt;/code> 等系统调用读写文件或者网络时，应用程序会被阻塞。&lt;/p>
+&lt;p>例如，当执行 &lt;code>read&lt;/code> 系统调用时，应用程序会从用户态陷入内核态，内核会检查文件描述符是否可读；当文件描述符中存在数据时，操作系统内核会将准备好的数据拷贝给应用程序并交回控制权。&lt;/p>
+&lt;p>操作系统中多数的 I/O 操作都是如上所示的阻塞请求，一旦执行 I/O 操作，应用程序会陷入阻塞等待 I/O 操作的结束。&lt;/p>
+&lt;h3>非阻塞 I/O&lt;span class="hx-absolute -hx-mt-20" id="非阻塞-io">&lt;/span>
+&lt;a href="#%e9%9d%9e%e9%98%bb%e5%a1%9e-io" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>当进程把一个文件描述符设置成非阻塞时，执行 &lt;code>read&lt;/code> 和 &lt;code>write&lt;/code> 等 I/O 操作会立刻返回一个 &lt;code>EAGAIN&lt;/code> 错误。意味着该文件描述符还在等待缓冲区中的数据。随后，应用程序会不断&lt;strong>轮询&lt;/strong>调用 &lt;code>read&lt;/code> 直到它的返回值大于 0，这时应用程序就可以对读取操作系统缓冲区中的数据并进行操作。&lt;/p>
+&lt;h3>多路复用&lt;span class="hx-absolute -hx-mt-20" id="多路复用">&lt;/span>
+&lt;a href="#%e5%a4%9a%e8%b7%af%e5%a4%8d%e7%94%a8" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>多路复用是指进程可以同时处理多个文件描述符，一旦某个描述符就绪（一般是读就绪或者写就绪），能够通知程序进行相应的读写操作。&lt;/p>
+&lt;p>系统调用 select 也可以提供 I/O 多路复用的能力，但是使用它有比较多的限制：&lt;/p>
+&lt;ul>
+&lt;li>监听能力有限：最多只能监听 1024 个文件描述符；&lt;/li>
+&lt;li>内存拷贝开销大：需要维护一个较大的数据结构存储文件描述符，该结构需要拷贝到内核中；&lt;/li>
+&lt;li>时间复杂度 &lt;code>O(n)&lt;/code>：返回准备就绪的事件个数后，需要遍历所有的文件描述符；&lt;/li>
+&lt;/ul>
+&lt;h4>epoll&lt;span class="hx-absolute -hx-mt-20" id="epoll">&lt;/span>
+&lt;a href="#epoll" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>三大核心系统调用：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-c" data-lang="c">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 创建 epol 实例
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="kt">int&lt;/span> &lt;span class="nf">epoll_create&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kt">int&lt;/span> &lt;span class="n">size&lt;/span>&lt;span class="p">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 管理监控列表
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="kt">int&lt;/span> &lt;span class="nf">epoll_ctl&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kt">int&lt;/span> &lt;span class="n">epfd&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="kt">int&lt;/span> &lt;span class="n">op&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="kt">int&lt;/span> &lt;span class="n">fd&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="k">struct&lt;/span> &lt;span class="n">epoll_event&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="n">event&lt;/span>&lt;span class="p">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 等待事件就绪
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="kt">int&lt;/span> &lt;span class="nf">epoll_wait&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kt">int&lt;/span> &lt;span class="n">epfd&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="k">struct&lt;/span> &lt;span class="n">epoll_event&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="n">events&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="kt">int&lt;/span> &lt;span class="n">maxevents&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="kt">int&lt;/span> &lt;span class="n">timeout&lt;/span>&lt;span class="p">);&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h3>Go 的网络轮询实现&lt;span class="hx-absolute -hx-mt-20" id="go-的网络轮询实现">&lt;/span>
+&lt;a href="#go-%e7%9a%84%e7%bd%91%e7%bb%9c%e8%bd%ae%e8%af%a2%e5%ae%9e%e7%8e%b0" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>不同的操作系统也都实现了自己的 I/O 多路复用函数，例如：&lt;code>epoll&lt;/code>、&lt;code>kqueue&lt;/code> 和 &lt;code>evport&lt;/code> 等。&lt;/p>
+&lt;p>Go 为了提高在不同操作系统上的 I/O 操作性能，使用平台特定的函数实现了多个版本的网络轮询模块：&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>src/runtime/netpoll_epoll.go&lt;/code>&lt;/li>
+&lt;li>&lt;code>src/runtime/netpoll_kqueue.go&lt;/code>&lt;/li>
+&lt;li>&lt;code>src/runtime/netpoll_solaris.go&lt;/code>&lt;/li>
+&lt;li>&lt;code>src/runtime/netpoll_windows.go&lt;/code>&lt;/li>
+&lt;li>&lt;code>src/runtime/netpoll_aix.go&lt;/code>&lt;/li>
+&lt;li>&lt;code>src/runtime/netpoll_fake.go&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;p>编译器在编译 Go 程序时，会根据目标平台选择树中特定的分支进行编译。例如，如果目标平台是 Linux，那么就会根据文件中的 &lt;code>// +build linux&lt;/code> 编译指令选择 &lt;code>src/runtime/netpoll_epoll.go&lt;/code> 并使用 &lt;code>epoll&lt;/code> 函数处理用户的 I/O 操作。&lt;/p>
+&lt;p>&lt;code>epoll&lt;/code>、&lt;code>kqueue&lt;/code> 等多路复用模块都要实现以下五个函数，这五个函数构成一个接口：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 初始化网络轮询器，通过 sync.Once 和 netpollInited 变量保证函数只会调用一次
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="kd">func&lt;/span> &lt;span class="nf">netpollinit&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 监听文件描述符上的边缘触发事件，创建事件并加入监听
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="kd">func&lt;/span> &lt;span class="nf">netpollopen&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">fd&lt;/span> &lt;span class="kt">uintptr&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">pd&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">pollDesc&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="kt">int32&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 轮询网络并返回一组已经准备就绪的 goroutine，传入的参数会决定它的行为
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 如果参数小于 0，无限期等待文件描述符就绪；
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 如果参数等于 0，非阻塞地轮询网络；
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 如果参数大于 0，阻塞特定时间轮询网络；
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="kd">func&lt;/span> &lt;span class="nf">netpoll&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">delta&lt;/span> &lt;span class="kt">int64&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="nx">gList&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 唤醒网络轮询器，例如：计时器向前修改时间时会通过该函数中断网络轮询器4；
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="kd">func&lt;/span> &lt;span class="nf">netpollBreak&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 判断文件描述符是否被轮询器使用
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="kd">func&lt;/span> &lt;span class="nf">netpollIsPollDescriptor&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">fd&lt;/span> &lt;span class="kt">uintptr&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="kt">bool&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h4>初始化&lt;span class="hx-absolute -hx-mt-20" id="初始化">&lt;/span>
+&lt;a href="#%e5%88%9d%e5%a7%8b%e5%8c%96" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>&lt;code>runtime.netpollinit&lt;/code>，即 Linux 上的 &lt;code>epoll&lt;/code>，它主要做了以下几件事情：&lt;/p>
+&lt;ol>
+&lt;li>是调用 &lt;code>epollcreate1&lt;/code> 创建一个新的 &lt;code>epoll&lt;/code> 文件描述符，这个文件描述符会在整个程序的生命周期中使用；&lt;/li>
+&lt;li>通过 &lt;code>runtime.nonblockingPipe &lt;/code>创建一个用于通信的管道；&lt;/li>
+&lt;li>使用 &lt;code>epollctl&lt;/code> 将用于读取数据的文件描述符打包成 &lt;code>epollevent&lt;/code> 事件加入监听；&lt;/li>
+&lt;/ol></description></item><item><title>系统监控</title><link>https://shipengqi.github.io/golang-learn/docs/advance/05_sysmon/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/advance/05_sysmon/</guid><description>
 &lt;p>Go 的系统监控 (sysmon) 是一个独立的特殊线程，它在后台持续运行，负责处理各种运行时系统的维护任务和监控工作。它在内部启动了一个不会中止的循环，在循环的内部会轮询网络、抢占长期运行或者处于系统调用的 goroutine 以及触发垃圾回收，通过这些行为，它能够让系统的运行状态变得更健康。&lt;/p>
 &lt;p>&lt;code>runtime.main&lt;/code> 函数：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">

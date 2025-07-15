@@ -1470,7 +1470,8 @@ title="Copy code"
 &lt;li>&lt;strong>栈空间不足&lt;/strong>&lt;/li>
 &lt;/ol>
 &lt;p>变量逃逸就意味着增加了堆中的对象个数，影响 GC 耗时，影响性能。所以编写代码时，避免返回指针，限制闭包的作用范围等来要尽量避免逃逸。&lt;/p>
-&lt;p>可以使用编译器的 &lt;code>gcflags=&amp;quot;-m&amp;quot;&lt;/code> 来查看变量逃逸的情况：&lt;/p>
+&lt;h3>查看逃逸分析&lt;span class="hx-absolute -hx-mt-20" id="查看逃逸分析">&lt;/span>
+&lt;a href="#%e6%9f%a5%e7%9c%8b%e9%80%83%e9%80%b8%e5%88%86%e6%9e%90" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>可以使用编译器的 &lt;code>gcflags=&amp;quot;-m&amp;quot;&lt;/code> 来查看变量逃逸的情况：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">package&lt;/span> &lt;span class="nx">main&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
@@ -1532,12 +1533,23 @@ title="Copy code"
 &lt;li>&lt;strong>指向栈对象的指针不能存在于堆中&lt;/strong>；&lt;/li>
 &lt;li>&lt;strong>指向栈对象的指针不能在栈对象回收后存活&lt;/strong>；&lt;/li>
 &lt;/ul>
-&lt;p>总结，&lt;strong>类型不确定的、大小不确定的、被函数外引用的变量、栈空间不足都会逃逸到堆上&lt;/strong>。&lt;/p>
+&lt;p>总结，&lt;strong>被函数外引用的变量（外部函数、方法、gorouine）、类型不确定的、大小不确定的、栈空间不足都会逃逸到堆上&lt;/strong>。&lt;/p>
 &lt;h3>传值还是传指针？&lt;span class="hx-absolute -hx-mt-20" id="传值还是传指针">&lt;/span>
 &lt;a href="#%e4%bc%a0%e5%80%bc%e8%bf%98%e6%98%af%e4%bc%a0%e6%8c%87%e9%92%88" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>传值会拷贝整个对象，而传指针只会拷贝指针地址，指向的对象是同一个。传指针可以减少值的拷贝，但是会导致内存分配逃逸到堆中，增加垃圾回收(GC)的负担。在&lt;strong>对象频繁创建和删除的场景下，传递指针导致的 GC 开销可能会严重影响性能&lt;/strong>。&lt;/p>
 &lt;p>一般情况下，对于&lt;strong>需要修改原对象值，或占用内存比较大的结构体，选择传指针&lt;/strong>。对于&lt;strong>只读的占用内存较小的结构体，直接传值&lt;/strong>能够获得更好的性能。&lt;/p>
+&lt;h3>优化技巧&lt;span class="hx-absolute -hx-mt-20" id="优化技巧">&lt;/span>
+&lt;a href="#%e4%bc%98%e5%8c%96%e6%8a%80%e5%b7%a7" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;ol>
+&lt;li>避免不必要的指针返回，尽量返回值而不是指针。&lt;/li>
+&lt;li>减少闭包对变量的引用：闭包需要使用外部变量时，经量使用参数传递，避免闭包引用外部变量。&lt;/li>
+&lt;li>避免接口赋值：使用具体类型代替接口，减少逃逸的可能性。&lt;/li>
+&lt;/ol>
 &lt;h2>死码消除&lt;span class="hx-absolute -hx-mt-20" id="死码消除">&lt;/span>
 &lt;a href="#%e6%ad%bb%e7%a0%81%e6%b6%88%e9%99%a4" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>死码消除(dead code elimination, DCE)是一种编译器优化技术，用处是&lt;strong>在编译阶段去掉对程序运行结果没有任何影响的代码&lt;/strong>。&lt;/p>
+&lt;ul>
+&lt;li>未使用的变量和函数&lt;/li>
+&lt;li>无法到达的代码分支&lt;/li>
+&lt;li>计算结果不被使用的表达式&lt;/li>
+&lt;/ul>
 &lt;p>&lt;strong>死码消除可以减小程序体积，程序运行过程中避免执行无用的指令，缩短运行时间&lt;/strong>。&lt;/p>
 &lt;h3>使用常量提升性能&lt;span class="hx-absolute -hx-mt-20" id="使用常量提升性能">&lt;/span>
 &lt;a href="#%e4%bd%bf%e7%94%a8%e5%b8%b8%e9%87%8f%e6%8f%90%e5%8d%87%e6%80%a7%e8%83%bd" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>有些场景下，使用常量不仅可以减少程序的体积，性能也会有很大的提升。&lt;/p>

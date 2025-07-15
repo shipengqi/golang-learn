@@ -754,4 +754,25 @@ title="Copy code"
 &lt;p>goroutine 的栈空间并不是由操作系统分配，而是 Go 自己管理的：&lt;/p>
 &lt;ul>
 &lt;li>&lt;strong>goroutine 的初始栈很小只有 2KB&lt;/strong>。这个&lt;strong>初始栈由 Go runtime 在堆（heap）上分配，不是在线程栈上分配&lt;/strong>！&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>g.stackguard0&lt;/code> 和 &lt;code>g.stackguard1&lt;/code> 使用来进行栈扩缩容的。&lt;/p>
+&lt;h4>栈扩容&lt;span class="hx-absolute -hx-mt-20" id="栈扩容">&lt;/span>
+&lt;a href="#%e6%a0%88%e6%89%a9%e5%ae%b9" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>当函数调用层级加深或者局部变量增多，导致栈空间不足时，Go runtime 会自动触发扩容。&lt;/p>
+&lt;p>通过 &lt;code>runtime.morestack&lt;/code> 函数来检测空间是否充足，如果不足，则调用 &lt;code>runtime.newstack&lt;/code> 创建新的更大的栈空间。通常是当前栈大小的两倍，最大不超过 1 GB，将旧栈的数据拷贝到新栈，更新相关指针。&lt;/p>
+&lt;h4>栈缩容&lt;span class="hx-absolute -hx-mt-20" id="栈缩容">&lt;/span>
+&lt;a href="#%e6%a0%88%e7%bc%a9%e5%ae%b9" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>当 goroutine 栈使用率较低时，Go runtime 会在垃圾回收期间检查栈内存的利用率。如果利用率低于 25%，则触发栈缩容，将栈空间缩小为原来的一半，但不会小于初始值 2 KB。&lt;/p>
+&lt;p>过程与扩容类似，通过 &lt;code>runtime.copystack&lt;/code> 函数开辟新的占空间，将旧栈的数据拷贝到新栈，更新相关指针。&lt;/p>
+&lt;h4>分段栈&lt;span class="hx-absolute -hx-mt-20" id="分段栈">&lt;/span>
+&lt;a href="#%e5%88%86%e6%ae%b5%e6%a0%88" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>Go 最初是使用&lt;strong>分段栈&lt;/strong>是为了应对不同大小的栈需求。每个 goroutine 的栈在启动时只有一个小的初始空间，随着栈需求增加，可以动态扩展，采用分段式分配内存，避免在栈空间有限的情况下，浪费内存。&lt;/p>
+&lt;p>这些栈空间虽然不连续，但是&lt;strong>当前 goroutine 的多个栈空间会以链表的形式串联起来，运行时会通过指针找到连续的栈片段&lt;/strong>。&lt;/p>
+&lt;h5>分段栈的问题&lt;span class="hx-absolute -hx-mt-20" id="分段栈的问题">&lt;/span>
+&lt;a href="#%e5%88%86%e6%ae%b5%e6%a0%88%e7%9a%84%e9%97%ae%e9%a2%98" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h5>&lt;ol>
+&lt;li>如果当前 goroutine 的栈几乎充满，那么任意的函数调用都会触发栈扩容，当函数返回后又会触发栈的收缩，如果在一个循环中调用函数，栈的分配和释放就会造成巨大的额外开销，这被称为&lt;strong>热分裂问题&lt;/strong>（Hot split）；&lt;/li>
+&lt;li>一旦 goroutine 使用的内存越过了分段栈的扩缩容阈值，运行时会触发栈的扩容和缩容，带来额外的工作量；&lt;/li>
+&lt;/ol>
+&lt;h4>连续栈&lt;span class="hx-absolute -hx-mt-20" id="连续栈">&lt;/span>
+&lt;a href="#%e8%bf%9e%e7%bb%ad%e6%a0%88" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>Go 1.13 以后使用连续栈：&lt;/p>
+&lt;ul>
+&lt;li>使用一个连续的内存区域管理栈，避免了内存碎片化的问题。&lt;/li>
+&lt;li>栈空间不足时，会分配一个新的连续的内存块，并将栈数据拷贝到新内存块中，简化了栈的管理。&lt;/li>
 &lt;/ul></description></item></channel></rss>

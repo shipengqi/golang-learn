@@ -1450,6 +1450,7 @@ title="Copy code"
 &lt;li>&lt;code>sync.Metux&lt;/code> -&amp;gt; 信号量（&lt;code>semaRoot.treap&lt;/code> 等待着队列）-&amp;gt; &lt;code>gopark/goready&lt;/code>。&lt;/li>
 &lt;li>&lt;code>sync.WaitGroup&lt;/code> -&amp;gt; 信号量（&lt;code>semaRoot.treap&lt;/code> 等待着队列）-&amp;gt; &lt;code>gopark/goready&lt;/code>。&lt;/li>
 &lt;li>&lt;code>sync.Cond&lt;/code> -&amp;gt; &lt;code>gopark/goready&lt;/code>。&lt;/li>
+&lt;li>&lt;code>golang.org/x/sync/semaphore&lt;/code> -&amp;gt; channel 阻塞、通知。&lt;/li>
 &lt;li>&lt;code>golang.org/x/sync/singleflight&lt;/code> -&amp;gt; &lt;code>sync.Metux&lt;/code> -&amp;gt; 信号量（&lt;code>semaRoot.treap&lt;/code> 等待着队列）-&amp;gt; &lt;code>gopark/goready&lt;/code>。&lt;/li>
 &lt;li>&lt;code>golang.org/x/sync/errgroup&lt;/code> -&amp;gt; &lt;code>sync.WaitGroup&lt;/code> -&amp;gt; 信号量（&lt;code>semaRoot.treap&lt;/code> 等待着队列）-&amp;gt; &lt;code>gopark/goready&lt;/code>。&lt;/li>
 &lt;/ul>
