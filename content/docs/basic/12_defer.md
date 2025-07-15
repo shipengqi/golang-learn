@@ -28,6 +28,7 @@ type _defer struct {
 
 ## defer 初始化
 
+
 编译器不仅将 `defer` 关键字都转换成 `runtime.deferproc` 函数，还会为所有调用 `defer` 的函数末尾插入 `runtime.deferreturn` 的函数调用。
 
 - `runtime.deferproc` 负责创建新的延迟调用；
