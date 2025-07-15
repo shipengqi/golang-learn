@@ -366,7 +366,7 @@ func send(c *hchan, sg *sudog, ep unsafe.Pointer, unlockf func(), skip int) {
 ```go
 func sendDirect(t *_type, sg *sudog, src unsafe.Pointer) {
 	// src 是当前 goroutine 发送的数据的内存地址
-	// dst 是接收者的
+	// dst 是接收者的值的存放位置
 	dst := sg.elem
 	// 写屏障
 	typeBitsBulkBarrier(t, uintptr(dst), uintptr(src), t.size)
