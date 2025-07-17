@@ -572,6 +572,11 @@ func main() {
 - [ants](https://github.com/panjf2000/ants)
 - [conc](https://github.com/sourcegraph/conc)
 
+### channl 性能优化
+
+1. **缓冲区大小**，设置合理的缓冲区大小，避免 goroutine 阻塞，和 goroutine 的上下文切换。
+2. **减少锁竞争**：`channel· 底层实现使用了锁，当有多个 goroutine 同时读写 channel 时，会导致锁竞争。减少对共享资源的访问来避免锁竞争。
+
 ## 零拷贝优化
 
 ### 优化字符串与 []byte 转换，减少内存分配

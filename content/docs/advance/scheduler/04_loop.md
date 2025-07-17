@@ -345,6 +345,10 @@ func dolockOSThread() {
 
 `runtime.UnlockOSThread` 用户解绑 goroutine 和线程。
 
+### 查看 goroutine 数量
+
+可以使用 `runtime.NumGoroutine` 函数查看当前 goroutine 的数量。
+
 ### 线程生命周期
 
 Go 语言的运行时会通过 `runtime.startm` 启动线程来执行处理器 `p`，如果在该函数中没能从闲置列表中获取到线程 `m` 就会调用 `runtime.newm` 创建新的线程：

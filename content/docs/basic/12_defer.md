@@ -1,7 +1,6 @@
 ---
 title: defer
 weight: 12
-draft: true
 ---
 
 `defer` 语句一般被用于处理成对的操作，如打开、关闭、连接、断开连接、加锁、释放锁。因为 `defer` 可以保证让你更任何情况下，资源都会被释放。所在的 goroutine 发生 `panic` 时依然可以执行。
@@ -240,3 +239,29 @@ Loop ended
 3
 3
 ```
+
+`defer` 遇到链式调用时，会先通过计算得到最后一个要执行的函数，然后保留这个函数的指针、参数（值复制）。所以下面的代码的输出是 `1 3 2`。
+
+```go
+type T struct{}
+
+func (t T) f(n int) T {
+    fmt.Print(n)
+    return t
+}
+
+func main() {
+    var t T
+    defer t.f(1).f(2)
+    fmt.Print(3)
+}
+
+// defer t.f(1).f(2)
+// 类似于
+// var t T
+// tmpT := t.f(1)
+// defer tmpT.f(2)
+// fmt.Print(3)
+```
+
+

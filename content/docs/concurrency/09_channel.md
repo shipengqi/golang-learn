@@ -20,6 +20,9 @@ ch := make(chan int)
 
 // 带缓冲 channel，缓冲区为 3
 ch = make(chan int, 3)
+
+// ok 为 false 表示通道已经关闭
+val, ok := <- ch
 ```
 
 > channel 的零值是 `nil`。

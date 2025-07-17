@@ -93,7 +93,7 @@ func toType(t *rtype) Type {
 }
 ```
 
-- `emptyInterface` 和上面提到的 `eface`是一回事，并且在不同的源码包：前者在 `reflect` 包，后者在 `runtime` 包
+- `emptyInterface` 和空接口 `eface` 是一回事，并且在不同的源码包：前者在 `reflect` 包，后者在 `runtime` 包
 - `eface.typ` 就是动态类型。
 - `toType` 只是做了一个类型转换。
 
