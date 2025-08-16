@@ -302,9 +302,7 @@ func NewRoleManager(maxHierarchyLevel int) rbac.RoleManager {
 
 ### 查询隐式角色或权限
 
-当用户通过 RBAC 层次结构继承角色或权限，而不是在策略规则中直接分配它们时，这种类型的分配为**隐式**。 要查询此类隐式关系，需要使用这两个
-API：`GetImplicitRolesForUser()` 和 `GetImplicitPermissionsForUser()`，而不是 `GetRolesForUser()` 和
-`GetPermissionsForUser()`。
+当**用户通过 RBAC 层次结构继承角色或权限，而不是在策略规则中直接分配它们时**，这种类型的分配为**隐式**。 要查询此类隐式关系，需要使用这两个API：`GetImplicitRolesForUser()` 和 `GetImplicitPermissionsForUser()`，而不是 `GetRolesForUser()` 和 `GetPermissionsForUser()`。
 
 ### 菜单权限
 
@@ -554,7 +552,7 @@ m = r.sub == p.sub && r.obj == p.obj && r.act == p.act || r.sub == "root"
 
 Casbin 提供了一系列内置函数，用于**扩展和简化匹配器的逻辑处理**。这些函数可以支持字符串匹配、路径匹配、正则表达式匹配等功能。
 
-`keyMatch/keyMatch2/keyMatch3/keyMatch4/keyMatch5` 都是匹配 URL 路径的，`regexMatch` 使用正则匹配，`ipMatch 匹配 IP 地址。参见 [Functions](https://casbin.org/zh/docs/function/)。
+`keyMatch/keyMatch2/keyMatch3/keyMatch4/keyMatch5` 都是匹配 URL 路径的，`regexMatch` 使用正则匹配，`ipMatch` 匹配 IP 地址。参见 [Functions](https://casbin.org/zh/docs/function/)。
 
 ### keyMatch
 
@@ -832,7 +830,7 @@ m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act && r.dom == p.dom
 m = g(r.sub, p.sub) && r.dom == p.dom && r.obj + ":" + r.act == p.obj + ":" + p.act
 ```
 
-- 字符串拼接的计算成本通常低于多次逻辑比较。
+- **字符串拼接的计算成本通常低于多次逻辑比较**。
 - 合并后匹配器计算次数减少。
 
 如果匹配器的条件多且顺序不当，可能会导致不必要的计算。**将匹配概率较高的条件放在前面**：
@@ -857,7 +855,7 @@ m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act
 2. **指定过期时间清除缓存**：它允许在指定的过期时间内清除缓存，这有助于确保策略的变更能够及时生效 。
 3. **通过读写锁保证缓存的并发安全**。
 4. **启用缓存**：可以使用 `EnableCache` 方法来启用评估结果的缓存，**默认是启用的**。
-5. **API 一致性**：`CachedEnforcer 的其他 API 方法与 `Enforcer` 相同。
+5. **API 一致性**：`CachedEnforcer` 的其他 API 方法与 `Enforcer` 相同。
 
 `CachedEnforcer` 的部分源码：
 
@@ -932,13 +930,34 @@ func (e *CachedEnforcer) setCachedResult(key string, res bool, extra ...interfac
 ```
 
 {{< callout type="warning" >}}
-`CachedEnforcer` 并没有针对 `UpdatePolicy` 做特殊处理，如果使用 `UpdatePolicy` 修改策略，那么缓存的评估结果不会被清理。
+`CachedEnforcer` 并没有针对 `UpdatePolicy` 做特殊处理，如果**使用 `UpdatePolicy` 修改策略，那么缓存的评估结果不会被清理**。
+
 所以尽量使用 `AddPolicy` 和 `RemovePolicy` 来修改策略。
 {{< /callout >}}
 
 
 ### 分片
 
-进行分片，让 Casbin 执行器只加载一小部分策略规则。例如，`执行器_0` 可以服务于 `租户_0` 到 `租户_99`，而 `执行器_1` 可以服务于 `租户_100` 到 `租户_199`。
+**进行分片，让 Casbin 执行器只加载一小部分策略规则**。例如，`执行器_0` 可以服务于 `租户_0` 到 `租户_99`，而 `执行器_1` 可以服务于 `租户_100` 到 `租户_199`。
 
 可以利用 [LoadFilteredPolicy ](https://casbin.org/zh/docs/policy-subset-loading) 来实现。
+
+```go
+import (
+    "github.com/casbin/casbin/v2"
+    fileadapter "github.com/casbin/casbin/v2/persist/file-adapter"
+)
+
+enforcer, _ := casbin.NewEnforcer()
+
+adapter := fileadapter.NewFilteredAdapter("examples/rbac_with_domains_policy.csv")
+enforcer.InitWithAdapter("examples/rbac_with_domains_model.conf", adapter)
+
+filter := &fileadapter.Filter{
+    P: []string{"", "domain1"},
+    G: []string{"", "", "domain1"},
+}
+enforcer.LoadFilteredPolicy(filter)
+
+// The loaded policy now only contains the entries pertaining to "domain1".
+```

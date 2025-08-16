@@ -11,7 +11,7 @@ Go 标准库提供了条件变量 `sync.Cond` 它可以让一组的 goroutine �
 
 互斥锁 `sync.Mutex` 通常用来保护临界区和共享资源，条件变量 `sync.Cond` 用来协调想要访问共享资源的 goroutine。
 
-`sync.Cond` 经常用在多个 goroutine 等待，一个 goroutine 通知的场景。
+**`sync.Cond` 经常用在多个 goroutine 等待，一个 goroutine 通知的场景**。
 
 比如有一个 goroutine 在异步地接收数据，剩下的多个 goroutine 必须等待这个协程接收完数据，才能读取到正确的数据。这个时候，就需要有个全局的变量来标志第一
 个 goroutine 数据是否接受完毕，剩下的 goroutine，反复检查该变量的值，直到满足要求。
@@ -105,7 +105,7 @@ type notifyList struct {
 - `noCopy`：用于保证结构体不会在编译期间拷贝
 - `copyChecker`：用于禁止运行期间发生的拷贝
 - `L`：用于保护 `notify` 字段
-- `notify`：一个 goroutine 链表，它是实现同步机制的核心结构
+- `notify`：**一个 goroutine 链表，它是实现同步机制的核心结构**
 
 `Wait` 方法会将当前 goroutine 陷入休眠状态，它的执行过程分成以下两个步骤：
 

@@ -192,12 +192,12 @@ func ready(gp *g, traceskip int, next bool) {
 
 
 - channel 阻塞（`hchan.sendq` 向 channel 发送数据而被阻塞的 goroutine 队列，`hchan.recvq` 读取 channel 的数据而被阻塞的 goroutine 队列）-> `gopark/goready`。
-- `sync.Metux` -> 信号量（`semaRoot.treap` 等待着队列）-> `gopark/goready`。
-- `sync.WaitGroup` -> 信号量（`semaRoot.treap` 等待着队列）-> `gopark/goready`。
+- `sync.Metux` -> 信号量（`semaRoot.treap` 等待者队列）-> `gopark/goready`。
+- `sync.WaitGroup` -> 信号量（`semaRoot.treap` 等待者队列）-> `gopark/goready`。
 - `sync.Cond` -> `gopark/goready`。
 - `golang.org/x/sync/semaphore` -> channel 阻塞、通知。
-- `golang.org/x/sync/singleflight` -> `sync.Metux` -> 信号量（`semaRoot.treap` 等待着队列）-> `gopark/goready`。
-- `golang.org/x/sync/errgroup` -> `sync.WaitGroup` -> 信号量（`semaRoot.treap` 等待着队列）-> `gopark/goready`。
+- `golang.org/x/sync/singleflight` -> `sync.Metux` -> 信号量（`semaRoot.treap` 等待者队列）-> `gopark/goready`。
+- `golang.org/x/sync/errgroup` -> `sync.WaitGroup` -> 信号量（`semaRoot.treap` 等待者队列）-> `gopark/goready`。
 
 
 上面的几种方式，都有一个被阻塞的 goroutine 队列， `goready` 唤醒时，可以直接使用阻塞队列中的 `g` 对象。

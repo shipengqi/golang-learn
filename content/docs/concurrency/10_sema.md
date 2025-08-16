@@ -5,8 +5,10 @@ weight: 10
 
 信号量（Semaphore）是一种用于实现多进程或多线程之间同步和互斥的机制。
 
-信号量可以简单理解为一个整型数，包含两种操作：`P`（Proberen，测试）操作和 `V`（Verhogen，增加）操作。其中，`P` 操作会尝试获取一个信号量，如果信号量的值大于 0，则将信号量的值减 1 并
-继续执行。否则，当前进程或线程就会被阻塞，直到有其他进程或线程释放这个信号量为止。V 操作则是释放一个信号量，将信号量的值加 1。
+信号量可以简单理解为一个整型数，包含两种操作：`P`（Proberen，测试）操作和 `V`（Verhogen，增加）操作。
+
+- `P` 操作会尝试获取一个信号量，如果信号量的值大于 0，则将信号量的值减 1 并继续执行。否则，当前进程或线程就会被阻塞，直到有其他进程或线程释放这个信号量为止。
+- `V` 操作则是释放一个信号量，将信号量的值加 1。
 
 `P` 操作和 `V` 操作可以看做是对资源的获取和释放。
 
@@ -19,7 +21,7 @@ type Mutex struct {
 }
 ```
 
-`Metux` 本质上就是基于信号量（sema）+ 原子操作来实现并发控制的。
+`Metux` 本质上就是基于**信号量（sema）+ 原子操作**来实现并发控制的。
 
 Go 操作信号量的方法：
 
@@ -199,13 +201,18 @@ func semrelease1(addr *uint32, handoff bool, skipframes int) {
 	if s != nil { // May be slow or even yield, so unlock first
 		// ...
 		// 唤醒 goroutine
+		// handoff=true，被唤醒的 goroutine 会被放入当前 P 的本地运行队列，等待正常调度
+		// handoff=false，当前释放信号量的 goroutine 会立即让出处理器（P），并将处理器直接移交给被唤醒的 goroutine
 		readyWithTime(s, 5+skipframes)
 		if s.ticket == 1 && getg().m.locks == 0 {
+			// 让出当前 g 的执行权，切换到下一个可运行的 g
+			// 类似于 Gosched()，但 goyield 是更底层的实现
 			goyield()
 		}
 	}
 }
 ```
+
 `goparkunlock` 的实现：
 
 ```go
@@ -288,7 +295,7 @@ type Weighted struct {
 }
 ```
 
-List 实现了一个等待队列，等待者的通知是通过 channel 实现的。
+List 实现了一个等待队列，**等待者的通知是通过 channel 实现的**。
 
 `Acquire` 实现：
 

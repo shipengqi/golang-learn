@@ -97,7 +97,7 @@ sys 0m0.007s
 修改代码，将数组元素累积到一个临时变量中，并在外层循环结束后写回数组，这样做可以减少内层循环中的内存读写操作，充分利用 CPU 缓存和寄存器，加速数据处理。
 
 {{< callout type="info" >}}
-数组从内存或缓存读，而一个临时变量很大可能是从寄存器读，那读取速度相差还是很大的。
+**数组从内存或缓存读，而一个临时变量很大可能是从寄存器读**，那读取速度相差还是很大的。
 {{< /callout >}}
 
 ```go
@@ -158,7 +158,7 @@ CPU 访问内存时，并不是逐个字节访问，而是以**字长**（word s
 
 进行**内存对齐，就是为了减少 CPU 访问内存的次数**。
 
-![mem-align](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/mem-align.png)
+![mem-align](https://raw.gitcode.com/shipengqi/illustrations/blobs/0b370230f5d823947cc3b6992ef16ec324433a08/mem-align.png)
 
 上图中，假如 CPU 字长为 4 个字节。变量 a 和 b 的大小为 3 个字节，没有内存对齐之前，CPU 读取 b 时，需要访问两次内存：
 
@@ -224,7 +224,7 @@ func main()  {
 
 `Part1` 只是对成员变量的字段顺序进行了调整，就减少了结构体占用大小。
 
-![mem-align](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/struct-mem-align.png)
+![mem-align](https://raw.gitcode.com/shipengqi/illustrations/blobs/29be05f59c8a0e173b4ded9c9fc5eea4cfff9c66/struct-mem-align.png)
 
 `part1`：
 
@@ -575,7 +575,7 @@ func main() {
 ### channl 性能优化
 
 1. **缓冲区大小**，设置合理的缓冲区大小，避免 goroutine 阻塞，和 goroutine 的上下文切换。
-2. **减少锁竞争**：`channel· 底层实现使用了锁，当有多个 goroutine 同时读写 channel 时，会导致锁竞争。减少对共享资源的访问来避免锁竞争。
+2. **减少锁竞争**：channel 底层实现使用了锁，当有多个 goroutine 同时读写 channel 时，会导致锁竞争。减少对共享资源的访问来避免锁竞争。
 
 ## 零拷贝优化
 

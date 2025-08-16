@@ -17,10 +17,10 @@ pprof 可以用于：
 
 生成分析样本的三种方式：
 
-- `runtime/pprof`：采集程序（非 Server）的运行数据。通过调用如 `runtime.StartCPUProfile`, `runtime.StopCPUProfile` 方法生成分析样本。主要用于**本地测试**。
-  - [pkg/profile](https://github.com/pkg/profile) 封装了 `runtime/pprof`，使用起来更加简便。
-- `net/http/pprof`：采集 HTTP Server 的运行时数据，通过 HTTP 服务获取 Profile 分析样本，底层还是调用的 `runtime/pprof`。主要用于**服务器端测试**。
-- `go test -bench`：使用 `go test -bench=. -cpuprofile cpuprofile.out ...` 运行基准测试来生成分析样本，可以指定所需标识来进行数据采集。
+1. `runtime/pprof`：采集程序（**非 Server**）的运行数据。通过调用如 `runtime.StartCPUProfile`, `runtime.StopCPUProfile` 方法生成分析样本。主要用于**本地测试**。
+   - [pkg/profile](https://github.com/pkg/profile) 封装了 `runtime/pprof`，使用起来更加简便。
+2. `net/http/pprof`：采集 HTTP Server 的运行时数据，通过 HTTP 服务获取 Profile 分析样本，底层还是调用的 `runtime/pprof`。主要用于**服务器端测试**。
+3. `go test -bench`：使用 `go test -bench=. -cpuprofile cpuprofile.out ...` 运行基准测试来生成分析样本，可以指定所需标识来进行数据采集。
 
 以 `net/http/pprof` 为例：
 
@@ -60,7 +60,7 @@ func main() {
 
 打开 http://localhost:8080/debug/pprof 后会看到下面页面：
 
-![pprof-home](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/pprof-home.png)
+![pprof-home](https://raw.gitcode.com/shipengqi/illustrations/blobs/affd23f900f0b1fe9de04d91f201dd0f377bca8c/pprof-home.png)
 
 pprof 包括了几个子页面：
 
@@ -70,19 +70,25 @@ pprof 包括了几个子页面：
 - goroutine：`<ip:port>/debug/pprof/goroutine`，查看当前所有运行的 goroutines 堆栈跟踪。
 - heap（Memory Profiling）: `<ip:port>/debug/pprof/heap`，查看活动对象的内存分配情况，在获取堆样本之前，可以指定 gc GET 参数来运行 gc。
 - mutex（Mutex Profiling）: `<ip:port>/debug/pprof/mutex`，查看导致互斥锁竞争的持有者的堆栈跟踪。
-- profile（CPU Profiling）: `<ip:port>/debug/pprof/profile`， 默认进行 `30s` 的 CPU Profiling，可以设置 GET 参数 `seconds` 来指定持续时间。获取跟踪文件之后，使用 `go tool trace` 命令来分析。
+- profile（CPU Profiling）: `<ip:port>/debug/pprof/profile`， 默认进行 `30s` 的 CPU Profiling，可以设置 GET 参数 `seconds` 来指定持续时间。获取跟踪文件之后，使用 `go tool pprof` 命令来分析。
 - threadcreate：`<ip:port>/debug/pprof/threadcreate`，查看创建新 OS 线程的堆栈跟踪。
 - trace: 当前程序的执行轨迹。可以设置 GET 参数 `seconds` 来指定持续时间。获取跟踪文件之后，使用 `go tool trace` 命令来分析。
 
 ### 在 Web 查看分析报告
 
+上面有三种方式生成分析样本，这里以 `net/http/pprof` 为例。
+
+#### 下载分析样本
+
 点击 profile，等待 30s 后会下载 CPU profile 文件，或者执行命令 `go tool pprof http://localhost:8080/debug/pprof/profile` ，得到的输出中有一行
 
 ```shell
-Saved profile in C:\Users\shipeng.CORPDOM\pprof\pprof.samples.cpu.002.pb.gz`
+Saved profile in C:\Users\shipeng.CORPDOM\pprof\pprof.samples.cpu.002.pb.gz
 ```
 
 表示生成的 profile 文件路径。
+
+#### 查看分析报告
 
 执行 `go tool pprof -http=<port> <profile 文件>` 启动 web server，然后就可以访问 `http://localhost:8081` 来查看：
 
@@ -99,13 +105,13 @@ $ (pprof) web
 
 > 如果出现 `Could not execute dot; may need to install graphviz.`，那么需要安裝 Graphviz。
 
-![profile-graph](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/profile-graph.png)
+![profile-graph](https://raw.gitcode.com/shipengqi/illustrations/blobs/d9de0b23bc2c8ab7b03fa2b63764108edb03d559/profile-graph.png)
 
 图中框越大，线越粗代表它占用 CPU 的时间越长。
 
 点击 `View -> Flame Graph` 可以查看火焰图：
 
-![profile-flame-graph](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/profile-flame-graph.png)
+![profile-flame-graph](https://raw.gitcode.com/shipengqi/illustrations/blobs/cdeb3c01593b09e5c58cdae12703d662efbd19e3/profile-flame-graph.png)
 
 图中调用顺序由上到下，每一块代表一个函数，越大代表占用 CPU 的时间越长。
 
@@ -113,7 +119,7 @@ $ (pprof) web
 
 ### 在终端查看分析报告
 
-使用 `go tool pprof` 命令可以在交互式终端查看分析报告。
+使用 `go tool pprof` 命令可以在交互式终端查看分析报告。`go tool pprof` 可以直接从 HTTP 服务获取分析样本，也可以指定本地样本文件，例如 `go tool pprof cpu.pprof`。
 
 #### CPU Profiling
 
