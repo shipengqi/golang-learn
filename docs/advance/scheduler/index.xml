@@ -510,7 +510,7 @@ title="Copy code"
 &lt;/div>
 &lt;ol>
 &lt;li>先调用 &lt;strong>&lt;code>settls&lt;/code> 函数初始化主线程的线程本地存储 (TLS)，目的是把 &lt;code>m0&lt;/code> 与主线程关联在一起&lt;/strong>。&lt;/li>
-&lt;li>证 TLS 功能是否正常，如果不正常则直接 &lt;code>abort&lt;/code> 退出程序。&lt;/li>
+&lt;li>验证 TLS 功能是否正常，如果不正常则直接 &lt;code>abort&lt;/code> 退出程序。&lt;/li>
 &lt;/ol>
 &lt;p>&lt;code>settls&lt;/code> 函数在 &lt;code>runtime/sys_linx_amd64.s&lt;/code> 文件中：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
@@ -1447,12 +1447,12 @@ title="Copy code"
 &lt;h4>使用场景&lt;span class="hx-absolute -hx-mt-20" id="使用场景">&lt;/span>
 &lt;a href="#%e4%bd%bf%e7%94%a8%e5%9c%ba%e6%99%af" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;ul>
 &lt;li>channel 阻塞（&lt;code>hchan.sendq&lt;/code> 向 channel 发送数据而被阻塞的 goroutine 队列，&lt;code>hchan.recvq&lt;/code> 读取 channel 的数据而被阻塞的 goroutine 队列）-&amp;gt; &lt;code>gopark/goready&lt;/code>。&lt;/li>
-&lt;li>&lt;code>sync.Metux&lt;/code> -&amp;gt; 信号量（&lt;code>semaRoot.treap&lt;/code> 等待着队列）-&amp;gt; &lt;code>gopark/goready&lt;/code>。&lt;/li>
-&lt;li>&lt;code>sync.WaitGroup&lt;/code> -&amp;gt; 信号量（&lt;code>semaRoot.treap&lt;/code> 等待着队列）-&amp;gt; &lt;code>gopark/goready&lt;/code>。&lt;/li>
+&lt;li>&lt;code>sync.Metux&lt;/code> -&amp;gt; 信号量（&lt;code>semaRoot.treap&lt;/code> 等待者队列）-&amp;gt; &lt;code>gopark/goready&lt;/code>。&lt;/li>
+&lt;li>&lt;code>sync.WaitGroup&lt;/code> -&amp;gt; 信号量（&lt;code>semaRoot.treap&lt;/code> 等待者队列）-&amp;gt; &lt;code>gopark/goready&lt;/code>。&lt;/li>
 &lt;li>&lt;code>sync.Cond&lt;/code> -&amp;gt; &lt;code>gopark/goready&lt;/code>。&lt;/li>
 &lt;li>&lt;code>golang.org/x/sync/semaphore&lt;/code> -&amp;gt; channel 阻塞、通知。&lt;/li>
-&lt;li>&lt;code>golang.org/x/sync/singleflight&lt;/code> -&amp;gt; &lt;code>sync.Metux&lt;/code> -&amp;gt; 信号量（&lt;code>semaRoot.treap&lt;/code> 等待着队列）-&amp;gt; &lt;code>gopark/goready&lt;/code>。&lt;/li>
-&lt;li>&lt;code>golang.org/x/sync/errgroup&lt;/code> -&amp;gt; &lt;code>sync.WaitGroup&lt;/code> -&amp;gt; 信号量（&lt;code>semaRoot.treap&lt;/code> 等待着队列）-&amp;gt; &lt;code>gopark/goready&lt;/code>。&lt;/li>
+&lt;li>&lt;code>golang.org/x/sync/singleflight&lt;/code> -&amp;gt; &lt;code>sync.Metux&lt;/code> -&amp;gt; 信号量（&lt;code>semaRoot.treap&lt;/code> 等待者队列）-&amp;gt; &lt;code>gopark/goready&lt;/code>。&lt;/li>
+&lt;li>&lt;code>golang.org/x/sync/errgroup&lt;/code> -&amp;gt; &lt;code>sync.WaitGroup&lt;/code> -&amp;gt; 信号量（&lt;code>semaRoot.treap&lt;/code> 等待者队列）-&amp;gt; &lt;code>gopark/goready&lt;/code>。&lt;/li>
 &lt;/ul>
 &lt;p>上面的几种方式，都有一个被阻塞的 goroutine 队列， &lt;code>goready&lt;/code> 唤醒时，可以直接使用阻塞队列中的 &lt;code>g&lt;/code> 对象。&lt;/p>
 &lt;h3>系统调用&lt;span class="hx-absolute -hx-mt-20" id="系统调用">&lt;/span>
@@ -1615,6 +1615,8 @@ title="Copy code"
 &lt;/div>
 &lt;p>&lt;code>runtime.dolockOSThread&lt;/code> 会分别设置线程的 &lt;code>lockedg&lt;/code> 字段和 goroutine 的 &lt;code>lockedm&lt;/code> 字段，这两行代码会绑定线程和 goroutine。&lt;/p>
 &lt;p>&lt;code>runtime.UnlockOSThread&lt;/code> 用户解绑 goroutine 和线程。&lt;/p>
+&lt;h3>查看 goroutine 数量&lt;span class="hx-absolute -hx-mt-20" id="查看-goroutine-数量">&lt;/span>
+&lt;a href="#%e6%9f%a5%e7%9c%8b-goroutine-%e6%95%b0%e9%87%8f" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>可以使用 &lt;code>runtime.NumGoroutine&lt;/code> 函数查看当前 goroutine 的数量。&lt;/p>
 &lt;h3>线程生命周期&lt;span class="hx-absolute -hx-mt-20" id="线程生命周期">&lt;/span>
 &lt;a href="#%e7%ba%bf%e7%a8%8b%e7%94%9f%e5%91%bd%e5%91%a8%e6%9c%9f" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Go 语言的运行时会通过 &lt;code>runtime.startm&lt;/code> 启动线程来执行处理器 &lt;code>p&lt;/code>，如果在该函数中没能从闲置列表中获取到线程 &lt;code>m&lt;/code> 就会调用 &lt;code>runtime.newm&lt;/code> 创建新的线程：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">

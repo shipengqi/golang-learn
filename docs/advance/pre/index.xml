@@ -574,7 +574,7 @@ title="Copy code"
 &lt;/ol>
 &lt;h4>多级队列模型&lt;span class="hx-absolute -hx-mt-20" id="多级队列模型">&lt;/span>
 &lt;a href="#%e5%a4%9a%e7%ba%a7%e9%98%9f%e5%88%97%e6%a8%a1%e5%9e%8b" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>&lt;strong>多级队列，就是多个队列执行调度&lt;/strong>。如图：&lt;/p>
-&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/os-priority-queue.png" alt="os-priority-queue" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/blobs/163cf94aff6dfecfa6c8f53e8b907cb64eb40765/os-priority-queue.png" alt="os-priority-queue" loading="lazy" />&lt;/p>
 &lt;p>两个优先级不同的队列，只要上层队列有任务，下层队列就会让出执行权限。&lt;/p>
 &lt;ul>
 &lt;li>低优先级队列可以考虑 &lt;code>抢占 + 优先级队列&lt;/code> 的方式实现，这样每次执行一个时间片段就可以判断一下高优先级的队列中是否有任务。&lt;/li>

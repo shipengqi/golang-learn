@@ -3473,9 +3473,7 @@ title="Copy code"
 &lt;a href="#%e5%8c%ba%e5%88%86%e8%a7%92%e8%89%b2%e5%92%8c%e7%94%a8%e6%88%b7" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>在 RBAC 系统内&lt;strong>用户和角色不能使用相同的名称&lt;/strong>，因为对于 Casbin 来说，不管是用户还是角色都只是一个&lt;strong>字符串&lt;/strong>，Casbin
 是没有办法知道你指定的是用户 alice 还是角色 alice。可以通过使用前缀来解决这个问题，例如 &lt;code>role::alice&lt;/code> 表示角色 alice。&lt;/p>
 &lt;h3>查询隐式角色或权限&lt;span class="hx-absolute -hx-mt-20" id="查询隐式角色或权限">&lt;/span>
-&lt;a href="#%e6%9f%a5%e8%af%a2%e9%9a%90%e5%bc%8f%e8%a7%92%e8%89%b2%e6%88%96%e6%9d%83%e9%99%90" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>当用户通过 RBAC 层次结构继承角色或权限，而不是在策略规则中直接分配它们时，这种类型的分配为&lt;strong>隐式&lt;/strong>。 要查询此类隐式关系，需要使用这两个
-API：&lt;code>GetImplicitRolesForUser()&lt;/code> 和 &lt;code>GetImplicitPermissionsForUser()&lt;/code>，而不是 &lt;code>GetRolesForUser()&lt;/code> 和
-&lt;code>GetPermissionsForUser()&lt;/code>。&lt;/p>
+&lt;a href="#%e6%9f%a5%e8%af%a2%e9%9a%90%e5%bc%8f%e8%a7%92%e8%89%b2%e6%88%96%e6%9d%83%e9%99%90" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>当&lt;strong>用户通过 RBAC 层次结构继承角色或权限，而不是在策略规则中直接分配它们时&lt;/strong>，这种类型的分配为&lt;strong>隐式&lt;/strong>。 要查询此类隐式关系，需要使用这两个API：&lt;code>GetImplicitRolesForUser()&lt;/code> 和 &lt;code>GetImplicitPermissionsForUser()&lt;/code>，而不是 &lt;code>GetRolesForUser()&lt;/code> 和 &lt;code>GetPermissionsForUser()&lt;/code>。&lt;/p>
 &lt;h3>菜单权限&lt;span class="hx-absolute -hx-mt-20" id="菜单权限">&lt;/span>
 &lt;a href="#%e8%8f%9c%e5%8d%95%e6%9d%83%e9%99%90" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>RBAC 通常只需要用户的角色，只使用 &lt;code>g&lt;/code> 就可以了。但是当你需要为资源定义继承关系时，可以同时使用 &lt;code>g&lt;/code> 和 &lt;code>g2&lt;/code>，下面的例子是定义菜单权限的模型：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
@@ -3805,7 +3803,7 @@ title="Copy code"
 &lt;p>&lt;code>r.sub == &amp;quot;root&amp;quot;&lt;/code> 检查 &lt;code>sub&lt;/code> 是否为 &lt;code>root&lt;/code>，如果是，返回 &lt;code>allow&lt;/code>。&lt;/p>
 &lt;h2>函数&lt;span class="hx-absolute -hx-mt-20" id="函数">&lt;/span>
 &lt;a href="#%e5%87%bd%e6%95%b0" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Casbin 提供了一系列内置函数，用于&lt;strong>扩展和简化匹配器的逻辑处理&lt;/strong>。这些函数可以支持字符串匹配、路径匹配、正则表达式匹配等功能。&lt;/p>
-&lt;p>&lt;code>keyMatch/keyMatch2/keyMatch3/keyMatch4/keyMatch5&lt;/code> 都是匹配 URL 路径的，&lt;code>regexMatch&lt;/code> 使用正则匹配，`ipMatch 匹配 IP 地址。参见 &lt;a href="https://casbin.org/zh/docs/function/" target="_blank" rel="noopener">Functions&lt;/a>。&lt;/p>
+&lt;p>&lt;code>keyMatch/keyMatch2/keyMatch3/keyMatch4/keyMatch5&lt;/code> 都是匹配 URL 路径的，&lt;code>regexMatch&lt;/code> 使用正则匹配，&lt;code>ipMatch&lt;/code> 匹配 IP 地址。参见 &lt;a href="https://casbin.org/zh/docs/function/" target="_blank" rel="noopener">Functions&lt;/a>。&lt;/p>
 &lt;h3>keyMatch&lt;span class="hx-absolute -hx-mt-20" id="keymatch">&lt;/span>
 &lt;a href="#keymatch" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>用于字符串通配符匹配，&lt;code>*&lt;/code> 表示通配。当需要对路径规则进行通配时使用，例如 &lt;code>/data/*&lt;/code> 可以匹配 &lt;code>/data/1&lt;/code> 和 &lt;code>/data/2&lt;/code>。&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
@@ -4171,7 +4169,7 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;ul>
-&lt;li>字符串拼接的计算成本通常低于多次逻辑比较。&lt;/li>
+&lt;li>&lt;strong>字符串拼接的计算成本通常低于多次逻辑比较&lt;/strong>。&lt;/li>
 &lt;li>合并后匹配器计算次数减少。&lt;/li>
 &lt;/ul>
 &lt;p>如果匹配器的条件多且顺序不当，可能会导致不必要的计算。&lt;strong>将匹配概率较高的条件放在前面&lt;/strong>：&lt;/p>
@@ -4198,7 +4196,7 @@ title="Copy code"
 &lt;li>&lt;strong>指定过期时间清除缓存&lt;/strong>：它允许在指定的过期时间内清除缓存，这有助于确保策略的变更能够及时生效 。&lt;/li>
 &lt;li>&lt;strong>通过读写锁保证缓存的并发安全&lt;/strong>。&lt;/li>
 &lt;li>&lt;strong>启用缓存&lt;/strong>：可以使用 &lt;code>EnableCache&lt;/code> 方法来启用评估结果的缓存，&lt;strong>默认是启用的&lt;/strong>。&lt;/li>
-&lt;li>&lt;strong>API 一致性&lt;/strong>：&lt;code>CachedEnforcer 的其他 API 方法与 &lt;/code>Enforcer` 相同。&lt;/li>
+&lt;li>&lt;strong>API 一致性&lt;/strong>：&lt;code>CachedEnforcer&lt;/code> 的其他 API 方法与 &lt;code>Enforcer&lt;/code> 相同。&lt;/li>
 &lt;/ol>
 &lt;p>&lt;code>CachedEnforcer&lt;/code> 的部分源码：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
@@ -4281,10 +4279,39 @@ title="Copy code"
 &lt;div class="hx-overflow-x-auto hx-mt-6 hx-flex hx-rounded-lg hx-border hx-py-2 ltr:hx-pr-4 rtl:hx-pl-4 contrast-more:hx-border-current contrast-more:dark:hx-border-current hx-border-yellow-100 hx-bg-yellow-50 hx-text-yellow-900 dark:hx-border-yellow-200/30 dark:hx-bg-yellow-700/30 dark:hx-text-yellow-200">
 &lt;div class="ltr:hx-pl-3 ltr:hx-pr-2 rtl:hx-pr-3 rtl:hx-pl-2">&lt;div class="hx-select-none hx-text-xl" style="font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';">⚠️&lt;/div>&lt;/div>
 &lt;div class="hx-w-full hx-min-w-0 hx-leading-7">
-&lt;div class="hx-mt-6 hx-leading-7 first:hx-mt-0">&lt;code>CachedEnforcer&lt;/code> 并没有针对 &lt;code>UpdatePolicy&lt;/code> 做特殊处理，如果使用 &lt;code>UpdatePolicy&lt;/code> 修改策略，那么缓存的评估结果不会被清理。
-所以尽量使用 &lt;code>AddPolicy&lt;/code> 和 &lt;code>RemovePolicy&lt;/code> 来修改策略。&lt;/div>
+&lt;div class="hx-mt-6 hx-leading-7 first:hx-mt-0">&lt;p>&lt;code>CachedEnforcer&lt;/code> 并没有针对 &lt;code>UpdatePolicy&lt;/code> 做特殊处理，如果&lt;strong>使用 &lt;code>UpdatePolicy&lt;/code> 修改策略，那么缓存的评估结果不会被清理&lt;/strong>。&lt;/p>
+&lt;p>所以尽量使用 &lt;code>AddPolicy&lt;/code> 和 &lt;code>RemovePolicy&lt;/code> 来修改策略。&lt;/p>
+&lt;/div>
 &lt;/div>
 &lt;/div>
 &lt;h3>分片&lt;span class="hx-absolute -hx-mt-20" id="分片">&lt;/span>
-&lt;a href="#%e5%88%86%e7%89%87" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>进行分片，让 Casbin 执行器只加载一小部分策略规则。例如，&lt;code>执行器_0&lt;/code> 可以服务于 &lt;code>租户_0&lt;/code> 到 &lt;code>租户_99&lt;/code>，而 &lt;code>执行器_1&lt;/code> 可以服务于 &lt;code>租户_100&lt;/code> 到 &lt;code>租户_199&lt;/code>。&lt;/p>
-&lt;p>可以利用 &lt;a href="https://casbin.org/zh/docs/policy-subset-loading" target="_blank" rel="noopener">LoadFilteredPolicy &lt;/a> 来实现。&lt;/p></description></item></channel></rss>
+&lt;a href="#%e5%88%86%e7%89%87" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;strong>进行分片，让 Casbin 执行器只加载一小部分策略规则&lt;/strong>。例如，&lt;code>执行器_0&lt;/code> 可以服务于 &lt;code>租户_0&lt;/code> 到 &lt;code>租户_99&lt;/code>，而 &lt;code>执行器_1&lt;/code> 可以服务于 &lt;code>租户_100&lt;/code> 到 &lt;code>租户_199&lt;/code>。&lt;/p>
+&lt;p>可以利用 &lt;a href="https://casbin.org/zh/docs/policy-subset-loading" target="_blank" rel="noopener">LoadFilteredPolicy &lt;/a> 来实现。&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="p">(&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="s">&amp;#34;github.com/casbin/casbin/v2&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fileadapter&lt;/span> &lt;span class="s">&amp;#34;github.com/casbin/casbin/v2/persist/file-adapter&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nx">enforcer&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">_&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">casbin&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">NewEnforcer&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nx">adapter&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">fileadapter&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">NewFilteredAdapter&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;examples/rbac_with_domains_policy.csv&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nx">enforcer&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">InitWithAdapter&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;examples/rbac_with_domains_model.conf&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">adapter&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nx">filter&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">fileadapter&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Filter&lt;/span>&lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">P&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="p">[]&lt;/span>&lt;span class="kt">string&lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="s">&amp;#34;&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s">&amp;#34;domain1&amp;#34;&lt;/span>&lt;span class="p">},&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">G&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="p">[]&lt;/span>&lt;span class="kt">string&lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="s">&amp;#34;&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s">&amp;#34;&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s">&amp;#34;domain1&amp;#34;&lt;/span>&lt;span class="p">},&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nx">enforcer&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">LoadFilteredPolicy&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">filter&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// The loaded policy now only contains the entries pertaining to &amp;#34;domain1&amp;#34;.
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div></description></item></channel></rss>

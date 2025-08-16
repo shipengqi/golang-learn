@@ -154,7 +154,90 @@ title="Copy code"
 &lt;li>是调用 &lt;code>epollcreate1&lt;/code> 创建一个新的 &lt;code>epoll&lt;/code> 文件描述符，这个文件描述符会在整个程序的生命周期中使用；&lt;/li>
 &lt;li>通过 &lt;code>runtime.nonblockingPipe &lt;/code>创建一个用于通信的管道；&lt;/li>
 &lt;li>使用 &lt;code>epollctl&lt;/code> 将用于读取数据的文件描述符打包成 &lt;code>epollevent&lt;/code> 事件加入监听；&lt;/li>
-&lt;/ol></description></item><item><title>系统监控</title><link>https://shipengqi.github.io/golang-learn/docs/advance/05_sysmon/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/advance/05_sysmon/</guid><description>
+&lt;/ol>
+&lt;h4>goroutine 与 epoll 的协作流程&lt;span class="hx-absolute -hx-mt-20" id="goroutine-与-epoll-的协作流程">&lt;/span>
+&lt;a href="#goroutine-%e4%b8%8e-epoll-%e7%9a%84%e5%8d%8f%e4%bd%9c%e6%b5%81%e7%a8%8b" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>goroutine 发起网络读操作（如 &lt;code>conn.Read()&lt;/code>）：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">handleConn&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">conn&lt;/span> &lt;span class="nx">net&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Conn&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">buf&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">make&lt;/span>&lt;span class="p">([]&lt;/span>&lt;span class="kt">byte&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">1024&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">n&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">err&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">conn&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Read&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">buf&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="c1">// 非阻塞 I/O，触发 netpoller 介入
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;ul>
+&lt;li>当 goroutine 调用 &lt;code>conn.Read()&lt;/code> 时，Go 的 net 包会先尝试&lt;strong>非阻塞读取&lt;/strong>（&lt;code>syscall.Read(fd, buf)&lt;/code>）。&lt;/li>
+&lt;li>如果数据未就绪（返回 &lt;code>EAGAIN&lt;/code> 错误），Go 会将&lt;strong>文件描述符（fd） 注册到 epoll 监听队列&lt;/strong>，并将当前 goroutine 阻塞。&lt;/li>
+&lt;/ul>
+&lt;p>goroutine 挂起：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 伪代码：Go 运行时内部处理
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="kd">func&lt;/span> &lt;span class="nf">Read&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">fd&lt;/span> &lt;span class="kt">int&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">buf&lt;/span> &lt;span class="p">[]&lt;/span>&lt;span class="kt">byte&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="kt">int&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="kt">error&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">n&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">err&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">syscall&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Read&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">fd&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">buf&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">err&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="nx">syscall&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">EAGAIN&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 将 fd 注册到 epoll，并挂起当前 Goroutine
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">netpollqueue&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Add&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">fd&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">currentG&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">gopark&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="c1">// 挂起 Goroutine，切换执行其他任务
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">continue&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="nx">n&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">err&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 将 fd 关联到当前 goroutine
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="kd">func&lt;/span> &lt;span class="nf">netpollblock&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">fd&lt;/span> &lt;span class="kt">uintptr&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">pd&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nf">getPollDesc&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">fd&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">pd&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">setG&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nf">getg&lt;/span>&lt;span class="p">())&lt;/span> &lt;span class="c1">// 关联当前 Goroutine
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nf">gopark&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">netpollblockcommit&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">unsafe&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Pointer&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">pd&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="nx">waitReasonIOWait&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;ul>
+&lt;li>&lt;code>gopark()&lt;/code> 将当前 goroutine 置为 Gwaiting 状态，并让出 CPU 给其他 goroutine。&lt;/li>
+&lt;/ul>
+&lt;p>epoll 监听就绪事件：&lt;/p>
+&lt;ul>
+&lt;li>后台的 网络轮询器线程（通常由 Go 运行时启动）通过 &lt;code>epoll_wait&lt;/code> 监听所有注册的 fd。&lt;/li>
+&lt;li>当数据到达时，epoll 返回就绪的 fd，轮询器找到关联的 goroutine，将其标记为可运行（Grunnable）。&lt;/li>
+&lt;/ul>
+&lt;p>goroutine 恢复执行：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">netpoll&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">delay&lt;/span> &lt;span class="kt">int64&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">[]&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="nx">g&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">events&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nf">epoll_wait&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">epfd&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="o">...&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="nx">_&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">ev&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="k">range&lt;/span> &lt;span class="nx">events&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">pd&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="nx">pollDesc&lt;/span>&lt;span class="p">)(&lt;/span>&lt;span class="nx">ev&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">data&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">netpollready&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">toRun&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">pd&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="c1">// 将关联的 Goroutine 加入运行队列
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="nx">toRun&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;ul>
+&lt;li>调度器将就绪的 goroutine 放入运行队列，等待 M（OS 线程）执行。&lt;/li>
+&lt;li>goroutine 从 &lt;code>gopark()&lt;/code> 后继续执行，再次调用 &lt;code>syscall.Read&lt;/code>，此时数据已就绪。&lt;/li>
+&lt;/ul></description></item><item><title>系统监控</title><link>https://shipengqi.github.io/golang-learn/docs/advance/05_sysmon/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/advance/05_sysmon/</guid><description>
 &lt;p>Go 的系统监控 (sysmon) 是一个独立的特殊线程，它在后台持续运行，负责处理各种运行时系统的维护任务和监控工作。它在内部启动了一个不会中止的循环，在循环的内部会轮询网络、抢占长期运行或者处于系统调用的 goroutine 以及触发垃圾回收，通过这些行为，它能够让系统的运行状态变得更健康。&lt;/p>
 &lt;p>&lt;code>runtime.main&lt;/code> 函数：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
@@ -217,7 +300,7 @@ title="Copy code"
 &lt;/ol>
 &lt;p>它除了会检查死锁之外，还会在循环中完成以下的工作：&lt;/p>
 &lt;ul>
-&lt;li>运行计时器 — 获取下一个需要被触发的计时器；&lt;/li>
+&lt;li>运行计时器：检查应用程序中设置的计时器，确保那些需要被触发的计时器会在到期时间能够及时运行。当发现有计时器需要触发时，&lt;code>sysmon&lt;/code> 会唤醒空闲的 &lt;code>p&lt;/code> 和 &lt;code>m&lt;/code> 来处理这些计时器事件；&lt;/li>
 &lt;li>轮询网络 — 获取需要处理的到期文件描述符；&lt;/li>
 &lt;li>抢占处理器 — 抢占运行时间较长的或者处于系统调用的 goroutine；&lt;/li>
 &lt;li>垃圾回收 — 在满足条件时触发垃圾收集回收内存；&lt;/li>

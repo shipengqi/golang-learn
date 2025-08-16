@@ -75,7 +75,7 @@
 &lt;li>根据 &lt;code>arena&lt;/code> 的基地址计算该地址所在的页号。&lt;/li>
 &lt;li>通过 &lt;code>mheap.spans&lt;/code> 数组获得管理该片内存的管理单元 &lt;code>runtime.mspan&lt;/code>（&lt;code>mheap_.spans[page]&lt;/code> 页号就是数组的索引）。&lt;/li>
 &lt;/ol>
-&lt;p>Go 在垃圾回收时会根据指针的地址判断对象是否在堆中，并通过上面的方式到管理该对象的 &lt;code>runtime.mspan&lt;/code>。但是这种方式又一个前提，就是&lt;strong>堆区的内存必须是连续的&lt;/strong>。&lt;/p>
+&lt;p>Go 在垃圾回收时会&lt;strong>根据指针的地址判断对象是否在堆中，并通过上面的方式到管理该对象的 &lt;code>runtime.mspan&lt;/code>&lt;/strong>。但是这种方式又一个前提，就是&lt;strong>堆区的内存必须是连续的&lt;/strong>。&lt;/p>
 &lt;p>在 C 和 Go 混合使用时，线性堆内存的问题：&lt;/p>
 &lt;ol>
 &lt;li>分配的内存地址会发生冲突，导致堆的初始化和扩容失败；&lt;/li>
@@ -680,9 +680,22 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;h3>调整 GOGC&lt;span class="hx-absolute -hx-mt-20" id="调整-gogc">&lt;/span>
-&lt;a href="#%e8%b0%83%e6%95%b4-gogc" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>GC 的触发原则是由步调算法来控制的，&lt;strong>其关键在于估计下一次需要触发 GC 时，堆的大小&lt;/strong>。如果在遇到海量请求的时，为了避免 GC 频繁触发，&lt;strong>可以通过将 GOGC 的值设置得更大，让 GC 触发的时间变得更晚，从而减少其触发频率&lt;/strong>，进而增加用户代码对机器的使用率。&lt;/p>
+&lt;a href="#%e8%b0%83%e6%95%b4-gogc" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>GC 的触发原则是由步调算法来控制的，&lt;strong>其关键在于估计下一次需要触发 GC 时，堆的大小&lt;/strong>。如果在遇到海量请求的时，为了避免 GC 频繁触发，&lt;strong>可以通过将 GOGC 的值设置得更大，让 GC 触发的时间变得更晚，从而减少其触发频率&lt;/strong>，进而增加用户代码对机器的使用率，但是也会增加内存使用。&lt;/p>
+&lt;p>GOGC 的默认值是 100。下面的代码意味着当堆内存增长到当前堆内存的两倍时触发 GC。&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">&lt;span class="nv">GOGC&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="m">1000&lt;/span> ./main&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">&lt;span class="nv">GOGC&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="m">200&lt;/span> ./main&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>或者在代码里：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="nx">debug&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">SetGCPercent&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">200&lt;/span>&lt;span class="p">)&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"

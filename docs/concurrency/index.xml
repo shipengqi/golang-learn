@@ -46,8 +46,7 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>当已经有 goroutine 调用 &lt;code>Lock&lt;/code> 方法获得了这个锁，再有 goroutine 请求这个锁就会阻塞在 &lt;code>Lock&lt;/code> 方法的调用上，
-直到持有这个锁的 goroutine 调用 &lt;code>UnLock&lt;/code> 释放这个锁。&lt;/p>
+&lt;p>当已经有 goroutine 调用 &lt;code>Lock&lt;/code> 方法获得了这个锁，再有 goroutine 请求这个锁就会阻塞在 &lt;code>Lock&lt;/code> 方法的调用上，直到持有这个锁的 goroutine 调用 &lt;code>UnLock&lt;/code> 释放这个锁。&lt;/p>
 &lt;p>&lt;strong>使用 &lt;code>defer&lt;/code> 来 &lt;code>UnLock&lt;/code> 锁，确保在函数返回之后或者发生错误返回时一定会执行 &lt;code>UnLock&lt;/code>&lt;/strong>。&lt;/p>
 &lt;h3>为什么一定要加锁？&lt;span class="hx-absolute -hx-mt-20" id="为什么一定要加锁">&lt;/span>
 &lt;a href="#%e4%b8%ba%e4%bb%80%e4%b9%88%e4%b8%80%e5%ae%9a%e8%a6%81%e5%8a%a0%e9%94%81" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
@@ -84,14 +83,13 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;p>上面的例子中期望的最后计数的结果是 &lt;code>10 * 1000 = 10000&lt;/code>。但是每次运行都可能得到不同的结果，基本上不会得到的一万的结果。&lt;/p>
-&lt;p>这是因为，&lt;code>count++&lt;/code> 不是一个原子操作，它至少包含 3 个步骤&lt;/p>
+&lt;p>这是因为，&lt;code>count++&lt;/code> 不是一个原子操作，它至少包含 3 个步骤：&lt;/p>
 &lt;ol>
-&lt;li>读取变量 count 的当前值，&lt;/li>
-&lt;li>对这个值加 1，&lt;/li>
+&lt;li>读取变量 count 的当前值；&lt;/li>
+&lt;li>对这个值加 1；&lt;/li>
 &lt;li>把结果保存到 count 中。&lt;/li>
 &lt;/ol>
-&lt;p>因为不是原子操作，就会有数据竞争的问题。例如，两个 goroutine 同时读取到 count 的值为 8888，接着各自按照自己的逻辑加 1，值变成了 8889，把这个结果再写回到 count 变量。
-此时总数只增加了 1，但是应该是增加 2 才对。这是并发访问共享数据的常见问题。&lt;/p>
+&lt;p>因为不是原子操作，就会有数据竞争的问题。例如，两个 goroutine 同时读取到 count 的值为 8888，接着各自按照自己的逻辑加 1，值变成了 8889，把这个结果再写回到 count 变量。此时总数只增加了 1，但是应该是增加 2 才对。这是并发访问共享数据的常见问题。&lt;/p>
 &lt;p>数据竞争的问题可以再编译时通过数据竞争检测器（race detector）工具发现计数器程序的问题以及修复方法。&lt;/p>
 &lt;h2>原理&lt;span class="hx-absolute -hx-mt-20" id="原理">&lt;/span>
 &lt;a href="#%e5%8e%9f%e7%90%86" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>sync.Mutex&lt;/code> 的结构体：&lt;/p>
@@ -112,7 +110,7 @@ title="Copy code"
 &lt;/div>
 &lt;p>&lt;code>state&lt;/code> 和 &lt;code>sema&lt;/code> 加起来占用 8 个字节。&lt;/p>
 &lt;p>&lt;code>state&lt;/code> 是一个复合型的字段，包含多个意义：&lt;/p>
-&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/mutex-state.png" alt="mutex-state" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/blobs/a28ed24ef4af3cef2b72c215e2358ae84ac39557/mutex-state.png" alt="mutex-state" loading="lazy" />&lt;/p>
 &lt;p>在默认状态下，互斥锁的所有状态位都是 0，&lt;code>int32&lt;/code> 中的不同位分别表示了不同的状态：&lt;/p>
 &lt;ul>
 &lt;li>&lt;code>locked&lt;/code>：表示互斥锁的锁定状态 (1: 锁定, 0: 未锁定)；&lt;/li>
@@ -122,15 +120,23 @@ title="Copy code"
 &lt;/ul>
 &lt;h3>正常模式和饥饿模式&lt;span class="hx-absolute -hx-mt-20" id="正常模式和饥饿模式">&lt;/span>
 &lt;a href="#%e6%ad%a3%e5%b8%b8%e6%a8%a1%e5%bc%8f%e5%92%8c%e9%a5%a5%e9%a5%bf%e6%a8%a1%e5%bc%8f" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>sync.Mutex&lt;/code> 有两种模式：&lt;strong>正常模式&lt;/strong>和&lt;strong>饥饿模式&lt;/strong>。&lt;/p>
+&lt;p>正常模式：&lt;/p>
 &lt;ul>
-&lt;li>正常模式下，锁的等待者会按照&lt;strong>先进先出&lt;/strong>的顺序获取锁。&lt;/li>
-&lt;li>Go 1.9 中为 mutex 增加了&lt;strong>饥饿模式&lt;/strong>。饥饿模式是指，刚被唤起的 goroutine 与新创建的 goroutine 竞争时，大概率会获取不到锁。为了减少这种情况，一旦 &lt;strong>goroutine 超过 1ms 没有获取到锁，它就会将当前互斥锁切换到饥饿模式&lt;/strong>，保证锁的公平性。&lt;/li>
+&lt;li>自旋尝试（Spinning）：等待锁的 goroutine 会先进行短时间的自旋（约 4 次尝试），如果锁很快释放，可以避免上下文切换，提高性能。&lt;/li>
+&lt;li>&lt;strong>竞争激烈时进入队列&lt;/strong>goroutine 会被加入 &lt;strong>FIFO 队列&lt;/strong>等待唤醒。&lt;/li>
+&lt;li>&lt;strong>新来的 goroutine 可能插队&lt;/strong>：
+&lt;ul>
+&lt;li>即使有 goroutine 在排队，新请求锁的 goroutine 仍有机会&lt;strong>直接抢锁&lt;/strong>（&lt;strong>减少上下文切换开销&lt;/strong>）。&lt;/li>
+&lt;li>这种机制在高并发场景下能提高吞吐量，但可能导致某些 goroutine 长时间拿不到锁（&lt;strong>饥饿&lt;/strong>）。&lt;/li>
 &lt;/ul>
-&lt;p>&lt;strong>在饥饿模式中，互斥锁会直接交给等待队列最前面的 goroutine&lt;/strong>。新来的 goroutine 在该状态下不能获取锁、也不会进入自旋状态，只会在队列的末尾等待。&lt;/p>
-&lt;p>下面两种情况，mutex 会切换为正常模式:&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;p>饥饿模式：&lt;/p>
+&lt;p>Go 1.9 中为 mutex 增加了&lt;strong>饥饿模式&lt;/strong>。&lt;strong>当某个 goroutine 超过 1ms 没有获取到锁，它就会将当前互斥锁切换到饥饿模式&lt;/strong>，保证锁的公平性。&lt;/p>
 &lt;ul>
-&lt;li>一个 goroutine 获得了锁并且它在队列的末尾。&lt;/li>
-&lt;li>一个 goroutine 获得了锁并且等待的时间少于 1ms。&lt;/li>
+&lt;li>&lt;strong>禁止新 goroutine 插队&lt;/strong>：所有&lt;strong>新来的 Goroutine 必须直接进入队列尾部&lt;/strong>，不能尝试抢锁。&lt;/li>
+&lt;li>&lt;strong>锁直接交给队首 goroutine&lt;/strong>。&lt;/li>
+&lt;li>退出饥饿模式：当队首 goroutine 是&lt;strong>最后一个等待者&lt;/strong>或&lt;strong>它等待时间 &lt;code>&amp;lt; 1ms&lt;/code>&lt;/strong> 时，切换回正常模式。&lt;/li>
 &lt;/ul>
 &lt;h3>Lock&lt;span class="hx-absolute -hx-mt-20" id="lock">&lt;/span>
 &lt;a href="#lock" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>Lock&lt;/code> 的实现：&lt;/p>
@@ -160,6 +166,7 @@ title="Copy code"
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="nx">m&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">Mutex&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="nf">lockSlow&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="kd">var&lt;/span> &lt;span class="nx">waitStartTime&lt;/span> &lt;span class="kt">int64&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">starving&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="kc">false&lt;/span> &lt;span class="c1">// 当前 goroutine 的饥饿标记
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// mutexStarving 是锁的饥饿标记
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">awoke&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="kc">false&lt;/span> &lt;span class="c1">// 唤醒标记
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">iter&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="c1">// 自旋次数
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">old&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">m&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">state&lt;/span> &lt;span class="c1">// 当前锁的状态
@@ -183,10 +190,10 @@ title="Copy code"
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 情况2: 准备新状态（没有进入自旋）
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">new&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">old&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 如果不是饥饿模式，表示当前 goroutine 要获取锁了，这里还没有真正修改锁的状态
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// // 如果是正常模式，新来的 goroutine 可以尝试直接抢锁
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nx">old&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">mutexStarving&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="p">{&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">new&lt;/span> &lt;span class="o">|=&lt;/span> &lt;span class="nx">mutexLocked&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">new&lt;/span> &lt;span class="o">|=&lt;/span> &lt;span class="nx">mutexLocked&lt;/span> &lt;span class="c1">// 新 goroutine 尝试直接设置锁标志位
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="p">}&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 如果锁已被持有或处于饥饿模式，增加等待计数，waiter 加 1
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nx">old&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">mutexLocked&lt;/span>&lt;span class="p">|&lt;/span>&lt;span class="nx">mutexStarving&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="p">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">new&lt;/span> &lt;span class="o">+=&lt;/span> &lt;span class="mi">1&lt;/span> &lt;span class="o">&amp;lt;&amp;lt;&lt;/span> &lt;span class="nx">mutexWaiterShift&lt;/span>
@@ -207,16 +214,20 @@ title="Copy code"
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="p">}&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 尝试去更新锁的新状态
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nx">atomic&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">CompareAndSwapInt32&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">m&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">state&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">old&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">new&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// CAS 成功并不代表获取了锁，而是代表成功更新了锁的状态，CAS 成功说明当前 goroutine 是获取锁的竞争者
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// CAS 成功并不代表获取了锁，而是代表成功更新了锁的状态
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// CAS 成功说明当前 goroutine 是获取锁的竞争者
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 更新了锁的状态之后，具体分为两种情况
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 情况1：
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 如果锁原先未被持有，并且不是饥饿模式，成功获取锁，直接返回
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 如果锁原先未被持有，并且不是饥饿模式
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 新来的 goroutine 抢锁成功
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nx">old&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">mutexLocked&lt;/span>&lt;span class="p">|&lt;/span>&lt;span class="nx">mutexStarving&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="p">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">break&lt;/span> &lt;span class="c1">// 通过 CAS 函数获取了锁
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="p">}&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// ...
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 新来的 goroutine 抢锁失败，进入排队逻辑
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// ...
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 情况2：需要排队等待
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 真正的锁获取需要等待前一个持有者释放
@@ -287,7 +298,7 @@ title="Copy code"
 &lt;/ul>
 &lt;/li>
 &lt;/ol>
-&lt;p>进入自旋会调用 &lt;code>runtime_doSpin()&lt;/code>，并执行 30 次的 &lt;code>PAUSE&lt;/code> 指令，该指令只会占用 CPU 并消耗 CPU 时间：&lt;/p>
+&lt;p>进入自旋会调用 &lt;code>runtime_doSpin()&lt;/code>，并执行 30 次的 &lt;strong>&lt;code>PAUSE&lt;/code> 指令，该指令只会占用 CPU 并消耗 CPU 时间，但是会引入延迟，降低 CPU 执行效率，降低功耗&lt;/strong>==，如果没有 PAUSE，CPU 会以最高速度循环检查锁是否可用**：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">//go:linkname sync_runtime_doSpin sync.runtime_doSpin
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">//go:nosplit
@@ -325,7 +336,7 @@ title="Copy code"
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">new&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="p">{&lt;/span> &lt;span class="c1">// 意味着当前锁有等待者，需要唤醒等待者
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// Outlined slow path to allow inlining the fast path.
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// To hide unlockSlow during tracing we skip one extra frame when tracing GoUnblock.
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 慢速解锁
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 慢速解锁，有等待者，需要唤醒
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">m&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">unlockSlow&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">new&lt;/span>&lt;span class="p">)&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
@@ -543,7 +554,7 @@ title="Copy code"
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="k">for&lt;/span> &lt;span class="nx">_&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">request&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="k">range&lt;/span> &lt;span class="nx">requests&lt;/span> &lt;span class="p">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">wg&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Go&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kd">func&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// res, err := service.call(request)
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="p">})&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nx">wg&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Wait&lt;/span>&lt;span class="p">()&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
@@ -612,7 +623,7 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;p>&lt;code>state1&lt;/code> 包含一个总共占用 12 字节的数组，这个数组会存储当前结构体的状态，在 64 位与 32 位的机器上表现也非常不同。&lt;/p>
-&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/waitgroup-state1.png" alt="waitgroup-state1" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/blobs/f44ac6b2eda5c6cefa556a6d1786b846b2b490f9/waitgroup-state1.png" alt="waitgroup-state1" loading="lazy" />&lt;/p>
 &lt;p>&lt;code>state&lt;/code> 方法用来从 &lt;code>state1&lt;/code> 字段中取出它的状态和信号量。&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 得到 state 的地址和信号量的地址
@@ -676,8 +687,7 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>&lt;code>Wait&lt;/code> 方法的实现逻辑：不断检查 state 的值。如果其中的计数值变为了 0，那么说明所有的任务已完成，调用者不必再等待，直接返回。如果计数值大于 0，说明此时还有任
-务没完成，那么调用者就变成了等待者，需要加入 waiter 队列，并且阻塞住自己。&lt;/p>
+&lt;p>&lt;code>Wait&lt;/code> 方法的实现逻辑：不断检查 state 的值。如果其中的计数值变为了 0，那么说明所有的任务已完成，调用者不必再等待，直接返回。如果计数值大于 0，说明此时还有任务没完成，那么调用者就变成了等待者，需要加入 waiter 队列，并且阻塞住自己。&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="nx">wg&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">WaitGroup&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="nf">Wait&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">statep&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">semap&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">wg&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">state&lt;/span>&lt;span class="p">()&lt;/span>
@@ -712,7 +722,7 @@ title="Copy code"
 &lt;p>&lt;code>sync.Cond&lt;/code> 不是一个常用的同步机制，但是在条件长时间无法满足时，&lt;strong>与使用 &lt;code>for {}&lt;/code> 进行忙碌等待相比，&lt;code>sync.Cond&lt;/code> 能够让出处理器的使用权，提高 CPU 的利用率&lt;/strong>。&lt;/p>
 &lt;p>&lt;code>sync.Cond&lt;/code> 基于互斥锁/读写锁，它和互斥锁的区别是什么？&lt;/p>
 &lt;p>互斥锁 &lt;code>sync.Mutex&lt;/code> 通常用来保护临界区和共享资源，条件变量 &lt;code>sync.Cond&lt;/code> 用来协调想要访问共享资源的 goroutine。&lt;/p>
-&lt;p>&lt;code>sync.Cond&lt;/code> 经常用在多个 goroutine 等待，一个 goroutine 通知的场景。&lt;/p>
+&lt;p>&lt;strong>&lt;code>sync.Cond&lt;/code> 经常用在多个 goroutine 等待，一个 goroutine 通知的场景&lt;/strong>。&lt;/p>
 &lt;p>比如有一个 goroutine 在异步地接收数据，剩下的多个 goroutine 必须等待这个协程接收完数据，才能读取到正确的数据。这个时候，就需要有个全局的变量来标志第一
 个 goroutine 数据是否接受完毕，剩下的 goroutine，反复检查该变量的值，直到满足要求。&lt;/p>
 &lt;p>当然也可以创建多个 channel，每个 goroutine 阻塞在一个 channel 上，由接收数据的 goroutine 在数据接收完毕后，逐个通知。但是这种方式更复杂一点。&lt;/p>
@@ -821,7 +831,7 @@ title="Copy code"
 &lt;li>&lt;code>noCopy&lt;/code>：用于保证结构体不会在编译期间拷贝&lt;/li>
 &lt;li>&lt;code>copyChecker&lt;/code>：用于禁止运行期间发生的拷贝&lt;/li>
 &lt;li>&lt;code>L&lt;/code>：用于保护 &lt;code>notify&lt;/code> 字段&lt;/li>
-&lt;li>&lt;code>notify&lt;/code>：一个 goroutine 链表，它是实现同步机制的核心结构&lt;/li>
+&lt;li>&lt;code>notify&lt;/code>：&lt;strong>一个 goroutine 链表，它是实现同步机制的核心结构&lt;/strong>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>Wait&lt;/code> 方法会将当前 goroutine 陷入休眠状态，它的执行过程分成以下两个步骤：&lt;/p>
 &lt;ul>
@@ -1069,39 +1079,13 @@ title="Copy code"
 &lt;p>&lt;code>New&lt;/code>：类型是 &lt;code>func() interface{}&lt;/code>，用来创建新的元素。
 &lt;code>Get&lt;/code>：从 Pool 中取出一个元素，如果没有更多的空闲元素，就调用 &lt;code>New&lt;/code> 创建新的元素。如果没有设置 &lt;code>New&lt;/code> 那么可能返回 &lt;code>nil&lt;/code>。
 &lt;code>Put&lt;/code>：将一个元素放回 Pool 中，使该元素可以重复使用，如果 &lt;code>Put&lt;/code> 的值是 nil，会被忽略。&lt;/p>
-&lt;h3>可以先 Put，再 Get 么？&lt;span class="hx-absolute -hx-mt-20" id="可以先-put再-get-么">&lt;/span>
-&lt;a href="#%e5%8f%af%e4%bb%a5%e5%85%88-put%e5%86%8d-get-%e4%b9%88" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>不可以。&lt;/p>
-&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">type&lt;/span> &lt;span class="nx">item&lt;/span> &lt;span class="kd">struct&lt;/span> &lt;span class="p">{&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">value&lt;/span> &lt;span class="kt">int&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">main&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">pool&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">sync&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Pool&lt;/span>&lt;span class="p">{&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">New&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="kd">func&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="kd">interface&lt;/span>&lt;span class="p">{}&lt;/span> &lt;span class="p">{&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="nx">item&lt;/span>&lt;span class="p">{}&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">},&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">pool&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Put&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">item&lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="nx">value&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="mi">1&lt;/span>&lt;span class="p">})&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">data&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">pool&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Get&lt;/span>&lt;span class="p">()&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">data&lt;/span>&lt;span class="p">)&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
-&lt;button
-class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
-title="Copy code"
->
-&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;/button>
-&lt;/div>
-&lt;/div>
 &lt;h2>原理&lt;span class="hx-absolute -hx-mt-20" id="原理">&lt;/span>
 &lt;a href="#%e5%8e%9f%e7%90%86" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Go 1.13 之前的 &lt;code>sync.Pool&lt;/code> 的问题：&lt;/p>
 &lt;ol>
 &lt;li>每次 GC 都会回收创建的对象。
 &lt;ul>
 &lt;li>缓存元素数量太多，就会导致 STW 耗时变长；&lt;/li>
-&lt;li>缓存元素都被回收后，会导致 Get 命中率下降，Get 方法不得不新创建很多对象。&lt;/li>
+&lt;li>缓存元素都被回收后，会导致 &lt;code>Get&lt;/code> 命中率下降，&lt;code>Get&lt;/code> 方法不得不新创建很多对象。&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>底层使用了 &lt;code>Mutex&lt;/code>，并发请求竞争锁激烈的时候，会导致性能的下降。&lt;/li>
@@ -1133,8 +1117,7 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;p>重要的两个字段是 &lt;code>local&lt;/code> 和 &lt;code>victim&lt;/code>，都是要用来存储空闲的元素。&lt;/p>
-&lt;p>&lt;code>local&lt;/code> 字段存储指向 &lt;code>[P]poolLocal&lt;/code> 数组（严格来说，它是一个切片）的指针。访问时，P 的 id 对应 &lt;code>[P]poolLocal&lt;/code> 下标索引。通过这样的设计，多个 goroutine 使用
-同一个 Pool 时，减少了竞争，提升了性能。&lt;/p>
+&lt;p>&lt;code>local&lt;/code> 字段存储指向 &lt;code>[P]poolLocal&lt;/code> 数组（严格来说，它是一个切片）的指针。访问时，P 的 id 对应 &lt;code>[P]poolLocal&lt;/code> 下标索引。通过这样的设计，多个 goroutine 使用同一个 Pool 时，减少了竞争，提升了性能。&lt;/p>
 &lt;p>在 &lt;code>src/sync/pool.go&lt;/code> 文件的 &lt;code>init&lt;/code> 函数里，注册了 GC 发生时，如何清理 Pool 的函数：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">init&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
@@ -1182,10 +1165,10 @@ title="Copy code"
 &lt;p>如果 &lt;code>sync.Pool&lt;/code> 的获取、释放速度稳定，那么就不会有新的池对象进行分配。如果获取的速度下降了，那么对象可能会在两个 GC 周期内被释放，而不是 Go 1.13 以前的一个 GC 周期。&lt;/p>
 &lt;/blockquote>
 &lt;p>调用 &lt;code>Get&lt;/code> 时，会先从 &lt;code>victim&lt;/code> 中获取，如果没有找到，则就会从 &lt;code>local&lt;/code> 中获取，如果 &lt;code>local&lt;/code> 中也没有，就会执行 &lt;code>New&lt;/code> 创建新的元素。&lt;/p>
+&lt;p>&lt;strong>Pool 中的缓存对象虽然还被清除，但是在两次 GC 之间的窗口期内，对象可被重复复用多次&lt;/strong>。例如一个 HTTP 服务在 1 秒内处理 1 万次请求，期间可能触发 0 次 GC，所有请求共享 Pool 中的对象。&lt;/p>
 &lt;h3>内存泄露&lt;span class="hx-absolute -hx-mt-20" id="内存泄露">&lt;/span>
-&lt;a href="#%e5%86%85%e5%ad%98%e6%b3%84%e9%9c%b2" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>使用的示例代码实现了一个 buffer 池，这个实现可能会有内存泄漏的风险。为什么？&lt;/p>
-&lt;p>因为在取出 &lt;code>bytes.Buffer&lt;/code> 之后，我们可以给这个 buffer 中增加大量的 &lt;code>byte&lt;/code> 数据，这会导致底层的 byte slice 的容量可能会变得很大。这个时候，即使 Reset 再放回到池子中，这些 byte slice 的容量不会改变，
-所占的空间依然很大。&lt;/p>
+&lt;a href="#%e5%86%85%e5%ad%98%e6%b3%84%e9%9c%b2" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>前面的示例代码中实现了一个 &lt;code>buffer&lt;/code> 池，这个实现可能会有内存泄漏的风险。为什么？&lt;/p>
+&lt;p>因为在取出 &lt;code>bytes.Buffer&lt;/code> 之后，可以给这个 &lt;code>buffer&lt;/code> 中增加大量的 &lt;code>byte&lt;/code> 数据，这会导致底层的 byte slice 的容量可能会变得很大。这个时候，即使 Reset 再放回到池子中，这些 byte slice 的容量不会改变，所占的空间依然很大。&lt;/p>
 &lt;p>&lt;code>Reset&lt;/code> 的实现：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// Reset resets the buffer to be empty,
@@ -1197,16 +1180,7 @@ title="Copy code"
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">b&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">buf&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">b&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">buf&lt;/span>&lt;span class="p">[:&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">]&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">b&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">off&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="mi">0&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">b&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">lastRead&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">opInvalid&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 切片结构体
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// runtime/slice.go
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="kd">type&lt;/span> &lt;span class="nx">slice&lt;/span> &lt;span class="kd">struct&lt;/span> &lt;span class="p">{&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">array&lt;/span> &lt;span class="nx">unsafe&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Pointer&lt;/span> &lt;span class="c1">// 元素指针，指向底层数组
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">len&lt;/span> &lt;span class="kt">int&lt;/span> &lt;span class="c1">// 长度
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">cap&lt;/span> &lt;span class="kt">int&lt;/span> &lt;span class="c1">// 容量
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -1234,7 +1208,7 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;p>因为 Pool 回收的机制，这些大的 Buffer 可能不会被立即回收，而是会占用很大的空间，这属于内存泄漏的问题。&lt;/p>
-&lt;p>Go 的标准库 &lt;code>encoding/json&lt;/code> 和 &lt;code>fmt&lt;/code> 修复这个问题的方法是增加了检查逻辑：如果放回的 buffer 超过一定大小，就直接丢弃掉，不再放到池子中。&lt;/p>
+&lt;p>Go 的标准库 &lt;code>encoding/json&lt;/code> 和 &lt;code>fmt&lt;/code> 修复这个问题的方法是增加了检查逻辑：如果放回的 &lt;code>buffer&lt;/code> 超过一定大小，就直接丢弃掉，不再放到池子中。&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 超过一定大小，直接丢弃掉
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="k">if&lt;/span> &lt;span class="nb">cap&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">p&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">buf&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">&amp;gt;&lt;/span> &lt;span class="mi">64&lt;/span>&lt;span class="o">&amp;lt;&amp;lt;&lt;/span>&lt;span class="mi">0&lt;/span> &lt;span class="p">{&lt;/span>
@@ -1252,10 +1226,15 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>所以在使用 &lt;code>sync.Pool&lt;/code> 时，回收 buffer 的时候，&lt;strong>一定要检查回收的对象的大小&lt;/strong>。如果 buffer 太大，就直接丢弃掉。&lt;/p>
+&lt;p>所以在使用 &lt;code>sync.Pool&lt;/code> 时，回收 &lt;code>buffer&lt;/code> 的时候，&lt;strong>一定要检查回收的对象的大小&lt;/strong>。如果 &lt;code>buffer&lt;/code> 太大，就直接丢弃掉。&lt;/p>
 &lt;h3>优化内存使用&lt;span class="hx-absolute -hx-mt-20" id="优化内存使用">&lt;/span>
-&lt;a href="#%e4%bc%98%e5%8c%96%e5%86%85%e5%ad%98%e4%bd%bf%e7%94%a8" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>使用 buffer 池的时候，可以根据实际元素的大小来分为几个 buffer 池。比如，小于 512 byte 的元素的 buffer 占一个池子；其次，小于 1K byte 大小的元素占一个池子；
-再次，小于 4K byte 大小的元素占一个池子。这样分成几个池子以后，就可以根据需要，到所需大小的池子中获取 buffer 了。&lt;/p>
+&lt;a href="#%e4%bc%98%e5%8c%96%e5%86%85%e5%ad%98%e4%bd%bf%e7%94%a8" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>使用 &lt;code>buffer&lt;/code> 池的时候，可以根据实际元素的大小来分为几个 &lt;code>buffer&lt;/code> 池。比如：&lt;/p>
+&lt;ul>
+&lt;li>小于 512 byte 的元素的 &lt;code>buffer&lt;/code> 占一个池子；&lt;/li>
+&lt;li>其次，小于 1K byte 大小的元素占一个池子；&lt;/li>
+&lt;li>再次，小于 4K byte 大小的元素占一个池子。&lt;/li>
+&lt;/ul>
+&lt;p>这样分成几个池子以后，就可以根据需要，到所需大小的池子中获取 &lt;code>buffer&lt;/code> 了。&lt;/p>
 &lt;p>例如标准库 &lt;a href="https://github.com/golang/go/blob/master/src/net/http/server.go" target="_blank" rel="noopener">net/http/server.go&lt;/a> 的实现：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">var&lt;/span> &lt;span class="p">(&lt;/span>
@@ -1374,7 +1353,7 @@ title="Copy code"
 &lt;h2>原理&lt;span class="hx-absolute -hx-mt-20" id="原理">&lt;/span>
 &lt;a href="#%e5%8e%9f%e7%90%86" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>context 的最大作用就是在&lt;strong>一组 goroutine 构成的树形结构中对信号进行同步&lt;/strong>，以减少计算资源的浪费。&lt;/p>
 &lt;p>例如，Go 的 HTTP server，处理每一个请求，都是启动一个单独的 goroutine，处理过程中还会启动新的 goroutine 来访问数据库和其他服务。而 context 在不同 goroutine 之间可以同步请求特定数据、取消信号以及处理请求的截止日期。&lt;/p>
-&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/context.png" alt="context" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/blobs/96e9eb7012bc38c62b063745719d5c82712552b7/context.png" alt="context" loading="lazy" />&lt;/p>
 &lt;p>每一个 context 都会从 root goroutine 一层层传递到底层。context 可以在上层 goroutine 执行出现错误时，将信号及时同步给下层。&lt;/p>
 &lt;h3>WithCancel&lt;span class="hx-absolute -hx-mt-20" id="withcancel">&lt;/span>
 &lt;a href="#withcancel" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
@@ -1878,14 +1857,12 @@ title="Copy code"
 &lt;p>在高并发的情况下，单次 CAS 的执行成功率会降低，因此需要配合循环语句 &lt;code>for&lt;/code>，形成一个 &lt;code>for+atomic&lt;/code> 的类似自旋乐观锁。&lt;/p>
 &lt;p>&lt;strong>自旋锁的使用场景&lt;/strong>：&lt;/p>
 &lt;ol>
-&lt;li>读多写少的场景，线程能够很快地获得锁，则自旋锁非常有效，因为它避免了线程调度和上下文切换的开销。如果有大量的写操作，CAS 操作无法获取到锁，
-线程会在不断的自旋中消耗大量的 CPU 时间。线程需要反复尝试获取锁，而不释放 CPU，这可能导致性能下降。&lt;/li>
+&lt;li>读多写少的场景，线程能够很快地获得锁，则自旋锁非常有效，因为它避免了线程调度和上下文切换的开销。如果有大量的写操作，CAS 操作无法获取到锁，线程会在不断的自旋中消耗大量的 CPU 时间。线程需要反复尝试获取锁，而不释放 CPU，这可能导致性能下降。&lt;/li>
 &lt;li>自旋锁适合用在加锁粒度很小的场景，锁的持有时间非常短。如果锁定时间较长，使用自旋锁可能导致线程长时间占用 CPU。&lt;/li>
 &lt;/ol>
 &lt;h3>ABA 问题&lt;span class="hx-absolute -hx-mt-20" id="aba-问题">&lt;/span>
 &lt;a href="#aba-%e9%97%ae%e9%a2%98" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>使用 CAS，会有 ABA 问题，ABA 问题是什么？&lt;/p>
-&lt;p>例如，一个 goroutine a 从内存位置 V 中取出 1，这时候另一个 goroutine b 也从内存位置 V 中取出 1，并且 goroutine b 将 V 位置的值更新为 0，接着又将 V 位置的值改为 1，这时候 goroutine a 进行 CAS 操作发现位置 V 的值仍然是 1，然后 goroutine a 操作成功。虽然 goroutine a 的 CAS 操
-作成功，但是这个值其实已经被修改过。&lt;/p>
+&lt;p>例如，一个 goroutine a 从内存位置 V 中取出 1，这时候另一个 goroutine b 也从内存位置 V 中取出 1，并且 goroutine b 将 V 位置的值更新为 0，接着又将 V 位置的值改为 1，这时候 goroutine a 进行 CAS 操作发现位置 V 的值仍然是 1，然后 goroutine a 操作成功。虽然 goroutine a 的 CAS 操作成功，但是这个值其实已经被修改过。&lt;/p>
 &lt;p>可以给变量附加时间戳、版本号等信息来解决。&lt;/p></description></item><item><title>Channel</title><link>https://shipengqi.github.io/golang-learn/docs/concurrency/09_channel/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/concurrency/09_channel/</guid><description>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;pre>&lt;code>Don’t communicate by sharing memory; share memory by communicating.
@@ -1907,7 +1884,10 @@ title="Copy code"
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="nx">ch&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">make&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kd">chan&lt;/span> &lt;span class="kt">int&lt;/span>&lt;span class="p">)&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 带缓冲 channel，缓冲区为 3
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="nx">ch&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nb">make&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kd">chan&lt;/span> &lt;span class="kt">int&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">3&lt;/span>&lt;span class="p">)&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="nx">ch&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nb">make&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kd">chan&lt;/span> &lt;span class="kt">int&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">3&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// ok 为 false 表示通道已经关闭
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="nx">val&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">ok&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="o">&amp;lt;-&lt;/span> &lt;span class="nx">ch&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -1963,7 +1943,7 @@ title="Copy code"
 &lt;li>&lt;code>len&lt;/code> 函数可以获取 channel 内部缓冲区有效元素的个数。&lt;/li>
 &lt;/ul>
 &lt;h3>使用 range 遍历 channel&lt;span class="hx-absolute -hx-mt-20" id="使用-range-遍历-channel">&lt;/span>
-&lt;a href="#%e4%bd%bf%e7%94%a8-range-%e9%81%8d%e5%8e%86-channel" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>使用 &lt;code>range&lt;/code> 循环可以遍历 channel，它依次从 channel 中接收数据，当 channel 被关闭并且没有值可接收时跳出循环：&lt;/p>
+&lt;a href="#%e4%bd%bf%e7%94%a8-range-%e9%81%8d%e5%8e%86-channel" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>使用 &lt;code>range&lt;/code> 循环可以遍历 channel，它依次从 channel 中接收数据，&lt;strong>当 channel 被关闭并且没有值可接收时跳出循环&lt;/strong>：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="nx">ch&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">make&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kd">chan&lt;/span> &lt;span class="kt">int&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">3&lt;/span>&lt;span class="p">)&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nx">ch&lt;/span> &lt;span class="o">&amp;lt;-&lt;/span> &lt;span class="mi">1&lt;/span>
@@ -2134,7 +2114,7 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>使用 mallocgc 函数创建 channel，就意味着 channel 都是分配在堆上的。所以&lt;strong>当一个 channel 没有被任何 goroutine 引用时，是会被 GC 回收的&lt;/strong>。&lt;/p>
+&lt;p>使用 &lt;code>mallocgc&lt;/code> 函数创建 channel，就意味着 channel 都是分配在堆上的。所以&lt;strong>当一个 channel 没有被任何 goroutine 引用时，是会被 GC 回收的&lt;/strong>。&lt;/p>
 &lt;h3>向 channel 发送数据&lt;span class="hx-absolute -hx-mt-20" id="向-channel-发送数据">&lt;/span>
 &lt;a href="#%e5%90%91-channel-%e5%8f%91%e9%80%81%e6%95%b0%e6%8d%ae" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>发送操作，也就是 &lt;code>ch &amp;lt;- i&lt;/code> 语句，编译器最终会将该语句转换成 &lt;code>chansend&lt;/code> 函数：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
@@ -2647,8 +2627,11 @@ title="Copy code"
 &lt;/div>
 &lt;p>&lt;code>recvq&lt;/code> 和 &lt;code>sendq&lt;/code> 中的所有 goroutine 被唤醒后，会分别去执行 &lt;code>chanrecv&lt;/code> 和 &lt;code>chansend&lt;/code> 中 &lt;code>gopark&lt;/code> 后面的代码。&lt;/p></description></item><item><title>信号量</title><link>https://shipengqi.github.io/golang-learn/docs/concurrency/10_sema/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/concurrency/10_sema/</guid><description>
 &lt;p>信号量（Semaphore）是一种用于实现多进程或多线程之间同步和互斥的机制。&lt;/p>
-&lt;p>信号量可以简单理解为一个整型数，包含两种操作：&lt;code>P&lt;/code>（Proberen，测试）操作和 &lt;code>V&lt;/code>（Verhogen，增加）操作。其中，&lt;code>P&lt;/code> 操作会尝试获取一个信号量，如果信号量的值大于 0，则将信号量的值减 1 并
-继续执行。否则，当前进程或线程就会被阻塞，直到有其他进程或线程释放这个信号量为止。V 操作则是释放一个信号量，将信号量的值加 1。&lt;/p>
+&lt;p>信号量可以简单理解为一个整型数，包含两种操作：&lt;code>P&lt;/code>（Proberen，测试）操作和 &lt;code>V&lt;/code>（Verhogen，增加）操作。&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>P&lt;/code> 操作会尝试获取一个信号量，如果信号量的值大于 0，则将信号量的值减 1 并继续执行。否则，当前进程或线程就会被阻塞，直到有其他进程或线程释放这个信号量为止。&lt;/li>
+&lt;li>&lt;code>V&lt;/code> 操作则是释放一个信号量，将信号量的值加 1。&lt;/li>
+&lt;/ul>
 &lt;p>&lt;code>P&lt;/code> 操作和 &lt;code>V&lt;/code> 操作可以看做是对资源的获取和释放。&lt;/p>
 &lt;p>Go 的 &lt;code>WaitGroup&lt;/code> 和 &lt;code>Metux&lt;/code> 都是通过信号量来控制 goroutine 的阻塞和唤醒，例如 &lt;code>Mutex&lt;/code> 结构体中的 &lt;code>sema&lt;/code>：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
@@ -2665,7 +2648,7 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>&lt;code>Metux&lt;/code> 本质上就是基于信号量（sema）+ 原子操作来实现并发控制的。&lt;/p>
+&lt;p>&lt;code>Metux&lt;/code> 本质上就是基于&lt;strong>信号量（sema）+ 原子操作&lt;/strong>来实现并发控制的。&lt;/p>
 &lt;p>Go 操作信号量的方法：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// src/sync/runtime.go
@@ -2878,9 +2861,13 @@ title="Copy code"
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">s&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="kc">nil&lt;/span> &lt;span class="p">{&lt;/span> &lt;span class="c1">// May be slow or even yield, so unlock first
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// ...
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 唤醒 goroutine
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// handoff=true，被唤醒的 goroutine 会被放入当前 P 的本地运行队列，等待正常调度
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// handoff=false，当前释放信号量的 goroutine 会立即让出处理器（P），并将处理器直接移交给被唤醒的 goroutine
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nf">readyWithTime&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">s&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">5&lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="nx">skipframes&lt;/span>&lt;span class="p">)&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">s&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">ticket&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="mi">1&lt;/span> &lt;span class="o">&amp;amp;&amp;amp;&lt;/span> &lt;span class="nf">getg&lt;/span>&lt;span class="p">().&lt;/span>&lt;span class="nx">m&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">locks&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="mi">0&lt;/span> &lt;span class="p">{&lt;/span>
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">goyield&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 让出当前 g 的执行权，切换到下一个可运行的 g
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 类似于 Gosched()，但 goyield 是更底层的实现
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nf">goyield&lt;/span>&lt;span class="p">()&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
@@ -2994,7 +2981,7 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>List 实现了一个等待队列，等待者的通知是通过 channel 实现的。&lt;/p>
+&lt;p>List 实现了一个等待队列，&lt;strong>等待者的通知是通过 channel 实现的&lt;/strong>。&lt;/p>
 &lt;p>&lt;code>Acquire&lt;/code> 实现：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="nx">s&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">Weighted&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="nf">Acquire&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">ctx&lt;/span> &lt;span class="nx">context&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Context&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">n&lt;/span> &lt;span class="kt">int64&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="kt">error&lt;/span> &lt;span class="p">{&lt;/span>
@@ -3184,8 +3171,7 @@ title="Copy code"
 &lt;p>&lt;code>query ...&lt;/code> 只打印了一次，请求被合并了。&lt;/p>
 &lt;p>&lt;code>singleflight.Group&lt;/code> 提供了三个方法：&lt;/p>
 &lt;ul>
-&lt;li>&lt;code>Do&lt;/code>：接受两个参数，第一个参数是一个 key，第二个参数是一个函数。同一个 key 对应的函数，在同一时间只会有一个在执行，其他的并发执行的请求会等待。当第一个执行的函数返回结果
-其他的并发请求会使用这个结果。&lt;/li>
+&lt;li>&lt;code>Do&lt;/code>：接受两个参数，第一个参数是一个 key，第二个参数是一个函数。&lt;strong>同一个 key 对应的函数，在同一时间只会有一个在执行，其他的并发执行的请求会等待。当第一个执行的函数返回结果其他的并发请求会使用这个结果&lt;/strong>。&lt;/li>
 &lt;li>&lt;code>DoChan&lt;/code>：和 &lt;code>Do&lt;/code> 方法差不多，只不过是返回一个 channel，当执行的函数返回结果时，就可以从这个 channel 中接收这个结果。&lt;/li>
 &lt;li>&lt;code>Forget&lt;/code>：在 &lt;code>Group&lt;/code> 的映射表中删除某个 key。接下来这个 key 的请求就不会等待前一个未完成的函数的返回结果了。&lt;/li>
 &lt;/ul>

@@ -57,12 +57,12 @@ title="Copy code"
 &lt;h3>字符串拼接&lt;span class="hx-absolute -hx-mt-20" id="字符串拼接">&lt;/span>
 &lt;a href="#%e5%ad%97%e7%ac%a6%e4%b8%b2%e6%8b%bc%e6%8e%a5" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>拼接字符串的几种方式：&lt;/p>
 &lt;h4>&lt;code>+&lt;/code> 拼接字符串&lt;span class="hx-absolute -hx-mt-20" id="-拼接字符串">&lt;/span>
-&lt;a href="#-%e6%8b%bc%e6%8e%a5%e5%ad%97%e7%ac%a6%e4%b8%b2" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>例如 &lt;code>fmt.Println(&amp;quot;hello&amp;quot; + s[5:])&lt;/code> 输出 &lt;code>&amp;quot;hello, world&amp;quot;&lt;/code>。使用 &lt;code>+&lt;/code> 来拼接两个字符串时，它会申请一块新的内存空间，大小是两个字符串的大小之和。
+&lt;a href="#-%e6%8b%bc%e6%8e%a5%e5%ad%97%e7%ac%a6%e4%b8%b2" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>例如 &lt;code>fmt.Println(&amp;quot;hello&amp;quot; + s[5:])&lt;/code> 输出 &lt;code>&amp;quot;hello, world&amp;quot;&lt;/code>。使用 &lt;code>+&lt;/code> 来拼接两个字符串时，它&lt;strong>会申请一块新的内存空间，大小是两个字符串的大小之和&lt;/strong>。
 拼接第三个字符串时，再申请一块新的内存空间，大小是三个字符串大小之和。&lt;strong>这种方式每次运算都需要重新分配内存，会给内存分配和 GC 带来额外的负担，所以性能较差&lt;/strong>。&lt;/p>
 &lt;h4>fmt.Sprintf&lt;span class="hx-absolute -hx-mt-20" id="fmtsprintf">&lt;/span>
 &lt;a href="#fmtsprintf" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>&lt;code>fmt.Sprintf()&lt;/code> 拼接字符串，内部使用 &lt;code>[]byte&lt;/code> 实现，不像直接运算符这种会产生很多临时的字符串，但是内部的逻辑比较复杂，有很多额外的判断，还用到了 &lt;code>interface&lt;/code>，所以性能一般。&lt;/p>
 &lt;h4>bytes.Buffer&lt;span class="hx-absolute -hx-mt-20" id="bytesbuffer">&lt;/span>
-&lt;a href="#bytesbuffer" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>利用 &lt;code>bytes.Buffer&lt;/code> 拼接字符串，是比较理想的一种方式。对内存的增长有优化，如果能预估字符串的长度，还可以用 &lt;code>buffer.Grow&lt;/code> 接口来设置 &lt;code>capacity&lt;/code>。&lt;/p>
+&lt;a href="#bytesbuffer" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>利用 &lt;code>bytes.Buffer&lt;/code> 拼接字符串，是比较理想的一种方式。对内存的增长有优化，如果可以预估出字符串的长度，可以使用 &lt;code>buffer.Grow&lt;/code> 接口来设置 &lt;code>capacity&lt;/code>。&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">var&lt;/span> &lt;span class="nx">buffer&lt;/span> &lt;span class="nx">bytes&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Buffer&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nx">buffer&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">WriteString&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;hello&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
@@ -97,8 +97,12 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;p>&lt;code>Builder.Grow&lt;/code> 方法可以预分配内存。&lt;/p>
-&lt;p>推荐使用 &lt;code>strings.Builder&lt;/code> 来拼接字符串。&lt;/p>
-&lt;p>&lt;code>strings.Builder&lt;/code> 性能上比 &lt;code>bytes.Buffer&lt;/code> 略快，一个比较重要的区别在于，&lt;strong>&lt;code>bytes.Buffer&lt;/code> 转化为字符串时重新申请了一块空间，存放生成的字符串变量，而 &lt;code>strings.Builder&lt;/code> 直接将底层的 &lt;code>[]byte&lt;/code> 转换成了字符串类型并返回&lt;/strong>。&lt;/p>
+&lt;p>&lt;strong>推荐使用 &lt;code>strings.Builder&lt;/code> 来拼接字符串&lt;/strong>。&lt;/p>
+&lt;p>&lt;strong>&lt;code>strings.Builder&lt;/code> 性能上比 &lt;code>bytes.Buffer&lt;/code> 略快&lt;/strong>，一个比较重要的区别在于：&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>&lt;code>bytes.Buffer&lt;/code> 转化为字符串时重新申请了一块空间，存放生成的字符串变量&lt;/strong>；&lt;/li>
+&lt;li>&lt;strong>&lt;code>strings.Builder&lt;/code> 直接将底层的 &lt;code>[]byte&lt;/code> 转换成了字符串类型并返回&lt;/strong>。&lt;/li>
+&lt;/ul>
 &lt;p>&lt;code>bytes.Buffer&lt;/code>：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="nx">b&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">Buffer&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="nf">String&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="kt">string&lt;/span> &lt;span class="p">{&lt;/span>
@@ -182,8 +186,8 @@ title="Copy code"
 &lt;div class="hx-w-full hx-min-w-0 hx-leading-7">
 &lt;div class="hx-mt-6 hx-leading-7 first:hx-mt-0">&lt;p>值类型和引用类型的区别：&lt;/p>
 &lt;ul>
-&lt;li>值类型的变量在赋值时会进行数据拷贝，变量间互不影响；而引用类型的变量在赋值时会进行引用拷贝，变量。&lt;/li>
-&lt;li>值类型的变量在函数参数传递时也是值拷贝，而引用类型的变量在函数参数传递时是引用拷贝。变量间共享一块内存，操作其中一个变量，会影响到其他变量。&lt;/li>
+&lt;li>&lt;strong>值类型的变量在赋值时会进行数据拷贝&lt;/strong>，变量间互不影响；而&lt;strong>引用类型的变量在赋值时会进行引用拷贝&lt;/strong>，变量间共享一块内存。&lt;/li>
+&lt;li>&lt;strong>值类型的变量在函数参数传递时也是值拷贝&lt;/strong>，而&lt;strong>引用类型的变量在函数参数传递时是引用拷贝&lt;/strong>。变量间共享一块内存，操作其中一个变量，会影响到其他变量。&lt;/li>
 &lt;/ul>&lt;/div>
 &lt;/div>
 &lt;/div></description></item><item><title>数组</title><link>https://shipengqi.github.io/golang-learn/docs/basic/02_array/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/basic/02_array/</guid><description>
@@ -203,12 +207,7 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;p>数组的长度在编译阶段确定，初始化之后大小就无法改变。&lt;/p>
-&lt;p>&lt;strong>数组是否应该在堆栈中初始化在编译期就确定了&lt;/strong>。&lt;/p>
-&lt;p>根据数组大小：&lt;/p>
-&lt;ul>
-&lt;li>当元素数量小于或者等于 4 个时，会直接将数组中的元素放置在栈上。&lt;/li>
-&lt;li>当元素数量大于 4 个时，会将数组中的元素放置到静态区，并在运行时取出。&lt;/li>
-&lt;/ul></description></item><item><title>切片</title><link>https://shipengqi.github.io/golang-learn/docs/basic/03_slice/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/basic/03_slice/</guid><description>
+&lt;p>&lt;strong>数组是否应该在堆栈中初始化在编译期就确定了&lt;/strong>。&lt;/p></description></item><item><title>切片</title><link>https://shipengqi.github.io/golang-learn/docs/basic/03_slice/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/basic/03_slice/</guid><description>
 &lt;p>切片 (slice) 在使用上和数组差不多，区别是切片是&lt;strong>可变长&lt;/strong>的，定义的时候不需要指定 size。&lt;/p>
 &lt;p>切片可以看做是对数组的一层简单的封装，切片的底层数据结构中，包含了一个数组。&lt;/p>
 &lt;p>切片的结构体：&lt;/p>
@@ -329,14 +328,14 @@ title="Copy code"
 &lt;li>&lt;code>s1 := slice[2:5]&lt;/code> 得到的 &lt;code>s1&lt;/code> 的容量为 8，因为&lt;strong>没有传入 &lt;code>max&lt;/code>，容量默认是到底层数组的结尾&lt;/strong>。&lt;/li>
 &lt;li>&lt;code>s2 := s1[2:6:7]&lt;/code> 得到的 &lt;code>s2&lt;/code> 的容量为 5（&lt;code>max - low&lt;/code>）。&lt;code>s2&lt;/code>，&lt;code>s1&lt;/code> 和 &lt;code>slice&lt;/code> 底层数组是同一个，所以 &lt;code>s2&lt;/code> 中的元素是 &lt;code>[4,5,6,7]&lt;/code>。&lt;/li>
 &lt;/ul>
-&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/slice-cut.png" alt="slice-cut" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/blobs/6f0d1fd9bbdb127a27aeca94c54827cd0c5cc7e8/slice-cut.png" alt="slice-cut" loading="lazy" />&lt;/p>
 &lt;p>下面的 &lt;code>s2 = append(s2, 100)&lt;/code> 追加一个元素，容量够用，不需要扩容，但是这个修改会影响所有指向这个底层数组的切片。&lt;/p>
-&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/slice-cut-append.png" alt="slice-cut-append" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/blobs/6694765cafd7a2b2532e41982f10ba28c4660dc9/slice-cut-append.png" alt="slice-cut-append" loading="lazy" />&lt;/p>
 &lt;p>再次追加一个元素 &lt;code>s2 = append(s2, 200)&lt;/code>，&lt;code>s2&lt;/code> 的容量不够了，需要扩容，于是 &lt;code>s2&lt;/code> 申请一块新的连续内存，并将数据拷贝过去，扩容后的容量是原来的 2 倍。
 这时候 &lt;code>s2&lt;/code> 的 &lt;code>Data&lt;/code> 指向了新的底层数组，已经和 &lt;code>s1&lt;/code> 这个 &lt;code>slice&lt;/code> 没有关系了，所以对 &lt;code>s2&lt;/code> 的修改不会再影响 &lt;code>s1&lt;/code>。&lt;/p>
-&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/slice-cut-append2.png" alt="slice-cut-append2" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/blobs/e29d4648202f69c7086484e54868916ace66f2b4/slice-cut-append2.png" alt="slice-cut-append2" loading="lazy" />&lt;/p>
 &lt;p>最后 &lt;code>s1[2] = 20&lt;/code> 也不会再影响 &lt;code>s2&lt;/code>。&lt;/p>
-&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/slice-cut-append3.png" alt="slice-cut-append3" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/blobs/44c2748907cf236dd078c37c10a5e5e56b8e3350/slice-cut-append3.png" alt="slice-cut-append3" loading="lazy" />&lt;/p>
 &lt;h2>切片是如何扩容的？&lt;span class="hx-absolute -hx-mt-20" id="切片是如何扩容的">&lt;/span>
 &lt;a href="#%e5%88%87%e7%89%87%e6%98%af%e5%a6%82%e4%bd%95%e6%89%a9%e5%ae%b9%e7%9a%84" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>append&lt;/code> 是用来向 slice 追加元素的，并&lt;strong>返回一个新的 slice&lt;/strong>。&lt;/p>
 &lt;p>&lt;code>append&lt;/code> 实际上就是向底层数组添加元素，但是数组的长度是固定的：&lt;/p>
@@ -423,7 +422,7 @@ title="Copy code"
 &lt;a href="#%e5%93%88%e5%b8%8c%e8%a1%a8%e7%9a%84%e8%ae%be%e8%ae%a1%e5%8e%9f%e7%90%86" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>哈希表其实是数组的扩展。哈希表是利用数组可以根据下标随机访问（时间复杂度是 &lt;code>O(1)&lt;/code>）这一特性来实现快速查找的。&lt;/p>
 &lt;h3>哈希函数&lt;span class="hx-absolute -hx-mt-20" id="哈希函数">&lt;/span>
 &lt;a href="#%e5%93%88%e5%b8%8c%e5%87%bd%e6%95%b0" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>哈希表是通过&lt;strong>哈希函数&lt;/strong>将 key 转化为数组的下标，然后将数据存储在数组下标对应的位置。查询时，也是同样的使用哈希函数计算出数组下标，从下标对应的位置取出数据。&lt;/p>
-&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/hash-func.png" alt="map-seek-addr" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/blobs/20553472dd8c6502c7cd1a510d4dca24f5198397/map-seek-addr.png" alt="map-seek-addr" loading="lazy" />&lt;/p>
 &lt;p>哈希函数的基本要求：&lt;/p>
 &lt;ol>
 &lt;li>哈希函数计算出来的值是一个非负整数。&lt;/li>
@@ -434,9 +433,8 @@ title="Copy code"
 &lt;p>常用的处理哈希冲突的方法有两种：&lt;strong>开放寻址法&lt;/strong>和&lt;strong>链表法&lt;/strong>。&lt;/p>
 &lt;h3>开放寻址法&lt;span class="hx-absolute -hx-mt-20" id="开放寻址法">&lt;/span>
 &lt;a href="#%e5%bc%80%e6%94%be%e5%af%bb%e5%9d%80%e6%b3%95" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>开放寻址法核心思想是，如果出现了哈希冲突，就重新探测一个空闲位置，将其插入。&lt;/p>
-&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/map-seek-addr.png" alt="map-seek-addr" loading="lazy" />&lt;/p>
-&lt;p>上图蓝色表示已经插入的元素，&lt;code>key9&lt;/code> 哈希后得到的数组下标为 6，但是已经有数据了，产生了冲突。那么就按顺序向后查找直到找到一个空闲的位置，如果到数组的尾部都没有找到空闲的位置，就从头开始继续找。
-上图最终找到位置 1 并插入元素。&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/blobs/20553472dd8c6502c7cd1a510d4dca24f5198397/map-seek-addr.png" alt="map-seek-addr" loading="lazy" />&lt;/p>
+&lt;p>上图蓝色表示已经插入的元素，&lt;code>key9&lt;/code> 哈希后得到的数组下标为 6，但是已经有数据了，产生了冲突。那么就按顺序向后查找直到找到一个空闲的位置，如果到数组的尾部都没有找到空闲的位置，就从头开始继续找。上图最终找到位置 1 并插入元素。&lt;/p>
 &lt;p>查找的逻辑和插入类似，从哈希函数计算出来的下标位置开始查找，比较数组中下标位置的元素和要查找的元素。如果相等，则说明就是要找的元素；否则就顺序往后依次查找。直到找到数组中的空闲位置，还没有找到，就说明要查找的元素并没有在哈希表中。&lt;/p>
 &lt;p>可以看出当数组中空闲位置不多的时候，哈希冲突的概率就会大大提高。&lt;strong>装载因子&lt;/strong>（load factor）就是用来表示空位的多少。&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
@@ -453,7 +451,7 @@ title="Copy code"
 &lt;p>装载因子越大，说明空闲位置越少，冲突越多，哈希表的性能会下降。&lt;/p>
 &lt;h3>链表法&lt;span class="hx-absolute -hx-mt-20" id="链表法">&lt;/span>
 &lt;a href="#%e9%93%be%e8%a1%a8%e6%b3%95" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>链表法是最常见的哈希冲突的解决办法。在哈希表中，每个桶（bucket）会对应一条链表，所有哈希值相同的元素都放到相同桶对应的链表中。&lt;/p>
-&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/map-link.png" alt="map-link" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/blobs/f242cc1652d75a584b78212fe4b077d3e0f22b72/map-link.png" alt="map-link" loading="lazy" />&lt;/p>
 &lt;p>插入时，哈希函数计算后得出存放在几号桶，然后遍历桶中的链表了：&lt;/p>
 &lt;ul>
 &lt;li>找到键相同的键值对，则更新键对应的值；&lt;/li>
@@ -539,13 +537,13 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;p>&lt;code>bmap&lt;/code> 就是桶，&lt;strong>一个桶里面会最多存储 8 个键值对&lt;/strong>。&lt;/p>
-&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/bmap-struct.png" alt="bmap-struct" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/blobs/1ed637b480a103c526ff108da4e3658c1fcbf9c0/bmap-struct.png" alt="bmap-struct" loading="lazy" />&lt;/p>
 &lt;ol>
 &lt;li>在桶内，会&lt;strong>根据 key 计算出来的 hash 值的高 8 位来决定 key 存储在桶中的位置&lt;/strong>（桶内的键值对，根据类型的大小就可以计算出偏移量）。&lt;/li>
 &lt;li>&lt;strong>key 和 value 是分别放在一块连续的内存，这样做的目的是为了节省内存&lt;/strong>。例如一个 &lt;code>map[int64]int8&lt;/code> 类型的 map，如果按照 &lt;code>key1/value1/key2/value2 ...&lt;/code> 这样的形式来存储，那么&lt;strong>内存对齐&lt;/strong>每个 &lt;code>key/value&lt;/code> 都需要 padding 7 个字节。分开连续存储的话，就只需要在最后 padding 一次。&lt;/li>
 &lt;li>每个桶只能存储 8 个 &lt;code>key/value&lt;/code>，如果有更多的 key 放入当前桶，就需要一个溢出桶，通过 &lt;code>overflow&lt;/code> 指针连接起来（&lt;strong>链表法&lt;/strong>）。&lt;/li>
 &lt;/ol>
-&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/hmap.png" alt="hmap" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/blobs/7299ec739895315b49422660e585719b3bb38f6d/hmap.png" alt="hmap" loading="lazy" />&lt;/p>
 &lt;h3>初始化&lt;span class="hx-absolute -hx-mt-20" id="初始化">&lt;/span>
 &lt;a href="#%e5%88%9d%e5%a7%8b%e5%8c%96" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>初始化 &lt;code>map&lt;/code>：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
@@ -624,7 +622,7 @@ title="Copy code"
 &lt;/div>
 &lt;p>这两种查询方式会被转换成 &lt;a href="https://github.com/golang/go/blob/8da6405e0db80fa0a4136fb816c7ca2db716c2b2/src/runtime/map.go#L396" target="_blank" rel="noopener">&lt;code>mapaccess1&lt;/code>&lt;/a> 和 &lt;code>mapaccess2&lt;/code> 函数，两个函数基本一样，不过 &lt;code>mapaccess2&lt;/code> 函数的返回值多了一个 &lt;code>bool&lt;/code> 类型。&lt;/p>
 &lt;p>查询过程：&lt;/p>
-&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/map-get.png" alt="map-get" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/blobs/a0add709c3e56df3ee2aeaa95c66ad4015aa2721/map-get.png" alt="map-get" loading="lazy" />&lt;/p>
 &lt;h4>1. 计算哈希值&lt;span class="hx-absolute -hx-mt-20" id="1-计算哈希值">&lt;/span>
 &lt;a href="#1-%e8%ae%a1%e7%ae%97%e5%93%88%e5%b8%8c%e5%80%bc" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>通过哈希函数和种子获取当前 key 的 64 位的哈希值（64 位机）。以上图哈希值：&lt;code>11010111 | 110000110110110010001111001010100010010110010101001 │ 00011&lt;/code> 为例。&lt;/p>
 &lt;h4>2. 计算这个 key 要放在哪个桶&lt;span class="hx-absolute -hx-mt-20" id="2-计算这个-key-要放在哪个桶">&lt;/span>
@@ -758,19 +756,15 @@ title="Copy code"
 &lt;li>装载因子超过阈值 6.5。&lt;/li>
 &lt;li>溢出桶的数量过多：
 &lt;ul>
-&lt;li>当 &lt;code>溢出桶数量 ≥ 2^(B-4)&lt;/code> 则触发扩容。&lt;/li>
+&lt;li>当 &lt;code>B &amp;lt; 15&lt;/code> 时，如果溢出桶的数量超过 &lt;code>2^B&lt;/code> 则触发扩容。&lt;/li>
+&lt;li>当 &lt;code>B &amp;gt;= 15&lt;/code> 时，如果溢出桶的数量超过 &lt;code>2^15&lt;/code> 则触发扩容，也就说&lt;strong>最多 &lt;code>2^15&lt;/code> 个溢出桶，避免无限制的增长&lt;/strong>。&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ol>
 &lt;p>触发的条件不同扩容的方式也分为两种：&lt;/p>
 &lt;ol>
 &lt;li>如果这次&lt;strong>扩容是溢出的桶太多导致的，那么这次扩容就是“等量扩容” &lt;code>sameSizeGrow&lt;/code>&lt;/strong>。&lt;/li>
-&lt;li>另一种就是装载因子超过阈值导致翻倍扩容了。&lt;/li>
-&lt;/ol>
-&lt;p>触发的条件不同扩容的方式也分为两种：&lt;/p>
-&lt;ol>
-&lt;li>如果这次&lt;strong>扩容是溢出的桶太多导致的，那么这次扩容就是“等量扩容” &lt;code>sameSizeGrow&lt;/code>&lt;/strong>。&lt;/li>
-&lt;li>另一种就是装载因子超过阈值导致翻倍扩容了。&lt;/li>
+&lt;li>另一种就是&lt;strong>装载因子超过阈值导致翻倍扩容&lt;/strong>了。&lt;/li>
 &lt;/ol>
 &lt;h4>为什么溢出桶过多需要进行扩容？&lt;span class="hx-absolute -hx-mt-20" id="为什么溢出桶过多需要进行扩容">&lt;/span>
 &lt;a href="#%e4%b8%ba%e4%bb%80%e4%b9%88%e6%ba%a2%e5%87%ba%e6%a1%b6%e8%bf%87%e5%a4%9a%e9%9c%80%e8%a6%81%e8%bf%9b%e8%a1%8c%e6%89%a9%e5%ae%b9" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>什么情况下会出现装载因子很小不超过阈值，但是溢出桶过多的情况？&lt;/p>
@@ -781,7 +775,7 @@ title="Copy code"
 &lt;h5>对于条件 1 当装载因子超过阈值后&lt;span class="hx-absolute -hx-mt-20" id="对于条件-1-当装载因子超过阈值后">&lt;/span>
 &lt;a href="#%e5%af%b9%e4%ba%8e%e6%9d%a1%e4%bb%b6-1-%e5%bd%93%e8%a3%85%e8%bd%bd%e5%9b%a0%e5%ad%90%e8%b6%85%e8%bf%87%e9%98%88%e5%80%bc%e5%90%8e" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h5>&lt;p>申请的新的 buckets 数量和原有的 buckets 数量的 &lt;strong>2 倍&lt;/strong>，也就是 &lt;code>B+1&lt;/code>。桶的数量改变了，那么 key 的哈希值要重新计算，才能决定它到底落在哪个 bucket。&lt;/p>
 &lt;p>例如，原来 &lt;code>B=5&lt;/code>，根据出 key 的哈希值的后 5 位，就能决定它落在哪个 bucket。扩容后的 buckets 数量翻倍，B 变成了 6，因此变成哈希值的后 6 位才能决定 key 落在哪个 bucket。这叫做 &lt;code>rehash&lt;/code>。&lt;/p>
-&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/map-evacuate-bucket-num.png" alt="map-evacuate-bucket-num" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/blobs/13c71d43f205e8f86976dcfe11d26ce99521c83c/map-evacuate-bucket-num.png" alt="map-evacuate-bucket-num" loading="lazy" />&lt;/p>
 &lt;p>因此，某个 key 在迁移前后 bucket 序号可能会改变，取决于 &lt;code>rehash&lt;/code> 之后的哈希值倒数第 6 位是 0 还是 1。&lt;/p>
 &lt;p>&lt;strong>扩容完成后，老 buckets 中的 key 分裂到了 2 个新的 bucket&lt;/strong>。&lt;/p>
 &lt;h4>渐进式扩容&lt;span class="hx-absolute -hx-mt-20" id="渐进式扩容">&lt;/span>
@@ -864,7 +858,7 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>也就是说&lt;strong>数据的迁移过程一般发生在插入或修改、删除 key 的时候&lt;/strong>。在扩容完毕后 (预分配内存)，不会马上就进行迁移。而是采取写时复制的方式，&lt;strong>当有访问到具体 bucket 时，才会逐渐的将 &lt;code>oldbucket&lt;/code> 迁移到新 bucket 中&lt;/strong>。&lt;/p>
+&lt;p>也就是说&lt;strong>数据的迁移过程一般发生在插入或修改、删除 key 的时候&lt;/strong>。在扩容完毕后 (预分配内存)，不会马上就进行迁移。而是采取&lt;strong>写时复制&lt;/strong>的方式，&lt;strong>当有访问到具体 bucket 时，才会逐渐的将 &lt;code>oldbucket&lt;/code> 迁移到新 bucket 中&lt;/strong>。&lt;/p>
 &lt;p>&lt;code>growWork&lt;/code> 函数：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">growWork&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">t&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">maptype&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">h&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">hmap&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">bucket&lt;/span> &lt;span class="kt">uintptr&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
@@ -912,7 +906,7 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>真正的迁移在 &lt;code>evacuate&lt;/code> 函数中，它会对传入桶中的数据进行再分配。&lt;code>evacuate&lt;/code> 函数每次只完成一个 bucket 的迁移工作（包括这个 bucket 链接的溢出桶），它会遍历 bucket （包括溢出桶）中得到所有 &lt;code>key/value&lt;/code> 并迁移。已迁移的 &lt;code>key/value&lt;/code> 对应的 &lt;code>tophash&lt;/code> 会被设置为 &lt;code>evacuatedEmpty&lt;/code>，表示已经迁移。&lt;/p>
+&lt;p>真正的迁移在 &lt;code>evacuate&lt;/code> 函数中，它会对传入桶中的数据进行再分配。&lt;code>evacuate&lt;/code> 函数每次只完成一个 bucket 的迁移工作（包括这个 bucket 链接的溢出桶），它会遍历 bucket （包括溢出桶）中得到所有 &lt;code>key/value&lt;/code> 并迁移。&lt;strong>已迁移的 &lt;code>key/value&lt;/code> 对应的 &lt;code>tophash&lt;/code> 会被设置为 &lt;code>evacuatedEmpty&lt;/code>，表示已经迁移&lt;/strong>。&lt;/p>
 &lt;h3>map 为什么是无序的&lt;span class="hx-absolute -hx-mt-20" id="map-为什么是无序的">&lt;/span>
 &lt;a href="#map-%e4%b8%ba%e4%bb%80%e4%b9%88%e6%98%af%e6%97%a0%e5%ba%8f%e7%9a%84" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>map 在扩容后，&lt;code>key/value&lt;/code> 会进行迁移，在同一个桶中的 key，有些会迁移到别的桶中，有些 key 原地不动，导致遍历 map 就无法保证顺序。&lt;/p>
 &lt;p>Go 底层的实现简单粗暴，并不是固定地从 0 号 bucket 开始遍历，而是直接生成一个随机数，这个随机数决定从哪里开始遍历，因此&lt;strong>每次 &lt;code>for range map&lt;/code> 的结果都是不一样的。那是因为它的起始位置根本就不固定&lt;/strong>。&lt;/p>
@@ -950,9 +944,9 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;h4>使用 &lt;code>unsafe.Pointer&lt;/code> 获取 key 或 value 的地址&lt;span class="hx-absolute -hx-mt-20" id="使用-unsafepointer-获取-key-或-value-的地址">&lt;/span>
-&lt;a href="#%e4%bd%bf%e7%94%a8-unsafepointer-%e8%8e%b7%e5%8f%96-key-%e6%88%96-value-%e7%9a%84%e5%9c%b0%e5%9d%80" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>可以使用 &lt;code>unsafe.Pointer&lt;/code> 等获取到了 key 或 value 的地址，也不能长期持有，因为一旦发生扩容，key 和 value 的位置就会改变，之前保存的地址也就失效了。&lt;/p>
+&lt;a href="#%e4%bd%bf%e7%94%a8-unsafepointer-%e8%8e%b7%e5%8f%96-key-%e6%88%96-value-%e7%9a%84%e5%9c%b0%e5%9d%80" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>可以使用 &lt;code>unsafe.Pointer&lt;/code> 等获取到了 key 或 value 的地址，也不能长期持有，因为&lt;strong>一旦发生扩容，key 和 value 的位置就会改变，之前保存的地址也就失效了&lt;/strong>。&lt;/p>
 &lt;h3>比较 map&lt;span class="hx-absolute -hx-mt-20" id="比较-map">&lt;/span>
-&lt;a href="#%e6%af%94%e8%be%83-map" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>比较只能是遍历 &lt;code>map&lt;/code> 的每个元素。&lt;code>map1 == map2&lt;/code> 这种编译是不通过的。&lt;/p>
+&lt;a href="#%e6%af%94%e8%be%83-map" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;strong>比较只能是遍历 &lt;code>map&lt;/code> 的每个元素&lt;/strong>。&lt;code>map1 == map2&lt;/code> 这种编译是不通过的。&lt;/p>
 &lt;h3>map 不是并发安全的&lt;span class="hx-absolute -hx-mt-20" id="map-不是并发安全的">&lt;/span>
 &lt;a href="#map-%e4%b8%8d%e6%98%af%e5%b9%b6%e5%8f%91%e5%ae%89%e5%85%a8%e7%9a%84" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>在查找、赋值、遍历、删除的过程中都会检测写标志，一旦发现写标志位为 &lt;code>1&lt;/code>，则直接 panic。&lt;/p>
 &lt;p>赋值和删除函数在检测完写标志是复位之后，先将写标志位设置位 &lt;code>1&lt;/code>，才会进行之后的操作。&lt;/p>
@@ -1187,7 +1181,7 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;h2>断言&lt;span class="hx-absolute -hx-mt-20" id="断言">&lt;/span>
-&lt;a href="#%e6%96%ad%e8%a8%80" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>类型断言也依赖于接口的数据结构，通过检查接口的 &lt;code>_type&lt;/code> 来判断类型是否于接口的实际类型匹配：&lt;/p>
+&lt;a href="#%e6%96%ad%e8%a8%80" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>类型断言也依赖于接口的数据结构，通过检查接口的 &lt;code>_type&lt;/code> 来判断类型是否与接口的动态类型匹配：&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">assertE2I&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">inter&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">interfacetype&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">e&lt;/span> &lt;span class="nx">eface&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="nx">i&lt;/span> &lt;span class="nx">iface&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">tab&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nf">getitab&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">inter&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">e&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="kd">type&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="kc">true&lt;/span>&lt;span class="p">)&lt;/span>
@@ -1266,7 +1260,7 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>上面的代码，&lt;strong>注意区分 &lt;code>Type&lt;/code> 和 &lt;code>Kind&lt;/code>，前者表示真实类型（静态类型），后者表示底层类型（动态类型）&lt;/strong>。所以在判断类型时，要选择正确的方式。&lt;/p>
+&lt;p>上面的代码，&lt;strong>注意区分 &lt;code>Type&lt;/code> 和 &lt;code>Kind&lt;/code>，前者表示真实类型，后者表示底层类型&lt;/strong>。所以在判断类型时，要选择正确的方式。&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">type&lt;/span> &lt;span class="nx">X&lt;/span> &lt;span class="kt">int&lt;/span>
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">type&lt;/span> &lt;span class="nx">Y&lt;/span> &lt;span class="kt">int&lt;/span>
@@ -1310,7 +1304,7 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;ul>
-&lt;li>&lt;code>emptyInterface&lt;/code> 和上面提到的 &lt;code>eface&lt;/code>是一回事，并且在不同的源码包：前者在 &lt;code>reflect&lt;/code> 包，后者在 &lt;code>runtime&lt;/code> 包&lt;/li>
+&lt;li>&lt;code>emptyInterface&lt;/code> 和空接口 &lt;code>eface&lt;/code> 是一回事，但是在不同的源码包：前者在 &lt;code>reflect&lt;/code> 包，后者在 &lt;code>runtime&lt;/code> 包&lt;/li>
 &lt;li>&lt;code>eface.typ&lt;/code> 就是动态类型。&lt;/li>
 &lt;li>&lt;code>toType&lt;/code> 只是做了一个类型转换。&lt;/li>
 &lt;/ul>
@@ -1404,15 +1398,15 @@ title="Copy code"
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>Map&lt;/code>&lt;/td>
-&lt;td>1、都为 &lt;code>nil&lt;/code>；2、非空、长度相等，指向同一个 &lt;code>map&lt;/code> 实体对象，或者相应的 key 指向的 value “深度”相等&lt;/td>
+&lt;td>1. 都为 &lt;code>nil&lt;/code>；&lt;br/> 2. 非空、长度相等，指向同一个 &lt;code>map&lt;/code> 实体对象，或者相应的 key 指向的 value “深度”相等&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>Pointer&lt;/code>&lt;/td>
-&lt;td>1、使用 &lt;code>==&lt;/code> 比较的结果相等；2、指向的实体“深度”相等&lt;/td>
+&lt;td>1. 使用 &lt;code>==&lt;/code> 比较的结果相等；&lt;br/>2. 指向的实体“深度”相等&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>Slice&lt;/code>&lt;/td>
-&lt;td>1、都为 &lt;code>nil&lt;/code>；2、非空、长度相等，首元素指向同一个底层数组的相同元素，即 &lt;code>&amp;amp;x[0] == &amp;amp;y[0]&lt;/code> 或者 相同索引处的元素“深度”相等&lt;/td>
+&lt;td>1. 都为 &lt;code>nil&lt;/code>；&lt;br/>2. 非空、长度相等，指向同一个底层数组的相同元素，即 &lt;code>&amp;amp;x[0] == &amp;amp;y[0]&lt;/code> 或者 相同索引处的元素“深度”相等&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>numbers&lt;/code>, &lt;code>bools&lt;/code>, &lt;code>strings&lt;/code>, and &lt;code>channels&lt;/code>&lt;/td>
@@ -1486,7 +1480,7 @@ title="Copy code"
 &lt;li>任何类型的指针 &lt;code>*T&lt;/code> 可以和 &lt;code>unsafe.Pointer&lt;/code> 相互转换。&lt;/li>
 &lt;li>&lt;code>uintptr&lt;/code> 可以和 &lt;code>unsafe.Pointer&lt;/code> 相互转换。&lt;/li>
 &lt;/ul>
-&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/pointer.png" alt="pointer" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/blobs/6e36b3ba5149073d20e4226a68a356a37baf5552/pointer.png" alt="pointer" loading="lazy" />&lt;/p>
 &lt;div class="hx-overflow-x-auto hx-mt-6 hx-flex hx-rounded-lg hx-border hx-py-2 ltr:hx-pr-4 rtl:hx-pl-4 contrast-more:hx-border-current contrast-more:dark:hx-border-current hx-border-blue-200 hx-bg-blue-100 hx-text-blue-900 dark:hx-border-blue-200/30 dark:hx-bg-blue-900/30 dark:hx-text-blue-200">
 &lt;div class="ltr:hx-pl-3 ltr:hx-pr-2 rtl:hx-pr-3 rtl:hx-pl-2">&lt;div class="hx-select-none hx-text-xl" style="font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';">ℹ️&lt;/div>&lt;/div>
 &lt;div class="hx-w-full hx-min-w-0 hx-leading-7">
@@ -1544,7 +1538,631 @@ title="Copy code"
 &lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
 &lt;/button>
 &lt;/div>
-&lt;/div></description></item><item><title>make 和 new</title><link>https://shipengqi.github.io/golang-learn/docs/basic/14_make_new/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/basic/14_make_new/</guid><description>
+&lt;/div></description></item><item><title>range</title><link>https://shipengqi.github.io/golang-learn/docs/basic/10_range/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/basic/10_range/</guid><description>
+&lt;p>为什么下面的 &lt;code>range&lt;/code> 遍历只执行了 3 次？&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">main&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">nums&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="p">[]&lt;/span>&lt;span class="kt">int&lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">2&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">3&lt;/span>&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="nx">i&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="k">range&lt;/span> &lt;span class="nx">nums&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">nums&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nb">append&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">nums&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">i&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">nums&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 输出：
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// [1 2 3 0]
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// [1 2 3 0 1]
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// [1 2 3 0 1 2]
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>因为 &lt;strong>&lt;code>range&lt;/code> 遍历的是切片的副本&lt;/strong>，而不是切片本身。在遍历的过程中，切片的长度会发生变化，但是遍历的次数在遍历开始时就已经确定了。&lt;/p>
+&lt;h2>range 变量作用域问题&lt;span class="hx-absolute -hx-mt-20" id="range-变量作用域问题">&lt;/span>
+&lt;a href="#range-%e5%8f%98%e9%87%8f%e4%bd%9c%e7%94%a8%e5%9f%9f%e9%97%ae%e9%a2%98" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">package&lt;/span> &lt;span class="nx">main&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="s">&amp;#34;sync&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="s">&amp;#34;time&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">main&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">wg&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">sync&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">WaitGroup&lt;/span>&lt;span class="p">{}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">values&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="p">[]&lt;/span>&lt;span class="kt">int&lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">2&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="mi">3&lt;/span>&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="nx">_&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">v&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="k">range&lt;/span> &lt;span class="nx">values&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">go&lt;/span> &lt;span class="kd">func&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">v&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="o">&amp;lt;-&lt;/span>&lt;span class="nx">time&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Tick&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">time&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Second&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>Go 1.22 之前的版本会输出：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">&lt;span class="m">3&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="m">3&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="m">3&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>因为在 &lt;code>range&lt;/code> 循环中获取返回变量的地址都完全相同（虽然有多个值），变量 v 的作用域覆盖了整个循环体，每次循环只是更新了 v 的值，而没有创建新的变量。&lt;/p>
+&lt;p>Go 1.22 版本修复了这个问题，&lt;strong>循环时的变量作用域被修改为每次循环都创建一个独立的变量&lt;/strong>。&lt;/p></description></item><item><title>defer</title><link>https://shipengqi.github.io/golang-learn/docs/basic/12_defer/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/basic/12_defer/</guid><description>
+&lt;p>&lt;code>defer&lt;/code> 语句一般被用于处理成对的操作，如打开、关闭、连接、断开连接、加锁、释放锁。因为 &lt;code>defer&lt;/code> 可以保证让你更任何情况下，资源都会被释放。所在的 goroutine 发生 &lt;code>panic&lt;/code> 时依然可以执行。&lt;/p>
+&lt;p>&lt;strong>注意：调用 &lt;code>os.Exit&lt;/code> 时 &lt;code>defer&lt;/code> 不会被执行&lt;/strong>，因为它直接调用操作系统提供的 &lt;code>exit&lt;/code> 系统调用，立即终止进程。&lt;/p>
+&lt;p>&lt;code>defer&lt;/code> 延迟函数为什么是按照&lt;strong>代码中的出现的顺序逆序执行&lt;/strong>的？&lt;/p>
+&lt;p>因为 Go 的底层实现中每个 goroutine 的 &lt;code>g&lt;/code> 对象上都有一个 &lt;code>defer&lt;/code> 链表，当有新的 &lt;code>_defer&lt;/code> 结构体就会挂在到这个链表的头部。因此执行顺序是&lt;strong>先进后出&lt;/strong>。&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">type&lt;/span> &lt;span class="nx">_defer&lt;/span> &lt;span class="kd">struct&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">started&lt;/span> &lt;span class="kt">bool&lt;/span> &lt;span class="c1">// defer 语句是否已经执行
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">heap&lt;/span> &lt;span class="kt">bool&lt;/span> &lt;span class="c1">// 区分对象是在堆上分配还是栈上分配
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">sp&lt;/span> &lt;span class="kt">uintptr&lt;/span> &lt;span class="c1">// 调用方的 sp (栈底) 寄存器
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">pc&lt;/span> &lt;span class="kt">uintptr&lt;/span> &lt;span class="c1">// 调用方的 pc (程序计数器) 寄存器，下一条汇编指令的地址
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fn&lt;/span> &lt;span class="kd">func&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="c1">// 传入 defer 的函数，包括函数地址及参数
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">_panic&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">_panic&lt;/span> &lt;span class="c1">// 正在执行 defer 的 panic 对象
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">link&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">_defer&lt;/span> &lt;span class="c1">// next defer, 链表指针，可以指向栈或者堆
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>由于每个 goroutine 有自己的 &lt;code>defer&lt;/code> 链表，因此 &lt;strong>&lt;code>defer&lt;/code> 是无法跨 goroutine 的&lt;/strong>。&lt;/p>
+&lt;h2>defer 初始化&lt;span class="hx-absolute -hx-mt-20" id="defer-初始化">&lt;/span>
+&lt;a href="#defer-%e5%88%9d%e5%a7%8b%e5%8c%96" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>编译器不仅将 &lt;code>defer&lt;/code> 关键字都转换成 &lt;code>runtime.deferproc&lt;/code> 函数，还会为所有调用 &lt;code>defer&lt;/code> 的函数末尾插入 &lt;code>runtime.deferreturn&lt;/code> 的函数调用。&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>runtime.deferproc&lt;/code> 负责创建新的延迟调用；&lt;/li>
+&lt;li>&lt;code>runtime.deferreturn&lt;/code> &lt;strong>负责在函数调用结束时执行所有的延迟调用&lt;/strong>，会插入在调用 &lt;code>defer&lt;/code> 的函数的末尾；&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>runtime.deferproc&lt;/code> 会为 &lt;code>defer&lt;/code> 创建一个新的 &lt;code>runtime._defer&lt;/code> 结构体、设置它的函数指针 &lt;code>fn&lt;/code>、调用方的程序计数器 &lt;code>pc&lt;/code> 和栈指针 &lt;code>sp&lt;/code> 并将相关的参数拷贝到相邻的内存空间中：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">deferproc&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">siz&lt;/span> &lt;span class="kt">int32&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">fn&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">funcval&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">sp&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nf">getcallersp&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">argp&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">uintptr&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">unsafe&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Pointer&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">fn&lt;/span>&lt;span class="p">))&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="nx">unsafe&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Sizeof&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">fn&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">callerpc&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nf">getcallerpc&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="c1">// 调用 deferproc 的函数的程序计数器
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">d&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nf">newdefer&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">siz&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">d&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">_panic&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="kc">nil&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">throw&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;deferproc: d.panic != nil after newdefer&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">d&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">fn&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">fn&lt;/span> &lt;span class="c1">// 传入 defer 的函数，包括函数地址及参数
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">d&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">pc&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">callerpc&lt;/span> &lt;span class="c1">// 调用 deferproc 的函数的程序计数器
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">d&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">sp&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">sp&lt;/span> &lt;span class="c1">// 调用 deferproc 的函数的栈指针
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">switch&lt;/span> &lt;span class="nx">siz&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">case&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">case&lt;/span> &lt;span class="nx">sys&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">PtrSize&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="o">*&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="kt">uintptr&lt;/span>&lt;span class="p">)(&lt;/span>&lt;span class="nf">deferArgs&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">d&lt;/span>&lt;span class="p">))&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="kt">uintptr&lt;/span>&lt;span class="p">)(&lt;/span>&lt;span class="nx">unsafe&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Pointer&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">argp&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">default&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">memmove&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nf">deferArgs&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">d&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="nx">unsafe&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Pointer&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">argp&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="nb">uintptr&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">siz&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">return0&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>最后调用的 &lt;code>runtime.return0&lt;/code> 是唯一一个不会触发延迟调用的函数，它可以避免递归调用 &lt;code>runtime.deferreturn&lt;/code> 函数。&lt;/p>
+&lt;p>&lt;code>runtime.newdefer&lt;/code> 的作用是获得一个 &lt;code>runtime._defer&lt;/code> 结构体，有三种方式：&lt;/p>
+&lt;ul>
+&lt;li>从调度器的 &lt;code>defer&lt;/code> 缓存池 &lt;code>sched.deferpool&lt;/code> 中取出结构体并将该结构体追加到当前 goroutine 的缓存池中；&lt;/li>
+&lt;li>从 goroutine 的延迟调用缓存池 &lt;code>pp.deferpool&lt;/code> 中取出结构体；&lt;/li>
+&lt;li>通过 &lt;code>runtime.mallocgc&lt;/code> 在堆上创建一个新的结构体；&lt;/li>
+&lt;/ul>
+&lt;p>无论使用哪种方式，只要获取到 &lt;code>runtime._defer&lt;/code> 结构体，它都会被追加到所在 &lt;code>g._defer&lt;/code> 链表的最前面。这也是为什么后调用的 &lt;code>defer&lt;/code> 会优先执行。&lt;/p>
+&lt;p>&lt;strong>&lt;code>runtime.deferreturn&lt;/code> 会从 goroutine 的 &lt;code>_defer&lt;/code> 链表中取出最前面的 &lt;code>runtime._defer&lt;/code> 结构体&lt;/strong>，并&lt;strong>调用 &lt;code>runtime.jmpdefer&lt;/code> 函数传入需要执行的函数和参数&lt;/strong>：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">deferreturn&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">arg0&lt;/span> &lt;span class="kt">uintptr&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">gp&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nf">getg&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">d&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">gp&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">_defer&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">d&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="kc">nil&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">sp&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nf">getcallersp&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">switch&lt;/span> &lt;span class="nx">d&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">siz&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">case&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">case&lt;/span> &lt;span class="nx">sys&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">PtrSize&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="o">*&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="kt">uintptr&lt;/span>&lt;span class="p">)(&lt;/span>&lt;span class="nx">unsafe&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Pointer&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">arg0&lt;/span>&lt;span class="p">))&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="kt">uintptr&lt;/span>&lt;span class="p">)(&lt;/span>&lt;span class="nf">deferArgs&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">d&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">default&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">memmove&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">unsafe&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Pointer&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">arg0&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="nf">deferArgs&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">d&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="nb">uintptr&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">d&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">siz&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fn&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">d&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">fn&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">gp&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">_defer&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">d&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">link&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">freedefer&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">d&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">jmpdefer&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">fn&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nb">uintptr&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">unsafe&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Pointer&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">arg0&lt;/span>&lt;span class="p">)))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;code>runtime.jmpdefer&lt;/code> 是一个用汇编语言实现的运行时函数，它的主要工作是&lt;strong>跳转到 &lt;code>defer&lt;/code> 所在的代码段并在执行结束之后跳转回 &lt;code>runtime.deferreturn&lt;/code>&lt;/strong>。&lt;/p>
+&lt;h3>总结&lt;span class="hx-absolute -hx-mt-20" id="总结">&lt;/span>
+&lt;a href="#%e6%80%bb%e7%bb%93" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>整个过程可以简单概括为：&lt;/p>
+&lt;ol>
+&lt;li>函数遇到 &lt;code>defer&lt;/code> 关键字时，调用 &lt;code>runtime.deferproc&lt;/code> 函数创建一个新的 &lt;code>runtime._defer&lt;/code> 结构体并将该结构体追加到所在 goroutine 的 &lt;code>_defer&lt;/code> 链表的最前面；&lt;/li>
+&lt;li>然后在函数的末尾插入 &lt;code>runtime.deferreturn&lt;/code> 函数；&lt;/li>
+&lt;li>调用 &lt;code>runtime.deferreturn&lt;/code> 函数时，会从所在 goroutine 的 &lt;code>_defer&lt;/code> 链表中取出最前面的 &lt;code>runtime._defer&lt;/code> 结构体并调用 &lt;code>runtime.jmpdefer&lt;/code> 函数传入需要执行的函数和参数；&lt;/li>
+&lt;li>&lt;code>runtime.jmpdefer&lt;/code> 函数会跳转到 &lt;code>defer&lt;/code> 所在的代码段并在执行结束之后跳转回 &lt;code>runtime.deferreturn&lt;/code>；&lt;/li>
+&lt;/ol>
+&lt;h2>开放编码&lt;span class="hx-absolute -hx-mt-20" id="开放编码">&lt;/span>
+&lt;a href="#%e5%bc%80%e6%94%be%e7%bc%96%e7%a0%81" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>在 1.14 中通过开发编码（Open Coded）实现 &lt;code>defer&lt;/code> 关键字，该设计使用代码内联优化 &lt;code>defer&lt;/code> 关键字的额外开销，该优化可以将 &lt;code>defer&lt;/code> 的调用开销从 1.13 版本的 &lt;code>~35ns&lt;/code> 降低至 &lt;code>~6ns&lt;/code> 左右：&lt;/p>
+&lt;p>通过静态分析和代码转换，&lt;strong>将部分 &lt;code>defer&lt;/code> 调用从动态链表管理转为静态化处理&lt;/strong>。&lt;/p>
+&lt;p>开发编码只会在满足以下的条件时启用：&lt;/p>
+&lt;ul>
+&lt;li>函数的 &lt;code>defer&lt;/code> 数量&lt;strong>少于或者等于 8 个&lt;/strong>；&lt;/li>
+&lt;li>函数的 &lt;code>defer&lt;/code> 关键字&lt;strong>不能在循环中执行&lt;/strong>；&lt;/li>
+&lt;li>&lt;strong>未使用 &lt;code>recover&lt;/code>&lt;/strong>（需精确控制 &lt;code>defer&lt;/code> 执行顺序时禁用优化）。&lt;/li>
+&lt;/ul>
+&lt;p>&lt;strong>开发编码在函数返回前直接插入 &lt;code>defer&lt;/code> 函数调用，省去链表遍历&lt;/strong>。&lt;/p>
+&lt;h2>defer 的性能&lt;span class="hx-absolute -hx-mt-20" id="defer-的性能">&lt;/span>
+&lt;a href="#defer-%e7%9a%84%e6%80%a7%e8%83%bd" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>相比直接用 CALL 汇编指令调用函数，&lt;code>defer&lt;/code> 要花费更大代价，包括注册，调用操作，额为的缓存开销。&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">call&lt;/span> &lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">m&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Lock&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">m&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Unlock&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">deferCall&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">m&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Lock&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">defer&lt;/span> &lt;span class="nx">m&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Unlock&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">BenchmarkCall&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">b&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">testing&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">B&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="nx">i&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">;&lt;/span> &lt;span class="nx">i&lt;/span> &lt;span class="p">&amp;lt;&lt;/span> &lt;span class="nx">b&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">N&lt;/span>&lt;span class="p">;&lt;/span> &lt;span class="nx">i&lt;/span> &lt;span class="o">++&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">call&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">BenchmarkDeferCall&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">b&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">testing&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">B&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="nx">i&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">;&lt;/span> &lt;span class="nx">i&lt;/span> &lt;span class="p">&amp;lt;&lt;/span> &lt;span class="nx">b&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">N&lt;/span>&lt;span class="p">;&lt;/span> &lt;span class="nx">i&lt;/span> &lt;span class="o">++&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">deferCall&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-sh" data-lang="sh">&lt;span class="line">&lt;span class="cl">$ go &lt;span class="nb">test&lt;/span> -bench&lt;span class="o">=&lt;/span>.
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">goos: windows
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">goarch: amd64
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">pkg: github.com/shipengqi/golang-learn/demos/defers
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">BenchmarkCall-8 &lt;span class="m">92349604&lt;/span> 12.9 ns/op
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">BenchmarkDeferCall-8 &lt;span class="m">34305316&lt;/span> 36.3 ns/op
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">PASS
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">ok github.com/shipengqi/golang-learn/demos/defers 2.571s&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>性能相差三倍，尽量避免使用 &lt;code>defer&lt;/code>。&lt;/p>
+&lt;h2>什么时候不应该使用 defer&lt;span class="hx-absolute -hx-mt-20" id="什么时候不应该使用-defer">&lt;/span>
+&lt;a href="#%e4%bb%80%e4%b9%88%e6%97%b6%e5%80%99%e4%b8%8d%e5%ba%94%e8%af%a5%e4%bd%bf%e7%94%a8-defer" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>比如处理日志文件，不恰当的 &lt;code>defer&lt;/code> 会导致关闭文件延时。&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">main&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="nx">i&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">;&lt;/span> &lt;span class="nx">i&lt;/span> &lt;span class="p">&amp;lt;&lt;/span> &lt;span class="mi">100&lt;/span>&lt;span class="p">;&lt;/span> &lt;span class="nx">i&lt;/span> &lt;span class="o">++&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">f&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">err&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">os&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Open&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Sprintf&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;%d.log&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">i&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">err&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="kc">nil&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">continue&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">defer&lt;/span> &lt;span class="nx">f&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Close&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// something
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>上面的 &lt;code>defer&lt;/code> 导致所有的 &lt;code>f&lt;/code> 都是在 &lt;code>main&lt;/code> 函数退出时才调用，白白消耗了资源。所以应该直接调用 &lt;code>Close&lt;/code> 函数，将文件操作封装到一个函数中，在该函数中调用 &lt;code>Close&lt;/code> 函数。&lt;/p>
+&lt;h2>defer 函数的参数会立即求值&lt;span class="hx-absolute -hx-mt-20" id="defer-函数的参数会立即求值">&lt;/span>
+&lt;a href="#defer-%e5%87%bd%e6%95%b0%e7%9a%84%e5%8f%82%e6%95%b0%e4%bc%9a%e7%ab%8b%e5%8d%b3%e6%b1%82%e5%80%bc" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>defer&lt;/code> 声明时，会立即对参数进行求值，而不是等延迟调用时才求值。&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">package&lt;/span> &lt;span class="nx">main&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="s">&amp;#34;fmt&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">main&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="nx">i&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">;&lt;/span> &lt;span class="nx">i&lt;/span> &lt;span class="p">&amp;lt;&lt;/span> &lt;span class="mi">3&lt;/span>&lt;span class="p">;&lt;/span> &lt;span class="nx">i&lt;/span>&lt;span class="o">++&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">defer&lt;/span> &lt;span class="kd">func&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">val&lt;/span> &lt;span class="kt">int&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">val&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="c1">// 打印传递的值
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="p">}(&lt;/span>&lt;span class="nx">i&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="c1">// 在这里立即捕获当前的 i 值
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;Loop ended&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>输出：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">Loop ended
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="m">2&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="m">1&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="m">0&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>但是如果不是函数传参，而是直接使用变量，会导致延迟调用时使用的是最新的值。&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">package&lt;/span> &lt;span class="nx">main&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="s">&amp;#34;fmt&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">main&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="nx">i&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">;&lt;/span> &lt;span class="nx">i&lt;/span> &lt;span class="p">&amp;lt;&lt;/span> &lt;span class="mi">3&lt;/span>&lt;span class="p">;&lt;/span> &lt;span class="nx">i&lt;/span>&lt;span class="o">++&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">defer&lt;/span> &lt;span class="kd">func&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">i&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="c1">// 直接引用 i
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="p">}()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;Loop ended&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>输出：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">Loop ended
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="m">3&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="m">3&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="m">3&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h2>链式调用&lt;span class="hx-absolute -hx-mt-20" id="链式调用">&lt;/span>
+&lt;a href="#%e9%93%be%e5%bc%8f%e8%b0%83%e7%94%a8" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>defer&lt;/code> 遇到链式调用时，会先通过计算得到最后一个要执行的函数，然后保留这个函数的指针、参数（值复制）。所以下面的代码的输出是 &lt;code>1 3 2&lt;/code>。&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">type&lt;/span> &lt;span class="nx">T&lt;/span> &lt;span class="kd">struct&lt;/span>&lt;span class="p">{}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="nx">t&lt;/span> &lt;span class="nx">T&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="nf">f&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">n&lt;/span> &lt;span class="kt">int&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="nx">T&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Print&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">n&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="nx">t&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">main&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="kd">var&lt;/span> &lt;span class="nx">t&lt;/span> &lt;span class="nx">T&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">defer&lt;/span> &lt;span class="nx">t&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">f&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">).&lt;/span>&lt;span class="nf">f&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Print&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="mi">3&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// defer t.f(1).f(2)
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 类似于
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// var t T
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// tmpT := t.f(1)
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// defer tmpT.f(2)
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// fmt.Print(3)
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div></description></item><item><title>panic</title><link>https://shipengqi.github.io/golang-learn/docs/basic/13_panic/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/basic/13_panic/</guid><description>
+&lt;p>Go 运行时错误会引起 &lt;code>painc&lt;/code> 异常。一般而言，当 &lt;code>panic&lt;/code> 异常发生时，程序会中断运行，并立即执行在该 goroutine 中被延迟的函数（&lt;code>defer&lt;/code> 机制）。随后，程序崩溃并输出日志信息。&lt;/p>
+&lt;p>由于 &lt;code>panic&lt;/code> 会引起程序的崩溃，因此 &lt;code>panic&lt;/code> 一般用于严重错误，如程序内部的逻辑不一致。但是对于大部分漏洞，我们应该使用 Go 提供的错误机制，而不是 &lt;code>panic&lt;/code>，尽量避免程序的崩溃。&lt;/p>
+&lt;div class="hx-overflow-x-auto hx-mt-6 hx-flex hx-rounded-lg hx-border hx-py-2 ltr:hx-pr-4 rtl:hx-pl-4 contrast-more:hx-border-current contrast-more:dark:hx-border-current hx-border-blue-200 hx-bg-blue-100 hx-text-blue-900 dark:hx-border-blue-200/30 dark:hx-bg-blue-900/30 dark:hx-text-blue-200">
+&lt;div class="ltr:hx-pl-3 ltr:hx-pr-2 rtl:hx-pr-3 rtl:hx-pl-2">&lt;div class="hx-select-none hx-text-xl" style="font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';">ℹ️&lt;/div>&lt;/div>
+&lt;div class="hx-w-full hx-min-w-0 hx-leading-7">
+&lt;div class="hx-mt-6 hx-leading-7 first:hx-mt-0">&lt;ul>
+&lt;li>&lt;code>panic&lt;/code> 只会触发当前 goroutine 的延迟函数调用；&lt;/li>
+&lt;li>&lt;code>recover&lt;/code> 只有在 &lt;code>defer&lt;/code> 函数中调用才会生效；&lt;/li>
+&lt;li>&lt;code>panic&lt;/code> 允许在 &lt;code>defer&lt;/code> 中嵌套多次调用，只有最后一个会被 &lt;code>recover&lt;/code> 捕获；&lt;/li>
+&lt;/ul>
+&lt;/div>
+&lt;/div>
+&lt;/div>
+&lt;h2>panic 函数&lt;span class="hx-absolute -hx-mt-20" id="panic-函数">&lt;/span>
+&lt;a href="#panic-%e5%87%bd%e6%95%b0" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>panic&lt;/code> 函数接受任何值作为参数。当某些不应该发生的场景发生时，就应该调用 &lt;code>panic&lt;/code>。&lt;/p>
+&lt;h3>panic 详情中都有什么&lt;span class="hx-absolute -hx-mt-20" id="panic-详情中都有什么">&lt;/span>
+&lt;a href="#panic-%e8%af%a6%e6%83%85%e4%b8%ad%e9%83%bd%e6%9c%89%e4%bb%80%e4%b9%88" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-sh" data-lang="sh">&lt;span class="line">&lt;span class="cl">panic: runtime error: index out of range
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">goroutine &lt;span class="m">1&lt;/span> &lt;span class="o">[&lt;/span>running&lt;span class="o">]&lt;/span>:
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">main.main&lt;span class="o">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">/Users/haolin/GeekTime/Golang_Puzzlers/src/puzzlers/article19/q0/demo47.go:5 +0x3d
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nb">exit&lt;/span> status &lt;span class="m">2&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>第一行是 &lt;code>panic: runtime error: index out of range&lt;/code>。其中的 &lt;code>runtime error&lt;/code> 的含义是，这是一个 &lt;code>runtime&lt;/code> 代码包中抛出的&lt;code> panic&lt;/code>。&lt;/p>
+&lt;p>&lt;code>goroutine 1 [running]&lt;/code>，它表示有一个 ID 为1的 goroutine 在此 &lt;code>panic&lt;/code> 被引发的时候正在运行。这里的 ID 其实并不重要。&lt;/p>
+&lt;p>&lt;code>main.main()&lt;/code> 表明了这个 goroutine 包装的 go 函数就是命令源码文件中的那个&lt;code>main&lt;/code>函数，也就是说这里的 goroutine 正是&lt;strong>主 goroutine&lt;/strong>。&lt;/p>
+&lt;p>再下面的一行，指出的就是这个 goroutine 中的哪一行代码在此 panic 被引发时正在执行。含了此行代码在其所属的源码文件中的行数，以及这个源码文件的绝对路径。&lt;/p>
+&lt;p>&lt;code>+0x3d&lt;/code> 代表的是：此行代码相对于其所属函数的入口程序计数偏移量。用处并不大。&lt;/p>
+&lt;p>&lt;code>exit status 2&lt;/code> 表明我的这个程序是以退出状态码2结束运行的。&lt;strong>在大多数操作系统中，只要退出状态码不是 0，都意味着程序运行的非正常结束&lt;/strong>。在 Go 语言中，&lt;strong>因 panic 导致程序结束运行的退出状态码一般都会是 2&lt;/strong>。&lt;/p>
+&lt;h3>从 panic 被引发到程序终止运行的大致过程是什么&lt;span class="hx-absolute -hx-mt-20" id="从-panic-被引发到程序终止运行的大致过程是什么">&lt;/span>
+&lt;a href="#%e4%bb%8e-panic-%e8%a2%ab%e5%bc%95%e5%8f%91%e5%88%b0%e7%a8%8b%e5%ba%8f%e7%bb%88%e6%ad%a2%e8%bf%90%e8%a1%8c%e7%9a%84%e5%a4%a7%e8%87%b4%e8%bf%87%e7%a8%8b%e6%98%af%e4%bb%80%e4%b9%88" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;ol>
+&lt;li>此行代码所属函数的执行随即终止。&lt;/li>
+&lt;li>紧接着，控制权并不会在此有片刻停留，它又会立即转移至再上一级的调用代码处。控制权如此一级一级地沿着调用栈的反方向传播至顶端，也就是我们编写的最外层函数那里。&lt;/li>
+&lt;/ol>
+&lt;p>这里的最外层函数指的是 &lt;code>go&lt;/code> 函数，对于主 goroutine 来说就是 &lt;code>main&lt;/code> 函数。但是控制权也不会停留在那里，而是被 Go 语言运行时系统收回。&lt;/p>
+&lt;p>随后，程序崩溃并终止运行，承载程序这次运行的进程也会随之死亡并消失。与此同时，在这个控制权传播的过程中，panic 详情会被逐渐地积累和完善，并会在程序终止之前被打印出来。&lt;/p>
+&lt;h3>怎样让 panic 包含一个值，以及应该让它包含什么样的值&lt;span class="hx-absolute -hx-mt-20" id="怎样让-panic-包含一个值以及应该让它包含什么样的值">&lt;/span>
+&lt;a href="#%e6%80%8e%e6%a0%b7%e8%ae%a9-panic-%e5%8c%85%e5%90%ab%e4%b8%80%e4%b8%aa%e5%80%bc%e4%bb%a5%e5%8f%8a%e5%ba%94%e8%af%a5%e8%ae%a9%e5%ae%83%e5%8c%85%e5%90%ab%e4%bb%80%e4%b9%88%e6%a0%b7%e7%9a%84%e5%80%bc" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>其实很简单，在调用 &lt;code>panic&lt;/code> 函数时，把某个值作为参数传给该函数就可以了。&lt;code>panic&lt;/code> 函数的唯一一个参数是空接口
+（也就是&lt;code>interface{}&lt;/code>）类型的，所以从语法上讲，它可以接受任何类型的值。&lt;/p>
+&lt;p>但是，我们&lt;strong>最好传入 &lt;code>error&lt;/code> 类型的错误值，或者其他的可以被有效序列化的值。这里的“有效序列化”指的是，可以更易读地去表示形式转换&lt;/strong>。&lt;/p>
+&lt;h2>recover 捕获异常&lt;span class="hx-absolute -hx-mt-20" id="recover-捕获异常">&lt;/span>
+&lt;a href="#recover-%e6%8d%95%e8%8e%b7%e5%bc%82%e5%b8%b8" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>一般情况下，不能因为某个处理函数引发的 &lt;code>panic&lt;/code> 异常，杀掉整个进程，可以使用 &lt;code>recover&lt;/code> 函数恢复 &lt;code>panic&lt;/code> 异常。&lt;/p>
+&lt;p>&lt;code>panic&lt;/code> 时会调用 &lt;code>recover&lt;/code>，但是 &lt;code>recover&lt;/code> 不能滥用，可能会引起资源泄漏或者其他问题。可以将 &lt;code>panic value&lt;/code> 设置成特殊类型，来标识某个 &lt;code>panic&lt;/code> 是否应该被恢复。&lt;strong>&lt;code>recover&lt;/code> 只能在 &lt;code>defer&lt;/code> 修饰的函数中使用&lt;/strong>:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">soleTitle&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">doc&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">html&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Node&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="nx">title&lt;/span> &lt;span class="kt">string&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">err&lt;/span> &lt;span class="kt">error&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="kd">type&lt;/span> &lt;span class="nx">bailout&lt;/span> &lt;span class="kd">struct&lt;/span>&lt;span class="p">{}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">defer&lt;/span> &lt;span class="kd">func&lt;/span>&lt;span class="p">()&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">switch&lt;/span> &lt;span class="nx">p&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nb">recover&lt;/span>&lt;span class="p">();&lt;/span> &lt;span class="nx">p&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">case&lt;/span> &lt;span class="kc">nil&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="c1">// no panic
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">case&lt;/span> &lt;span class="nx">bailout&lt;/span>&lt;span class="p">{}:&lt;/span> &lt;span class="c1">// &amp;#34;expected&amp;#34; panic
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">err&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">fmt&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Errorf&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;multiple title elements&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">default&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nb">panic&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">p&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="c1">// unexpected panic; carry on panicking
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nb">panic&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">bailout&lt;/span>&lt;span class="p">{})&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>上面的代码，&lt;code>deferred&lt;/code> 函数调用 &lt;code>recover&lt;/code>，并检查 &lt;code>panic value&lt;/code>：&lt;/p>
+&lt;ul>
+&lt;li>当 &lt;code>panic value&lt;/code> 是 &lt;code>bailout{}&lt;/code> 类型时，&lt;code>deferred&lt;/code> 函数生成一个 &lt;code>error&lt;/code> 返回给调用者。&lt;/li>
+&lt;li>当 &lt;code>panic value&lt;/code> 是其他 &lt;code>non-nil&lt;/code> 值时，表示发生了未知的 &lt;code>panic&lt;/code> 异常。&lt;/li>
+&lt;/ul>
+&lt;h3>正确使用 recover 函数&lt;span class="hx-absolute -hx-mt-20" id="正确使用-recover-函数">&lt;/span>
+&lt;a href="#%e6%ad%a3%e7%a1%ae%e4%bd%bf%e7%94%a8-recover-%e5%87%bd%e6%95%b0" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>先调用 &lt;code>recover&lt;/code> 函数，再调用 &lt;code>panic&lt;/code> 函数会怎么样呢？&lt;/p>
+&lt;p>如果在调用 &lt;code>recover&lt;/code> 函数时未发生 panic，那么该函数就不会做任何事情，并且只会返回一个 &lt;code>nil&lt;/code>。&lt;/p>
+&lt;p>&lt;strong>&lt;code>defer&lt;/code> 语句调用 &lt;code>recover&lt;/code> 函数才是正确的打开方式&lt;/strong>。&lt;/p>
+&lt;p>要注意，&lt;strong>尽量把 &lt;code>defer&lt;/code> 语句写在函数体的开始处，因为在引发 panic 的语句之后的所有语句，都不会有任何执行机会&lt;/strong>。&lt;/p>
+&lt;div class="hx-overflow-x-auto hx-mt-6 hx-flex hx-rounded-lg hx-border hx-py-2 ltr:hx-pr-4 rtl:hx-pl-4 contrast-more:hx-border-current contrast-more:dark:hx-border-current hx-border-blue-200 hx-bg-blue-100 hx-text-blue-900 dark:hx-border-blue-200/30 dark:hx-bg-blue-900/30 dark:hx-text-blue-200">
+&lt;div class="ltr:hx-pl-3 ltr:hx-pr-2 rtl:hx-pr-3 rtl:hx-pl-2">&lt;div class="hx-select-none hx-text-xl" style="font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';">ℹ️&lt;/div>&lt;/div>
+&lt;div class="hx-w-full hx-min-w-0 hx-leading-7">
+&lt;div class="hx-mt-6 hx-leading-7 first:hx-mt-0">&lt;strong>注意连续调用 &lt;code>panic&lt;/code> 只有最后一个会被 &lt;code>recover&lt;/code> 捕获&lt;/strong>。&lt;/div>
+&lt;/div>
+&lt;/div>
+&lt;h2>panic 和 recover 原理&lt;span class="hx-absolute -hx-mt-20" id="panic-和-recover-原理">&lt;/span>
+&lt;a href="#panic-%e5%92%8c-recover-%e5%8e%9f%e7%90%86" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>panic&lt;/code> 能够改变程序的控制流：&lt;/p>
+&lt;ol>
+&lt;li>当一个函数中调用 &lt;code>panic&lt;/code> 时会立刻停止执行该函数的其他代码，并在执行结束后在当前 goroutine 中递归执行调用方的延迟函数调用 &lt;code>defer&lt;/code>；&lt;/li>
+&lt;li>&lt;code>recover&lt;/code> 可以中止 &lt;code>panic&lt;/code> 造成的程序崩溃。它是一个只能在 &lt;code>defer&lt;/code> 中发挥作用的函数，在其他作用域中调用不会发挥任何作用；&lt;/li>
+&lt;/ol>
+&lt;p>&lt;code>defer&lt;/code> 关键字对应的 &lt;code>runtime.deferproc&lt;/code> 会将延迟调用函数与调用方所在 goroutine 进行关联。所以当程序发生崩溃时只会调用&lt;strong>当前 goroutine&lt;/strong> 的延迟调用函数。&lt;/p>
+&lt;p>多次调用 &lt;code>panic&lt;/code> 不会影响 &lt;code>defer&lt;/code> 函数的正常执行。&lt;/p>
+&lt;p>数据结构 &lt;code>runtime._panic&lt;/code>&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">type&lt;/span> &lt;span class="nx">_panic&lt;/span> &lt;span class="kd">struct&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">argp&lt;/span> &lt;span class="nx">unsafe&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Pointer&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">arg&lt;/span> &lt;span class="kd">interface&lt;/span>&lt;span class="p">{}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">link&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">_panic&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">recovered&lt;/span> &lt;span class="kt">bool&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">aborted&lt;/span> &lt;span class="kt">bool&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">pc&lt;/span> &lt;span class="kt">uintptr&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">sp&lt;/span> &lt;span class="nx">unsafe&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">Pointer&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">goexit&lt;/span> &lt;span class="kt">bool&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h3>崩溃恢复&lt;span class="hx-absolute -hx-mt-20" id="崩溃恢复">&lt;/span>
+&lt;a href="#%e5%b4%a9%e6%ba%83%e6%81%a2%e5%a4%8d" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>编译器会将关键字 &lt;code>recover&lt;/code> 转换成 &lt;code>runtime.gorecover&lt;/code>：&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">gorecover&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">argp&lt;/span> &lt;span class="kt">uintptr&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="kd">interface&lt;/span>&lt;span class="p">{}&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">p&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">gp&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">_panic&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">p&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="kc">nil&lt;/span> &lt;span class="o">&amp;amp;&amp;amp;&lt;/span> &lt;span class="p">!&lt;/span>&lt;span class="nx">p&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">recovered&lt;/span> &lt;span class="o">&amp;amp;&amp;amp;&lt;/span> &lt;span class="nx">argp&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="nb">uintptr&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">p&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">argp&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">p&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">recovered&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="kc">true&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="nx">p&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">arg&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">return&lt;/span> &lt;span class="kc">nil&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;ol>
+&lt;li>如果当前 goroutine 没有调用 &lt;code>panic&lt;/code>，那么该函数会直接返回 &lt;code>nil&lt;/code>，这也是崩溃恢复在非 &lt;code>defer&lt;/code> 中调用会失效的原因。&lt;/li>
+&lt;li>修改 &lt;code>runtime._panic&lt;/code> 结构体的 &lt;code>recovered&lt;/code> 字段。&lt;/li>
+&lt;/ol>
+&lt;p>&lt;code>runtime.gorecover&lt;/code> 函数本身不包含恢复程序的逻辑，程序的恢复也是由 &lt;code>runtime.gopanic&lt;/code> 函数负责的：&lt;/p>
+&lt;ol>
+&lt;li>创建新的 &lt;code>runtime._panic&lt;/code> 结构并添加到所在 &lt;code>goroutine._panic&lt;/code> 链表的最前面；&lt;/li>
+&lt;li>在循环中不断从当前 goroutine 的 &lt;code>_defer&lt;/code> 中链表获取 &lt;code>runtime._defer&lt;/code> 并调用 &lt;code>runtime.reflectcall&lt;/code> 运行延迟调用函数；&lt;/li>
+&lt;li>调用 &lt;code>runtime.fatalpanic&lt;/code> 中止整个程序；&lt;/li>
+&lt;/ol>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-go" data-lang="go">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">gopanic&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">e&lt;/span> &lt;span class="kd">interface&lt;/span>&lt;span class="p">{})&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">gp&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nf">getg&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 创建新的 runtime._panic 并添加到所在 goroutine 的 _panic 链表的最前面
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="kd">var&lt;/span> &lt;span class="nx">p&lt;/span> &lt;span class="nx">_panic&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">p&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">arg&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">e&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">p&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">link&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">gp&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">_panic&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">gp&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">_panic&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="nx">_panic&lt;/span>&lt;span class="p">)(&lt;/span>&lt;span class="nf">noescape&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">unsafe&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Pointer&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">p&lt;/span>&lt;span class="p">)))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 在循环中不断从当前 goroutine 的 _defer 中链表获取 runtime._defer
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 并调用 runtime.reflectcall 运行延迟调用函数
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">for&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 执行延迟调用函数，可能会设置 p.recovered = true
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">d&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">gp&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">_defer&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">d&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="kc">nil&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">break&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">d&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">_panic&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="nx">_panic&lt;/span>&lt;span class="p">)(&lt;/span>&lt;span class="nf">noescape&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">unsafe&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Pointer&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">p&lt;/span>&lt;span class="p">)))&lt;/span> &lt;span class="c1">// 关联 defer 和 panic
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 运行延迟调用函数，如果碰到了 recover 函数，就会将 p.recovered 标记成 true
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nf">reflectcall&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="kc">nil&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="nx">unsafe&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Pointer&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">d&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">fn&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="nf">deferArgs&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">d&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="nb">uint32&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">d&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">siz&lt;/span>&lt;span class="p">),&lt;/span> &lt;span class="nb">uint32&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">d&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">siz&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">d&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">_panic&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="kc">nil&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">d&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">fn&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="kc">nil&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">gp&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">_defer&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">d&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">link&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">freedefer&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">d&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 从 _defer 中取出了程序计数器 pc 和栈指针 sp
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nx">pc&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">d&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">pc&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">sp&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">unsafe&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nf">Pointer&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">d&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">sp&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="k">if&lt;/span> &lt;span class="nx">p&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">recovered&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">gp&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">_panic&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">p&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">link&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="nx">gp&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">_panic&lt;/span> &lt;span class="o">!=&lt;/span> &lt;span class="kc">nil&lt;/span> &lt;span class="o">&amp;amp;&amp;amp;&lt;/span> &lt;span class="nx">gp&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">_panic&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">aborted&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">gp&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">_panic&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">gp&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">_panic&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">link&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">if&lt;/span> &lt;span class="nx">gp&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">_panic&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="kc">nil&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">gp&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">sig&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="mi">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">gp&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">sigcode0&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nb">uintptr&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">sp&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">gp&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">sigcode1&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">pc&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// mcall 了从当前 goroutine 切换到 g0
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 调用 runtime.recovery 函数触发 goroutine 的调度
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nf">mcall&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">recovery&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nf">throw&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;recovery failed&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 调用 runtime.fatalpanic 中止整个程序，最终会调用 exit(2)
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 这是为什么连续调用 panic 只有最后一个会被 recover 捕获的原因
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nf">fatalpanic&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">gp&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">_panic&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">func&lt;/span> &lt;span class="nf">recovery&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nx">gp&lt;/span> &lt;span class="o">*&lt;/span>&lt;span class="nx">g&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">sp&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">gp&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">sigcode0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">pc&lt;/span> &lt;span class="o">:=&lt;/span> &lt;span class="nx">gp&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">sigcode1&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">gp&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">sched&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">sp&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">sp&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">gp&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">sched&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">pc&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="nx">pc&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">gp&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">sched&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">lr&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="mi">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">gp&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">sched&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">ret&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="mi">1&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="c1">// 调用 defer 关键字时，调用时的栈指针 sp 和程序计数器 pc 就已经存储到了 runtime._defer 结构体中
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// 这里的 runtime.gogo 函数会跳回 defer 关键字调用的位置
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="c1">// gogo 函数从 g0 切换到调用 defer 的 goroutine
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span> &lt;span class="nf">gogo&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">&amp;amp;&lt;/span>&lt;span class="nx">gp&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">sched&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h4>崩溃恢复流程&lt;span class="hx-absolute -hx-mt-20" id="崩溃恢复流程">&lt;/span>
+&lt;a href="#%e5%b4%a9%e6%ba%83%e6%81%a2%e5%a4%8d%e6%b5%81%e7%a8%8b" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;ol>
+&lt;li>编译器会负责做转换关键字的工作；
+&lt;ul>
+&lt;li>将 &lt;code>panic&lt;/code> 和 &lt;code>recover&lt;/code> 分别转换成 &lt;code>runtime.gopanic&lt;/code> 和 &lt;code>runtime.gorecover&lt;/code>；&lt;/li>
+&lt;li>将 &lt;code>defer&lt;/code> 转换成 &lt;code>deferproc&lt;/code> 函数；&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>在调用 &lt;code>defer&lt;/code> 的函数末尾插入 &lt;code>deferreturn&lt;/code> 函数；&lt;/li>
+&lt;li>在运行过程中遇到 &lt;code>gopanic&lt;/code> 方法时，会从 goroutine 的链表依次取出 &lt;code>_defer&lt;/code> 结构体并执行；
+&lt;ul>
+&lt;li>如果调用延迟执行函数时遇到了 &lt;code>gorecover&lt;/code> 就会将 &lt;code>_panic.recovered&lt;/code> 标记成 &lt;code>true&lt;/code> 并返回 &lt;code>panic&lt;/code> 的参数；&lt;/li>
+&lt;li>在这次调用结束之后，&lt;code>gopanic&lt;/code> 会从 &lt;code>_defer&lt;/code> 结构体中取出程序计数器 &lt;code>pc&lt;/code> 和栈指针 &lt;code>sp&lt;/code> 并调用 &lt;code>recovery&lt;/code> 函数进行恢复程序；&lt;/li>
+&lt;li>&lt;code>recovery&lt;/code> 会根据传入的 &lt;code>pc&lt;/code> 和 &lt;code>sp&lt;/code> 跳转回 &lt;code>deferproc&lt;/code>；&lt;/li>
+&lt;li>编译器自动生成的代码会发现 &lt;code>deferproc&lt;/code> 的返回值不为 0，这时会跳回 &lt;code>deferreturn&lt;/code> 并恢复到正常的执行流程；&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>如果没有遇到 &lt;code>gorecover&lt;/code> 就会依次遍历所有的 &lt;code>_defer&lt;/code> 结构，并在最后调用 &lt;code>fatalpanic&lt;/code> 中止程序、打印 &lt;code>panic&lt;/code> 的参数并返回错误码 2；&lt;/li>
+&lt;/ol></description></item><item><title>make 和 new</title><link>https://shipengqi.github.io/golang-learn/docs/basic/14_make_new/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/basic/14_make_new/</guid><description>
 &lt;p>Go 中初始化一个结构，有两个关键字：&lt;code>make&lt;/code> 和 &lt;code>new&lt;/code>。虽然都是用于初始化结构，但是有很大的不同。&lt;/p>
 &lt;ol>
 &lt;li>&lt;code>new&lt;/code> 是根据传入的类型分配一片内存空间，并返回指向这片内存空间的指针。
