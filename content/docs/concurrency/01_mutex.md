@@ -40,8 +40,7 @@ func Balance() int {
 }
 ```
 
-当已经有 goroutine 调用 `Lock` 方法获得了这个锁，再有 goroutine 请求这个锁就会阻塞在 `Lock` 方法的调用上，
-直到持有这个锁的 goroutine 调用 `UnLock` 释放这个锁。
+当已经有 goroutine 调用 `Lock` 方法获得了这个锁，再有 goroutine 请求这个锁就会阻塞在 `Lock` 方法的调用上，直到持有这个锁的 goroutine 调用 `UnLock` 释放这个锁。
 
 **使用 `defer` 来 `UnLock` 锁，确保在函数返回之后或者发生错误返回时一定会执行 `UnLock`**。
 
@@ -75,14 +74,13 @@ func main() {
 
 上面的例子中期望的最后计数的结果是 `10 * 1000 = 10000`。但是每次运行都可能得到不同的结果，基本上不会得到的一万的结果。
 
-这是因为，`count++` 不是一个原子操作，它至少包含 3 个步骤
+这是因为，`count++` 不是一个原子操作，它至少包含 3 个步骤：
 
-1. 读取变量 count 的当前值，
-2. 对这个值加 1，
+1. 读取变量 count 的当前值；
+2. 对这个值加 1；
 3. 把结果保存到 count 中。
 
-因为不是原子操作，就会有数据竞争的问题。例如，两个 goroutine 同时读取到 count 的值为 8888，接着各自按照自己的逻辑加 1，值变成了 8889，把这个结果再写回到 count 变量。
-此时总数只增加了 1，但是应该是增加 2 才对。这是并发访问共享数据的常见问题。
+因为不是原子操作，就会有数据竞争的问题。例如，两个 goroutine 同时读取到 count 的值为 8888，接着各自按照自己的逻辑加 1，值变成了 8889，把这个结果再写回到 count 变量。此时总数只增加了 1，但是应该是增加 2 才对。这是并发访问共享数据的常见问题。
 
 数据竞争的问题可以再编译时通过数据竞争检测器（race detector）工具发现计数器程序的问题以及修复方法。
 
@@ -102,7 +100,7 @@ type Mutex struct {
 
 `state` 是一个复合型的字段，包含多个意义：
 
-![mutex-state](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/mutex-state.png)
+![mutex-state](https://raw.gitcode.com/shipengqi/illustrations/blobs/a28ed24ef4af3cef2b72c215e2358ae84ac39557/mutex-state.png)
 
 在默认状态下，互斥锁的所有状态位都是 0，`int32` 中的不同位分别表示了不同的状态：
 
@@ -115,15 +113,21 @@ type Mutex struct {
 
 `sync.Mutex` 有两种模式：**正常模式**和**饥饿模式**。
 
-- 正常模式下，锁的等待者会按照**先进先出**的顺序获取锁。
-- Go 1.9 中为 mutex 增加了**饥饿模式**。饥饿模式是指，刚被唤起的 goroutine 与新创建的 goroutine 竞争时，大概率会获取不到锁。为了减少这种情况，一旦 **goroutine 超过 1ms 没有获取到锁，它就会将当前互斥锁切换到饥饿模式**，保证锁的公平性。
+正常模式：
 
-**在饥饿模式中，互斥锁会直接交给等待队列最前面的 goroutine**。新来的 goroutine 在该状态下不能获取锁、也不会进入自旋状态，只会在队列的末尾等待。
+- 自旋尝试（Spinning）：等待锁的 goroutine 会先进行短时间的自旋（约 4 次尝试），如果锁很快释放，可以避免上下文切换，提高性能。
+- **竞争激烈时进入队列**goroutine 会被加入 **FIFO 队列**等待唤醒。
+- **新来的 goroutine 可能插队**：
+  - 即使有 goroutine 在排队，新请求锁的 goroutine 仍有机会**直接抢锁**（**减少上下文切换开销**）。
+  - 这种机制在高并发场景下能提高吞吐量，但可能导致某些 goroutine 长时间拿不到锁（**饥饿**）。
 
-下面两种情况，mutex 会切换为正常模式:
+饥饿模式：
 
-- 一个 goroutine 获得了锁并且它在队列的末尾。
-- 一个 goroutine 获得了锁并且等待的时间少于 1ms。
+Go 1.9 中为 mutex 增加了**饥饿模式**。**当某个 goroutine 超过 1ms 没有获取到锁，它就会将当前互斥锁切换到饥饿模式**，保证锁的公平性。
+
+- **禁止新 goroutine 插队**：所有**新来的 Goroutine 必须直接进入队列尾部**，不能尝试抢锁。
+- **锁直接交给队首 goroutine**。
+- 退出饥饿模式：当队首 goroutine 是**最后一个等待者**或**它等待时间 `< 1ms`** 时，切换回正常模式。
 
 ### Lock
 
@@ -155,6 +159,7 @@ func (m *Mutex) Lock() {
 func (m *Mutex) lockSlow() {
 	var waitStartTime int64
 	starving := false // 当前 goroutine 的饥饿标记
+	                  // mutexStarving 是锁的饥饿标记
 	awoke := false // 唤醒标记
 	iter := 0 // 自旋次数
 	old := m.state // 当前锁的状态
@@ -178,9 +183,9 @@ func (m *Mutex) lockSlow() {
 		}
 		// 情况2: 准备新状态（没有进入自旋）
         new := old
-		// 如果不是饥饿模式，表示当前 goroutine 要获取锁了，这里还没有真正修改锁的状态
+		// // 如果是正常模式，新来的 goroutine 可以尝试直接抢锁
         if old&mutexStarving == 0 {
-			new |= mutexLocked 
+			new |= mutexLocked // 新 goroutine 尝试直接设置锁标志位
 		}
 		// 如果锁已被持有或处于饥饿模式，增加等待计数，waiter 加 1
 		if old&(mutexLocked|mutexStarving) != 0 {
@@ -202,15 +207,19 @@ func (m *Mutex) lockSlow() {
 		}
         // 尝试去更新锁的新状态
 		if atomic.CompareAndSwapInt32(&m.state, old, new) {
-			// CAS 成功并不代表获取了锁，而是代表成功更新了锁的状态，CAS 成功说明当前 goroutine 是获取锁的竞争者
+			// CAS 成功并不代表获取了锁，而是代表成功更新了锁的状态
+			// CAS 成功说明当前 goroutine 是获取锁的竞争者
 			// 更新了锁的状态之后，具体分为两种情况
 
             // 情况1：
-			// 如果锁原先未被持有，并且不是饥饿模式，成功获取锁，直接返回
+
+			// 如果锁原先未被持有，并且不是饥饿模式
+			// 新来的 goroutine 抢锁成功
 			if old&(mutexLocked|mutexStarving) == 0 {
 				break // 通过 CAS 函数获取了锁
 			}
 			
+			// 新来的 goroutine 抢锁失败，进入排队逻辑
 		    // ...
 
             // 情况2：需要排队等待
@@ -273,7 +282,7 @@ func (m *Mutex) lockSlow() {
    - 自旋的次数小于四次
    - 当前机器上至少存在一个正在运行的处理器 P 并且处理的运行队列为空
 
-进入自旋会调用 `runtime_doSpin()`，并执行 30 次的 `PAUSE` 指令，该指令只会占用 CPU 并消耗 CPU 时间：
+进入自旋会调用 `runtime_doSpin()`，并执行 30 次的 **`PAUSE` 指令，该指令只会占用 CPU 并消耗 CPU 时间，但是会引入延迟，降低 CPU 执行效率，降低功耗**==，如果没有 PAUSE，CPU 会以最高速度循环检查锁是否可用**：
 
 ```go
 //go:linkname sync_runtime_doSpin sync.runtime_doSpin
@@ -305,7 +314,7 @@ func (m *Mutex) Unlock() {
 	if new != 0 { // 意味着当前锁有等待者，需要唤醒等待者
 		// Outlined slow path to allow inlining the fast path.
 		// To hide unlockSlow during tracing we skip one extra frame when tracing GoUnblock.
-		// 慢速解锁
+		// 慢速解锁，有等待者，需要唤醒
 		m.unlockSlow(new)
 	}
 }

@@ -63,6 +63,46 @@ $ go mod init <project-path>
 
 `GOPRIVATE` 较为特殊，它的值将作为 `GONOPROXY` 和 `GONOSUMDB` 的默认值。所以只使用 `GOPRIVATE` 就足够。
 
+#### 配置 Git 
+
+由于 Go 会通过 `git clone` 下载私有模块，必须确保 Git 有权限访问私有仓库。
+
+1. **用户名 + 密码**（不推荐）：
+
+```bash
+git config --global url."https://user:token@git.example.com".insteadOf "https://git.example.com"
+```
+
+`token` 可以是 GitLab/GitHub 的 **Personal Access Token** (PAT)。
+
+2. **netrc 文件**：
+
+```plaintext
+machine git.example.com
+login user
+password token
+```
+
+3. **SSH 认证**：
+
+生成 SSH Key（如果还没有）：
+
+```bash
+ssh-keygen -t ed25519 -C "your-email@example.com"
+```
+
+配置 Git 使用 SSH：
+
+```bash
+git config --global url."git@git.example.com:".insteadOf "https://git.example.com"
+```
+
+测试 SSH 连接：
+
+```bash
+ssh -T git@git.example.com
+```
+
 ### go.mod 文件
 
 `go.mod` 是 Go Modules 项目所必须的最重要的文件，描述了当前项目的元信息，目前有 5 个关键字：

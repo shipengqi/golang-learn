@@ -107,7 +107,7 @@ CALL	runtime·abort(SB)
 ```
 
 1. 先调用 **`settls` 函数初始化主线程的线程本地存储 (TLS)，目的是把 `m0` 与主线程关联在一起**。
-2. 证 TLS 功能是否正常，如果不正常则直接 `abort` 退出程序。
+2. 验证 TLS 功能是否正常，如果不正常则直接 `abort` 退出程序。
 
 `settls` 函数在 `runtime/sys_linx_amd64.s` 文件中：
 

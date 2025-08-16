@@ -17,7 +17,7 @@ VS Code 的 Remote 功能由三个插件组成，分别适用于三种不同的�
 
 SSH 模式的原理：
 
-![architecture-vscode-ssh](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/architecture-vscode-ssh.png)
+![architecture-vscode-ssh](https://raw.gitcode.com/shipengqi/illustrations/blobs/6f4c1523f807b9eb936721af7576028e350bd747/architecture-vscode-ssh.png)
 图片来自于 Visual Studio Code 官网
 
 ### 连接远程机器
@@ -54,7 +54,7 @@ Host shccdfrh75vm7.hpeswlab.net
 
 左侧边栏的 Remote Explorer，可以快速打开远程机器上的代码目录：
 
-![vscode-remote-usage](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/vscode-remote-usage.png)
+![vscode-remote-usage](https://raw.gitcode.com/shipengqi/illustrations/blobs/1444ed2e15fa8d7c3fdf9104d1c70b929b513be9/vscode-remote-usage.png)
 
 ### 配置免密登录
 
@@ -81,7 +81,7 @@ $ ssh-copy-id username@remote-host
 
 连接到远程主机后，就可以进行远程开发了。可以像本地开发一样查看，修改文件。
 
-![vscode-ssh-dev](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/vscode-ssh-dev.png)
+![vscode-ssh-dev](https://raw.gitcode.com/shipengqi/illustrations/blobs/d3023d564928cff99d5fb789f627b8da2243d3d2/vscode-ssh-dev.png)
 
 ## 远程调试
 

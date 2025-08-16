@@ -79,7 +79,7 @@ context 的最大作用就是在**一组 goroutine 构成的树形结构中对�
 
 例如，Go 的 HTTP server，处理每一个请求，都是启动一个单独的 goroutine，处理过程中还会启动新的 goroutine 来访问数据库和其他服务。而 context 在不同 goroutine 之间可以同步请求特定数据、取消信号以及处理请求的截止日期。
 
-![context](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/context.png)
+![context](https://raw.gitcode.com/shipengqi/illustrations/blobs/96e9eb7012bc38c62b063745719d5c82712552b7/context.png)
 
 每一个 context 都会从 root goroutine 一层层传递到底层。context 可以在上层 goroutine 执行出现错误时，将信号及时同步给下层。
 

@@ -84,3 +84,66 @@ func netpollIsPollDescriptor(fd uintptr) bool
 1. 是调用 `epollcreate1` 创建一个新的 `epoll` 文件描述符，这个文件描述符会在整个程序的生命周期中使用；
 2. 通过 `runtime.nonblockingPipe `创建一个用于通信的管道；
 3. 使用 `epollctl` 将用于读取数据的文件描述符打包成 `epollevent` 事件加入监听；
+
+#### goroutine 与 epoll 的协作流程
+
+goroutine 发起网络读操作（如 `conn.Read()`）：
+
+```go
+func handleConn(conn net.Conn) {
+    buf := make([]byte, 1024)
+    n, err := conn.Read(buf) // 非阻塞 I/O，触发 netpoller 介入
+    // ...
+}
+```
+
+- 当 goroutine 调用 `conn.Read()` 时，Go 的 net 包会先尝试**非阻塞读取**（`syscall.Read(fd, buf)`）。
+- 如果数据未就绪（返回 `EAGAIN` 错误），Go 会将**文件描述符（fd） 注册到 epoll 监听队列**，并将当前 goroutine 阻塞。
+
+goroutine 挂起：
+
+```go
+// 伪代码：Go 运行时内部处理
+func Read(fd int, buf []byte) (int, error) {
+    for {
+        n, err := syscall.Read(fd, buf)
+        if err == syscall.EAGAIN {
+            // 将 fd 注册到 epoll，并挂起当前 Goroutine
+            netpollqueue.Add(fd, currentG)
+            gopark() // 挂起 Goroutine，切换执行其他任务
+            continue
+        }
+        return n, err
+    }
+}
+
+// 将 fd 关联到当前 goroutine
+func netpollblock(fd uintptr) {
+    pd := getPollDesc(fd)
+    pd.setG(getg()) // 关联当前 Goroutine
+    gopark(netpollblockcommit, unsafe.Pointer(pd), waitReasonIOWait)
+}
+```
+
+- `gopark()` 将当前 goroutine 置为 Gwaiting 状态，并让出 CPU 给其他 goroutine。
+
+epoll 监听就绪事件：
+
+- 后台的 网络轮询器线程（通常由 Go 运行时启动）通过 `epoll_wait` 监听所有注册的 fd。
+- 当数据到达时，epoll 返回就绪的 fd，轮询器找到关联的 goroutine，将其标记为可运行（Grunnable）。
+
+goroutine 恢复执行：
+
+```go
+func netpoll(delay int64) []*g {
+    events := epoll_wait(epfd, ...)
+    for _, ev := range events {
+        pd := (*pollDesc)(ev.data)
+        netpollready(&toRun, pd) // 将关联的 Goroutine 加入运行队列
+    }
+    return toRun
+}
+```
+
+- 调度器将就绪的 goroutine 放入运行队列，等待 M（OS 线程）执行。
+- goroutine 从 `gopark()` 后继续执行，再次调用 `syscall.Read`，此时数据已就绪。

@@ -20,6 +20,9 @@ ch := make(chan int)
 
 // 带缓冲 channel，缓冲区为 3
 ch = make(chan int, 3)
+
+// ok 为 false 表示通道已经关闭
+val, ok := <- ch
 ```
 
 > channel 的零值是 `nil`。
@@ -69,7 +72,7 @@ ch = make(chan int, 3)
 
 ### 使用 range 遍历 channel
 
-使用 `range` 循环可以遍历 channel，它依次从 channel 中接收数据，当 channel 被关闭并且没有值可接收时跳出循环：
+使用 `range` 循环可以遍历 channel，它依次从 channel 中接收数据，**当 channel 被关闭并且没有值可接收时跳出循环**：
 
 ```go
 ch := make(chan int, 3)
@@ -212,7 +215,7 @@ func makechan(t *chantype, size int) *hchan {
 }
 ```
 
-使用 mallocgc 函数创建 channel，就意味着 channel 都是分配在堆上的。所以**当一个 channel 没有被任何 goroutine 引用时，是会被 GC 回收的**。
+使用 `mallocgc` 函数创建 channel，就意味着 channel 都是分配在堆上的。所以**当一个 channel 没有被任何 goroutine 引用时，是会被 GC 回收的**。
 
 ### 向 channel 发送数据
 

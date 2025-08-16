@@ -114,7 +114,7 @@ func convT2I(inter *interfacetype, tab *itab, t *_type, v unsafe.Pointer) (iface
 
 ## 断言
 
-类型断言也依赖于接口的数据结构，通过检查接口的 `_type` 来判断类型是否于接口的实际类型匹配：
+类型断言也依赖于接口的数据结构，通过检查接口的 `_type` 来判断类型是否与接口的动态类型匹配：
 
 ```go
 func assertE2I(inter *interfacetype, e eface) (i iface) {

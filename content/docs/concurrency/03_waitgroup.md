@@ -64,7 +64,7 @@ func (wg *WaitGroup) Go(f func()) {
 for _, request := range requests {
     wg.Go(func() {
         // res, err := service.call(request)
-    }
+    })
 }
 wg.Wait()
 ```
@@ -116,7 +116,7 @@ $ go vet proc.go
 
 `state1` 包含一个总共占用 12 字节的数组，这个数组会存储当前结构体的状态，在 64 位与 32 位的机器上表现也非常不同。
 
-![waitgroup-state1](https://raw.gitcode.com/shipengqi/illustrations/files/main/go/waitgroup-state1.png)
+![waitgroup-state1](https://raw.gitcode.com/shipengqi/illustrations/blobs/f44ac6b2eda5c6cefa556a6d1786b846b2b490f9/waitgroup-state1.png)
 
 `state` 方法用来从 `state1` 字段中取出它的状态和信号量。
 
@@ -169,8 +169,7 @@ func (wg *WaitGroup) Done() {
 }
 ```
 
-`Wait` 方法的实现逻辑：不断检查 state 的值。如果其中的计数值变为了 0，那么说明所有的任务已完成，调用者不必再等待，直接返回。如果计数值大于 0，说明此时还有任
-务没完成，那么调用者就变成了等待者，需要加入 waiter 队列，并且阻塞住自己。
+`Wait` 方法的实现逻辑：不断检查 state 的值。如果其中的计数值变为了 0，那么说明所有的任务已完成，调用者不必再等待，直接返回。如果计数值大于 0，说明此时还有任务没完成，那么调用者就变成了等待者，需要加入 waiter 队列，并且阻塞住自己。
 
 ```go
 func (wg *WaitGroup) Wait() {
