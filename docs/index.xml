@@ -4323,7 +4323,7 @@ title="Copy code"
 &lt;p>因为那是为非 main goroutine 准备的，&lt;strong>非 main goroutine 执行完成后就会返回到 &lt;code>goexit&lt;/code> 继续执行&lt;/strong>，而 main goroutine 执行完成后整个进程就结束了。&lt;/p>
 &lt;h2>流程图&lt;span class="hx-absolute -hx-mt-20" id="流程图">&lt;/span>
 &lt;a href="#%e6%b5%81%e7%a8%8b%e5%9b%be" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;div class="img-zoom lg">
-&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/go-main-run-flow.png" alt=go-main-run-flow">
+&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/go-main-run-flow.png" alt="go-main-run-flow">
 &lt;/div></description></item><item><title>代码规范</title><link>https://shipengqi.github.io/golang-learn/docs/project/03_code/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/project/03_code/</guid><description>
 &lt;p>好的代码规范非常重要，可以提高代码的可读性，减少 bug，提高开发效率。&lt;/p>
 &lt;p>Go 官方提供的代码规范：&lt;/p>
@@ -7260,6 +7260,33 @@ title="Copy code"
 &lt;blockquote>
 &lt;p>先行版本号和编译版本号只能是字母、数字，并且不可以有空格。&lt;/p>
 &lt;/blockquote>
+&lt;h2>常见标识&lt;span class="hx-absolute -hx-mt-20" id="常见标识">&lt;/span>
+&lt;a href="#%e5%b8%b8%e8%a7%81%e6%a0%87%e8%af%86" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>标识&lt;/th>
+&lt;th>含义&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>alpha&lt;/code>&lt;/td>
+&lt;td>内部测试版&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>beta&lt;/code>&lt;/td>
+&lt;td>公测版&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>rc&lt;/code> / &lt;code>rc.1&lt;/code>&lt;/td>
+&lt;td>候选发布版&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>preview&lt;/code>&lt;/td>
+&lt;td>预览版&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
 &lt;h2>如何确定版本号？&lt;span class="hx-absolute -hx-mt-20" id="如何确定版本号">&lt;/span>
 &lt;a href="#%e5%a6%82%e4%bd%95%e7%a1%ae%e5%ae%9a%e7%89%88%e6%9c%ac%e5%8f%b7" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ol>
 &lt;li>在实际开发的时候，可以使用 &lt;code>0.1.0&lt;/code> 作为第一个开发版本号，并在后续的每次发行时递增次版本号。&lt;/li>

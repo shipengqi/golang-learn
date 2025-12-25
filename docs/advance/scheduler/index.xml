@@ -1225,7 +1225,7 @@ title="Copy code"
 &lt;p>因为那是为非 main goroutine 准备的，&lt;strong>非 main goroutine 执行完成后就会返回到 &lt;code>goexit&lt;/code> 继续执行&lt;/strong>，而 main goroutine 执行完成后整个进程就结束了。&lt;/p>
 &lt;h2>流程图&lt;span class="hx-absolute -hx-mt-20" id="流程图">&lt;/span>
 &lt;a href="#%e6%b5%81%e7%a8%8b%e5%9b%be" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;div class="img-zoom lg">
-&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/go-main-run-flow.png" alt=go-main-run-flow">
+&lt;img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/go-main-run-flow.png" alt="go-main-run-flow">
 &lt;/div></description></item><item><title>调度循环</title><link>https://shipengqi.github.io/golang-learn/docs/advance/scheduler/04_loop/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shipengqi.github.io/golang-learn/docs/advance/scheduler/04_loop/</guid><description>
 &lt;h2>非 main goroutine 的退出&lt;span class="hx-absolute -hx-mt-20" id="非-main-goroutine-的退出">&lt;/span>
 &lt;a href="#%e9%9d%9e-main-goroutine-%e7%9a%84%e9%80%80%e5%87%ba" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>newproc1&lt;/code> 创建 goroutine 的时候已经在其栈上放好了一个返回地址，伪造成 &lt;code>goexit&lt;/code> 函数调用了 goroutine 的入口函数。&lt;strong>非 main goroutine 执行完成后就会返回到 &lt;code>goexit&lt;/code> 继续执行&lt;/strong>。&lt;/p>
