@@ -399,5 +399,5 @@ goexit 函数为什么没有调用？
 ## 流程图
 
 <div class="img-zoom lg">
-  <img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/go-main-run-flow.png" alt=go-main-run-flow">
+  <img src="https://raw.gitcode.com/shipengqi/illustrations/files/main/go/go-main-run-flow.png" alt="go-main-run-flow">
 </div>
